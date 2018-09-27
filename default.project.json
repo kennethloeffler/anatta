@@ -1,0 +1,21 @@
+{
+  "name": "anatta",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "anatta": {
+        "$path": "src"
+      }
+    },
+    "TestService": {
+      "$className": "TestService",
+      "TestEZ": {
+        "$path": "vendor/testez/src"
+      },
+      "TestRunner" : {
+        "$path": "TestRunner.server.lua"
+      }
+    }
+  }
+}
