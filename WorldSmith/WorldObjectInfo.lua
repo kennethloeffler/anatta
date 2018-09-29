@@ -1,3 +1,5 @@
+local WorldObject = require(script.Parent.WorldObject)
+
 local function AnimateDoor(parameters, dir, remoteEvent, player, container)
 	if container.Enabled.Value == true then
 		container.Enabled.Value = false
@@ -13,27 +15,34 @@ end
 
 local function createTrigger(cframe, size, container, triggerName)
 	local trigger = Instance.new("Part")
-	local value = Instance.new("ObjectValue")
 	trigger.Size = size
 	trigger.Transparency = 1
 	trigger.CFrame = cframe
 	trigger.Anchored = true
 	trigger.CanCollide = false
-	value.Name = triggerName
-	value.Value = trigger
 	trigger.Parent = container
-	value.Parent = container
+	
+	local _, cont = WorldObject.new(trigger, "TouchTrigger", {Enabled = true})
+	
+	if cont:IsA("Folder") then 
+		container[triggerName].Value = cont
+		WorldObjectInfo.TouchTrigger._init({Enabled = true}, cont)
+	end
+	
 end
 
-local WorldObjectInfo = {
+WorldObjectInfo = {
 	["AnimatedDoor"] = {
 		Enabled = "boolean",
 		AutomaticTriggers = "boolean",
 		Time = "number",
+		OpenDirection = "number",
 		CloseDelay = "number",
 		EasingStyle = "string",
 		TriggerOffset = "number",
 		PivotPart = "Instance",
+		FrontTrigger = "Instance",
+		BackTrigger = "Instance",
 		["_init"] = function(parameters, container)
 			if parameters.PivotPart.Parent:IsA("Model") then
 				for _, part in pairs(parameters.PivotPart.Parent:GetChildren()) do
@@ -59,22 +68,39 @@ local WorldObjectInfo = {
 			end
 		end,
 		["_connectEventsFunction"] = function(parameters, container)
-			parameters.FrontTrigger.Touched:connect(function(part)
+			local frontDirection = parameters.OpenDirection == 0 and 1 or parameters.OpenDirection
+			local backDirection = parameters.OpenDirection == 0 and -1 or parameters.OpenDirection
+			parameters.FrontTrigger.Event.Event:connect(function(part)
 				local player = game.Players:GetPlayerFromCharacter(part.Parent)
 				if part.Parent:FindFirstChild("Humanoid") then
-					AnimateDoor(parameters, 1, container.RemoteEvent, player, container)
+					AnimateDoor(parameters, frontDirection, container.RemoteEvent, player, container)
 				end
 			end)
-			parameters.BackTrigger.Touched:connect(function(part)
+			parameters.BackTrigger.Event.Event:connect(function(part)
 				local player = game.Players:GetPlayerFromCharacter(part.Parent)
 				if part.Parent:FindFirstChild("Humanoid") then
-					AnimateDoor(parameters, -1, container.RemoteEvent, player, container)
+					AnimateDoor(parameters, backDirection, container.RemoteEvent, player, container)
 				end
 			end)
 		end
 	},
-	["PhysicsDoor"] = {
-		
+	["TouchTrigger"] = {
+		Enabled = "boolean",
+		["_init"] = function(parameters, container)
+			if container.Parent:IsA("BasePart") then
+				local bindableEvent = Instance.new("BindableEvent")
+				bindableEvent.Parent = container
+			end
+		end,
+		["_connectEventsFunction"] = function(parameters, container)
+			if container.Parent:IsA("BasePart") then
+				container.Parent.Touched:connect(function(part)
+					if container.Enabled.Value == true then
+						container.Event:Fire(part)
+					end
+				end)
+			end
+		end
 	}
 }
 

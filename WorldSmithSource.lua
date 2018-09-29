@@ -1,7 +1,7 @@
 local CollectionService = game:GetService("CollectionService")
 
 local WorldObjectInfo
-local WorldObject = require(script.Parent.WorldObject)
+local WorldObject = require(script.Parent.WorldSmith.WorldObject)
 local StudioWidgets = require(2393391735)
 	local CollapsibleTitledSection = StudioWidgets.CollapsibleTitledSection
 	local GuiUtilities = StudioWidgets.GuiUtilities
@@ -51,6 +51,10 @@ end
 function updateWorldObject(elementBin, setParams)
 	for parameter, value in pairs(setParams) do
 		elementBin[parameter].Value = value
+		if elementBin.Name == "AnimatedDoor" and elementBin.AutomaticTriggers.Value == true then
+			elementBin.FrontTrigger.Value.Parent.CFrame = elementBin.PivotPart.Value.CFrame * CFrame.new(elementBin.Parent:GetModelSize().X/2 - elementBin.PivotPart.Value.Size.X/2, 0, 1 + elementBin.TriggerOffset.Value)
+			elementBin.BackTrigger.Value.Parent.CFrame = elementBin.PivotPart.Value.CFrame * CFrame.new(elementBin.Parent:GetModelSize().X/2 - elementBin.PivotPart.Value.Size.X/2, 0, -1 - elementBin.TriggerOffset.Value)		
+		end
 	end
 end
 
@@ -66,18 +70,34 @@ end
 
 main = function()
 	
-	if not game.ServerScriptService:WaitForChild("WorldSmith", 2) then
-		local bin = script.Parent.WorldSmith:Clone()
-		bin.Parent = game.ServerScriptService	
-	end
-	WorldObjectInfo = require(game.ServerScriptService.WorldSmith.WorldObjectInfo)
+ 	spawn(function()
+		while wait(0.5) do
+			if plugin then
+				if not game.ServerScriptService:WaitForChild("WorldSmith", 2) then
+					local bin = script.Parent.WorldSmith:Clone()
+					bin.Parent = game.ServerScriptService	
+				end
+				WorldObjectInfo = require(game.ServerScriptService.WorldSmith.WorldObjectInfo)
+			else
+				break
+			end
+		end
+	end)
 	
-	if not game.ReplicatedStorage:WaitForChild("WorldSmith", 2) then
-		local bin = Instance.new("Folder")
-		bin.Name = "WorldSmith"
-		bin.Parent = game.ReplicatedStorage	
-		game.ServerScriptService.WorldSmith.WorldSmithClientMain.Parent = bin
-	end
+	spawn(function() 
+		while wait(0.5) do
+			if plugin then
+				if not game.ReplicatedStorage:WaitForChild("WorldSmith", 2) then
+					local bin = Instance.new("Folder")
+					bin.Name = "WorldSmith"
+					bin.Parent = game.ReplicatedStorage	
+					game.ServerScriptService.WorldSmith.WorldSmithClientMain:Clone().Parent = bin
+				end
+			else
+				break
+			end
+		end
+	end)
 	
 	local canCreateWindow = true
 	local isInInstanceSelection = false
@@ -100,7 +120,6 @@ main = function()
 	local RefreshWorldObjects = Toolbar:CreateButton("Refresh WorldObjects", "Refreshes the list of available WorldObjects", "http://www.roblox.com/asset/?id=2408135150") 
 	local Settings = Toolbar:CreateButton("Settings", "Opens the settings menu", "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png")
 	local DockWidgetPluginGui = CreateDockWidget("WorldSmith", "WorldSmith Editor", Enum.InitialDockState.Float, true, true, 150, 150, 150, 150)
-	DockWidgetPluginGui.Enabled = false
 	
 	local WorldObjectList = VerticallyScalingListFrame.new("ActionList")
 	local WorldObjectFrame = AutoScalingScrollingFrame.new("ActionFrame", WorldObjectList._uiListLayout)
@@ -191,7 +210,7 @@ main = function()
 		
 	function createInstanceParameterInput(parameter, setParams, parameterList, loadedParam, okButton, okButtonFunction)
 		local textbox = LabeledInstanceInput.new(parameter, parameter, loadedParam or "")
-		textbox:SetInstanceClass("Part")
+		textbox:SetInstanceClass("Instance")
 		textbox:SetInstanceChangedFunction(function()
 			setParams[parameter] = textbox:GetInstance()
 		end)
@@ -279,7 +298,8 @@ main = function()
 			else
 				for parameter, _type in pairs(parameters) do
 					if _type == "Instance" then
-						createInstanceParameterInput(parameter, setParams, parameterList)			
+						createInstanceParameterInput(parameter, setParams, parameterList)
+						setParams[parameter] = Instance.new("IntValue") -- might leak? idk
 					elseif _type == "number" then
 						createNumberParameterInput(parameter, setParams, parameterList)
 						setParams[parameter] =	0
@@ -298,7 +318,7 @@ main = function()
 	game.Selection.SelectionChanged:connect(function()
 		local obj = getSelection()
 		if obj then
-			if canCreateWindow and not isInInstanceSelection and obj:IsA("Model") then
+			if canCreateWindow and not isInInstanceSelection then
 				updateWorldObjectFrame(obj)			
 			end
 		else

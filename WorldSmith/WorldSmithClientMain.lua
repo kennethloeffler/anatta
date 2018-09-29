@@ -14,6 +14,14 @@ local function createArgDictionary(paramContainerChildren)
 	return t
 end
 
+local function queryWorldObject(worldObjectRef, param)
+	if worldObjectRef[param] then
+		return worldObjectRef[param].Value
+	else
+		error("WorldObject '".. worldObjectRef.Name .. "' does not have parameter '" .. param .. "'")
+	end
+end
+
 local clientSideActiveWorldObjects = {}
 
 local clientSideAssignedWorldObjects = {}
@@ -33,7 +41,7 @@ local func = {
 			local cf2 = parameters.PivotPart.CFrame * CFrame.Angles(0, dir * (-math.pi / 2), 0)
 			local tween2 = game:GetService("TweenService"):Create(
 				parameters.PivotPart,
-				TweenInfo.new(parameters.Time/2, Enum.EasingStyle[parameters.EasingStyle] or Enum.EasingStyle.Linear, Enum.EasingDirection.In, 0, false, parameters.CloseDelay or 0),
+				TweenInfo.new(parameters.Time/2, Enum.EasingStyle[parameters.EasingStyle] or Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, parameters.CloseDelay or 0),
 				{CFrame = cf2}
 			)
 			tween2:Play()
@@ -45,16 +53,26 @@ local func = {
 
 local clientPredictionFunc = {
 	AnimatedDoor = function(parameters, worldObjectRef)
-		game.Players.LocalPlayer.Character.HumanoidRootPart.Touched:connect(function(part)
-			if parameters.Enabled then
-				if part == parameters.FrontTrigger then
-					func.AnimatedDoor(parameters, 1, worldObjectRef)
-				elseif part == parameters.BackTrigger then
-					func.AnimatedDoor(parameters, -1, worldObjectRef)
-				end
+		parameters.FrontTrigger.Event.Event:connect(function(part)
+			local frontDirection = queryWorldObject(worldObjectRef, "OpenDirection") == 0 and 1 or queryWorldObject(worldObjectRef, "OpenDirection")
+			if parameters.Enabled == true then
+				func.AnimatedDoor(parameters, frontDirection, worldObjectRef)
 			end
 		end)
-	end
+		parameters.BackTrigger.Event.Event:connect(function(part)
+			local backDirection = queryWorldObject(worldObjectRef, "OpenDirection") == 0 and -1 or queryWorldObject(worldObjectRef, "OpenDirection")
+			if parameters.Enabled == true then
+				func.AnimatedDoor(parameters, backDirection, worldObjectRef)
+			end
+		end)
+	end,
+	TouchTrigger = function(parameters, worldObjectRef)
+		worldObjectRef.Parent.Touched:connect(function(part)
+			if queryWorldObject(worldObjectRef, "Enabled") == true and part.Parent == game.Players.LocalPlayer.Character then
+				worldObjectRef.Event:Fire()
+			end
+		end)
+	end		
 }
 
 function WorldSmithClientMain.new()
@@ -77,9 +95,9 @@ function WorldSmithClientMain.new()
 										func[worldObject](parameters, dir, container)
 									end
 								end)
-								clientPredictionFunc[worldObject](createArgDictionary(container:GetChildren()), container)
 							end
 						end
+						clientPredictionFunc[worldObject](createArgDictionary(container:GetChildren()), container)
 					end
 				end
 			end
