@@ -70,35 +70,6 @@ end
 
 main = function()
 	
- 	spawn(function()
-		while wait(0.5) do
-			if plugin then
-				if not game.ServerScriptService:WaitForChild("WorldSmith", 2) then
-					local bin = script.Parent.WorldSmith:Clone()
-					bin.Parent = game.ServerScriptService	
-				end
-				WorldObjectInfo = require(game.ServerScriptService.WorldSmith.WorldObjectInfo)
-			else
-				break
-			end
-		end
-	end)
-	
-	spawn(function() 
-		while wait(0.5) do
-			if plugin then
-				if not game.ReplicatedStorage:WaitForChild("WorldSmith", 2) then
-					local bin = Instance.new("Folder")
-					bin.Name = "WorldSmith"
-					bin.Parent = game.ReplicatedStorage	
-					game.ServerScriptService.WorldSmith.WorldSmithClientMain:Clone().Parent = bin
-				end
-			else
-				break
-			end
-		end
-	end)
-	
 	local canCreateWindow = true
 	local isInInstanceSelection = false
 	
@@ -119,7 +90,36 @@ main = function()
 	local EditorWindow = Toolbar:CreateButton("Editor", "Opens the WorldSmith editor menu", "http://www.roblox.com/asset/?id=2408111785")
 	local RefreshWorldObjects = Toolbar:CreateButton("Refresh WorldObjects", "Refreshes the list of available WorldObjects", "http://www.roblox.com/asset/?id=2408135150") 
 	local Settings = Toolbar:CreateButton("Settings", "Opens the settings menu", "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png")
-	local DockWidgetPluginGui = CreateDockWidget("WorldSmith", "WorldSmith Editor", Enum.InitialDockState.Float, true, true, 150, 150, 150, 150)
+	local DockWidgetPluginGui = CreateDockWidget("WorldSmith", "WorldSmith Editor", Enum.InitialDockState.Float, true, false, 150, 150, 150, 150)
+	
+	spawn(function()
+		while wait(0.5) do
+			if DockWidgetPluginGui.Parent ~= nil then
+				if not game.ServerScriptService:WaitForChild("WorldSmith", 2) then
+					local bin = script.Parent.WorldSmith:Clone()
+					bin.Parent = game.ServerScriptService	
+				end
+				WorldObjectInfo = require(game.ServerScriptService.WorldSmith.WorldObjectInfo)
+			else
+				break
+			end
+		end
+	end)
+	
+	spawn(function() 
+		while wait(0.5) do
+			if DockWidgetPluginGui.Parent ~= nil then
+				if not game.ReplicatedStorage:WaitForChild("WorldSmith", 2) then
+					local bin = Instance.new("Folder")
+					bin.Name = "WorldSmith"
+					bin.Parent = game.ReplicatedStorage	
+					game.ServerScriptService.WorldSmith.WorldSmithClientMain:Clone().Parent = bin
+				end
+			else
+				break
+			end
+		end
+	end)
 	
 	local WorldObjectList = VerticallyScalingListFrame.new("ActionList")
 	local WorldObjectFrame = AutoScalingScrollingFrame.new("ActionFrame", WorldObjectList._uiListLayout)

@@ -70,13 +70,17 @@ WorldObjectInfo = {
 		["_connectEventsFunction"] = function(parameters, container)
 			local frontDirection = parameters.OpenDirection == 0 and 1 or parameters.OpenDirection
 			local backDirection = parameters.OpenDirection == 0 and -1 or parameters.OpenDirection
-			parameters.FrontTrigger.Event.Event:connect(function(part)
+			local frontEventObj = (parameters.FrontTrigger:FindFirstChild("Event") and "Event") or (parameters.FrontTrigger:FindFirstChild("RemoteEvent") and "RemoteEvent")
+			local backEventObj = (parameters.BackTrigger:FindFirstChild("Event") and "Event") or (parameters.BackTrigger:FindFirstChild("RemoteEvent") and "RemoteEvent")
+			local frontEvent = (parameters.FrontTrigger:FindFirstChild("Event") and "Event")  or (parameters.FrontTrigger:FindFirstChild("RemoteEvent") and "OnServerEvent")
+			local backEvent = (parameters.BackTrigger:FindFirstChild("Event") and "Event") or (parameters.BackTrigger:FindFirstChild("RemoteEvent") and "OnServerEvent")
+			parameters.FrontTrigger[frontEventObj][frontEvent]:connect(function(part)
 				local player = game.Players:GetPlayerFromCharacter(part.Parent)
 				if part.Parent:FindFirstChild("Humanoid") then
 					AnimateDoor(parameters, frontDirection, container.RemoteEvent, player, container)
 				end
 			end)
-			parameters.BackTrigger.Event.Event:connect(function(part)
+			parameters.BackTrigger[backEventObj][backEvent]:connect(function(part)
 				local player = game.Players:GetPlayerFromCharacter(part.Parent)
 				if part.Parent:FindFirstChild("Humanoid") then
 					AnimateDoor(parameters, backDirection, container.RemoteEvent, player, container)
@@ -100,6 +104,22 @@ WorldObjectInfo = {
 					end
 				end)
 			end
+		end
+	},
+	["ContextActionTrigger"] = {
+		Enabled = "boolean",
+		InputType = "string",
+		InputEnum = "string",
+		MaxDistance = "number",
+		CreateTouchButton = "boolean",
+		["_init"] = function(parameters, container)
+			local remoteEvent = Instance.new("RemoteEvent")
+			remoteEvent.Parent = container
+		end,
+		["_connectEventsFunction"] = function(parameters, container)
+			container.RemoteEvent.OnServerEvent:connect(function(player)
+				print(player.Name)
+			end)
 		end
 	}
 }
