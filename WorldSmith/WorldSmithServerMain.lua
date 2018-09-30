@@ -1,18 +1,8 @@
 local CollectionService = game:GetService("CollectionService")
 
+local WorldSmithUtilities = require(game.ServerScriptService.WorldSmith.WorldSmithServerUtilities)
 local WorldObject = require(game.ServerScriptService.WorldSmith.WorldObject)
 local WorldObjectInfo = require(game.ServerScriptService.WorldSmith.WorldObjectInfo)
-
-local function createArgDictionary(paramContainerChildren)
-	local t = {}
-	local c = paramContainerChildren
-	for i, v in ipairs(c) do
-		if v:IsA("ValueBase") then
-			t[v.Name] = v.Value
-		end
-	end
-	return t
-end
 
 local WorldSmithMain = {}
 WorldSmithMain.__index = WorldSmithMain
@@ -26,13 +16,12 @@ function WorldSmithMain.new()
 		for _, component in ipairs(componentList) do
 			local paramContainerChildren = component:GetChildren()
 			if WorldObjectInfo[component.Name]._connectEventsFunction ~= nil then
-				WorldObjectInfo[component.Name]._connectEventsFunction(createArgDictionary(paramContainerChildren), component)
+				WorldObjectInfo[component.Name]._connectEventsFunction(WorldSmithUtilities.CreateArgDictionary(paramContainerChildren), component)
 			end
 		end
 	end
 	
 	CollectionService:GetInstanceAddedSignal("entity"):connect(function(entity)
-		print('added entity' .. entity.Name)
 		self._entityComponentMap[entity] = {}
 	end)
 	
@@ -44,10 +33,10 @@ function WorldSmithMain.new()
 				self._entityComponentMap[component.Parent][#self._entityComponentMap[component.Parent] + 1] = component
 				local paramContainerChildren = component:GetChildren()
 				if WorldObjectInfo[component.Name]._init ~= nil then
-					WorldObjectInfo[component.Name].init(createArgDictionary(paramContainerChildren), component)
+					WorldObjectInfo[component.Name].init(WorldSmithUtilities.CreateArgDictionary(paramContainerChildren), component)
 				end
 				if WorldObjectInfo[component.Name]._connectEventsFunction ~= nil then
-					WorldObjectInfo[component.Name]._connectEventsFunction(createArgDictionary(paramContainerChildren), component)
+					WorldObjectInfo[component.Name]._connectEventsFunction(WorldSmithUtilities.CreateArgDictionary(paramContainerChildren), component)
 				end
 			else
 				error("WorldSmith: this error should never happen")
