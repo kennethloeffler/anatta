@@ -1,77 +1,31 @@
 local CollectionService = game:GetService("CollectionService")
 local ContextActionService = game:GetService("ContextActionService")
 
+local Utilities = require(script.Parent:WaitForChild("WorldSmithClientUtilities"))
+
 local WorldSmithClientMain = {}
 WorldSmithClientMain.__index = WorldSmithClientMain
 
 TotalContextActions = 0
 
-local function createArgDictionary(paramContainerChildren)
-	local t = {}
-	local c = paramContainerChildren
-	for i, v in ipairs(c) do
-		if v:IsA("ValueBase") then
-			t[v.Name] = v.Value
-		end
-	end
-	return t
-end
-
-local function queryWorldObject(worldObjectRef, param)
-	if worldObjectRef[param] then
-		return worldObjectRef[param].Value
-	else
-		error("WorldObject '".. worldObjectRef.Name .. "' does not have parameter '" .. param .. "'")
-	end
-end
-
-local clientSideActiveWorldObjects = {}
-
-local clientSideAssignedWorldObjects = {}
-
-local func = {
-	AnimatedDoor = function(parameters, dir, worldObjectRef)
-		if not clientSideActiveWorldObjects[worldObjectRef] then
-			clientSideActiveWorldObjects[worldObjectRef] = true
-			local cf1 = parameters.PivotPart.CFrame * CFrame.Angles(0, dir * (math.pi / 2), 0)
-			local tween1 = game:GetService("TweenService"):Create(
-				parameters.PivotPart,
-				TweenInfo.new(parameters.Time / 2, Enum.EasingStyle[parameters.EasingStyle] or Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0),
-				{CFrame = cf1}
-			)
-			tween1:Play()
-			wait(parameters.Time / 2)
-			local cf2 = parameters.PivotPart.CFrame * CFrame.Angles(0, dir * (-math.pi / 2), 0)
-			local tween2 = game:GetService("TweenService"):Create(
-				parameters.PivotPart,
-				TweenInfo.new(parameters.Time/2, Enum.EasingStyle[parameters.EasingStyle] or Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, parameters.CloseDelay or 0),
-				{CFrame = cf2}
-			)
-			tween2:Play()
-			wait((parameters.Time / 2) + parameters.CloseDelay)
-			clientSideActiveWorldObjects[worldObjectRef] = nil
-		end
-	end,
-}
-
 local clientPredictionFunc = {
 	AnimatedDoor = function(parameters, worldObjectRef)
 		parameters.FrontTrigger.Event.Event:connect(function(part)
-			local frontDirection = queryWorldObject(worldObjectRef, "OpenDirection") == 0 and 1 or queryWorldObject(worldObjectRef, "OpenDirection")
+			local frontDirection = Utilities.QueryWorldObject(worldObjectRef, "OpenDirection") == 0 and 1 or Utilities.QueryWorldObject(worldObjectRef, "OpenDirection")
 			if parameters.Enabled == true then
-				func.AnimatedDoor(parameters, frontDirection, worldObjectRef)
+				Utilities.AnimatedDoor(parameters, frontDirection, worldObjectRef)
 			end
 		end)
 		parameters.BackTrigger.Event.Event:connect(function(part)
-			local backDirection = queryWorldObject(worldObjectRef, "OpenDirection") == 0 and -1 or queryWorldObject(worldObjectRef, "OpenDirection")
+			local backDirection = Utilities.QueryWorldObject(worldObjectRef, "OpenDirection") == 0 and -1 or Utilities.QueryWorldObject(worldObjectRef, "OpenDirection")
 			if parameters.Enabled == true then
-				func.AnimatedDoor(parameters, backDirection, worldObjectRef)
+				Utilities.AnimatedDoor(parameters, backDirection, worldObjectRef)
 			end
 		end)
 	end,
 	TouchTrigger = function(parameters, worldObjectRef)
 		worldObjectRef.Parent.Touched:connect(function(part)
-			if queryWorldObject(worldObjectRef, "Enabled") == true and part.Parent == game.Players.LocalPlayer.Character then
+			if Utilities.QueryWorldObject(worldObjectRef, "Enabled") == true and part.Parent == game.Players.LocalPlayer.Character then
 				worldObjectRef.Event:Fire()
 			end
 		end)
@@ -79,6 +33,7 @@ local clientPredictionFunc = {
 	ContextActionTrigger = function(parameters, worldObjectRef)
 		local function contextActionFunction(actionName, inputState, inputObj)
 			if inputState == Enum.UserInputState.Begin then
+				worldObjectRef.Event:Fire()
 				worldObjectRef.RemoteEvent:FireServer()
 			end
 		end
@@ -86,15 +41,29 @@ local clientPredictionFunc = {
 			TotalContextActions = TotalContextActions + 1
 			local num = TotalContextActions .. TotalContextActions
 			spawn(function()
-				while wait() do
-					if (worldObjectRef.Parent.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= queryWorldObject(worldObjectRef, "MaxDistance") then
-						ContextActionService:BindAction(num, contextActionFunction, false, Enum[queryWorldObject(worldObjectRef, "InputEnum")][queryWorldObject(worldObjectRef, "InputType")])
+				while wait() do -- TODO: add ContextAction ui
+					if (worldObjectRef.Parent.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= Utilities.QueryWorldObject(worldObjectRef, "MaxDistance") then
+						ContextActionService:BindAction(num, contextActionFunction, false, Enum[Utilities.QueryWorldObject(worldObjectRef, "InputEnum")][Utilities.QueryWorldObject(worldObjectRef, "InputType")])
 					else
 						ContextActionService:UnbindAction(num)
 					end
 				end
 			end)
 		end
+	end,
+	Vehicle = function(parameters, worldObjectRef)
+		worldObjectRef.RemoteEvent.OnClientEvent:connect(function(argType, occupantNumber)
+			game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
+			game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+			game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = occupantNumber == 1 and parameters.DriverConstraint.Parent.CFrame or parameters.AdditionalCharacterConstraints[tostring(occupantNumber)].CFrame
+			local motor6d = Instance.new("Weld")
+			motor6d.Part0 = game.Players.LocalPlayer.Character.HumanoidRootPart
+			motor6d.Part1 = occupantNumber == 1 and parameters.DriverConstraint.Parent or parameters.AdditionalCharacterConstraints[tostring(occupantNumber)]
+			motor6d.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+		end)
+	end,
+	CharacterConstraint = function()
+		
 	end
 }
 
@@ -102,8 +71,8 @@ function WorldSmithClientMain.new()
 	
 	local self = setmetatable({}, WorldSmithClientMain)
 	
+	repeat wait() until game:IsLoaded() == true
 	self:_setupEntityComponentMap()
-	repeat wait() until game.Players.LocalPlayer.Character ~= nil
 	self:_refreshEntityComponentMap()
 	
 	return self
@@ -126,13 +95,13 @@ function WorldSmithClientMain:_setupEntityComponentMap()
 				for _, obj in pairs(component:GetChildren()) do
 					if obj:IsA("RemoteEvent") then
 						obj.OnClientEvent:connect(function(player, parameters, arg)
-							if player ~= game.Players.LocalPlayer and func[component.Name] then
-								func[component.Name](parameters, arg, component)
+							if player ~= game.Players.LocalPlayer and Utilities[component.Name] then
+								Utilities[component.Name](parameters, arg, component)
 							end
 						end)
 					end
 				end
-				clientPredictionFunc[component.Name](createArgDictionary(component:GetChildren()), component)
+				clientPredictionFunc[component.Name](Utilities.CreateArgDictionary(component:GetChildren()), component)
 			else
 				error("WorldSmith: this error should never happen")
 			end
@@ -165,17 +134,17 @@ function WorldSmithClientMain:_refreshEntityComponentMap()
 							obj.OnClientEvent:connect(function(player, parameters, arg)
 								if player ~= game.Players.LocalPlayer then
 									print(player.Name)
-									func[component.Name](parameters, arg, component)
+									Utilities[component.Name](parameters, arg, component)
 								end
 							end)
 						end
 					end
-					clientPredictionFunc[component.Name](createArgDictionary(component:GetChildren()), component)
+					clientPredictionFunc[component.Name](Utilities.CreateArgDictionary(component:GetChildren()), component)
 				end
 			end
 		end
 	end
-end--]]
+end
 
 
 return WorldSmithClientMain.new()

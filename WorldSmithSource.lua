@@ -114,6 +114,7 @@ main = function()
 					bin.Name = "WorldSmith"
 					bin.Parent = game.ReplicatedStorage	
 					game.ServerScriptService.WorldSmith.WorldSmithClientMain:Clone().Parent = bin
+					game.ServerScriptService.WorldSmith.WorldSmithClientUtilities:Clone().Parent = bin
 				end
 			else
 				break
@@ -315,15 +316,20 @@ main = function()
 		end
 	end
 	
-	game.Selection.SelectionChanged:connect(function()
-		local obj = getSelection()
-		if obj then
-			if canCreateWindow and not isInInstanceSelection then
-				updateWorldObjectFrame(obj)			
+	local selectionCon
+	selectionCon = game.Selection.SelectionChanged:connect(function()
+		if DockWidgetPluginGui.Parent ~= nil then
+			local obj = getSelection()
+			if obj then
+				if canCreateWindow and not isInInstanceSelection then
+					updateWorldObjectFrame(obj)			
+				end
+			else
+				clearFrame(WorldObjectList:GetFrame())
+				WorldObjectSection._frame.TitleBarVisual.TitleLabel.Text = "No model selected!"
 			end
 		else
-			clearFrame(WorldObjectList:GetFrame())
-			WorldObjectSection._frame.TitleBarVisual.TitleLabel.Text = "No model selected!"
+			selectionCon:Disconnect()
 		end
 	end)
 
