@@ -6,13 +6,14 @@ WorldObject.__index = WorldObject
 function WorldObject.new(associatedInstance, worldObject, parameters)
 	local instance = {}
 	
-	CollectionService:AddTag(associatedInstance, "WorldObject")
+	CollectionService:AddTag(associatedInstance, "entity")
 	
 	instance.Model = associatedInstance
 	
 	local parameterContainer = Instance.new("Folder")
 	parameterContainer.Name = worldObject
 	parameterContainer.Parent = associatedInstance
+	CollectionService:AddTag(parameterContainer, "component")
 	
 	for param, v in pairs(parameters) do
 		if typeof(v) == "Instance" then
