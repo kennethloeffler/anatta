@@ -11,6 +11,7 @@ function WorldSmithMain.new()
 	local self = setmetatable({}, WorldSmithMain)
 	
 	self:_buildEntityComponentMap()
+	self._registeredSystems = {}
 	
 	for entity, componentList in pairs(self._entityComponentMap) do
 		for _, component in ipairs(componentList) do
@@ -26,14 +27,14 @@ function WorldSmithMain.new()
 	end)
 	
 	CollectionService:GetInstanceAddedSignal("component"):connect(function(component)
-		print('added component' .. component.Name)
 		if not self._registeredSystems[component] then
 			self._registeredSystems[component] = true
 			if self._entityComponentMap[component.Parent] then
 				self._entityComponentMap[component.Parent][#self._entityComponentMap[component.Parent] + 1] = component
+				WorldSmithUtilities.YieldUntilComponentLoaded(component)
 				local paramContainerChildren = component:GetChildren()
-				if WorldObjectInfo[component.Name]._init ~= nil then
-					WorldObjectInfo[component.Name].init(WorldSmithUtilities.CreateArgDictionary(paramContainerChildren), component)
+				if WorldObjectInfo[component.Name]._init ~= nil and not component.Parent:FindFirstChild("CLONE") then
+					WorldObjectInfo[component.Name]._init(WorldSmithUtilities.CreateArgDictionary(paramContainerChildren), component)
 				end
 				if WorldObjectInfo[component.Name]._connectEventsFunction ~= nil then
 					WorldObjectInfo[component.Name]._connectEventsFunction(WorldSmithUtilities.CreateArgDictionary(paramContainerChildren), component)

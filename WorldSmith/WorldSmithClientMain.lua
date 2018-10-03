@@ -42,7 +42,7 @@ local clientPredictionFunc = {
 			local num = TotalContextActions .. TotalContextActions
 			spawn(function()
 				while wait() do -- TODO: add ContextAction ui
-					if (worldObjectRef.Parent.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= Utilities.QueryWorldObject(worldObjectRef, "MaxDistance") then
+					if (worldObjectRef.Parent.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= Utilities.QueryWorldObject(worldObjectRef, "MaxDistance") and Utilities.QueryWorldObject(worldObjectRef, "Enabled") == true and not Utilities.inVehicle then
 						ContextActionService:BindAction(num, contextActionFunction, false, Enum[Utilities.QueryWorldObject(worldObjectRef, "InputEnum")][Utilities.QueryWorldObject(worldObjectRef, "InputType")])
 					else
 						ContextActionService:UnbindAction(num)
@@ -52,14 +52,8 @@ local clientPredictionFunc = {
 		end
 	end,
 	Vehicle = function(parameters, worldObjectRef)
-		worldObjectRef.RemoteEvent.OnClientEvent:connect(function(argType, occupantNumber)
-			game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
-			game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-			game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = occupantNumber == 1 and parameters.DriverConstraint.Parent.CFrame or parameters.AdditionalCharacterConstraints[tostring(occupantNumber)].CFrame
-			local motor6d = Instance.new("Weld")
-			motor6d.Part0 = game.Players.LocalPlayer.Character.HumanoidRootPart
-			motor6d.Part1 = occupantNumber == 1 and parameters.DriverConstraint.Parent or parameters.AdditionalCharacterConstraints[tostring(occupantNumber)]
-			motor6d.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+		parameters.EnterTrigger.Event.Event:connect(function()
+			
 		end)
 	end,
 	CharacterConstraint = function()
@@ -72,6 +66,7 @@ function WorldSmithClientMain.new()
 	local self = setmetatable({}, WorldSmithClientMain)
 	
 	repeat wait() until game:IsLoaded() == true
+	
 	self:_setupEntityComponentMap()
 	self:_refreshEntityComponentMap()
 	
@@ -90,18 +85,21 @@ function WorldSmithClientMain:_setupEntityComponentMap()
 	CollectionService:GetInstanceAddedSignal("component"):connect(function(component)
 		if not self._registeredSystems[component] then
 			self._registeredSystems[component] = true
+			Utilities.YieldUntilComponentLoaded(component)
 			if self._entityComponentMap[component.Parent] then
 				self._entityComponentMap[component.Parent][#self._entityComponentMap[component.Parent] + 1] = component
 				for _, obj in pairs(component:GetChildren()) do
 					if obj:IsA("RemoteEvent") then
 						obj.OnClientEvent:connect(function(player, parameters, arg)
-							if player ~= game.Players.LocalPlayer and Utilities[component.Name] then
+							if Utilities[component.Name] then
 								Utilities[component.Name](parameters, arg, component)
 							end
 						end)
 					end
 				end
-				clientPredictionFunc[component.Name](Utilities.CreateArgDictionary(component:GetChildren()), component)
+				if clientPredictionFunc[component.Name] then
+					clientPredictionFunc[component.Name](Utilities.CreateArgDictionary(component:GetChildren()), component)
+				end
 			else
 				error("WorldSmith: this error should never happen")
 			end
@@ -120,7 +118,7 @@ function WorldSmithClientMain:_setupEntityComponentMap()
 			end
 		end
 	end
-
+	
 end
 
 function WorldSmithClientMain:_refreshEntityComponentMap()
@@ -129,17 +127,19 @@ function WorldSmithClientMain:_refreshEntityComponentMap()
 			for _, component in ipairs(componentList) do
 				if not self._registeredSystems[component] then
 					self._registeredSystems[component] = true
+					Utilities.YieldUntilComponentLoaded(component)
 					for _, obj in pairs(component:GetChildren()) do
 						if obj:IsA("RemoteEvent") then
 							obj.OnClientEvent:connect(function(player, parameters, arg)
-								if player ~= game.Players.LocalPlayer then
-									print(player.Name)
-									Utilities[component.Name](parameters, arg, component)
+								if Utilities[component.Name] then
+									Utilities[component.Name](parameters, arg, component, player)
 								end
 							end)
 						end
 					end
-					clientPredictionFunc[component.Name](Utilities.CreateArgDictionary(component:GetChildren()), component)
+					if clientPredictionFunc[component.Name] then
+						clientPredictionFunc[component.Name](Utilities.CreateArgDictionary(component:GetChildren()), component)
+					end
 				end
 			end
 		end

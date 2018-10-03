@@ -95,7 +95,7 @@ main = function()
 	spawn(function()
 		while wait(0.5) do
 			if DockWidgetPluginGui.Parent ~= nil then
-				if not game.ServerScriptService:WaitForChild("WorldSmith", 2) then
+				if not game.ServerScriptService:WaitForChild("WorldSmith", 0.5) then
 					local bin = script.Parent.WorldSmith:Clone()
 					bin.Parent = game.ServerScriptService	
 				end
@@ -109,12 +109,12 @@ main = function()
 	spawn(function() 
 		while wait(0.5) do
 			if DockWidgetPluginGui.Parent ~= nil then
-				if not game.ReplicatedStorage:WaitForChild("WorldSmith", 2) then
+				if not game.ReplicatedStorage:WaitForChild("WorldSmith", 0.5) then
 					local bin = Instance.new("Folder")
 					bin.Name = "WorldSmith"
 					bin.Parent = game.ReplicatedStorage	
-					game.ServerScriptService.WorldSmith.WorldSmithClientMain:Clone().Parent = bin
-					game.ServerScriptService.WorldSmith.WorldSmithClientUtilities:Clone().Parent = bin
+					script.Parent.WorldSmith.WorldSmithClientMain:Clone().Parent = bin
+					script.Parent.WorldSmith.WorldSmithClientUtilities:Clone().Parent = bin
 				end
 			else
 				break
@@ -283,7 +283,7 @@ main = function()
 			if paramContainer then
 				for _, parameter in pairs(paramContainer:GetChildren()) do
 					if parameter:IsA("ObjectValue") then
-						createInstanceParameterInput(parameter.Name, setParams, parameterList, parameter.Value.Name)
+						createInstanceParameterInput(parameter.Name, setParams, parameterList, parameter.Value.Name or "")
 						setParams[parameter.Name] = parameter.Value
 					elseif parameter:IsA("NumberValue") then
 						createNumberParameterInput(parameter.Name, setParams, parameterList, tonumber(parameter.Value))
@@ -339,10 +339,12 @@ main = function()
 	end)
 	
 	RefreshWorldObjects.Click:connect(function()
-		local newWorldObjects = game.ServerScriptService.WorldSmith.WorldObjectInfo:Clone()
-		game.ServerScriptService.WorldSmith.WorldObjectInfo:Destroy()
-		newWorldObjects.Parent = game.ServerScriptService.WorldSmith
-		WorldObjectInfo = require(newWorldObjects)
+		if game.ReplicatedStorage:FindFirstChild("WorldSmith") then
+			game.ReplicatedStorage.WorldSmith:Destroy()
+		end
+		if game.ServerScriptService:FindFirstChild("WorldSmith") then
+			game.ServerScriptService.WorldSmith:Destroy()
+		end
 	end)
 	
 	Settings.Click:connect(function()
