@@ -1,6 +1,24 @@
 local WorldSmithUtilities = require(script.Parent.WorldSmithServerUtilities)
 
 WorldObjectInfo = {
+	["ContextActionTrigger"] = {
+		Enabled = "boolean",
+		InputType = "string",
+		InputEnum = "string",
+		MaxDistance = "number",
+		CreateTouchButton = "boolean",
+		["_init"] = function(parameters, container)
+			local remoteEvent = Instance.new("RemoteEvent")
+			remoteEvent.Parent = container
+			local bindableEvent = Instance.new("BindableEvent")
+			bindableEvent.Parent = container
+		end
+	},
+	["CharacterConstraint"] = {
+		CharacterPoseId = "number",
+		Enabled = "boolean",
+		Label = "string"
+	},
 	["TouchTrigger"] = {
 		Enabled = "boolean",
 		["_init"] = function(parameters, container)
@@ -14,6 +32,37 @@ WorldObjectInfo = {
 				container.Parent.Touched:connect(function(part)
 					if container.Enabled.Value == true then
 						container.Event:Fire(part)
+					end
+				end)
+			end
+		end
+	},
+	["Respawner"] = {
+		Enabled = "boolean",
+		RespawnTime = "number",
+		ItemToSpawn = "Instance",
+		SpawnDelay = "number",
+		["_init"] = function(parameters, container)
+			
+		end,
+		["_connectEventsFunction"] = function(parameters, container)
+			if container.Parent:IsA("BasePart") then
+				local part = container.Parent
+				local partSize = part.Size
+				local partPos = part.CFrame.p
+				local region3 = Region3.new((part.CFrame * CFrame.new(-partSize / 2)).p, (part.CFrame * CFrame.new(partSize / 2)).p)
+				local spawnedItem = container.ItemToSpawn.Value
+				local flag = Instance.new("BoolValue", spawnedItem)
+				local itemToSpawn = spawnedItem:Clone()
+				flag.Name = "CLONE"
+				part.Anchored = true
+				spawn(function()
+					while wait(1) do
+						if (spawnedItem:GetPrimaryPartCFrame().p - partPos).magnitude > (partSize / 2).magnitude then
+							itemToSpawn.Parent = game.Workspace
+							spawnedItem = itemToSpawn
+							itemToSpawn = itemToSpawn:Clone()
+						end
 					end
 				end)
 			end
@@ -73,24 +122,6 @@ WorldObjectInfo = {
 			end)
 		end
 	},
-	["ContextActionTrigger"] = {
-		Enabled = "boolean",
-		InputType = "string",
-		InputEnum = "string",
-		MaxDistance = "number",
-		CreateTouchButton = "boolean",
-		["_init"] = function(parameters, container)
-			local remoteEvent = Instance.new("RemoteEvent")
-			remoteEvent.Parent = container
-			local bindableEvent = Instance.new("BindableEvent")
-			bindableEvent.Parent = container
-		end
-	},
-	["CharacterConstraint"] = {
-		CharacterPoseId = "number",
-		Enabled = "boolean",
-		Label = "string"
-	},
 	["Vehicle"] = {
 		Enabled = "boolean",
 		CameraFollowsVehicle = "boolean",
@@ -98,18 +129,25 @@ WorldObjectInfo = {
 		AutoTrigger = "boolean",
 		EnterTrigger = "Instance",
 		AccelerationRate = "number",
+		BrakeDeceleration = "number",
+		MaxTurnSpeed = "number",
 		TurnRate = "number",
 		MaxSpeed = "number",
-		MaxAcceleration = "number",
+		MaxForce = "number",
 		WheelContainer = "Instance",
 		DriverConstraint = "Instance",
 		AdditionalCharacterConstraints = "Instance",
+		_totalOccupants = "number",
 		["_init"] = function(parameters, container)
 			local remoteEvent = Instance.new("RemoteEvent", container)
-			local bodyForce = Instance.new("BodyForce", parameters.MainPart)
+			local bodyForce = Instance.new("BodyVelocity", parameters.MainPart)
 			local bodyGyro = Instance.new("BodyGyro", parameters.MainPart)
 			bodyForce.Name = "BodyForce"
+			bodyForce.MaxForce = Vector3.new(math.huge, 0, math.huge)
+			bodyForce.Velocity = Vector3.new(0, 0, 0)
 			bodyGyro.Name = "BodyGyro"
+			bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+			bodyGyro.CFrame = parameters.MainPart.CFrame
 			for _, part in pairs(container.Parent:GetChildren()) do
 				if part:IsA("BasePart") then
 					local motor6d = Instance.new("Motor6D")
@@ -133,16 +171,17 @@ WorldObjectInfo = {
 		end,
 		["_connectEventsFunction"] = function(parameters, container)
 			if parameters.EnterTrigger then
-				local totalOccupants = 0
 				local eventObj, eventName = WorldSmithUtilities.GetTriggerEventNames(parameters.EnterTrigger)
 				parameters.EnterTrigger.RemoteEvent.OnServerEvent:connect(function(arg)
 					local maxCapacity = (parameters.AdditionalCharacterContraints and #container.AdditionalCharacterConstraints.Value:GetChildren() or 0) + 1
-					if totalOccupants < maxCapacity then
+					if container.EnterTrigger.Value.Enabled.Value == true and parameters._totalOccupants <= maxCapacity then
 						local player = game.Players:GetPlayerFromCharacter(arg.Parent) or arg
 						WorldSmithUtilities.ConstrainCharacter(player, parameters.DriverConstraint)
-						totalOccupants = totalOccupants + 1
-						container.RemoteEvent:FireClient(arg, "enterVehicle", totalOccupants)
-						container.MainPart.Value:SetNetworkOwner(player)
+						parameters._totalOccupants = parameters._totalOccupants + 1
+						WorldSmithUtilities.Vehicle(parameters, "enterVehicle", container.RemoteEvent, player, container)
+						if parameters._totalOccupants == maxCapacity then
+							container.EnterTrigger.Value.Enabled.Value = false
+						end
 					end
 				end)
 			end
@@ -150,10 +189,12 @@ WorldObjectInfo = {
 				-- TODO: setup auto context action trigger
 			end
 			container.RemoteEvent.OnServerEvent:connect(function(player, argType, arg)
-				
+				if argType == "exitVehicle" then
+					WorldSmithUtilities.Vehicle(parameters, "exitVehicle", container.RemoteEvent, player, container)
+				end
 			end)
 		end
-	}
+	},
 }
 
 
