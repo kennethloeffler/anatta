@@ -8,19 +8,21 @@ local clientSideAssignedWorldObjects = {}
 WorldSmithUtilities.inVehicle = false
 
 function WorldSmithUtilities.YieldUntilComponentLoaded(component)
+	local firstTime = tick()
+	local lastNum = 0
 	while true do
 		local numChildren = #component:GetChildren()
 		if numChildren > 0 then
-			break
+			lastNum = numChildren
 		end
 		game:GetService("RunService").Heartbeat:wait()
+		if lastNum > 0 and lastNum == numChildren then break end
 	end
 end
 
-function WorldSmithUtilities.CreateArgDictionary(paramContainerChildren)
+function WorldSmithUtilities.CreateArgDictionary(componentChildren)
 	local t = {}
-	local c = paramContainerChildren
-	for i, v in ipairs(c) do
+	for i, v in ipairs(componentChildren) do
 		if v:IsA("ValueBase") then
 			t[v.Name] = v.Value
 		end
@@ -28,17 +30,61 @@ function WorldSmithUtilities.CreateArgDictionary(paramContainerChildren)
 	return t
 end
 
-function WorldSmithUtilities.QueryWorldObject(worldObjectRef, param)
-	if worldObjectRef[param] then
-		return worldObjectRef[param].Value
+function WorldSmithUtilities.UnpackInputs(componentRef)
+	local desktopPCEnum1, desktopPCEnum2 = componentRef.desktopPC.Value:match("([^,]+),([^,]+)")
+	local mobileEnum1, mobileEnum2 = componentRef.mobile.Value:match("([^,]+),([^,]+)")
+	local consoleEnum1, consoleEnum2 = componentRef.console.Value:match("([^,]+),([^,]+)")
+	local inputs = {componentRef.desktopPC.Value ~= "" and Enum[desktopPCEnum1][desktopPCEnum2] or nil, componentRef.mobile.Value ~= "" and Enum[mobileEnum1][mobileEnum2] or nil, componentRef.console.Value ~= "" and Enum[consoleEnum1][consoleEnum2] or nil}
+	return unpack(inputs)
+end
+
+function WorldSmithUtilities.Query(componentRef, param)
+	if componentRef[param] then
+		return componentRef[param].Value
 	else
-		error("WorldObject '".. worldObjectRef.Name .. "' does not have parameter '" .. param .. "'")
+		error("WorldObject '".. componentRef.Name .. "' does not have parameter '" .. param .. "'")
 	end
 end
 
-function WorldSmithUtilities.AnimatedDoor(parameters, dir, worldObjectRef, player)
-	if not clientSideActiveWorldObjects[worldObjectRef] and player ~= game.Players.LocalPlayer then
-		clientSideActiveWorldObjects[worldObjectRef] = true
+function WorldSmithUtilities.TweenPartPosition(parameters, argType, componentRef, player)
+	if player ~= game.Players.LocalPlayer and clientSideActiveWorldObjects[componentRef] == nil then
+		clientSideActiveWorldObjects[componentRef] = true
+		local timeToWait = parameters.RepeatCount >= 0 and (parameters.Time + (parameters.Reverses and parameters.Time or 0) + (parameters.RepeatCount * parameters.Time) + parameters.DelayTime) or "n/a"
+		local cf = parameters.LocalCoords and (componentRef.Parent.CFrame * CFrame.new(parameters.X, parameters.Y, parameters.Z)) or CFrame.new(parameters.X, parameters.Y, parameters.Z)
+		local tween = game:GetService("TweenService"):Create(
+			componentRef.Parent,
+			TweenInfo.new(parameters.Time, Enum.EasingStyle[parameters.EasingStyle] or Enum.EasingStyle.Linear, Enum.EasingDirection[parameters.EasingDirection], parameters.RepeatCount, parameters.Reverses, parameters.DelayTime),
+			{CFrame = cf}
+		)
+		tween:Play()
+		if timeToWait ~= "n/a" then
+			wait(timeToWait)
+			clientSideActiveWorldObjects[componentRef] = nil
+		end
+	end
+end
+
+function WorldSmithUtilities.TweenPartRotation(parameters, argType, componentRef, player)
+	if player ~= game.Players.LocalPlayer and clientSideActiveWorldObjects[componentRef] == nil then
+		clientSideActiveWorldObjects[componentRef] = true
+		local timeToWait = parameters.RepeatCount >= 0 and (parameters.Time + (parameters.Reverses and parameters.Time or 0) + (parameters.RepeatCount * parameters.Time) + parameters.DelayTime) or "n/a"
+		local cf = parameters.LocalCoords and (componentRef.Parent.CFrame * CFrame.Angles(math.rad(parameters.X), math.rad(parameters.Y), math.rad(parameters.Z))) or CFrame.new(componentRef.Parent.CFrame.p) * CFrame.Angles(math.rad(parameters.X), math.rad(parameters.Y), math.rad(parameters.Z))
+		local tween = game:GetService("TweenService"):Create(
+			componentRef.Parent,
+			TweenInfo.new(parameters.Time, Enum.EasingStyle[parameters.EasingStyle] or Enum.EasingStyle.Linear, Enum.EasingDirection[parameters.EasingDirection], parameters.RepeatCount, parameters.Reverses, parameters.DelayTime),
+			{CFrame = cf}
+		)
+		tween:Play()
+		if timeToWait ~= "n/a" then
+			wait(timeToWait)
+			clientSideActiveWorldObjects[componentRef] = nil
+		end
+	end
+end
+
+function WorldSmithUtilities.AnimatedDoor(parameters, dir, componentRef, player)
+	if not clientSideActiveWorldObjects[componentRef] and player ~= game.Players.LocalPlayer then
+		clientSideActiveWorldObjects[componentRef] = true
 		local cf1 = parameters.PivotPart.CFrame * CFrame.Angles(0, dir * (math.pi / 2), 0)
 		local tween1 = game:GetService("TweenService"):Create(
 			parameters.PivotPart,
@@ -55,15 +101,15 @@ function WorldSmithUtilities.AnimatedDoor(parameters, dir, worldObjectRef, playe
 		)
 		tween2:Play()
 		wait((parameters.Time / 2) + parameters.CloseDelay)
-		clientSideActiveWorldObjects[worldObjectRef] = nil
+		clientSideActiveWorldObjects[componentRef] = nil
 	end
 end
 
-function WorldSmithUtilities.Vehicle(parameters, argType, worldObjectRef)
+function WorldSmithUtilities.Vehicle(parameters, argType, componentRef)
 	local currentRot = 0
 	local currentVelocity = 0
-	local bodyVelocity = worldObjectRef.MainPart.Value.BodyVelocity --Instance.new("BodyVelocity", worldObjectRef.MainPart.Value)
-	local bodyGyro = worldObjectRef.MainPart.Value.BodyGyro--Instance.new("BodyGyro", worldObjectRef.MainPart.Value)
+	local bodyVelocity = Instance.new("BodyVelocity", componentRef.MainPart.Value)
+	local bodyGyro = Instance.new("BodyGyro", componentRef.MainPart.Value)
 	if argType == "enterVehicle" then
 		WorldSmithUtilities.inVehicle = true
 		game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
@@ -74,18 +120,19 @@ function WorldSmithUtilities.Vehicle(parameters, argType, worldObjectRef)
 				if inputState == Enum.UserInputState.Begin then
 					game.Players.LocalPlayer.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
 					game.Players.LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-					game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChild("Weld"):Destroy()
 					ContextActionService:UnbindAction("ExitVehicle")
 					ContextActionService:UnbindAction("Throttle")
 					ContextActionService:UnbindAction("Reverse")
 					ContextActionService:UnbindAction("Left")
 					ContextActionService:UnbindAction("Right")
+					bodyVelocity:Destroy()
+					bodyGyro:Destroy()
 					WorldSmithUtilities.inVehicle = false
-					worldObjectRef.RemoteEvent:FireServer("exitVehicle")
+					componentRef.RemoteEvent:FireServer("exitVehicle")
 				end
 			end, 
 			true, 
-			Enum[worldObjectRef.EnterTrigger.Value.InputEnum.Value][worldObjectRef.EnterTrigger.Value.InputType.Value]
+			WorldSmithUtilities.UnpackInputs(componentRef.EnterTrigger.Value)
 		)
 		ContextActionService:BindAction(
 			"Throttle",
@@ -127,7 +174,7 @@ function WorldSmithUtilities.Vehicle(parameters, argType, worldObjectRef)
 						break 
 					end
 					if math.abs(currentVelocity) > 0.1 then
-						bodyGyro.CFrame = CFrame.fromMatrix(worldObjectRef.MainPart.Value.CFrame.p, -worldObjectRef.MainPart.Value.CFrame.RightVector, Vector3.new(0, 1, 0), -worldObjectRef.MainPart.Value.CFrame.LookVector) * CFrame.Angles(0, math.rad(-(currentRot + addedRot)), 0)
+						bodyGyro.CFrame = CFrame.fromMatrix(componentRef.MainPart.Value.CFrame.p, -componentRef.MainPart.Value.CFrame.RightVector, Vector3.new(0, 1, 0), -componentRef.MainPart.Value.CFrame.LookVector) * CFrame.Angles(0, math.rad(-(currentRot + addedRot)), 0)
 						currentRot = currentRot + addedRot
 						bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * parameters.MaxForce
 					else
@@ -149,7 +196,7 @@ function WorldSmithUtilities.Vehicle(parameters, argType, worldObjectRef)
 						break 
 					end
 					if math.abs(currentVelocity) > 0.1 then
-						bodyGyro.CFrame = CFrame.fromMatrix(worldObjectRef.MainPart.Value.CFrame.p, -worldObjectRef.MainPart.Value.CFrame.RightVector, Vector3.new(0, 1, 0), -worldObjectRef.MainPart.Value.CFrame.LookVector) * CFrame.Angles(0, math.rad(currentRot + addedRot), 0)
+						bodyGyro.CFrame = CFrame.fromMatrix(componentRef.MainPart.Value.CFrame.p, -componentRef.MainPart.Value.CFrame.RightVector, Vector3.new(0, 1, 0), -componentRef.MainPart.Value.CFrame.LookVector) * CFrame.Angles(0, math.rad(currentRot + addedRot), 0)
 						currentRot = currentRot + addedRot
 						bodyGyro.MaxTorque = Vector3.new(1, 1, 1) * parameters.MaxForce
 					else
@@ -169,7 +216,7 @@ function WorldSmithUtilities.Vehicle(parameters, argType, worldObjectRef)
 			else
 				currentVelocity = 0
 			end
-			bodyVelocity.Velocity = worldObjectRef.MainPart.Value.CFrame.LookVector.unit * (currentVelocity)
+			bodyVelocity.Velocity = componentRef.MainPart.Value.CFrame.LookVector.unit * (currentVelocity)
 			wait()
 		end
 	end)

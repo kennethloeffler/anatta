@@ -1,7 +1,6 @@
-local WorldObject = require(script.Parent.WorldObject)
+local WorldObject = require(script.Parent.Component)
 
 local WorldSmithUtilities = {}
-
 
 function WorldSmithUtilities.YieldUntilComponentLoaded(component)
 	while true do
@@ -12,6 +11,7 @@ function WorldSmithUtilities.YieldUntilComponentLoaded(component)
 		game:GetService("RunService").Heartbeat:wait()
 	end
 end
+
 function WorldSmithUtilities.CreateTouchTrigger(cframe, size, container, triggerName, initFunction)
 	local trigger = Instance.new("Part")
 	trigger.Size = size
@@ -60,12 +60,14 @@ function WorldSmithUtilities.Vehicle(parameters, argType, remoteEvent, player, c
 		container.MainPart.Value:SetNetworkOwner(player)
 		motor6d.Part0 = player.Character.HumanoidRootPart
 		motor6d.Part1 = parameters.DriverConstraint.Parent
+		motor6d.Name = "VehicleWeld"
 		motor6d.Parent = player.Character.HumanoidRootPart
 		remoteEvent:FireClient(player, player, WorldSmithUtilities.CreateArgDictionary(container:GetChildren()), argType)
 	elseif argType == "exitVehicle" then
 		player.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
 		player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
 		container.EnterTrigger.Value.Enabled.Value = true
+		player.Character.HumanoidRootPart:FindFirstChild("VehicleWeld"):Destroy()
 		parameters._totalOccupants = parameters._totalOccupants - 1
 		repeat wait() until container.MainPart.Value.Velocity.magnitude < 0.1
 		container.MainPart.Value:SetNetworkOwner(nil)

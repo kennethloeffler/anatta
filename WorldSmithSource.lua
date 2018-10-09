@@ -1,7 +1,7 @@
 local CollectionService = game:GetService("CollectionService")
 
 local WorldObjectInfo
-local WorldObject = require(script.Parent.WorldSmith.WorldObject)
+local WorldObject = require(script.Parent.WorldSmith.WorldSmithServerMain.Component)
 local StudioWidgets = require(2393391735)
 	local CollapsibleTitledSection = StudioWidgets.CollapsibleTitledSection
 	local GuiUtilities = StudioWidgets.GuiUtilities
@@ -68,12 +68,7 @@ local function getDictionarySize(t)
 	return counter
 end
 
-main = function()
-	
-	local canCreateWindow = true
-	local isInInstanceSelection = false
-	
-	local function getSelection()
+local function getSelection()
 		local t = game.Selection:Get()
 		local counter = 0
 		local obj
@@ -85,11 +80,17 @@ main = function()
 			return obj
 		end
 	end
+
+main = function()
+	
+	local canCreateWindow = true
+	local isInInstanceSelection = false
 	
 	local Toolbar = plugin:CreateToolbar("WorldSmith")
 	local EditorWindow = Toolbar:CreateButton("Editor", "Opens the WorldSmith editor menu", "http://www.roblox.com/asset/?id=2408111785")
 	local RefreshWorldObjects = Toolbar:CreateButton("Refresh WorldObjects", "Refreshes the list of available WorldObjects", "http://www.roblox.com/asset/?id=2408135150") 
 	local Settings = Toolbar:CreateButton("Settings", "Opens the settings menu", "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png")
+	local RigidBody = Toolbar:CreateButton("RigidBody", "Creates a rigid body out of a model with center at selected model's PrimaryPart", "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png")
 	local DockWidgetPluginGui = CreateDockWidget("WorldSmith", "WorldSmith Editor", Enum.InitialDockState.Float, true, false, 150, 150, 150, 150)
 	
 	spawn(function()
@@ -99,7 +100,7 @@ main = function()
 					local bin = script.Parent.WorldSmith:Clone()
 					bin.Parent = game.ServerScriptService	
 				end
-				WorldObjectInfo = require(game.ServerScriptService.WorldSmith.WorldObjectInfo)
+				WorldObjectInfo = require(game.ServerScriptService.WorldSmith.WorldSmithServerMain.ComponentInfo)
 			else
 				break
 			end
@@ -114,7 +115,6 @@ main = function()
 					bin.Name = "WorldSmith"
 					bin.Parent = game.ReplicatedStorage	
 					script.Parent.WorldSmith.WorldSmithClientMain:Clone().Parent = bin
-					script.Parent.WorldSmith.WorldSmithClientUtilities:Clone().Parent = bin
 				end
 			else
 				break
@@ -344,6 +344,22 @@ main = function()
 		end
 		if game.ServerScriptService:FindFirstChild("WorldSmith") then
 			game.ServerScriptService.WorldSmith:Destroy()
+		end
+	end)
+	
+	RigidBody.Click:connect(function()
+		local selection = getSelection()
+		if selection and selection:IsA("Model") then
+			for _, part in pairs(selection:GetChildren()) do
+				if part ~= selection.PrimaryPart and part:IsA("BasePart") then
+					local motor6d = Instance.new("Motor6D")
+					motor6d.Parent = part
+					motor6d.C0 = part.CFrame:inverse() * selection.PrimaryPart.CFrame
+					motor6d.Part0 = part
+					motor6d.Part1 = selection.PrimaryPart
+					part.Anchored = false
+				end
+			end
 		end
 	end)
 	

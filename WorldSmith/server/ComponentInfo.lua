@@ -1,10 +1,19 @@
 local WorldSmithUtilities = require(script.Parent.WorldSmithServerUtilities)
 
-WorldObjectInfo = {
+local WorldObjectData = {
+	FoodItem = {
+		BurgerPatty = {
+			Price = 0			
+		}
+	}
+}
+
+ComponentInfo = {
 	["ContextActionTrigger"] = {
 		Enabled = "boolean",
-		InputType = "string",
-		InputEnum = "string",
+		desktopPC = "string",
+		mobile = "string",
+		console = "string",
 		MaxDistance = "number",
 		CreateTouchButton = "boolean",
 		["_init"] = function(parameters, container)
@@ -12,7 +21,7 @@ WorldObjectInfo = {
 			remoteEvent.Parent = container
 			local bindableEvent = Instance.new("BindableEvent")
 			bindableEvent.Parent = container
-		end
+		end,
 	},
 	["CharacterConstraint"] = {
 		CharacterPoseId = "number",
@@ -37,13 +46,38 @@ WorldObjectInfo = {
 			end
 		end
 	},
-	["Respawner"] = {
+	["DestroyWhenIdle"] = {
+		MaximumIdleTime = "number",
+		Trigger = "Instance",
+		["_connectEventsFunction"] = function(parameters, container)
+			local startedThread = false
+			local t = 0
+			container.Trigger.Value.RemoteEvent.OnServerEvent:connect(function()
+				t = 0
+				if not startedThread then
+					startedThread = true
+					spawn(function()
+						while wait(1) do
+							if container.Trigger.Value.Enabled.Value == true then 
+								t = t + 1 
+							end
+							if t >= container.MaximumIdleTime.Value then 
+								container.Parent:Destroy()
+								break 
+							end
+						end
+					end)
+				end
+			end)
+		end
+	},
+	["AutoSpawner"] = {
 		Enabled = "boolean",
 		RespawnTime = "number",
+		MaxSpawnedItems = "number",
 		ItemToSpawn = "Instance",
-		SpawnDelay = "number",
 		["_init"] = function(parameters, container)
-			
+			local bindableEvent = Instance.new("BindableEvent", container)
 		end,
 		["_connectEventsFunction"] = function(parameters, container)
 			if container.Parent:IsA("BasePart") then
@@ -53,20 +87,135 @@ WorldObjectInfo = {
 				local region3 = Region3.new((part.CFrame * CFrame.new(-partSize / 2)).p, (part.CFrame * CFrame.new(partSize / 2)).p)
 				local spawnedItem = container.ItemToSpawn.Value
 				local flag = Instance.new("BoolValue", spawnedItem)
-				local itemToSpawn = spawnedItem:Clone()
 				flag.Name = "CLONE"
 				part.Anchored = true
+				local itemToSpawn = spawnedItem:Clone()
 				spawn(function()
+					local totalSpawnedItems = 0
 					while wait(1) do
-						if (spawnedItem:GetPrimaryPartCFrame().p - partPos).magnitude > (partSize / 2).magnitude then
+						local pos = spawnedItem:IsA("Model") and spawnedItem:GetPrimaryPartCFrame().p or spawnedItem.CFrame.p
+						local shouldRespawn = container.MaxSpawnedItems.Value < 0 and true or totalSpawnedItems < container.MaxSpawnedItems.Value
+						if (pos - partPos).magnitude > (partSize / 2).magnitude and shouldRespawn then
+							wait(container.RespawnTime.Value)
+							totalSpawnedItems = totalSpawnedItems + 1
 							itemToSpawn.Parent = game.Workspace
 							spawnedItem = itemToSpawn
 							itemToSpawn = itemToSpawn:Clone()
+							container.Event:Fire()
 						end
 					end
 				end)
 			end
 		end
+	},
+	["TimedRespawner"] = {
+		Enabled = "boolean",
+		RespawnTime = "number",
+		ItemToSpawn = "Instance",
+		DestroyLastItem = "boolean",
+		["_init"] = function(parameters, container)
+			local bindableEvent = Instance.new("BindableEvent", container)
+		end,
+		["_connectEventsFunction"] = function(parameters, container)
+			local obj = container.ItemToSpawn.Value:Clone()
+			spawn(function()
+				while wait(container.RespawnTime.Value) do
+					if container.Enabled.Value == true then
+						if container.DestroyLastItem.Value == true then container.ItemToSpawn.Value:Destroy() end
+						container.ItemToSpawn.Value = obj
+						local flag = Instance.new("BoolValue", obj)
+						flag.Name = "CLONE"
+						obj.Parent = game.Workspace
+						obj = obj:Clone()
+						container.Event:Fire()
+					end
+				end
+			end)
+		end
+	},
+	["TweenPartPosition"] = {
+		Enabled = "boolean",
+		LocalCoords = "boolean",
+		ClientSide = "boolean",
+		Trigger = "Instance",
+		Time = "number",
+		EasingStyle = "string",
+		EasingDirection = "string",
+		Reverses = "boolean",
+		RepeatCount = "number",
+		DelayTime = "number",
+		X = "number",
+		Y = "number",
+		Z = "number",
+		["_init"] = function(parameters, container)
+			local remoteEvent = Instance.new("RemoteEvent", container)
+		end,
+		["_connectEventsFunction"] = function(parameters, container)
+			if container.Trigger.Value then
+				if not container.ClientSide.Value then
+					if container.Trigger.Value:FindFirstChild("RemoteEvent") then
+						container.Trigger.Value.RemoteEvent.OnServerEvent:connect(function()
+							container.RemoteEvent:FireAllClients()
+						end)
+					end
+					if container.Trigger.Value:FindFirstChild("Event") then
+						container.Trigger.Value.Event.Event:connect(function()
+							container.RemoteEvent:FireAllClients()
+						end)
+					end
+				end
+			end
+		end
+	},
+	["TweenPartRotation"] = {
+		Enabled = "boolean",
+		ClientSide = "boolean",
+		LocalCoords = "boolean",
+		Trigger = "Instance",
+		Time = "number",
+		EasingStyle = "string",
+		EasingDirection = "string",
+		Reverses = "boolean",
+		RepeatCount = "number",
+		DelayTime = "number",
+		X = "number",
+		Y = "number",
+		Z = "number",
+		["_init"] = function(parameters, container)
+			local remoteEvent = Instance.new("RemoteEvent", container)
+		end,
+		["_connectEventsFunction"] = function(parameters, container)
+			if container.Trigger.Value then
+				if not container.ClientSide.Value then
+					if container.Trigger.Value:FindFirstChild("RemoteEvent") then
+						container.Trigger.Value.RemoteEvent.OnServerEvent:connect(function()
+							container.RemoteEvent:FireAllClients()
+						end)
+					end
+					if container.Trigger.Value:FindFirstChild("Event") then
+						container.Trigger.Value.Event.Event:connect(function()
+							container.RemoteEvent:FireAllClients()
+						end)
+					end
+				end
+			end
+		end
+	},
+	["StoreFoodItem"] = {
+		FoodName = "string",
+		FoodPrice = "number",
+		["_init"] = function(parameters, container)
+								
+		end,
+		["_connectEventsFunction"] = function(parameters, container)
+			
+		end
+	},
+	["ShoppingCart"] = {
+		MaxCapacity = "number",
+	},
+	["StoreCheckout"] = {
+		
 	},
 	["AnimatedDoor"] = {
 		Enabled = "boolean",
@@ -140,14 +289,14 @@ WorldObjectInfo = {
 		_totalOccupants = "number",
 		["_init"] = function(parameters, container)
 			local remoteEvent = Instance.new("RemoteEvent", container)
-			local bodyForce = Instance.new("BodyVelocity", parameters.MainPart)
+			--[[local bodyForce = Instance.new("BodyVelocity", parameters.MainPart)
 			local bodyGyro = Instance.new("BodyGyro", parameters.MainPart)
-			bodyForce.Name = "BodyForce"
+			bodyForce.Name = "BodyVelocity"
 			bodyForce.MaxForce = Vector3.new(math.huge, 0, math.huge)
 			bodyForce.Velocity = Vector3.new(0, 0, 0)
 			bodyGyro.Name = "BodyGyro"
 			bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-			bodyGyro.CFrame = parameters.MainPart.CFrame
+			bodyGyro.CFrame = parameters.MainPart.CFrame--]]
 			for _, part in pairs(container.Parent:GetChildren()) do
 				if part:IsA("BasePart") then
 					local motor6d = Instance.new("Motor6D")
@@ -199,4 +348,4 @@ WorldObjectInfo = {
 
 
 
-return WorldObjectInfo
+return ComponentInfo
