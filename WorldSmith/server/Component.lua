@@ -1,9 +1,9 @@
 local CollectionService = game:GetService("CollectionService")
 
-local WorldObject = {}
-WorldObject.__index = WorldObject
+local Component = {}
+Component.__index = Component
 
-function WorldObject.new(associatedInstance, worldObject, parameters)
+function Component.new(associatedInstance, component, parameters)
 	local instance = {}
 	
 	CollectionService:AddTag(associatedInstance, "entity")
@@ -11,7 +11,7 @@ function WorldObject.new(associatedInstance, worldObject, parameters)
 	instance.Model = associatedInstance
 	
 	local parameterContainer = Instance.new("Folder")
-	parameterContainer.Name = worldObject
+	parameterContainer.Name = component
 	parameterContainer.Parent = associatedInstance
 	CollectionService:AddTag(parameterContainer, "component")
 	
@@ -42,4 +42,4 @@ function WorldObject.new(associatedInstance, worldObject, parameters)
 	return instance, parameterContainer
 end
 
-return WorldObject
+return Component
