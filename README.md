@@ -25,16 +25,16 @@ WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entityâ
 - [Systems](https://github.com/kennethloeffler/WorldSmith#systems)
   - [Built-in systems](https://github.com/kennethloeffler/WorldSmith#built-in-systems)
     - [Client:](https://github.com/kennethloeffler/WorldSmith#client)
-      - [ContextActionSystem](https://github.com/kennethloeffler/WorldSmith#contextactionsystem-client)
-      - [DoorSystem](https://github.com/kennethloeffler/WorldSmith#doorsystem-client)
-      - [TriggerSystem](https://github.com/kennethloeffler/WorldSmith#triggersystem-client)
-      - [TweenSystem](https://github.com/kennethloeffler/WorldSmith#tweensystem-client)
-      - [VehicleSystem](https://github.com/kennethloeffler/WorldSmith#vehiclesystem-client)
+      - ContextActionSystem
+      - DoorSystem
+      - TriggerSystem
+      - TweenSystem
+      - VehicleSystem
     - [Server:](https://github.com/kennethloeffler/WorldSmith#server)
-      - [DoorSystem](https://github.com/kennethloeffler/WorldSmith#doorsystem-server)
-      - [TriggerSystem](https://github.com/kennethloeffler/WorldSmith#triggersystem-server)
-      - [TweenSystem](https://github.com/kennethloeffler/WorldSmith#tweensystem-server)
-      - [VehicleSystem](https://github.com/kennethloeffler/WorldSmith#vehiclesystem-server)
+      - DoorSystem
+      - TriggerSystem
+      - TweenSystem
+      - VehicleSystem
   - [Creating custom systems](https://github.com/kennethloeffler/WorldSmith#creating-custom-systems)
   
 ## The WorldSmith interface
@@ -52,12 +52,65 @@ The refresh components button hot-swaps the plugin's currently loaded ComponentI
 ## Components
 ### Built-in components
 #### ContextActionTrigger
+- bool Enabled
+- string desktopPC
+- string mobile
+- string console
+- number MaxDistance
+- bool CreateTouchButton
 #### TouchTrigger
+- bool Enabled
 #### CharacterConstraint
+- number CharacterPoseId
+- bool Enabled
+- string Label
 #### TweenPartPosition
+- bool Enabled
+- bool LocalCoords
+- bool ClientSide
+- Instance Trigger
+- number Time
+- string EasingStyle
+- string EasingDirection
+- bool Reverses
+- number RepeatCount
+- number DelayTime
+- number X, Y, Z
 #### TweenPartRotation
+- bool Enabled
+- bool LocalCoords
+- bool ClientSide
+- Instance Trigger
+- number Time
+- string EasingStyle
+- string EasingDirection
+- bool Reverses
+- number RepeatCount
+- number DelayTime
+- number X, Y, Z
 #### AnimatedDoor
+ - bool Enabled
+ - bool AutomaticTriggers
+ - number Time
+ - number OpenDirection
+ - number CloseDelay
+ - string EasingStyle
+ - number TriggerOffset
+ - Instance PivotPart
+ - Instance FrontTrigger
+ - Instance BackTrigger
 #### Vehicle
+ - bool Enabled
+ - Instance MainPart
+ - Instance EnterTrigger
+ - number AccelerationRate
+ - number BrakeDeceleration
+ - number MaxTurnSpeed
+ - number TurnRate
+ - number MaxSpeed
+ - number MaxForce
+ - Instance DriverConstraint
+ - Instance AdditionalCharacterConstraints
 ### Creating custom components
 Custom components may be created by editing the WorldSmithServer.ComponentInfo module. Components consist of a unique name and an arbitrary number of parameters. The idiom for defining components is as follows:
 ```
@@ -72,15 +125,15 @@ ComponentName = { -- declaration of a new component called "ComponentName"
 ## Systems
 ### Built-in systems
 #### Client
-##### ContextActionSystem  {#client}
-##### DoorSystem  {#client}
-##### TriggerSystem  {#client}
-##### TweenSystem  {#client}
-##### VehicleSystem  {#client}
+##### ContextActionSystem
+##### DoorSystem
+##### TriggerSystem
+##### TweenSystem
+##### VehicleSystem
 #### Server
-##### DoorSystem  {#server}
-##### TriggerSystem  {#server}
-##### TweenSystem  {#server}
-##### VehicleSystem  {#server}
+##### DoorSystem
+##### TriggerSystem
+##### TweenSystem
+##### VehicleSystem
 ### Creating custom systems
 Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems, respectively. Each system runs on its own thread and has access to the **entity-component map** as well as the **component-entity map**. 
