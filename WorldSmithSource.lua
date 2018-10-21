@@ -1,7 +1,7 @@
 local CollectionService = game:GetService("CollectionService")
+local ComponentInfo
+local Component = require(script.Parent.WorldSmithServer.Component)
 
-local WorldObjectInfo
-local WorldObject = require(script.Parent.WorldSmith.WorldSmithServerMain.Component)
 local StudioWidgets = require(2393391735)
 	local CollapsibleTitledSection = StudioWidgets.CollapsibleTitledSection
 	local GuiUtilities = StudioWidgets.GuiUtilities
@@ -43,8 +43,8 @@ function clearFrame(frame)
 	end
 end
 
-function createWorldObject(model, worldObject, setParams)
-	local obj, container = WorldObject.new(model, worldObject, setParams)
+function createWorldObject(model, component, setParams)
+	local obj, container = Component.new(model, component, setParams)
 	return obj, container
 end
 
@@ -69,38 +69,40 @@ local function getDictionarySize(t)
 end
 
 local function getSelection()
-		local t = game.Selection:Get()
-		local counter = 0
-		local obj
-		for i, v in pairs(t) do
-			counter = counter + 1
-			obj = v
-		end
-		if counter == 1 then
-			return obj
-		end
+	local t = game.Selection:Get()
+	local counter = 0
+	local obj
+	for i, v in pairs(t) do
+		counter = counter + 1
+		obj = v
 	end
+	if counter == 1 then
+		return obj
+	end
+end
 
-main = function()
+local function main()
 	
 	local canCreateWindow = true
 	local isInInstanceSelection = false
 	
 	local Toolbar = plugin:CreateToolbar("WorldSmith")
-	local EditorWindow = Toolbar:CreateButton("Editor", "Opens the WorldSmith editor menu", "http://www.roblox.com/asset/?id=2408111785")
-	local RefreshWorldObjects = Toolbar:CreateButton("Refresh WorldObjects", "Refreshes the list of available WorldObjects", "http://www.roblox.com/asset/?id=2408135150") 
+	local AddComponentWindow = Toolbar:CreateButton("Add components...", "Opens a window where components may be added to selected instance(s)", "http://www.roblox.com/asset/?id=2408111785")	
+	local ComponentWindow = Toolbar:CreateButton("Show components", "Opens a window which displays all the components contained in the selected instance(s)", "rbxassetid://2482648512")
+	local RigidBody = Toolbar:CreateButton("Create rigid body...", "Creates a rigid body out of a selected model (model must have a PrimaryPart)", "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png")	
+	local RefreshDependencies = Toolbar:CreateButton("Refresh components...", "Refreshes the list of available components", "http://www.roblox.com/asset/?id=2408135150")
 	local Settings = Toolbar:CreateButton("Settings", "Opens the settings menu", "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png")
-	local RigidBody = Toolbar:CreateButton("RigidBody", "Creates a rigid body out of a model with center at selected model's PrimaryPart", "rbxasset://textures/ui/Settings/MenuBarIcons/GameSettingsTab.png")
-	local DockWidgetPluginGui = CreateDockWidget("WorldSmith", "WorldSmith Editor", Enum.InitialDockState.Float, true, false, 150, 150, 150, 150)
+	local DockWidgetPluginGui = CreateDockWidget("WorldSmithComponents", "Components", Enum.InitialDockState.Float, true, false, 150, 150, 150, 150)
+	local AddComponentPluginGui = CreateDockWidget("WorldSmithAddComponents", "Add components...", Enum.InitialDockState.Float, true, false, 150, 150, 150, 150)
 	
 	spawn(function()
 		while wait(0.5) do
 			if DockWidgetPluginGui.Parent ~= nil then
-				if not game.ServerScriptService:WaitForChild("WorldSmith", 0.5) then
-					local bin = script.Parent.WorldSmith:Clone()
+				if not game.ServerScriptService:WaitForChild("WorldSmithServer", 0.5) then
+					local bin = script.Parent.WorldSmithServer:Clone()
 					bin.Parent = game.ServerScriptService	
 				end
-				WorldObjectInfo = require(game.ServerScriptService.WorldSmith.WorldSmithServerMain.ComponentInfo)
+				ComponentInfo = require(game.ServerScriptService.WorldSmithServer.ComponentInfo)
 			else
 				break
 			end
@@ -110,11 +112,9 @@ main = function()
 	spawn(function() 
 		while wait(0.5) do
 			if DockWidgetPluginGui.Parent ~= nil then
-				if not game.ReplicatedStorage:WaitForChild("WorldSmith", 0.5) then
-					local bin = Instance.new("Folder")
-					bin.Name = "WorldSmith"
+				if not game.ReplicatedStorage:WaitForChild("WorldSmithClient", 0.5) then
+					local bin = script.Parent.WorldSmithClient:Clone()
 					bin.Parent = game.ReplicatedStorage	
-					script.Parent.WorldSmith.WorldSmithClientMain:Clone().Parent = bin
 				end
 			else
 				break
@@ -122,34 +122,36 @@ main = function()
 		end
 	end)
 	
+	repeat wait() until ComponentInfo
+	
 	local WorldObjectList = VerticallyScalingListFrame.new("ActionList")
 	local WorldObjectFrame = AutoScalingScrollingFrame.new("ActionFrame", WorldObjectList._uiListLayout)
-	local WorldObjectSection = CollapsibleTitledSection.new("Actions", "No element selected!", true, false, false)
+	local WorldObjectSection = CollapsibleTitledSection.new("Actions", "No instance selected!", true, false, false)
 	WorldObjectFrame:GetFrame().Size = UDim2.new(1, 0, 1, 0)
 	WorldObjectFrame:GetFrame().Parent = DockWidgetPluginGui
 	WorldObjectList:GetFrame().Parent = WorldObjectSection:GetContentsFrame()
 	WorldObjectSection:GetSectionFrame().Parent = WorldObjectFrame:GetFrame()
 	
+	local newComponentList = VerticallyScalingListFrame.new("AddComponentList")
+	local newComponentFrame = AutoScalingScrollingFrame.new("AddComponentFrame", newComponentList._uiListLayout)
+	newComponentFrame:GetFrame().Size = UDim2.new(1, 0, 1, 0)
+	newComponentFrame:GetFrame().Parent = AddComponentPluginGui
+	newComponentList:GetFrame().Parent = newComponentFrame:GetFrame()
+	for worldObject, parameters in pairs(ComponentInfo) do
+		local worldObjectCreationButton = CustomTextButton.new(worldObject, worldObject)
+		worldObjectCreationButton:getButton().Size = UDim2.new(0.5, 0, 0, 20)
+		newComponentList:AddChild(worldObjectCreationButton:getButton())
+		worldObjectCreationButton:getButton().MouseButton1Down:connect(function()
+			createParameterWindow(getSelection(), worldObject, parameters, true)
+		end)
+	end
+	
 	local function updateWorldObjectFrame(selectedObj)
-		WorldObjectSection._frame.TitleBarVisual.TitleLabel.Text = "WorldObjects: " .. selectedObj.Name
+		WorldObjectSection._frame.TitleBarVisual.TitleLabel.Text = "Components: " .. selectedObj.Name
 		clearFrame(WorldObjectList:GetFrame())
-		for worldObject, parameters in pairs(WorldObjectInfo) do
-			local worldObjectTitle = CollapsibleTitledSection.new(worldObject, worldObject, true, false, false)
-			local paramList = VerticallyScalingListFrame.new("worldObjectList")
-			local worldObjectCreationButton = CustomTextButton.new("Create", "Create")
-			worldObjectCreationButton:getButton().Size = UDim2.new(0.5, 0, 0, 20)
-			paramList:AddChild(worldObjectCreationButton:getButton())
-			WorldObjectList:AddChild(worldObjectTitle:GetSectionFrame())
-			WorldObjectList:AddChild(paramList:GetFrame())
-			worldObjectCreationButton:getButton().MouseButton1Down:connect(function()
-				createParameterWindow(selectedObj, worldObject, parameters, paramList)
-			end)
-			for _, container in pairs(selectedObj:GetChildren()) do
-				if container:IsA("Folder") then
-					if container.Name == worldObject then
-						createWorldObjectButton(selectedObj, worldObject, WorldObjectInfo[worldObject], paramList, container)
-					end
-				end
+		for _, container in pairs(selectedObj:GetChildren()) do
+			if container:IsA("Folder") then
+				createWorldObjectButton(selectedObj, container.Name, ComponentInfo[container.Name], WorldObjectList, container)
 			end
 		end
 	end
@@ -164,7 +166,7 @@ main = function()
 			deleteButton:getButton().Parent = button:getButton()
 			paramList:AddChild(button:getButton())
 			button:getButton().MouseButton1Click:connect(function()
-				createParameterWindow(selectedObj, worldObject, parameters, nil, paramContainer)
+				createParameterWindow(selectedObj, worldObject, parameters, false, paramContainer)
 			end)
 			deleteButton:getButton().MouseButton1Click:connect(function()
 				if paramContainer then
@@ -174,7 +176,7 @@ main = function()
 						end
 					end
 					if not selectedObj:FindFirstChildWhichIsA("Folder") then
-						CollectionService:RemoveTag(selectedObj, "WorldObject")
+						CollectionService:RemoveTag(selectedObj, "entity")
 					end
 					paramContainer:Destroy()
 					button:getButton():Destroy()
@@ -218,7 +220,8 @@ main = function()
 		parameterList:AddChild(textbox:GetFrame())
 	end
 	
-	function createParameterWindow(selectedObj, worldObject, parameters, paramList, paramContainer)
+	function createParameterWindow(selectedObj, worldObject, parameters, createNewComponent, paramContainer)
+		if not getSelection() then return end
 		local setParams = {}
 		local paramLen = getDictionarySize(parameters)
 		if canCreateWindow then
@@ -248,13 +251,12 @@ main = function()
 				isInInstanceSelection = false
 				canCreateWindow = true
 				paramWindow:Destroy()
-				if paramList then
-					local bin, container = createWorldObject(selectedObj, worldObject, setParams)
-					createWorldObjectButton(selectedObj, worldObject, parameters, paramList, bin)
-					updateWorldObjectFrame(selectedObj)
-					if WorldObjectInfo[worldObject]._init ~= nil then
-						WorldObjectInfo[worldObject]._init(setParams, container)
+				if createNewComponent then
+					local _, parameterContainer = createWorldObject(selectedObj, worldObject, setParams)
+					if ComponentInfo[worldObject]._init ~= nil then
+						ComponentInfo[worldObject]._init(setParams, parameterContainer)
 					end
+					updateWorldObjectFrame(selectedObj)
 				else
 					updateWorldObject(paramContainer, setParams)
 					updateWorldObjectFrame(selectedObj)
@@ -333,23 +335,41 @@ main = function()
 		end
 	end)
 
-	EditorWindow.Click:connect(function()
+	ComponentWindow.Click:connect(function()
 		DockWidgetPluginGui.Enabled = not DockWidgetPluginGui.Enabled
 		clearFrame(WorldObjectList:GetFrame())
 	end)
 	
-	RefreshWorldObjects.Click:connect(function()
-		if game.ReplicatedStorage:FindFirstChild("WorldSmith") then
-			game.ReplicatedStorage.WorldSmith:Destroy()
+	AddComponentWindow.Click:connect(function()
+		clearFrame(newComponentList:GetFrame())
+		for worldObject, parameters in pairs(ComponentInfo) do
+			local worldObjectCreationButton = CustomTextButton.new(worldObject, worldObject)
+			worldObjectCreationButton:getButton().Size = UDim2.new(0.5, 0, 0, 20)
+			newComponentList:AddChild(worldObjectCreationButton:getButton())
+			worldObjectCreationButton:getButton().MouseButton1Down:connect(function()
+				createParameterWindow(getSelection(), worldObject, parameters, true)
+			end)
 		end
-		if game.ServerScriptService:FindFirstChild("WorldSmith") then
-			game.ServerScriptService.WorldSmith:Destroy()
+		AddComponentPluginGui.Enabled = not AddComponentPluginGui.Enabled
+	end)
+	
+	RefreshDependencies.Click:connect(function()
+		ComponentInfo = require(game.ServerScriptService.WorldSmithServer.ComponentInfo)
+		clearFrame(newComponentList:GetFrame())
+		for worldObject, parameters in pairs(ComponentInfo) do
+			local worldObjectCreationButton = CustomTextButton.new(worldObject, worldObject)
+			worldObjectCreationButton:getButton().Size = UDim2.new(0.5, 0, 0, 20)
+			newComponentList:AddChild(worldObjectCreationButton:getButton())
+			worldObjectCreationButton:getButton().MouseButton1Down:connect(function()
+				createParameterWindow(getSelection(), worldObject, parameters, true)
+			end)
 		end
 	end)
 	
 	RigidBody.Click:connect(function()
 		local selection = getSelection()
 		if selection and selection:IsA("Model") then
+			if not selection.PrimaryPart then error("WorldSmith: Model must have a PrimaryPart to create rigid body") return end
 			for _, part in pairs(selection:GetChildren()) do
 				if part ~= selection.PrimaryPart and part:IsA("BasePart") then
 					local motor6d = Instance.new("Motor6D")
@@ -404,5 +424,5 @@ main = function()
 		end
 	end)
 end
-
+			
 main()

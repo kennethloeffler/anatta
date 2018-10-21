@@ -5,15 +5,11 @@ Component.__index = Component
 
 function Component.new(associatedInstance, component, parameters)
 	local instance = {}
-	
-	CollectionService:AddTag(associatedInstance, "entity")
-	
+
 	instance.Model = associatedInstance
 	
 	local parameterContainer = Instance.new("Folder")
 	parameterContainer.Name = component
-	parameterContainer.Parent = associatedInstance
-	CollectionService:AddTag(parameterContainer, "component")
 	
 	for param, v in pairs(parameters) do
 		if typeof(v) == "Instance" then
@@ -38,7 +34,11 @@ function Component.new(associatedInstance, component, parameters)
 			paramRef.Parent = parameterContainer
 		end
 	end
-		
+	
+	parameterContainer.Parent = associatedInstance
+	CollectionService:AddTag(associatedInstance, "entity")
+	CollectionService:AddTag(parameterContainer, "component")
+	
 	return instance, parameterContainer
 end
 
