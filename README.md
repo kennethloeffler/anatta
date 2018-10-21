@@ -83,8 +83,7 @@ When the event(s) within "Trigger" are fired, the position of this component's p
 #### TweenPartRotation
 When the event(s) within "Trigger" are fired, the rotation of this component's parent entity will tween according to its parameters: on every client if ClientSide is false, or only on the client that triggered it if ClientSide is true. The parent entity is expected to be a BasePart. 
 - bool Enabled
-- bool LocalCoords
-- bool ClientSide
+- bool LocalCoords- bool ClientSide
 - Instance Trigger
 - number Time
 - string EasingStyle
@@ -146,4 +145,4 @@ ComponentName = { -- declaration of a new component called "ComponentName"
 Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems, respectively. Each system runs on its own thread and has access to the **entity-component map** as well as the **component-entity map**. Examples of system implementations can be found by looking at the built-in systems defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems.
 
 #### Communicating between components
-Sometimes components need to communicate. In general, there are three ways by which components may communicate which each other; [these are descrbed in detail here.](http://gameprogrammingpatterns.com/component.html#how-do-components-communicate-with-each-other)
+Sometimes components need to communicate; this should be done in the systems. In general, there are three ways by which components may communicate which each other; [these are described in detail here.](http://gameprogrammingpatterns.com/component.html#how-do-components-communicate-with-each-other) For reference, the built-in systems almost exclusively use the 2nd pattern described in the link.
