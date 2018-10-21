@@ -1,4 +1,4 @@
-# WorldSmith -  a game creation plugin for Roblox Studio
+(# WorldSmith -  a game creation plugin for Roblox Studio
 
 ## Introduction
 
@@ -14,28 +14,28 @@ WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entityâ
   - [Refresh components button](https://github.com/kennethloeffler/WorldSmith#refresh-components-button)
 - [Components](https://github.com/kennethloeffler/WorldSmith#components)
   - [Built-in components](https://github.com/kennethloeffler/WorldSmith#built-in-components)
-    - [ContextActionTrigger](https://github.com/kennethloeffler/WorldSmith#ContextActionTrigger)  
+    - [ContextActionTrigger](https://github.com/kennethloeffler/WorldSmith#contextactiontrigger)  
     - [TouchTrigger](https://github.com/kennethloeffler/WorldSmith#touchtrigger)
-    - [CharacterConstraint](https://github.com/kennethloeffler/WorldSmith#CharacterConstraint)
-    - [TweenPartPosition](https://github.com/kennethloeffler/WorldSmith#TweenPartPosition)
-    - [TweenPartRotation](https://github.com/kennethloeffler/WorldSmith#TweenPartRotation)
-    - [AnimatedDoor](https://github.com/kennethloeffler/WorldSmith#AnimatedDoor)
+    - [CharacterConstraint](https://github.com/kennethloeffler/WorldSmith#characterconstraint)
+    - [TweenPartPosition](https://github.com/kennethloeffler/WorldSmith#tweenpartposition)
+    - [TweenPartRotation](https://github.com/kennethloeffler/WorldSmith#tweenpartrotation)
+    - [AnimatedDoor](https://github.com/kennethloeffler/WorldSmith#animateddoor)
 
-- [Vehicle](https://github.com/kennethloeffler/WorldSmith#Vehicle)
+- [Vehicle](https://github.com/kennethloeffler/WorldSmith#vehicle)
   - [Creating custom components](https://github.com/kennethloeffler/WorldSmith#creating-custom-components)
 - [Systems](https://github.com/kennethloeffler/WorldSmith#systems)
   - [Built-in systems](https://github.com/kennethloeffler/WorldSmith#built-in-systems)
-    - [Client:](https://github.com/kennethloeffler/WorldSmith#Client)
-      - [ContextActionSystem](https://github.com/kennethloeffler/WorldSmith#ClientContextActionSystem)
-      - [DoorSystem](https://github.com/kennethloeffler/WorldSmith#ClientDoorSystem)
-      - TriggerSystem
-      - TweenSystem
-      - VehicleSystem
-    - Server:
-      - DoorSystem
-      - TriggerSystem
-      - TweenSystem
-      - VehicleSystem
+    - [Client:](https://github.com/kennethloeffler/WorldSmith#client)
+      - [ContextActionSystem](https://github.com/kennethloeffler/WorldSmith#contextactionsystem-client)
+      - [DoorSystem](https://github.com/kennethloeffler/WorldSmith#doorsystem-client)
+      - [TriggerSystem](https://github.com/kennethloeffler/WorldSmith#triggersystem-client)
+      - [TweenSystem](https://github.com/kennethloeffler/WorldSmith#tweensystem-client)
+      - [VehicleSystem](https://github.com/kennethloeffler/WorldSmith#vehiclesystem-client)
+    - [Server:](https://github.com/kennethloeffler/WorldSmith#server)
+      - [DoorSystem](https://github.com/kennethloeffler/WorldSmith#doorsystem-server)
+      - [TriggerSystem](https://github.com/kennethloeffler/WorldSmith#triggersystem-server)
+      - [TweenSystem](https://github.com/kennethloeffler/WorldSmith#tweensystem-server)
+      - [VehicleSystem](https://github.com/kennethloeffler/WorldSmith#vehiclesystem-server)
   - [Creating custom systems](https://github.com/kennethloeffler/WorldSmith#creating-custom-systems)
   
 ## The WorldSmith interface
@@ -73,12 +73,15 @@ ComponentName = { -- declaration of a new component called "ComponentName"
 ## Systems
 ### Built-in systems
 #### Client
-##### ContextActionSystem {#ClientContextActionSystem}
-##### DoorSystem {#ClientDoorSystem}
-##### TriggerSystem {#ClientTriggerSystem}
-##### TweenSystem {#ClientTweenSystem}
-##### VehicleSystem {#ClientVehicleSystem}
+##### ContextActionSystem {#client}
+##### DoorSystem {#client}
+##### TriggerSystem {#client}
+##### TweenSystem {#client}
+##### VehicleSystem {#client}
 #### Server
-##### 
+##### DoorSystem {#server}
+##### TriggerSystem {#server}
+##### TweenSystem {#server}
+##### VehicleSystem {#server}
 ### Creating custom systems
 Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems, respectively. Each system runs on its own thread and has access to the **entity-component map** as well as the **component-entity map**. 
