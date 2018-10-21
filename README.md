@@ -26,8 +26,8 @@ WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entityâ
 - [Systems](https://github.com/kennethloeffler/WorldSmith#systems)
   - [Built-in systems](https://github.com/kennethloeffler/WorldSmith#built-in-systems)
     - [Client:](https://github.com/kennethloeffler/WorldSmith#Client)
-      - [ContextActionSystem](https://github.com/kennethloeffler/WorldSmith#Client#ContextActionSystem)
-      - [DoorSystem](https://github.com/kennethloeffler/WorldSmith#Client#DoorSystem)
+      - [ContextActionSystem](https://github.com/kennethloeffler/WorldSmith#ClientContextActionSystem)
+      - [DoorSystem](https://github.com/kennethloeffler/WorldSmith#ClientDoorSystem)
       - TriggerSystem
       - TweenSystem
       - VehicleSystem
@@ -73,11 +73,12 @@ ComponentName = { -- declaration of a new component called "ComponentName"
 ## Systems
 ### Built-in systems
 #### Client
-##### ContextActionSystem
-##### DoorSystem
-##### TriggerSystem
-##### TweenSystem
-##### VehicleSystem
+##### ContextActionSystem {#ClientContextActionSystem}
+##### DoorSystem {#ClientDoorSystem}
+##### TriggerSystem {#ClientTriggerSystem}
+##### TweenSystem {#ClientTweenSystem}
+##### VehicleSystem {#ClientVehicleSystem}
 #### Server
+##### 
 ### Creating custom systems
 Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems, respectively. Each system runs on its own thread and has access to the **entity-component map** as well as the **component-entity map**. 
