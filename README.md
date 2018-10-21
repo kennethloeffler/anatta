@@ -21,7 +21,8 @@ WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entityâ
     - [TweenPartRotation](https://github.com/kennethloeffler/WorldSmith#tweenpartrotation)
     - [AnimatedDoor](https://github.com/kennethloeffler/WorldSmith#animateddoor)
     - [Vehicle](https://github.com/kennethloeffler/WorldSmith#vehicle)
-  - [Creating custom components](https://github.com/kennethloeffler/WorldSmith#creating-custom-components)
+
+- [Creating custom components](https://github.com/kennethloeffler/WorldSmith#creating-custom-components)
 - [Systems](https://github.com/kennethloeffler/WorldSmith#systems)
   - [Built-in systems](https://github.com/kennethloeffler/WorldSmith#built-in-systems)
     - [Client:](https://github.com/kennethloeffler/WorldSmith#client)
@@ -50,6 +51,7 @@ The rigid body button creates a rigid body out of a selected model - the model m
 The refresh components button hot-swaps the plugin's currently loaded ComponentInfo module with the one in ServerScriptService.WorldSmithServer. 
 
 ## Components
+Components are represented by Folder instances parented to their corresponding entities. They contain ValueBase instances matching the parameters defined for their component. 
 ### Built-in components
 #### ContextActionTrigger
 When a player becomes MaxDistance units away from this component's parent entity, a context action is bound on their client matching the desktopPC, mobile, and console parameters, which when triggered broadcasts an event within the component. The parent entity is expected to be a BasePart. desktopPC, mobile, and console should be comma-delineated strings specifying the input enum and type, i.e. for desktopPC: KeyCode,E
