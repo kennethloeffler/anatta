@@ -13,31 +13,63 @@ WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entityâ
   - [Rigid body button](https://github.com/kennethloeffler/WorldSmith#rigid-body-button)
   - [Refresh components button](https://github.com/kennethloeffler/WorldSmith#refresh-components-button)
 - [Components](https://github.com/kennethloeffler/WorldSmith#components)
-  - [Built-in components](https://github.com/kennethloeffler/WorldSmith#builtin-components)
+  - [Built-in components](https://github.com/kennethloeffler/WorldSmith#built-in-components)
+    - [ContextActionTrigger](https://github.com/kennethloeffler/WorldSmith#ContextActionTrigger)  
     - [TouchTrigger](https://github.com/kennethloeffler/WorldSmith#touchtrigger)
+    - [CharacterConstraint](https://github.com/kennethloeffler/WorldSmith#CharacterConstraint)
+    - [TweenPartPosition](https://github.com/kennethloeffler/WorldSmith#TweenPartPosition)
+    - [TweenPartRotation](https://github.com/kennethloeffler/WorldSmith#TweenPartRotation)
+    - [AnimatedDoor](https://github.com/kennethloeffler/WorldSmith#AnimatedDoor)
+    - [Vehicle](https://github.com/kennethloeffler/WorldSmith#Vehicle)
   - [Creating custom components](https://github.com/kennethloeffler/WorldSmith#creating-custom-components)
 - [Systems](https://github.com/kennethloeffler/WorldSmith#systems)
-  - [Built-in systems](https://github.com/kennethloeffler/WorldSmith#builtin-systems)
+  - [Built-in systems](https://github.com/kennethloeffler/WorldSmith#built-in-systems)
+    - [Client:](https://github.com/kennethloeffler/WorldSmith#Client)
+      - [ContextActionSystem](https://github.com/kennethloeffler/WorldSmith#Client#ContextActionSystem)
+      - [DoorSystem](https://github.com/kennethloeffler/WorldSmith#Client#DoorSystem)
+      - TriggerSystem
+      - TweenSystem
+      - VehicleSystem
+    - Server:
+      - DoorSystem
+      - TriggerSystem
+      - TweenSystem
+      - VehicleSystem
   - [Creating custom systems](https://github.com/kennethloeffler/WorldSmith#creating-custom-systems)
   
 ## The WorldSmith interface
 ### Add component window
-  The add component window allows components to be added to the selected instance.
+The add component window allows components to be added to the selected instance.
 ### Show components window
-  The show components window displays all the components a selected instance possesses. 
+The show components window displays all the components a selected instance possesses. 
 ### Parameter window
-  The parameter window allows the parameters of a component to be edited.
+The parameter window allows the parameters of a component to be edited.
 ### Rigid body button
-  The rigid body button creates a rigid body out of a selected model - the model must have a PrimaryPart, and all BaseParts contained in the model will be rigidly attached to the PrimaryPart.
+The rigid body button creates a rigid body out of a selected model - the model must have a PrimaryPart, and all BaseParts contained in the model will be rigidly attached to the PrimaryPart.
 ### Refresh components button
-  The refresh components button hot-swaps the plugin's currently loaded ComponentInfo module with the one in ServerScriptService.WorldSmithServer. 
+The refresh components button hot-swaps the plugin's currently loaded ComponentInfo module with the one in ServerScriptService.WorldSmithServer. 
 
 ## Components
 ### Built-in components
-
-
-### Built-in components
+#### ContextActionTrigger
+#### TouchTrigger
+#### CharacterConstraint
+#### TweenPartPosition
+#### TweenPartRotation
+#### AnimatedDoor
+#### Vehicle
+### Creating custom components
+Custom components may be created by editing the WorldSmithServer.ComponentInfo module. Components consist of a unique name and an arbitrary number of parameters. The idiom for defining components is as follows:
+```
+ComponentName = { -- declaration of a new component called "ComponentName"
+  BoolParameter = "boolean" -- a boolean parameter called "BoolParameter"
+  NumberParameter = "number" -- a number parameter called "NumberParameter"
+  StringParameter = "string" -- a string parameter called "StringParameter"
+  InstanceParameter = "Instance" -- an instance parameter called "InstanceParameter"
+}
+```
 
 ## Systems
-
-### Refresh components button
+### Built-in systems
+### Creating custom systems
+Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems, respectively. Each system runs on its own thread and has access to the **entity-component map** as well as the **component-entity map**. 
