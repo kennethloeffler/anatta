@@ -1,4 +1,4 @@
-(# WorldSmith -  a game creation plugin for Roblox Studio
+# WorldSmith -  a game creation plugin for Roblox Studio
 
 ## Introduction
 
@@ -20,8 +20,7 @@ WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entityâ
     - [TweenPartPosition](https://github.com/kennethloeffler/WorldSmith#tweenpartposition)
     - [TweenPartRotation](https://github.com/kennethloeffler/WorldSmith#tweenpartrotation)
     - [AnimatedDoor](https://github.com/kennethloeffler/WorldSmith#animateddoor)
-
-- [Vehicle](https://github.com/kennethloeffler/WorldSmith#vehicle)
+    - [Vehicle](https://github.com/kennethloeffler/WorldSmith#vehicle)
   - [Creating custom components](https://github.com/kennethloeffler/WorldSmith#creating-custom-components)
 - [Systems](https://github.com/kennethloeffler/WorldSmith#systems)
   - [Built-in systems](https://github.com/kennethloeffler/WorldSmith#built-in-systems)
@@ -73,11 +72,11 @@ ComponentName = { -- declaration of a new component called "ComponentName"
 ## Systems
 ### Built-in systems
 #### Client
-##### ContextActionSystem {#client}
-##### DoorSystem {#client}
-##### TriggerSystem {#client}
-##### TweenSystem {#client}
-##### VehicleSystem {#client}
+##### ContextActionSystem ##### {#client}
+##### DoorSystem ##### {#client}
+##### TriggerSystem ##### {#client}
+##### TweenSystem ##### {#client}
+##### VehicleSystem ##### {#client}
 #### Server
 ##### DoorSystem {#server}
 ##### TriggerSystem {#server}
