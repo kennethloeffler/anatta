@@ -72,15 +72,15 @@ ComponentName = { -- declaration of a new component called "ComponentName"
 ## Systems
 ### Built-in systems
 #### Client
-##### ContextActionSystem ##### {#client}
-##### DoorSystem ##### {#client}
-##### TriggerSystem ##### {#client}
-##### TweenSystem ##### {#client}
-##### VehicleSystem ##### {#client}
+##### ContextActionSystem  {#client}
+##### DoorSystem  {#client}
+##### TriggerSystem  {#client}
+##### TweenSystem  {#client}
+##### VehicleSystem  {#client}
 #### Server
-##### DoorSystem {#server}
-##### TriggerSystem {#server}
-##### TweenSystem {#server}
-##### VehicleSystem {#server}
+##### DoorSystem  {#server}
+##### TriggerSystem  {#server}
+##### TweenSystem  {#server}
+##### VehicleSystem  {#server}
 ### Creating custom systems
 Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems, respectively. Each system runs on its own thread and has access to the **entity-component map** as well as the **component-entity map**. 
