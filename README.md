@@ -52,19 +52,23 @@ The refresh components button hot-swaps the plugin's currently loaded ComponentI
 ## Components
 ### Built-in components
 #### ContextActionTrigger
+When a player becomes MaxDistance units away from this component's parent entity, a context action is bound on their client matching the desktopPC, mobile, and console parameters, which when triggered broadcasts an event within the component. The parent entity is expected to be a BasePart. desktopPC, mobile, and console should be comma-delineated strings specifying the input enum and type, i.e. for desktopPC: KeyCode,E
 - bool Enabled
 - string desktopPC
 - string mobile
 - string console
 - number MaxDistance
-- bool CreateTouchButton
+- bool CreateTouchButton (NOT FULLY IMPLEMENTED)
 #### TouchTrigger
+When a character touches this component's parent entity, an event is fired with the component. The parent entity is expected to be a BasePart. 
 - bool Enabled
 #### CharacterConstraint
-- number CharacterPoseId
+Specifies that this component's entity is an attachment point for characters. The parent entity is expected to be a BasePart.
+- number CharacterPoseId (NOT FULLY IMPLEMENTED)
 - bool Enabled
 - string Label
 #### TweenPartPosition
+When the event(s) within "Trigger" are fired, the position of this component's parent entity will tween according to its parameters: on every client if ClientSide is false, or only on the client that triggered it if ClientSide is true. The parent entity is expected to be a BasePart. 
 - bool Enabled
 - bool LocalCoords
 - bool ClientSide
@@ -77,6 +81,7 @@ The refresh components button hot-swaps the plugin's currently loaded ComponentI
 - number DelayTime
 - number X, Y, Z
 #### TweenPartRotation
+When the event(s) within "Trigger" are fired, the rotation of this component's parent entity will tween according to its parameters: on every client if ClientSide is false, or only on the client that triggered it if ClientSide is true. The parent entity is expected to be a BasePart. 
 - bool Enabled
 - bool LocalCoords
 - bool ClientSide
@@ -89,6 +94,7 @@ The refresh components button hot-swaps the plugin's currently loaded ComponentI
 - number DelayTime
 - number X, Y, Z
 #### AnimatedDoor
+When this component is given to an instance, all of the BaseParts contained within the instance will be rigidly attached to PivotPart. When the event(s) within "BackTrigger" or "FrontTrigger" are fired, the rotation of PivotPart will tween -90 or 90 degrees (depending on which trigger was fired), and then back on each client. If AutomaticTriggers is set to true, two TouchTriggers will be automatically generated for BackTrigger and FrontTrigger; TriggerOffset controls how far these triggers are placed away from the center of the door.
  - bool Enabled
  - bool AutomaticTriggers
  - number Time
@@ -100,6 +106,7 @@ The refresh components button hot-swaps the plugin's currently loaded ComponentI
  - Instance FrontTrigger
  - Instance BackTrigger
 #### Vehicle
+When this component is given to an instance, all of the BaseParts contained within the instance will be rigidly attached to MainPart. When the event within EnterTrigger is fired, the player who fired it will be attached to the parent entity of DriverConstraint (expected to be a CharacterConstraint) and if they are the first player to enter, they will be given control of the vehicle. 
  - bool Enabled
  - Instance MainPart
  - Instance EnterTrigger
@@ -110,7 +117,7 @@ The refresh components button hot-swaps the plugin's currently loaded ComponentI
  - number MaxSpeed
  - number MaxForce
  - Instance DriverConstraint
- - Instance AdditionalCharacterConstraints
+ - Instance AdditionalCharacterConstraints (NOT FULLY IMPLEMENTED)
 ### Creating custom components
 Custom components may be created by editing the WorldSmithServer.ComponentInfo module. Components consist of a unique name and an arbitrary number of parameters. The idiom for defining components is as follows:
 ```
@@ -136,4 +143,7 @@ ComponentName = { -- declaration of a new component called "ComponentName"
 ##### TweenSystem
 ##### VehicleSystem
 ### Creating custom systems
-Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems, respectively. Each system runs on its own thread and has access to the **entity-component map** as well as the **component-entity map**. 
+Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems, respectively. Each system runs on its own thread and has access to the **entity-component map** as well as the **component-entity map**. Examples of system implementations can be found by looking at the built-in systems defined in ReplicatedStorage.WorldSmithClient.Systems and ServerScriptService.WorldSmithServer.Systems.
+
+#### Communicating between components
+Sometimes components need to communicate. In general, there are three ways by which components may communicate which each other; [these are descrbed in detail here.](http://gameprogrammingpatterns.com/component.html#how-do-components-communicate-with-each-other)
