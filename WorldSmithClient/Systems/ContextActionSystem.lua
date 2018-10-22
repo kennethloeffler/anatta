@@ -10,14 +10,16 @@ function ContextActionSystem.Start(componentEntityMap)
 	while game:GetService("RunService").Heartbeat:wait() do
 
 		local contextActionsNear = {}
-	
-		for _, component in ipairs(componentEntityMap.ContextActionTrigger) do
-			if component.Parent:IsA("BasePart") then
-				if not ContextActions[component] then TotalContextActions = TotalContextActions + 1 ContextActions[component] = TotalContextActions end
-				if (component.Parent.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= component.MaxDistance.Value and component.Enabled.Value == true then
-					contextActionsNear[#contextActionsNear + 1] = component
-				else
-					ContextActionService:UnbindAction(tostring(ContextActions[component]))
+		
+		if componentEntityMap.ContextActionTrigger then
+			for _, component in ipairs(componentEntityMap.ContextActionTrigger) do
+				if component.Parent:IsA("BasePart") then
+					if not ContextActions[component] then TotalContextActions = TotalContextActions + 1 ContextActions[component] = TotalContextActions end
+					if (component.Parent.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= component.MaxDistance.Value and component.Enabled.Value == true then
+						contextActionsNear[#contextActionsNear + 1] = component
+					else
+						ContextActionService:UnbindAction(tostring(ContextActions[component]))
+					end
 				end
 			end
 		end

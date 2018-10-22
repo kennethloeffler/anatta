@@ -2,6 +2,10 @@ local CollectionService = game:GetService("CollectionService")
 local ComponentInfo
 local Component = require(script.Parent.WorldSmithServer.Component)
 
+if not game:GetService("RunService"):IsServer() then
+	repeat wait() until false
+end
+
 local StudioWidgets = require(2393391735)
 	local CollapsibleTitledSection = StudioWidgets.CollapsibleTitledSection
 	local GuiUtilities = StudioWidgets.GuiUtilities
@@ -424,5 +428,5 @@ local function main()
 		end
 	end)
 end
-			
+
 main()
