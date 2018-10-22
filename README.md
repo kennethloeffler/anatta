@@ -149,4 +149,4 @@ Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmi
 All a system needs to run is a ```Start()```  function within the module's return value. The entity-component map and the component-entity map are passed to this function (in that order). 
 
 #### Communicating between components
-Sometimes components need to communicate; this should be done in the systems. In general, there are three ways by which components may communicate which each other; [these are described in detail here.](http://gameprogrammingpatterns.com/component.html#how-do-components-communicate-with-each-other) For reference, the built-in systems almost exclusively use the 2nd pattern described in the link.
+Sometimes components need to communicate; this should be done in the systems. In general, there are three ways by which components may communicate with each other; [these are described in detail here.](http://gameprogrammingpatterns.com/component.html#how-do-components-communicate-with-each-other) For reference, the built-in systems almost exclusively use the 2nd pattern described in the link.
