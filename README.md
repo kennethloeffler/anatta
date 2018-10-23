@@ -136,10 +136,12 @@ When this component is given to an instance, all of the BaseParts contained with
 Custom components may be created by editing the WorldSmithServer.ComponentInfo module. Components consist of a unique name and an arbitrary number of parameters. The idiom for defining components is as follows:
 ```
 ComponentName = { -- declaration of a new component called "ComponentName"
-  BoolParameter = "boolean" -- a boolean parameter called "BoolParameter"
-  NumberParameter = "number" -- a number parameter called "NumberParameter"
-  StringParameter = "string" -- a string parameter called "StringParameter"
-  InstanceParameter = "Instance" -- an instance parameter called "InstanceParameter"
+  BoolParameter = "boolean", -- a boolean parameter called "BoolParameter"
+  NumberParameter = "number", -- a number parameter called "NumberParameter"
+  StringParameter = "string", -- a string parameter called "StringParameter"
+  InstanceParameter = "Instance", -- an instance parameter called "InstanceParameter"
+  ["_init"] = function(parameters, component) -- a function called when this component is created via the plugin interface
+  end
 }
 ```
 
