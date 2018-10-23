@@ -106,7 +106,7 @@ function WorldSmithServerMain:_initializeSystems()
 	for _, system in pairs(script.Parent.Systems:GetChildren()) do
 		local sys = require(system)
 		spawn(function()
-			sys.Start(self._componentEntityMap)
+			sys.Start(self._componentEntityMap, self._entityComponentMap)
 		end)
 	end
 end
