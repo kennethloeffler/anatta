@@ -141,7 +141,7 @@ ComponentName = { -- declaration of a new component called "ComponentName"
   NumberParameter = "number", -- a number parameter called "NumberParameter"
   StringParameter = "string", -- a string parameter called "StringParameter"
   InstanceParameter = "Instance", -- an instance parameter called "InstanceParameter"
-  ["_init"] = function(parameters, component) -- a function called when this component is created via the plugin interface
+  ["_init"] = function(parameters, component) -- a function called when this component is created via the plugin interface (optional)
   end
 }
 ```
