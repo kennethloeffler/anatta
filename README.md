@@ -98,7 +98,8 @@ When the event(s) within "Trigger" are fired, the position of this component's p
 #### TweenPartRotation
 When the event(s) within "Trigger" are fired, the rotation of this component's parent entity will tween according to its parameters: on every client if ClientSide is false, or only on the client that triggered it if ClientSide is true. The parent entity is expected to be a BasePart. 
 - bool Enabled
-- bool LocalCoords- bool ClientSide
+- bool LocalCoords
+- bool ClientSide
 - Instance Trigger
 - number Time
 - string EasingStyle
