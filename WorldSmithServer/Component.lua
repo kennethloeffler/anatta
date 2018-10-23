@@ -1,9 +1,8 @@
 --[[//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Component.lua
 
-This class is exclusively used by the Studio plugin. Reason for this class is so metadata may be attached to components without it
-clogging up the entity-component and component-entity maps. I haven't fully implemented this feature yet; anyone wishing to do so 
-before I do is welcome :)
+Reason for this class is so metadata may be attached to components without it clogging up the entity-component and component-entity 
+maps. I haven't fully implemented this feature yet; anyone wishing to do so before I do is welcome :)
 
 Constructor:
 
