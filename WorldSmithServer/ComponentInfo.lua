@@ -1,3 +1,13 @@
+--[[//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ComponentInfo.lua
+
+This is where all components are defined. Each index in this dictionary is a string which represents the name of a component, and each 
+value is a dictionary which represents the parameters of a component. The component may have an _init() function defined within its
+parameter dictionary; this function is called when the component is created in the Studio plugin. A dictionary containing the 
+parameters of the component and the component Folder itself are passed to this function (in that order).
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////--]]
+
 local WorldSmithUtilities = require(script.Parent.WorldSmithServerUtilities)
 
 ComponentInfo = {

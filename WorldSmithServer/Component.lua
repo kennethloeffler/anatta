@@ -1,3 +1,24 @@
+--[[//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Component.lua
+
+Reason for this class is so metadata may be attached to components without it clogging up the entity-component and component-entity 
+maps. I haven't fully implemented this feature yet; anyone wishing to do so before I do is welcome :)
+
+Constructor:
+
+	Component.new(Instance associatedInstance, string component, dictionary parameters)
+
+Member variables:
+
+	Public:
+
+		Component.Model - this component's associated instance
+
+	Private:
+
+		(none)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////--]]
+
 local CollectionService = game:GetService("CollectionService")
 
 local Component = {}
