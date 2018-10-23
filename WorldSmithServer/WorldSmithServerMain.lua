@@ -89,7 +89,9 @@ function WorldSmithServerMain:_buildEntityComponentMap()
 	for _, entity in pairs(assignedInstances) do
 		self._entityComponentMap[entity] = {}
 		for i, v in ipairs(entity:GetChildren()) do
-			self._entityComponentMap[entity][i] = v
+			if v:IsA("Folder") and ComponentInfo[v.Name] then
+				self._entityComponentMap[entity][#self._entityComponentMap[entity] + 1] = v
+			end
 		end
 	end
 	
