@@ -11,12 +11,19 @@ Constructor:
 Member variables:
 
 	Public:
+<<<<<<< HEAD
 
 		Component.Model - this component's associated instance
 
 	Private:
 
 		(none)
+=======
+		Component.Model - this component's associated instance
+	Private:
+		(none)
+
+>>>>>>> origin/master
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////--]]
 
 local CollectionService = game:GetService("CollectionService")

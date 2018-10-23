@@ -4,6 +4,19 @@
 
 WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entity–component–system) for Roblox Studio. It allows **components** to be tied to instances (which represent **entities**). Components consist *only of data* - all behavior lives in the **systems**. WorldSmith's interface allows a game creator to give an instance as many different components as he or she wishes; in this way, game objects can be built with extremely varied and customizable behavior with no dependency issues, and changing/adding behaviors is often as simple as editing a few component parameters/adding new components, including during runtime \[!].
 
+### Requiring the WorldSmithServerMain and WorldSmithClientMain modules
+For systems (i.e. all the game behavior) to be initialized, both of the above named modules must be required by the server and client.
+
+In a Script on the server (i.e. ServerScriptService):
+```
+local WorldSmithServer = require(game.ServerScriptService.WorldSmithServer.WorldSmithServerMain)
+```
+
+In a LocalScript on the client (i.e. StarterPlayerScripts):
+```
+local WorldSmithClient = require(game.ReplicatedStorage.WorldSmithClient.WorldSmithClientMain)
+```
+
 ## Table of contents
 
 - [The WorldSmith interface](https://github.com/kennethloeffler/WorldSmith#the-worldsmith-interface)
@@ -85,7 +98,8 @@ When the event(s) within "Trigger" are fired, the position of this component's p
 #### TweenPartRotation
 When the event(s) within "Trigger" are fired, the rotation of this component's parent entity will tween according to its parameters: on every client if ClientSide is false, or only on the client that triggered it if ClientSide is true. The parent entity is expected to be a BasePart. 
 - bool Enabled
-- bool LocalCoords- bool ClientSide
+- bool LocalCoords
+- bool ClientSide
 - Instance Trigger
 - number Time
 - string EasingStyle
@@ -123,10 +137,12 @@ When this component is given to an instance, all of the BaseParts contained with
 Custom components may be created by editing the WorldSmithServer.ComponentInfo module. Components consist of a unique name and an arbitrary number of parameters. The idiom for defining components is as follows:
 ```
 ComponentName = { -- declaration of a new component called "ComponentName"
-  BoolParameter = "boolean" -- a boolean parameter called "BoolParameter"
-  NumberParameter = "number" -- a number parameter called "NumberParameter"
-  StringParameter = "string" -- a string parameter called "StringParameter"
-  InstanceParameter = "Instance" -- an instance parameter called "InstanceParameter"
+  BoolParameter = "boolean", -- a boolean parameter called "BoolParameter"
+  NumberParameter = "number", -- a number parameter called "NumberParameter"
+  StringParameter = "string", -- a string parameter called "StringParameter"
+  InstanceParameter = "Instance", -- an instance parameter called "InstanceParameter"
+  ["_init"] = function(parameters, component) -- a function called when this component is created via the plugin interface (optional)
+  end
 }
 ```
 
@@ -149,4 +165,4 @@ Clientside and serverside systems are each defined in ReplicatedStorage.WorldSmi
 All a system needs to run is a ```Start()```  function within the module's return value. The entity-component map and the component-entity map are passed to this function (in that order). 
 
 #### Communicating between components
-Sometimes components need to communicate; this should be done in the systems. In general, there are three ways by which components may communicate which each other; [these are described in detail here.](http://gameprogrammingpatterns.com/component.html#how-do-components-communicate-with-each-other) For reference, the built-in systems almost exclusively use the 2nd pattern described in the link.
+Sometimes components need to communicate; this should be done in the systems. In general, there are three ways by which components may communicate with each other; [these are described in detail here.](http://gameprogrammingpatterns.com/component.html#how-do-components-communicate-with-each-other) For reference, the built-in systems almost exclusively use the 2nd pattern described in the link.
