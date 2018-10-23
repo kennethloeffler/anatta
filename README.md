@@ -7,12 +7,12 @@ WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entityâ
 ### Requiring the WorldSmithServerMain and WorldSmithClientMain modules
 For systems (i.e. all the game behavior) to be initialized, both of the above named modules must be required by the server and client.
 
-In a Script on the server:
+In a Script on the server (i.e. ServerScriptService):
 ```
 local WorldSmithServer = require(game.ServerScriptService.WorldSmithServer.WorldSmithServerMain)
 ```
 
-In a LocalScript on the cient:
+In a LocalScript on the client (i.e. StarterPlayerScripts):
 ```
 local WorldSmithClient = require(game.ReplicatedStorage.WorldSmithClient.WorldSmithClientMain)
 ```
