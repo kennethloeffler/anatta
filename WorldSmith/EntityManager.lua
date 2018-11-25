@@ -36,7 +36,7 @@ EntityManager.lua
 			[Client] void EntityManager:RequestAddComponent(Instance entity, string componentType, T paramList)
 				Description: sends a request to the server to create componentType belonging to entity with parameters defined by paramList
 							
-			[Server] void EntityManager:LoadEntityForPlayer(Instance instanceToLoad, Player player)
+			[Server] void EntityManager:LoadForPlayer(Instance instanceToLoad, Player player)
 				Description: Loads instanceToLoad and all ts associated entities for player
 			
 			[Server] void EntityManager:KillEntityForPlayer(Instance entity, Player player)
