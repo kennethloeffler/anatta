@@ -95,7 +95,8 @@ EntityManager.lua
 						.
 			
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
---]]
+--]]--Hopefully, most of this is self-documenting - please create an issue on GitHub if you think something needs a comment
+					
 
 local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
@@ -122,22 +123,24 @@ function EntityManager.new() -- constructor is just here for readability - don't
 	self._componentAddedEvent = componentAddedEvent
 	
 	if IsClient and not IsServer then
-		
-		self._entityUpdater = game.Players.LocalPlayer.PlayerGui:WaitForChild("entityUpdater" .. tostring(game.Players.LocalPlayer.UserId))
-		self._entityLoader = game.Players.LocalPlayer.PlayerGui:WaitForChild("entityLoader" .. tostring(game.Players.LocalPlayer.UserId))
-		
+		game.Players.LocalPlayer:WaitForChild("PlayerGui")
+		self._entityUpdater = game.Players.LocalPlayer.PlayerGui:WaitForChild("EntityUpdater")
+		self._entityLoader = game.Players.LocalPlayer.PlayerGui:WaitForChild("EntityLoader")
 		self:_setupClient()
 		
-	elseif IsServer and not IsClient then
+	elseif IsServer or IsStudio then
 		
-		self._clientEntities = {}
+		if not IsStudio or IsRunMode then
+			self._clientEntities = {}
 		
-		local clientRequestEvent = Instance.new("BindableEvent")
-		self._clientRequestEvent = clientRequestEvent
+			local clientRequestEvent = Instance.new("BindableEvent")
+			self._clientRequestEvent = clientRequestEvent
 		
-		local playerAddedEvent = Instance.new("BindableEvent")
-		self._playerAddedEvent = playerAddedEvent
-		self.PlayerAdded = playerAddedEvent.Event
+			local playerAddedEvent = Instance.new("BindableEvent")
+			self._playerAddedEvent = playerAddedEvent
+			
+			self.PlayerAdded = playerAddedEvent.Event
+		end
 		
 		self:_setupEntityComponentMaps()
 		
@@ -160,8 +163,8 @@ function EntityManager:_createGUIDForInstance(instance)
 	return GUID.Value
 end
 
-function EntityManager:_createEntity(instance)
-	local GUID = self:_createGUIDForInstance(instance)
+function EntityManager:_createEntity(instance, id)
+	local GUID = id or self:_createGUIDForInstance(instance)
 	CollectionService:AddTag(instance, "entity")
 	self._entityMap[GUID] = {} -- TODO: minimize rehashes by filling this table with n bools, where n is the number of unique ComponentTypes 
 	return GUID
@@ -255,7 +258,12 @@ end
 
 function EntityManager:LoadForPlayer(instance, player)
 	
-	local function getEntitiesForInstance(instance)
+	if not IsServer then
+		error("LoadForPlayer cannot be used on the client")
+	end
+	
+	-- this function creates a copy of the game state contained within "instance"
+	local function getEntitiesForInstance(instance) 
 		if not self._clientEntities[player.UserId] then
 			self._clientEntities[player.UserId] = {}
 		end
@@ -265,8 +273,10 @@ function EntityManager:LoadForPlayer(instance, player)
 			local GUID = entity.GUID.Value
 			if entity == instance or entity:IsDescendantOf(instance) then
 				clientEntityMap[GUID] = {}
-				self._clientEntities[player.UserId][GUID] = true 
+				self._clientEntities[player.UserId][GUID] = true
 				for componentId in pairs(self._entityMap[GUID]) do
+					-- UGLY HACK: Roblox's packet serializer does NOT play nice with sparse arrays, so this needs to be a string,
+					-- turning our sparse array into a string-keyed dictionary (absolutely disgusting, but w/e)
 					local componentIdString = tostring(componentId)
 					if not clientComponentMap[componentIdString] then
 						clientComponentMap[componentIdString] = {}
@@ -279,15 +289,47 @@ function EntityManager:LoadForPlayer(instance, player)
 		return clientEntityMap, clientComponentMap
 	end
 	
-	if IsServer then
-		local clientEntityMap, clientComponentMap = getEntitiesForInstance(instance)
-		local newInstance = instance:Clone()
-		local entityLoader = player.PlayerGui["entityLoader" .. tostring(player.UserId)]
-		newInstance.Parent = player.PlayerGui
-		entityLoader:InvokeClient(player, 0, newInstance, clientEntityMap, clientComponentMap)
-		newInstance:Destroy()
-	else
-		error("LoadForPlayer cannot be used on the client")
+	-- send over a copy of "instance" and a copy of the game state contained within "instance"
+	local clientEntityMap, clientComponentMap = getEntitiesForInstance(instance)
+	local newInstance = instance:Clone()
+	local entityLoader = player.PlayerGui.EntityLoader
+	newInstance.Parent = player.PlayerGui
+	entityLoader:InvokeClient(player, 0, newInstance, clientEntityMap, clientComponentMap)
+	newInstance:Destroy()
+end
+
+function EntityManager:UpdateComponentForPlayer(instance, player, componentType, paramList)
+	local componentId = Component:_getComponentIdFromType(componentType)
+	local entity = instance:IsA("Player") and instance or self:_getEntity(instance)
+	if not entity then
+		error(instance.Name .. " is not an entity")
+	end
+	if not componentId then 
+		error(componentType .. " is not a valid ComponentType")
+	end
+	if not IsServer then
+		error("UpdateComponentForPlayer cannot be used on the client")
+	end
+	local entityUpdater = player.PlayerGui.EntityUpdater
+	local t = {}
+	for paramName, value in pairs(paramList) do
+		local paramId = Component:_getParamIdFromName(paramName, componentId)
+		t[paramId] = value
+	end
+	entityUpdater:FireClient(player, 0, entity, componentId, t) -- firing with code 0 - updating a component
+end
+
+function EntityManager:KillEntityForPlayer(instance, player)
+	local entity = instance:_getEntity(instance)
+	if not entity then
+		error(instance.Name .. " is not an entity")
+	end
+	if not IsServer then
+		error("KillEntityForPlayer cannot be used on the client")
+	end
+	if self._clientEntities[player.UserId][entity] then -- don't need to fire event if client doesn't have entity loaded
+		local entityUpdater = player.PlayerGui.EntityUpdater
+		entityUpdater:FireClient(1, player, entity) -- firing with code 1 - killing an entity
 	end
 end
 
@@ -304,45 +346,8 @@ function EntityManager:KillComponentForPlayer(instance, player, componentType)
 		error("KillComponentForPlayer cannot be used on the client")
 	end
 	if self._clientEntities[player.UserId][entity] then -- don't need to fire event if client doesn't have entity loaded
-		local entityUpdater = player.PlayerGui["entityUpdater" .. tostring(player.UserId)]
+		local entityUpdater = player.PlayerGui.EntityUpdater
 		entityUpdater:FireClient(2, player, entity, componentId) -- firing with code 2 - killing a component
-	end
-end
-
-function EntityManager:UpdateComponentForPlayer(instance, player, componentType, paramList)
-	local componentId = Component:_getComponentIdFromType(componentType)
-	local entity = instance:_getEntity(instance)
-	if not entity then
-		error(instance.Name .. " is not an entity")
-	end
-	if not componentId then 
-		error(componentType .. " is not a valid ComponentType")
-	end
-	if not IsServer then
-		error("UpdateComponentForPlayer cannot be used on the client")
-	end
-	if self._clientEntities[player.UserId][entity] then -- don't need to fire event if client doesn't have entity loaded
-		local entityUpdater = player.PlayerGui["entityUpdater" .. tostring(player.UserId)]
-		local t = {}
-		for paramName, value in pairs(paramList) do
-			local paramId = Component:_getParamIdFromName(paramName, componentId)
-			t[paramId] = value
-		end
-		entityUpdater:FireClient(0, player, entity, componentId, t) -- firing with code 0 - updating a component
-	end
-end
-
-function EntityManager:KillEntityForPlayer(instance, player)
-	local entity = instance:_getEntity(instance)
-	if not entity then
-		error(instance.Name .. " is not an entity")
-	end
-	if not IsServer then
-		error("KillEntityForPlayer cannot be used on the client")
-	end
-	if self._clientEntities[player.UserId][entity] then -- don't need to fire event if client doesn't have entity loaded
-		local entityUpdater = player.PlayerGui["entityUpdater" .. tostring(player.UserId)]
-		entityUpdater:FireClient(1, player, entity) -- firing with code 1 - killing an entity
 	end
 end
 
@@ -358,136 +363,170 @@ function EntityManager:GetClientRequestSignal(requestType, componentType, instan
 	if not IsServer then
 		error("GetClientRequestSignal cannot be used on the client")
 	end
-	local BindableEvent = Instance.new("BindableEvent")
-	if requestType == "AddComponent" then
-		self._clientRequestEvent:connect(function(player, code, GUID, reqComponentId, paramList)
-			if GUID == entity and reqComponentId == componentId and code == 0 then
-				BindableEvent:Fire(player, paramList)
+	
+	-- this functon sets up a new bindable event which fires when certain conditions are met
+	local function setupListener(reqCode)
+		local bindableEvent = Instance.new("BindableEvent")
+		self._clientRequestEvent.Event:connect(function(player, code, GUID, reqComponentId, paramList)
+			if code == reqCode and GUID == entity and reqComponentId == componentId then
+				bindableEvent:Fire(player, paramList)
 			end
 		end)
-		return BindableEvent.Event, BindableEvent
+		return bindableEvent.Event, bindableEvent
+	end
+	
+	if requestType == "AddComponent" then
+		return setupListener(0) -- code 0; client is requesting to add a component
 	elseif requestType == "KillComponent" then
-		
+		-- I'm not going to implement this yet because I'm not sure if it has an actual use
+	elseif requestType == "UpdateComponent" then
+		return setupListener(3) -- code 3; client is requesting to update a component
 	else
 		error(requestType .. " is not a valid RequestType")
 	end
 end 
 
 function EntityManager:RequestAddComponent(instance, componentType, paramList)
-	if IsClient then
-		local entity = self:_getEntity(instance)
-		if entity then
-			local componentId = Component:_getComponentIdFromType(componentType)
-			if componentId then
-				local t = {}
-				for index, value in pairs(paramList) do
-					local paramId = Component:_getParamIdFromName(index)
-					if paramId then
-						t[paramId] = value
-					end
-				end
-				self._entityUpdater:FireServer(entity, componentId, t)
-			end
+	local entity = self:_getEntity(instance)
+	local componentId = Component:_getComponentIdFromType(componentType)
+	if not IsClient then
+		error("RequestAddComponent can only be used on the client")
+	end
+	if not entity then
+		error(instance.Name .. " is not an entity")
+	end
+	if not componentId then
+		error(componentType .. " is not a valid componentType")
+	end
+	local t = {}
+	for index, value in pairs(paramList) do
+		local paramId = Component:_getParamIdFromName(index, componentId)
+		if paramId then
+			t[paramId] = value
 		end
 	end
+	self._entityUpdater:FireServer(0, entity, componentId, paramList)
+end
+
+function EntityManager:RequestUpdateComponent(instance, componentType, paramList)
+	local entity = self:_getEntity(instance)
+	local componentId = Component:_getComponentIdFromType(componentType)
+	if not IsClient then
+		error("RequestUpdateComponent can only be used on the client")
+	end
+	if not entity then
+		error(instance.Name .. " is not an entity")
+	end
+	if not componentId then
+		error(componentType .. " is not a valid componentType")
+	end
+	local t = {}
+	for index, value in pairs(paramList) do
+		local paramId = Component:_getParamIdFromName(index, componentId)
+		if paramId then
+			t[paramId] = value
+		end
+	end
+	self._entityUpdater:FireServer(3, entity, componentId, paramList)
 end
 
 function EntityManager:_setupEntityComponentMaps()
 										  					
-	if IsServer then
-		
-		local function createParamList(componentRef)
-			local t = {}
-			local c = componentRef:GetChildren()
-			for i = 1, #c do
-				if c[i]:IsA("ValueBase") then
-					t[c[i].Name] = c[i].Value
-				end
-			end
-			return t
-		end
-		
-		local assignedInstances = CollectionService:GetTagged("entity")
-		local componentTags = CollectionService:GetTagged("component")
-		
-		-- two TIGHT loops - all the setup we really need ...
-		local mapBuildTime = tick()
-		for _, instance in pairs(assignedInstances) do 
-			local entity = self:_getEntity(instance)
-			self._entityMap[entity] = {}
-		end
-		
-		for _, componentRef in pairs(componentTags) do
-			self:AddComponent(componentRef.Parent, componentRef.Name, createParamList(componentRef), IsStudio)
-			if IsStudio == false or IsRunMode == true then -- don't need these ValueBase instances floating around in memory anymore
-				componentRef:Destroy()
-			end
-		end
-		
-		-- ... except for handling networking things
-		if IsStudio == false or IsRunMode == true then
-			game.Players.PlayerAdded:connect(function(player)
-				local entityLoader = Instance.new("RemoteFunction")
-				entityLoader.Name = "entityLoader" .. tostring(player.UserId)
-				entityLoader.Parent = player.PlayerGui
-				local entityUpdater = Instance.new("RemoteEvent")
-				entityUpdater.Name = "entityUpdater" .. tostring(player.UserId)
-				entityUpdater.Parent = player.PlayerGui
-				entityUpdater.OnServerEvent:connect(function(player, code, GUID, componentId, paramList)
-					self._clientRequestEvent:Fire(player, code, GUID, componentId, paramList)
-				end)
-				self._playerAddedEvent:Fire(player)
-			end)
-		end
-	else
+	if not (IsServer or IsStudio) then
 		error("_setupEntityComponentMaps cannot be used on the client")
+	end	
+	
+	local function createParamList(componentRef)
+		local t = {}
+		local c = componentRef:GetChildren()
+		for i = 1, #c do
+			if c[i]:IsA("ValueBase") then
+				t[c[i].Name] = c[i].Value
+			end
+		end
+		return t
 	end
+	
+	local assignedInstances = CollectionService:GetTagged("entity")
+	local componentTags = CollectionService:GetTagged("component")
+	
+	-- two TIGHT loops - all the setup we really need ...
+	local mapBuildTime = tick()
+	for _, instance in pairs(assignedInstances) do 
+		local entity = self:_getEntity(instance)
+		self._entityMap[entity] = {}
+	end
+	
+	for _, componentRef in pairs(componentTags) do
+		self:AddComponent(componentRef.Parent, componentRef.Name, createParamList(componentRef), IsStudio)
+		if IsStudio == false or IsRunMode == true then -- don't need these ValueBase instances floating around in memory anymore
+			componentRef:Destroy()
+		end
+	end
+	
+	-- ... except for handling networking things
+	if IsStudio == false or IsRunMode == true then
+		game.Players.PlayerAdded:connect(function(player)
+			local entityLoader = Instance.new("RemoteFunction")
+			entityLoader.Name = "EntityLoader"
+			entityLoader.Parent = player.PlayerGui
+			local entityUpdater = Instance.new("RemoteEvent")
+			entityUpdater.Name = "EntityUpdater"
+			entityUpdater.Parent = player.PlayerGui
+			entityUpdater.OnServerEvent:connect(function(player, code, GUID, componentId, paramList)
+				self._clientRequestEvent:Fire(player, code, GUID, componentId, paramList)
+			end)
+			self._playerAddedEvent:Fire(player)
+		end)
+	end		
 end
 
 function EntityManager:_setupClient()
 		
-	if IsClient then
-		
-		local function createParamList(component, componentId)
-			local t = {}
-			for paramId in pairs(component) do
-				local paramName = Component:_getParamNameFromId(paramId, componentId)
-				t[paramName] = component[paramId]
-			end
-			return t
-		end
-			
-		self._entityLoader.OnClientInvoke = function(code, instance, entityMap, componentMap) -- server wants to add an entity (or entities) to this client
-			local newInstance = instance:Clone()
-			newInstance.Parent = game.Workspace
-			-- all we need are some TIGHT loops
-			for _, entity in pairs(CollectionService:GetTagged("entity")) do 
-				if entity == newInstance or entity:IsDescendantOf(newInstance) then
-					local GUID = entity.GUID.Value
-					for componentIdString in pairs(entityMap[GUID]) do
-						local componentId = tonumber(componentIdString)
-						self:AddComponent(entity, componentId, createParamList(componentMap[componentIdString][GUID], componentId))
-					end
-				end
-			end
-			return	
-		end
-		
-		self._entityUpdater.OnClientEvent:connect(function(code, GUID, componentId, paramList)
-			if code == 0 then -- server wants to update the state of a component on this client
-				for paramId in pairs(paramList) do
-					self._componentMap[componentId][GUID][paramId] = paramList[paramId]
-				end
-			elseif code == 1 then -- server wants to kill an entity on this client
-				self:KillEntity(GUID)
-			elseif code == 2 then -- server wants to kill a component on this client
-				self:KillComponent(GUID, componentId)
-			end
-		end)
-			
-	else
+	if not IsClient then
 		error("_setupClient cannot be used on the server")	
 	end
+		
+	local function createParamList(component, componentId)
+		local t = {}
+		for paramId in pairs(component) do
+			local paramName = Component:_getParamNameFromId(paramId, componentId)
+			t[paramName] = component[paramId]
+		end
+		return t
+	end
+			
+	self._entityLoader.OnClientInvoke = function(code, instance, entityMap, componentMap) -- server wants to send stuff to this client
+		local newInstance = instance:Clone()
+		newInstance.Parent = game.Workspace
+		-- all we need are some TIGHT loops
+		for _, entity in pairs(CollectionService:GetTagged("entity")) do 
+			if entity == newInstance or entity:IsDescendantOf(newInstance) then
+				local GUID = entity.GUID.Value
+				for componentIdString in pairs(entityMap[GUID]) do
+					local componentId = tonumber(componentIdString) -- back to a sparse array, baby B^)
+					self:AddComponent(entity, componentId, createParamList(componentMap[componentIdString][GUID], componentId))
+				end
+			end
+		end
+		return	
+	end
+	
+	self._entityUpdater.OnClientEvent:connect(function(code, entity, componentId, paramList)
+		if code == 0 then -- server wants to update the state of a component on this client
+			if typeof(entity) == "string" then
+				for paramId in pairs(paramList) do
+					self._componentMap[componentId][entity][paramId] = paramList[paramId]
+				end
+			else
+				self:AddComponent(entity, componentId, paramList)
+			end
+		elseif code == 1 then -- server wants to kill an entity on this client
+			self:KillEntity(entity)
+		elseif code == 2 then -- server wants to kill a component on this client
+			self:KillComponent(entity, componentId)
+		end
+	end)
 end
 
 function EntityManager:StepSystem(systemName, deltaT)
@@ -495,7 +534,7 @@ function EntityManager:StepSystem(systemName, deltaT)
 	if IsClient then
 		system = require(game.ReplicatedStorage.WorldSmith.ClientSystems[systemName])
 		system(self, deltaT)
-	elseif IsServer and not IsStudio then
+	elseif IsServer and (not IsStudio or IsRunMode) then
 		system = require(game.ServerScriptService.WorldSmith.ServerSystems[systemName])
 		system(self, deltaT)
 	end
