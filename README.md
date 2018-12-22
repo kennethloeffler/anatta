@@ -36,5 +36,5 @@ The rigid body button creates a rigid body out of a selected model - the model m
 ### Refresh components button
 The refresh components button hot-swaps the plugin's currently loaded ComponentDesc module with the one in ReplicatedStorage.WorldSmith.
 
-## The EntityManager class
-EntityManager is the workhorse of the ECS - it provides many useful methods for getting and manipulating groups of entities and their components. [EntityManager.lua](https://github.com/kennethloeffler/WorldSmith/blob/master/WorldSmith/EntityManager.lua) contains a full API reference for this class
+##EntityManager
+EntityManager is the workhorse of the ECS - it provides many useful methods for getting and manipulating groups of entities and their components. [EntityManager.lua](https://github.com/kennethloeffler/WorldSmith/blob/master/WorldSmith/EntityManager.lua) contains a full API reference.
