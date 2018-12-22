@@ -24,7 +24,7 @@ local EntityManager = require(game.ReplicatedStorage.WorldSmith.EntityManager)
   - [Show components window](https://github.com/kennethloeffler/WorldSmith#show-components-window)
   - [Rigid body button](https://github.com/kennethloeffler/WorldSmith#rigid-body-button)
   - [Refresh components button](https://github.com/kennethloeffler/WorldSmith#refresh-components-button)
- - [The EntityManager class](https://github.com/kennethloeffler/WorldSmith#EntityManager)
+ - [EntityManager](https://github.com/kennethloeffler/WorldSmith#EntityManager)
   
 ## The WorldSmith interface
 ### Add component window
