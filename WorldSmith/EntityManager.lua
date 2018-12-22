@@ -200,7 +200,6 @@ function EntityManager:KillEntity(instance)
 	for componentId in pairs(self._entityMap[entity]) do
 		self._componentMap[componentId][entity] = nil
 	end
-	if instance then instance:Destroy() end
 	self._entityMap[entity] = nil
 	self._freedGUIDs[#self._freedGUIDs + 1] = entity
 end
@@ -300,6 +299,10 @@ end
 
 function EntityManager:UpdateComponentForPlayer(instance, player, componentType, paramList)
 	local componentId = Component:_getComponentIdFromType(componentType)
+	-- Player instances are a bit special in this architecture - they are the only objects (other than those in ReplicatedStorage
+	-- or Workspace) that are always replicated to all clients. This means we can just pass the player instance rather than the GUID 
+	-- as our "entity," saving some data for things like characters, tools, or other such components that are best attached to players
+	-- (those types of components will likely have to be updated very often over the line, making this even more important)
 	local entity = instance:IsA("Player") and instance or self:_getEntity(instance)
 	if not entity then
 		error(instance.Name .. " is not an entity")
@@ -314,7 +317,7 @@ function EntityManager:UpdateComponentForPlayer(instance, player, componentType,
 	local t = {}
 	for paramName, value in pairs(paramList) do
 		local paramId = Component:_getParamIdFromName(paramName, componentId)
-		t[paramId] = value
+		t[tostring(paramId)] = value
 	end
 	entityUpdater:FireClient(player, 0, entity, componentId, t) -- firing with code 0 - updating a component
 end
@@ -369,7 +372,11 @@ function EntityManager:GetClientRequestSignal(requestType, componentType, instan
 		local bindableEvent = Instance.new("BindableEvent")
 		self._clientRequestEvent.Event:connect(function(player, code, GUID, reqComponentId, paramList)
 			if code == reqCode and GUID == entity and reqComponentId == componentId then
-				bindableEvent:Fire(player, paramList)
+				local t = {}
+				for paramId in pairs(paramList) do
+					t[Component:_getParamNameFromId(tonumber(paramId), componentId)] = paramList[paramId]
+				end
+				bindableEvent:Fire(player, t)
 			end
 		end)
 		return bindableEvent.Event, bindableEvent
@@ -402,10 +409,10 @@ function EntityManager:RequestAddComponent(instance, componentType, paramList)
 	for index, value in pairs(paramList) do
 		local paramId = Component:_getParamIdFromName(index, componentId)
 		if paramId then
-			t[paramId] = value
+			t[tostring(paramId)] = value
 		end
 	end
-	self._entityUpdater:FireServer(0, entity, componentId, paramList)
+	self._entityUpdater:FireServer(0, entity, componentId, t)
 end
 
 function EntityManager:RequestUpdateComponent(instance, componentType, paramList)
@@ -424,10 +431,10 @@ function EntityManager:RequestUpdateComponent(instance, componentType, paramList
 	for index, value in pairs(paramList) do
 		local paramId = Component:_getParamIdFromName(index, componentId)
 		if paramId then
-			t[paramId] = value
+			t[tostring(paramId)] = value
 		end
 	end
-	self._entityUpdater:FireServer(3, entity, componentId, paramList)
+	self._entityUpdater:FireServer(3, entity, componentId, t)
 end
 
 function EntityManager:_setupEntityComponentMaps()
@@ -478,6 +485,9 @@ function EntityManager:_setupEntityComponentMaps()
 			end)
 			self._playerAddedEvent:Fire(player)
 		end)
+		game.Players.PlayerRemoving:Connect(function(player)
+			self._clientEntities[player.UserId] = nil
+		end)
 	end		
 end
 
@@ -516,10 +526,14 @@ function EntityManager:_setupClient()
 		if code == 0 then -- server wants to update the state of a component on this client
 			if typeof(entity) == "string" then
 				for paramId in pairs(paramList) do
-					self._componentMap[componentId][entity][paramId] = paramList[paramId]
+					self._componentMap[componentId][entity][tonumber(paramId)] = paramList[paramId]
 				end
-			else
-				self:AddComponent(entity, componentId, paramList)
+			elseif entity:IsA("Player") then
+				local t = {}
+				for paramId in pairs(paramList) do
+					t[tonumber(paramId)] = paramList[paramId]
+				end
+				self:AddComponent(entity, componentId, t)
 			end
 		elseif code == 1 then -- server wants to kill an entity on this client
 			self:KillEntity(entity)

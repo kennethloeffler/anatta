@@ -70,7 +70,7 @@ function Component.new(entity, component, paramList, isStudio, isPlugin)
 		end
 	else
 		for param, v in pairs(paramList) do
-			local paramId = Component:_getParamIdFromName(param, componentId)
+			local paramId = (not tonumber(param)) and Component:_getParamIdFromName(param, componentId) or param
 			struct[paramId] =  v
 			if isStudio then
 				entity[componentId][param]:GetPropertyChangedSignal("Value"):connect(function()
