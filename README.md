@@ -1,3 +1,5 @@
+(not production ready; use at your own risk)
+
 # WorldSmith -  a game creation plugin for Roblox Studio
 
 ## Introduction
