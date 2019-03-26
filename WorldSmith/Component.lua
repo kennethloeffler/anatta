@@ -1,21 +1,14 @@
---[[///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	
-	Component factory
-	
---]]--/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+-- Component.lua
 
 local CollectionService = game:GetService("CollectionService")
 local ComponentDesc = require(script.Parent.ComponentDesc)
 
-local Component = {}
-Component.__index = Component
-
 local ComponentIds = {}
 local ComponentParamId = {}
 
--- serialization doo dads
+local Component = {}
+
+-- set up tables for looking up components by id/typenames
 for id, component in ipairs(ComponentDesc) do
 	if component._metadata then
 		if component._metadata.ComponentType then
@@ -37,52 +30,21 @@ for id, component in ipairs(ComponentDesc) do
 end
 
 function Component.new(entity, component, paramList, isStudio, isPlugin)
+	assert(typeof(entity) == "Instance", "Expected instance")
+	assert((typeof(component) == "number" or typeof(component) == "string", "Expected string or integer")
+	assert(typeof(paramList) == "table", "Expected table")
 	
-	local struct = {}
-	
-	local componentId = tonumber(component) or Component:_getComponentIdFromType(component)
-	local parameterContainer
+	local struct = {} 
+	local componentId = typeof(component) == "number" and component or Component._getComponentIdFromType(component)
 
-	if isPlugin then
-		parameterContainer = Instance.new("Folder")
-		CollectionService:AddTag(parameterContainer, "component")
-		parameterContainer.Name = componentId
-		parameterContainer.Parent = entity
-		for param, v in pairs(paramList) do
-			local paramId = Component:_getParamIdFromName(param, componentId)
-			local paramRef
-			if typeof(v) == "Instance" then
-				paramRef = Instance.new("ObjectValue")
-			elseif typeof(v) == "string" then
-				paramRef = Instance.new("StringValue")
-			elseif typeof(v) == "number" then
-				paramRef = Instance.new("NumberValue")
-			elseif typeof(v) == "boolean" then
-				paramRef = Instance.new("BoolValue")
-			end
-			paramRef.Name = param
-			paramRef.Value = v
-			paramRef.Parent = parameterContainer
-			struct[paramId] =  v
-			entity[componentId][param]:GetPropertyChangedSignal("Value"):connect(function()
-				rawset(struct, paramId, entity[componentId][param].Value)
-			end)
-		end
-	else
-		for param, v in pairs(paramList) do
-			local paramId = (not tonumber(param)) and Component:_getParamIdFromName(param, componentId) or param
-			struct[paramId] =  v
-			if isStudio then
-				entity[componentId][param]:GetPropertyChangedSignal("Value"):connect(function()
-					rawset(struct, paramId, entity[componentId][param].Value)
-				end)
-			end	
-		end
+	for paramName in pairs(ComponentDesc[componentId]) do
+		local paramId = Component._getParamIdFromName(paramName)
+		struct[paramId] = paramList[paramName]
 	end
-			
+	
 	local StructMetatable = {
 		__index = function(_, index)
-			local paramId = Component:_getParamIdFromName(index, componentId)
+			local paramId = Component._getParamIdFromName(index, componentId)
 			if paramId then
 				return struct[paramId]
 			elseif index == "Parent" then
@@ -94,12 +56,9 @@ function Component.new(entity, component, paramList, isStudio, isPlugin)
 			end
 		end,
 		__newindex = function(_, index, value)
-			local paramId = Component:_getParamIdFromName(index, componentId)
+			local paramId = Component._getParamIdFromName(index, componentId)
 			if paramId then
 				struct[paramId] = value
-				if isStudio then
-					entity[componentId][index].Value = value
-				end
 			else
 				error(component .. " does not have parameter " .. index)
 			end
@@ -109,19 +68,19 @@ function Component.new(entity, component, paramList, isStudio, isPlugin)
 	return setmetatable(struct, StructMetatable)
 end
 
-function Component:_getComponentDesc() -- used by plugin
+function Component._getComponentDesc() -- used by plugin
 	return ComponentDesc
 end
 
-function Component:_getComponentIdFromType(componentType)
+function Component._getComponentIdFromType(componentType)
 	return ComponentIds[componentType]
 end
 
-function Component:_getParamIdFromName(paramName, componentId)
+function Component._getParamIdFromName(paramName, componentId)
 	return ComponentParamId[componentId][paramName]
 end
 
-function Component:_getParamNameFromId(paramId, componentId)
+function Component._getParamNameFromId(paramId, componentId)
 	local params = ComponentParamId[componentId]
 	local retParamName
 	for paramName, id in pairs(params) do
