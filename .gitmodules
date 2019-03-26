@@ -1,0 +1,6 @@
+[submodule "RoactStudioWidgets"]
+	path = RoactStudioWidgets
+	url = http://github.com/tiffany352/RoactStudioWidgets
+[submodule "roact"]
+	path = roact
+	url = http://github.com/roblox/roact
