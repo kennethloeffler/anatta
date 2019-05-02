@@ -253,7 +253,7 @@ function EntityManager:GetComponentAddedSignal(componentType, instance)
 		end
 	end)
 	return BindableEvent.Event, BindableEvent
-end
+end 
 
 function EntityManager:LoadForPlayer(instance, player)
 	
@@ -378,13 +378,14 @@ function EntityManager:GetClientRequestSignal(requestType, componentType, instan
 				end
 				bindableEvent:Fire(player, t)
 			end
-		end)
+		ends
 		return bindableEvent.Event, bindableEvent
 	end
 	
 	if requestType == "AddComponent" then
 		return setupListener(0) -- code 0; client is requesting to add a component
 	elseif requestType == "KillComponent" then
+		return setupListener(1)
 		-- I'm not going to implement this yet because I'm not sure if it has an actual use
 	elseif requestType == "UpdateComponent" then
 		return setupListener(3) -- code 3; client is requesting to update a component
@@ -519,7 +520,7 @@ function EntityManager:_setupClient()
 				end
 			end
 		end
-		return	
+		return
 	end
 	
 	self._entityUpdater.OnClientEvent:connect(function(code, entity, componentId, paramList)

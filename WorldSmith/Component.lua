@@ -3,69 +3,49 @@
 local CollectionService = game:GetService("CollectionService")
 local ComponentDesc = require(script.Parent.ComponentDesc)
 
+local Component = {}
+
 local ComponentIds = {}
 local ComponentParamId = {}
 
-local Component = {}
-
--- set up tables for looking up components by id/typenames
-for id, component in ipairs(ComponentDesc) do
-	if component._metadata then
-		if component._metadata.ComponentType then
-			ComponentIds[component._metadata.ComponentType] = id
+local ComponentMetatable = {
+	__index = function(component, index)
+		local paramId = Component._getParamIdFromName(index, component.componentId)
+		if paramId then
+			return component[paramId]
+		elseif index == "Parent" then
+			return component._entity
+		elseif index == "_componentId" then
+			return component._componentId
 		else
-			warn("game.ReplicatedStorage.Component: ._metadata for ComponentId " .. id .. " is missing a 'ComponentType' field") 
+			error(" does not have parameter " .. index)	
 		end
-	else
-		warn("game.ReplicatedStorage.Component: no ._metadata found for ComponentId " .. id)
-	end
-	local counter = 0
-	ComponentParamId[id] = {}
-	for paramName, v in pairs(component) do
-		if typeof(v) == "string" then
-			counter = counter + 1
-			ComponentParamId[id][paramName] = counter
+	end,
+	__newindex = function(component, index, value)
+		local paramId = Component._getParamIdFromName(index, component._componentId)
+		if paramId then
+			component[paramId] = value
+		else
+			error(" does not have parameter " .. index)
 		end
 	end
-end
+}
 
-function Component.new(entity, component, paramList, isStudio, isPlugin)
+function Component.new(entity, component, paramList)
 	assert(typeof(entity) == "Instance", "Expected instance")
-	assert((typeof(component) == "number" or typeof(component) == "string", "Expected string or integer")
+	assert(typeof(component) == "number" or typeof(component) == "string", "Expected string or integer")
 	assert(typeof(paramList) == "table", "Expected table")
 	
-	local struct = {} 
-	local componentId = typeof(component) == "number" and component or Component._getComponentIdFromType(component)
-
+	local newComponent = {} 
+	newComponent._componentId = typeof(component) == "number" and component or Component._getComponentIdFromType(component)
+	newComponent._entity = entity
+	
 	for paramName in pairs(ComponentDesc[componentId]) do
 		local paramId = Component._getParamIdFromName(paramName)
-		struct[paramId] = paramList[paramName]
+		newComponent[paramId] = paramList[paramName]
 	end
 	
-	local StructMetatable = {
-		__index = function(_, index)
-			local paramId = Component._getParamIdFromName(index, componentId)
-			if paramId then
-				return struct[paramId]
-			elseif index == "Parent" then
-				return entity
-			elseif index == "_componentId" then
-				return componentId
-			else
-				error(component .. " does not have parameter " .. index)	
-			end
-		end,
-		__newindex = function(_, index, value)
-			local paramId = Component._getParamIdFromName(index, componentId)
-			if paramId then
-				struct[paramId] = value
-			else
-				error(component .. " does not have parameter " .. index)
-			end
-		end
-	}
-	
-	return setmetatable(struct, StructMetatable)
+	return setmetatable(newComponent, ComponentMetatable)
 end
 
 function Component._getComponentDesc() -- used by plugin
@@ -89,6 +69,27 @@ function Component._getParamNameFromId(paramId, componentId)
 		end
 	end
 	return retParamName
+end
+
+-- set up tables for looking up components by id/typenames
+for id, component in ipairs(ComponentDesc) do
+	if component._metadata then
+		if component._metadata.ComponentType then
+			ComponentIds[component._metadata.ComponentType] = id
+		else
+			warn("game.ReplicatedStorage.Component: ._metadata for ComponentId " .. id .. " is missing a 'ComponentType' field") 
+		end
+	else
+		warn("game.ReplicatedStorage.Component: no ._metadata found for ComponentId " .. id)
+	end
+	local counter = 0
+	ComponentParamId[id] = {}
+	for paramName, v in pairs(component) do
+		if typeof(v) == "string" then
+			counter = counter + 1
+			ComponentParamId[id][paramName] = counter
+		end
+	end
 end
 
 return Component

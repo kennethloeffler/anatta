@@ -2,25 +2,12 @@ local CollectionService = game:GetService("CollectionService")
 local EntityManager
 local ComponentDesc
 
+-- dont run mfer
 if not game:GetService("RunService"):IsStudio() or game:GetService("RunService"):IsRunMode() then
-	repeat wait() until false
+	return
 end
 
-local StudioWidgets = require(2393391735)
-	local CollapsibleTitledSection = StudioWidgets.CollapsibleTitledSection
-	local GuiUtilities = StudioWidgets.GuiUtilities
-	local ImageButtonWithText = StudioWidgets.ImageButtonWithText
-	local LabeledCheckBox = StudioWidgets.LabeledCheckbox
-	local LabeledMultiChoice = StudioWidgets.LabeledMultiChoice
-	local LabeledSlider = StudioWidgets.LabeledSlider
-	local LabeledTextInput = StudioWidgets.LabeledTextInput
-	local LabeledInstanceInput = StudioWidgets.LabeledInstanceInput
-	local StatefulImageButton = StudioWidgets.StatefulImageButton
-	local VerticallyScalingListFrame = StudioWidgets.VerticallyScalingListFrame
-	local CustomTextButton = StudioWidgets.CustomTextButton
-	local LabeledRadioButton = StudioWidgets.LabeledRadioButton
-	local RbxGui = StudioWidgets.RbxGui
-	local AutoScalingScrollingFrame = StudioWidgets.AutoScalingScrollingFrame
+local RoactStudioWidgets = require(script.Parent.RoactStudioWidgets)
 
 function CreateDockWidget(guiId, title, initDockState, initEnabled, overrideEnabledRestore, floatXSize, floatYSize, minWidth, minHeight)
 	local DockWidgetPluginGui = plugin:CreateDockWidgetPluginGui(
@@ -138,7 +125,7 @@ local function main()
 			ComponentCreationButton:getButton().Size = UDim2.new(1, 0, 0, 20)
 			newComponentList:AddChild(ComponentCreationButton:getButton())
 			ComponentCreationButton:getButton().MouseButton1Down:connect(function()
-					local paramList = {}
+				local paramList = {}
 				for param, v in pairs(parameters) do
 					if typeof(v) == "string" then
 							local setVal
