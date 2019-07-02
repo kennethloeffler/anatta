@@ -11,3 +11,5 @@ function WSAssert(condition, ...)
 		error("assertion failed", 2)
 	end
 end
+
+return WSAssert
