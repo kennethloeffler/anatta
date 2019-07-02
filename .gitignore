@@ -18,6 +18,10 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Emacs files
+*.lua~
+*.lua#
+
 # =========================
 # Operating System Files
 # =========================
