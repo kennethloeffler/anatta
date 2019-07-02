@@ -12,8 +12,6 @@ local SERVER = RunService:IsServer() and not RunService:IsClient()
 local STUDIO = RunService:IsStudio()
 local RUNMODE = RunService:IsRunMode()
 
-local EntityManager = {}
-
 -- Internal
 --------------------------------------------------------------------------------------------------------------------------------------------------
 local TotalEntities = 0
@@ -23,6 +21,8 @@ local FreedGuidCache = {}
 local KilledComponents = {}
 local AddedComponents = {}
 local EntitiesByInstance = {}
+local ComponentAddedEvents = {}
+local ComponentRemovedEvents = {}
 local SystemsRunning = false
 local Systems = {}
 
@@ -39,7 +39,7 @@ local function getNewGuid(instance)
 		guid = HttpService:GenerateGUID(false)
 	end
 	EntitiesByInstance[instance] = guid
-	return
+	return guid
 end
 
 ---Adds a component to the destruction cache
@@ -62,6 +62,7 @@ local function stepComponentLifetime()
 				local instance = componentList[componentOffset].Instance
 				if not parentEntitiesMap[entity] then
 					if componentOffset ~= keptComponentOffset then
+						-- Come on baby let's do the flip! Take me by my little hand and go like this !
 						componentList[keptComponentOffset] = componentList[componentOffset]
 						EntityMap[entity][componentId] = keptComponentOffset
 						componentList[componentOffset] = nil					
@@ -83,13 +84,13 @@ local function stepComponentLifetime()
 			end
 		end
 	end
-	for cacheIndex = 1, #AddedComponents do
-		local component = AddedComponents[cacheIndex]
+	for i = 1, #AddedComponents do
+		local component = AddedComponents[i]
 		local componentId = component._componentId
 		local componentOffset = #ComponentMap[componentId] + 1
 		EntityMap[component._entity][componentId] = componentOffset
 		ComponentMap[componentId][componentOffset] = component
-		AddedComponents[cacheIndex] = nil
+		AddedComponents[i] = nil
 	end
 end
 
@@ -98,15 +99,22 @@ for _, moduleScript in pairs(componentsRoot:GetChildren()) do
 	local componentId = require(moduleScript)
 	ComponentMap[componentId] = {}
 	KilledComponents[componentId] = {}
+	ComponentKilledEvents[componentId] = Instance.new("BindableEvent")
+	ComponentAddedEvents[componentId] = Instance.new("BindableEvent")
 end
 
 -- Public API
 --------------------------------------------------------------------------------------------------------------------------------------------------
+local EntityManager = {}
 
 ---Creates a new entity and associates it with instance
+-- this function errors nil if an entity is already associated with instance
 -- @param instance
 -- @return The GUID, which represents the new entity
 function EntityManager.AddEntity(instance)
+   
+	WSAssert(EntitiesByInstance[instance] == nil, "%s already has an associated entity", instance.Name)
+	
 	local entity = getNewGuid(instance)
 	EntityMap[entity] = {}
 	TotalEntities = TotalEntities + 1
@@ -116,15 +124,17 @@ end
 
 ---Adds a component of type componentType to instance with parameters specified by paramMap
 -- If instance does not already have an associated entity, a new entity will be created
--- This operation is cached - creation occurs when the RunService steps or between system steps
+-- If instance already has componentType, the component will be overwritten
+-- This operation is cached - creation occurs on the RunService's heartbeat or between system steps
 -- @param instance
 -- @param componentType 
 -- @param paramMap Table containing values of parameters that will be set for this component, indexed by parameter name
 -- @return The new component object
 function EntityManager.AddComponent(instance, componentType, paramMap)
 	local entity = EntityManager.GetEntity(instance) or EntityManager.AddEntity(instance)
-	local component = Component(instance, componentType, paramMap)
+	local component = Component(entity, componentType, paramMap)
 	AddedComponents[#AddedComponents + 1] = component
+	ComponentAddedEvents[component._componentId]:Fire(instance)
 	return component
 end
 
@@ -143,9 +153,11 @@ end
 -- @return The component object of type componentType associated with instance
 function EntityManager.GetComponent(instance, componentType)
 	local entity = EntityManager.GetEntity(instance) 
+
 	if not entity then
 		return
 	end
+
 	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
 	local componentIndex = EntityMap[entity][componentId]
 	if componentIndex
@@ -162,15 +174,21 @@ function EntityManager.GetAllComponentsOfType(componentType)
 	return componentMap[componentId]
 end
 
-function EntityManager.GetComponentAdded(componentType)
+function EntityManager.ComponentAdded(componentType)
+	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+	local bindable = ComponentAddedEvents[componentId]
+	return bindable.Event
 end
 
-function EntityManager.GetComponentRemoved(componentType)
+function EntityManager.ComponentRemoved(componentType)
+	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+	local bindable = ComponentRemovedEvents[componentId]
+	return bindable.Event
 end
 
 ---Removes component of type componentType from the entity associated with instance
 -- If instance is not associated with an entity, this function returns without doing anything
--- This operation is cached - destruction occurs on the RunService's heartbeat or between system calls
+-- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
 -- @param componentType
 function EntityManager.KillComponent(instance, componentType)
@@ -184,6 +202,7 @@ function EntityManager.KillComponent(instance, componentType)
 	local componentIndex = EntityMap[entity][componentId]
 	if componentIndex then
 		cacheComponentKilled(entity, componentId)
+		ComponentRemovedEvents[componentId]:Fire(instance)
 	end
 end
 
@@ -200,17 +219,18 @@ function EntityManager.KillEntity(instance)
 
 	for componentId in pairs(EntityMap[entity]) do
 		cacheComponentKilled(entity, componentId)
+	   	ComponentRemovedEvents[componentId]:Fire(instance)
 	end
 end
 
 function EntityManager.FromPrefab(instance)
-	local prefab = PrefabMap[instance]
-	WSAssert(prefab, "%s is not associated with a prefab", instance.Name)
-	
+
 end
 
 function EntityManager.LoadSystem(systemModule)
+   
 	WSAssert(typeof(system) == "Instance" and system:IsA("ModuleScript"), "expected ModuleScript")
+
 	local system = require(systemModule)
 	if system.Heartbeat then
 		WSAssert(typeof(system.Heartbeat) == "function", "expected function %s.Heartbeat", systemModule.Name)
@@ -219,7 +239,9 @@ function EntityManager.LoadSystem(systemModule)
 end
 
 function EntityManager.StartSystems()
+   
 	WSAssert(systemsRunning == false, "systems already started")
+   
 	SystemsRunning = true
 	local numSystems = #systems
 	local lastFrameTime = RunService.Heartbeat:Wait()
