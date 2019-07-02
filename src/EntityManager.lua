@@ -2,8 +2,6 @@
 local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
-local ServerStorage = game:GetService("ServerStorage")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Component = require(script.Parent.Component)
 local WSAssert = require(script.Parent.WSAssert)
@@ -95,8 +93,8 @@ local function stepComponentLifetime()
 end
 
 -- Initialization
-for _, moduleScript in pairs(componentsRoot:GetChildren()) do
-	local componentId = require(moduleScript)
+for componentType, componentData in pairs(ComponentDesc.ComponentDescriptor) do
+	local componentId = componentData.ComponentId
 	ComponentMap[componentId] = {}
 	KilledComponents[componentId] = {}
 	ComponentKilledEvents[componentId] = Instance.new("BindableEvent")
@@ -112,8 +110,8 @@ local EntityManager = {}
 -- @param instance
 -- @return The GUID, which represents the new entity
 function EntityManager.AddEntity(instance)
-   
-	WSAssert(EntitiesByInstance[instance] == nil, "%s already has an associated entity", instance.Name)
+	local typeofArg = typeof(instance)
+   	WSAssert(typeofInstance == "Instance", "expected Instance (got %s)", typeofInstance)
 	
 	local entity = getNewGuid(instance)
 	EntityMap[entity] = {}
@@ -227,11 +225,11 @@ function EntityManager.FromPrefab(instance)
 
 end
 
-function EntityManager.LoadSystem(systemModule)
+function EntityManager.LoadSystem(pathToSystemModule)
    
-	WSAssert(typeof(system) == "Instance" and system:IsA("ModuleScript"), "expected ModuleScript")
+	WSAssert(typeof(pathToSystemModule) == "Instance" and pathToSystemModule:IsA("ModuleScript"), "expected ModuleScript")
 
-	local system = require(systemModule)
+	local system = require(pathToSystemModule)
 	if system.Heartbeat then
 		WSAssert(typeof(system.Heartbeat) == "function", "expected function %s.Heartbeat", systemModule.Name)
 		Systems[#Systems + 1] = system

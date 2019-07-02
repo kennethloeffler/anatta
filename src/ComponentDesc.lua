@@ -5,48 +5,28 @@ local ComponentDesc = {}
 local ComponentIdsByType = {}
 local ComponentTypesById = {}
 local ComponentParamIds = {}
-local CachedComponentIds = script:GetChildren()
 
-ComponentDesc._numUniqueComponents = #CachedComponentIds
+ComponentDesc.ComponentDescriptor = script:FindFirstChild("ComponentDescriptor") and require(script.ComponentDescriptor) or {}
 
-local function cacheComponentId(componentTypeName, componentId)
-	local valueObject = Instance.new("IntValue")
-	valueObject.Value = componentId
-	valueObject.Name = componentTypeName
-	valueObject.Parent = script
-end
-
-local function cacheParamId(componentTypeName, paramName, paramId)
-	local valueObject = Instance.new("IntValue")
-	valueObject.Value = paramId
-	valueObject.Name = paramName
-	valueObject.Parent = script[componentTypeName]
-end
-
----Defines a new component type with name componentType with parameters defined by paramMap
--- @param componentType A human-readable type name for this component
--- @param paramMap A dictionary containing parameter type and default value information
--- @return The component id of this component
-function ComponentDesc.Define(componentType, paramMap)
-	WSAssert(typeof(componentTypeName) == "string")
-	WSAssert(typeof(paramMap) == "table"))
+-- initialization
+for componentType, componentData in pairs(ComponentDescriptor) do
+   
+	WSAssert(typeof(componentType) == "string", "expected string")
+	WSAssert(typeof(componentData) == "table", "expected table")
 	
-	local cachedComponentIdObject = script:FindFirstChild(componentTypeName)
-	local componentId = cachedComponentIdObject and cachedComponentIdObject.Value or ComponentDesc._numUniqueComponents + 1
-	ComponentIdsByType[componentId] = componentTypeName
-	ComponentTypesById[componentTypeName] = componentId
+	local componentId = componentData.ComponentId
+	WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
+	ComponentIdsByType[componentType] = componentId
+	ComponentTypesById[componentId] = componentType
 	ComponentParamIds[componentId] = {}
 	
-	local paramId = 0
-	for paramName in pairs(paramMap) do
-		WSAssert(typeof(paramName) == "string")
-		paramId = cachedComponentIdObject and cachedComponentIdObject[paramName].Value or paramId + 1
-		ComponentParamIds[componentId][paramName] = paramId
+	for paramName, paramId in pairs(componentData) do
+		if paramName ~= "ComponentId" then
+			WSAssert(paramName == "string", "expected string")
+			WSAssert(paramId == "number", "expected number")
+			ComponentParamIds[componentId][paramName] = paramId
+		end
 	end
-	
-	ComponentDesc._numUniqueComponents = ComponentDesc._numUniqueComponents + (cachedComponentIdObject and 0 or 1)
-	
-	return componentId
 end
 
 function ComponentDesc.GetParamIdFromName(componentId, paramName)
@@ -58,7 +38,7 @@ function ComponentDesc.GetComponentIdFromType(componentType)
 end
 
 function ComponentDesc.GetComponentTypeFromId(componentId)
-	return ComponentTypesById[componentId] or error(componentId .. " is not a valid component id"
+	return ComponentTypesById[componentId] or error(componentId .. " is not a valid component id")
 end
 
 return ComponentDesc
