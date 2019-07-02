@@ -5,10 +5,10 @@ function WSAssert(condition, ...)
 				return string.format(...)
 			end)
 			if success then
-				error("assertion failed: " .. msg, 2)
+				error("WorldSmith: assertion failed: " .. msg, 2)
 			end
 		end
-		error("assertion failed", 2)
+		error("WorldSmith: assertion failed", 2)
 	end
 end
 
