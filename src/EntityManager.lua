@@ -106,12 +106,13 @@ end
 local EntityManager = {}
 
 ---Creates a new entity and associates it with instance
--- this function errors nil if an entity is already associated with instance
+-- this function errors if an entity is already associated with instance
 -- @param instance
 -- @return The GUID, which represents the new entity
 function EntityManager.AddEntity(instance)
 	local typeofArg = typeof(instance)
-   	WSAssert(typeofInstance == "Instance", "expected Instance (got %s)", typeofInstance)
+   	WSAssert(typeofArg == "Instance", "expected Instance (got %s)", typeofArg)
+	WSAssert(EntitiesByInstance[instance] == nil, "%s already has an associated entity", instance.Name)
 	
 	local entity = getNewGuid(instance)
 	EntityMap[entity] = {}
@@ -122,7 +123,7 @@ end
 
 ---Adds a component of type componentType to instance with parameters specified by paramMap
 -- If instance does not already have an associated entity, a new entity will be created
--- If instance already has componentType, the component will be overwritten
+-- If instance already has componentType, the the instance's componentType will be overwritten
 -- This operation is cached - creation occurs on the RunService's heartbeat or between system steps
 -- @param instance
 -- @param componentType 
@@ -193,7 +194,7 @@ function EntityManager.ComponentKilled(componentType)
 end
 
 ---Removes component of type componentType from the entity associated with instance
--- If instance is not associated with an entity, this function returns without doing anything
+-- If instance is not associated with an entity or instance does not have componentType, this function returns without doing anything
 -- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
 -- @param componentType
@@ -252,10 +253,9 @@ function EntityManager.StartSystems()
 	local numSystems = #systems
 	local lastFrameTime = RunService.Heartbeat:Wait()
 	while SystemsRunning do
-		stepComponentLifetime()
 		for i = 1, numSystems do
-		  	Systems[i](lastFrameTime)
-			stepComponentLifetime()
+		   	stepComponentLifetime()
+			Systems[i](lastFrameTime)
 		end
 		lastFrameTime = RunService.Heartbeat:Wait()
 	end
