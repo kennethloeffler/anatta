@@ -1,112 +1,61 @@
-local Instance = require(script.Instance)
+-- Instance.lua
+-- original code by tiffany352
+local Instance = {}
+Instance.__metatable = "Instance"
+Instance.__cache = setmetatable({}, {__mode = "kv"})
+Instance.InstanceKey = {}
 
-local gameWhitelist = {
-	ReplicatedStorage = true,
-	ServerScriptService = true,
-	ServerStorage = true,
-}
-local sandboxGame = Instance.new(game, {
-	GetService = function(self, service)
-		assert(typeof(service) == 'string')
-		if gameWhitelist[service] then
-			return Instance.new(game:GetService(service))
-		end
-	end,
-	__childrenWhitelist = gameWhitelist
-})
-
-local SandboxEnv = {}
-
-function SandboxEnv.new(script, baseEnv)
-	local env = {}
-
-	env.script = Instance.new(script)
-
-	env.game = sandboxGame
-
-	env._G = env
-	env.assert = assert
-	env.error = error
-	env.pairs = pairs
-	env.ipairs = ipairs
-	env.next = next
-	env.pcall = pcall
-	env.print = print
-	env.select = select
-	env.tonumber = tonumber
-	env.tostring = tostring
-	env.type = type
-	env.unpack = unpack
-	env.xpcall = xpcall
-	env.setmetatable = setmetatable
-
-	-- libraries
-	env.string = string
-	env.math = math
-	env.table = table
-	env.utf8 = utf8
-
-	-- atomic types
-	env.Axes = Axes
-	env.BrickColor = BrickColor
-	env.CFrame = CFrame
-	env.Color3 = Color3
-	env.ColorSequence = ColorSequence
-	env.ColorSequenceKeypoint = ColorSequenceKeypoint
-	env.Faces = Faces
-	env.NumberRange = NumberRange
-	env.NumberSequence = NumberSequence
-	env.NumberSequenceKeypoint = NumberSequenceKeypoint
-	env.PhysicalProperties = PhysicalProperties
-	env.Ray = Ray
-	env.Rect = Rect
-	env.Region3 = Region3
-	env.TweenInfo = TweenInfo
-	env.UDim = UDim
-	env.UDim2 = UDim2
-	env.Vector2 = Vector2
-	env.Vector3 = Vector3
-	-- excluded: Instance, DockWidgetPluginGuiInfo, PathWaypoint, Random, Vector3int16, Region3int16
-
-	function env.require(module)
-		if typeof(module) ~= 'Instance' then
-			module = module[Instance.InstanceKey]
-		end
-		local func = loadstring(module.Source, '@'..module:GetFullName())
-		setfenv(func, SandboxEnv.new(module))
-		return func()
+function Instance.new(realInst, mixins)
+	if not realInst then
+		return nil
 	end
 
-	return env
+	if Instance.__cache[realInst] then
+		return Instance.__cache[realInst]
+	end
+
+	local proxyMt = {}
+	proxyMt.__metatable = "Instance"
+	proxyMt.__newindex = error
+	local function GetChildren(self)
+		local whitelist = mixins and mixins.__childWhitelist
+		local filterChildren = {}
+		for _,child in pairs(realInst:GetChildren()) do
+			if not whitelist or whitelist[child.Name] then
+				filterChildren[#filterChildren + 1] = child
+			end
+		end
+		return filterChildren
+	end
+	function proxyMt:__index(key)
+		if key == Instance.InstanceKey then
+			return realInst
+		end
+		assert(typeof(key) == "string")
+		if key == "Parent" then
+			return Instance.new(realInst.Parent)
+		end
+		local whitelist = mixins and mixins.__childWhitelist
+		if key == "GetChildren" then
+			return GetChildren
+		end
+		if mixins and mixins[key] then
+			return mixins[key]
+		end
+		if not whitelist or whitelist[key] then
+			local child = realInst:FindFirstChild(key)
+			if child then
+				return Instance.new(child)
+			end
+		end
+		error(string.format("No such child %s of %s", key, realInst:GetFullName()))
+	end
+
+	local self = {}
+	setmetatable(self, proxyMt)
+
+	return self
 end
 
--- much more restricted environment for data serialization
-function SandboxEnv.lson()
-	local env = {}
+return Instance
 
-	-- atomic types
-	env.Axes = Axes
-	env.BrickColor = BrickColor
-	env.CFrame = CFrame
-	env.Color3 = Color3
-	env.ColorSequence = ColorSequence
-	env.ColorSequenceKeypoint = ColorSequenceKeypoint
-	env.Faces = Faces
-	env.NumberRange = NumberRange
-	env.NumberSequence = NumberSequence
-	env.NumberSequenceKeypoint = NumberSequenceKeypoint
-	env.PhysicalProperties = PhysicalProperties
-	env.Ray = Ray
-	env.Rect = Rect
-	env.Region3 = Region3
-	env.TweenInfo = TweenInfo
-	env.UDim = UDim
-	env.UDim2 = UDim2
-	env.Vector2 = Vector2
-	env.Vector3 = Vector3
-	-- excluded: Instance, DockWidgetPluginGuiInfo, PathWaypoint, Random, Vector3int16, Region3int16
-
-	return env
-end
-
-return SandboxEnv
