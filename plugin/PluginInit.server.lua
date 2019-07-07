@@ -1,5 +1,6 @@
--- PluginInit.lua
+-- PluginInit.lua - stole lots of idea from tiffany352 !!!
 local RunService = game:GetService("RunService")
+local ServerStorage = game:GetService("ServerStorage")
 
 local WSAssert = require(script.Parent.Parent.src.WSAssert)
 
@@ -7,17 +8,19 @@ local CLIENT = RunService:IsClient()
 local RUNMODE = RunService:IsRunmode()
 local SERVER = RunService:IsServer()
 
-local PluginSource = script.Parent.Parent
-local WatchedSource = PluginSource
+local IsCustomSource = false
+local OriginalSource = script.Parent.Parent
+local WatchedSource = OriginalSource
 local CurrentSource = WatchedSource
 
 local Toolbars = {}
 local Buttons = {}
 local DockWidgets = {}
 local WatchedInstances = {}
-local UnloadedCallback
 
 local PluginWrapper = {}
+
+PluginWrapper.OnUnloading = nil
 
 if not SERVER and CLIENT and RUNMODE then
 	-- don't load plugin in runmode client
@@ -25,6 +28,16 @@ if not SERVER and CLIENT and RUNMODE then
 end
 
 WSAssert(plugin ~= nil, "attempt to run plugin in non-plugin context")
+
+if IsCustomSource then
+	local customSource = ServerStorage:FindFirstChild("WorldSmith")
+	if customSource then
+		WatchedSource = source
+		CurrentSource = WatchedSource
+	else
+		warn("ServerStorage.WorldSmith does not exist; using original source")
+	end
+end
 
 function PluginWrapper.GetToolbar(toolbarName)
    
@@ -67,15 +80,52 @@ function PluginWrapper.GetDockWidget(dockWidgetName, ...)
 	return dockWidget
 end
 
-function PluginWrapper.Load(cachedState)
-end
+function PluginWrapper.Load()
+	local success, result = pcall(require, CurrentSource.plugin.Main)
 
-function PluginWrapper.Unload()
+	WSAssert(success, "plugin failed to load: %s", result)
+
+	local loadedPlugin = result
+
+	success, result = pcall(loadedPlugin, PluginWrapper)
+
+	WSAssert(success, "plugin failed to run: %s", result)
+	WSAssert(PluginWrapper.OnUnloaded, "PluginWrapper.OnUnloading is nil")
 end
 
 function PluginWrapper.Reload()
+	CurrentSource = WatchedSource:Clone()
+	PluginWrapper.Load()
 end
 
 function PluginWrapper.Watch(instance)
+
+	if WatchedInstances[instance] then
+		return
+	end
+
+	if instance == script then
+		return
+	end
+
+	local ChangedConnection = instance.Changed:Connect(function()
+		print("WorldSmith: plugin reloading; " .. instance:GetFullName() .. " changed")
+		PluginWrapper.Reload()
+	end)
+
+	local ChildAddedConnection = instance.ChildAdded:Connect(function(child)
+		PluginWrapper.Watch(child)	
+	end)
+
+	WatchedInstances[instance] = {ChangedConnection, ChildAddedConnection}
+
+	for _, child in ipairs(instance:GetChildren()) do
+		PluginWrapper.Watch(child)
+	end   
 end
+
+PluginWrapper.Load()
+PluginWrapper.Watch(WatchedSource)
+
+plugin.Unloading:Connect(PluginWrapper.OnUnloading)
 
