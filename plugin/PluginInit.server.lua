@@ -79,6 +79,3 @@ end
 function PluginWrapper.Watch(instance)
 end
 
-PluginWrapper.Load()
-PluginWrapper.Watch(
-
