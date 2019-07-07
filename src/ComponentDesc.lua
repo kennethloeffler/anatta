@@ -20,7 +20,7 @@ function ComponentDesc.LoadComponentDescriptor()
 	local ComponentDescriptor = require(ComponentDescriptorModule)
 	ComponentDesc.ComponentDescriptor = ComponentDescriptor
 	
-	for componentType, componentData in pairs(ComponentDescriptor) do
+	for componentType, componentDescription in pairs(ComponentDescriptor) do
 
 		WSAssert(typeof(componentType) == "string", "expected string")
 		WSAssert(typeof(componentData) == "table", "expected table")
@@ -31,7 +31,7 @@ function ComponentDesc.LoadComponentDescriptor()
 		ComponentTypesById[componentId] = componentType
 		ComponentParamIds[componentId] = {}
 	
-		for paramName, paramId in pairs(componentData) do
+		for paramName, paramId in pairs(componentDescription) do
 			if paramName ~= "ComponentId" then
 				WSAssert(paramName == "string", "expected string")
 				WSAssert(paramId == "number", "expected number")

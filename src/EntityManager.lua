@@ -93,8 +93,8 @@ local function stepComponentLifetime()
 end
 
 -- Initialization
-for componentType, componentData in pairs(ComponentDesc.ComponentDescriptor) do
-	local componentId = componentData.ComponentId
+for componentType, componentDescriptor in pairs(ComponentDesc.ComponentDescriptor) do
+	local componentId = componentDescriptor.ComponentId
 	ComponentMap[componentId] = {}
 	KilledComponents[componentId] = {}
 	ComponentKilledEvents[componentId] = Instance.new("BindableEvent")

@@ -1,5 +1,4 @@
 -- ComponentFactory.lua
-local CollectionService = game:GetService("CollectionService")
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
 local WSAssert = require(script.Parent.WSAssert)
