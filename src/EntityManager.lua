@@ -3,6 +3,7 @@ local CollectionService = game:GetService("CollectionService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
+local ComponentDesc = require(script.Parent.ComponentDesc)
 local ComponentFactory = require(script.Parent.ComponentFactory)
 local WSAssert = require(script.Parent.WSAssert)
 
