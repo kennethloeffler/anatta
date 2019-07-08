@@ -94,7 +94,7 @@ local function stepComponentLifetime()
 end
 
 -- Initialization
-for componentType, componentDescriptor in pairs(ComponentDesc.ComponentDescriptor) do
+for componentType, componentDescriptor in pairs(ComponentDesc.ComponentDescriptors) do
 	local componentId = componentDescriptor.ComponentId
 	ComponentMap[componentId] = {}
 	KilledComponents[componentId] = {}
@@ -264,6 +264,15 @@ end
 
 function EntityManager.StopSystems()
 	SystemsRunning = false
+end
+
+function EntityManager.Destroy()
+	-- maybe overkill ...
+	EntityManager.StopSytems()
+	for componentId in pairs(ComponentDesc.ComponentDescriptors) do
+		ComponentRemovedEvents[componentId]:Destroy()
+		ComponentAddedEvents[componentId]:Destroy()
+	end
 end
 
 return EntityManager
