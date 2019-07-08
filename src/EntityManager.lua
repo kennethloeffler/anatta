@@ -235,11 +235,19 @@ function EntityManager.FromPrefab(instance)
 
 end
 
-function EntityManager.LoadSystem(pathToSystemModule)
+function EntityManager.LoadSystem(pathToSystemModule, plugin)
    
 	WSAssert(typeof(pathToSystemModule) == "Instance" and pathToSystemModule:IsA("ModuleScript"), "expected ModuleScript")
 
 	local system = require(pathToSystemModule)
+
+	system.plugin = plugin
+	
+	if system.Init then
+		WSAssert(typeof(system.Init) == "function", "expected function %s.Init", systemModule.Name)
+		system.Init()
+	end
+	
 	if system.Heartbeat then
 		WSAssert(typeof(system.Heartbeat) == "function", "expected function %s.Heartbeat", systemModule.Name)
 		Systems[#Systems + 1] = system
@@ -267,8 +275,8 @@ function EntityManager.StopSystems()
 end
 
 function EntityManager.Destroy()
-	-- maybe overkill ...
-	EntityManager.StopSytems()
+	-- maybe overkill idk lolll
+	SystemsRunning = false
 	for componentId in pairs(ComponentDesc.ComponentDescriptors) do
 		ComponentRemovedEvents[componentId]:Destroy()
 		ComponentAddedEvents[componentId]:Destroy()
@@ -276,3 +284,4 @@ function EntityManager.Destroy()
 end
 
 return EntityManager
+
