@@ -32,7 +32,7 @@ WSAssert(plugin ~= nil, "attempt to run plugin in non-plugin context")
 if IsCustomSource then
 	local customSource = ServerStorage:FindFirstChild("WorldSmith")
 	if customSource then
-		WatchedSource = source
+		WatchedSource = customSource
 		CurrentSource = WatchedSource
 	else
 		warn("ServerStorage.WorldSmith does not exist; using original source")
