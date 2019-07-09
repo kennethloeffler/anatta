@@ -48,41 +48,50 @@ local function cacheComponentKilled(entity, componentId)
 	KilledComponents[componentId][entity] = true
 end
 
----Iterates through the component lifetime caches and mutates entity-component maps accordingly
--- Called after each system step and when RunService.Stepped fires
-local function stepComponentLifetime()
-	for componentId, parentEntitiesMap in pairs(KilledComponents) do
-		if next(parentEntitiesList) then
-			local componentList = ComponentMap[componentId]
-			local keptComponentOffset = 1
-			-- fast one-pass algorithm for reording a an array after removals
-			for componentOffset = 1, #componentList do
-				local entity = componentList[componentOffset]._entity
-				local instance = componentList[componentOffset].Instance
-				if not parentEntitiesMap[entity] then
-					if componentOffset ~= keptComponentOffset then
-						-- Come on baby let's do the flip! Take me by my little hand and go like this !
-						componentList[keptComponentOffset] = componentList[componentOffset]
-						EntityMap[entity][componentId] = keptComponentOffset
-						componentList[componentOffset] = nil					
-					end
-					keptComponentOffset = keptComponentOffset + 1
-				else
-					componentList[componentOffset] = nil
-					EntityMap[entity][componentId] = nil
-					parentEntitiesMap[entity] = nil
-					if not next(EntityMap[entity]) then
-						-- no components; free this entity
-						CollectionService:RemoveTag(instance, "_WSEntity")
-						EntityMap[entity] = nil
-						FreedGuidCache[#FreedGuidCache + 1] = entity
-						TotalEntities = TotalEntities - 1
-						EntitiesByInstance[instance] = nil
-					end
-				end
+local function doReorder(componentId, parentEntitiesMap)
+
+	if not next(parentEntitiesMap) then
+		return
+	end
+
+	local componentList = ComponentMap[componentId]
+	local keptComponentOffset = 1
+	for componentOffset = 1, #componentList do
+		local entity = componentList[componentOffset]._entity
+		local instance = componentList[componentOffset].Instance
+		if not parentEntitiesMap[entity] then
+			if componentOffset ~= keptComponentOffset then
+				-- swap !
+				componentList[keptComponentOffset] = componentList[componentOffset]
+				EntityMap[entity][componentId] = keptComponentOffset
+				componentList[componentOffset] = nil					
+			end
+			keptComponentOffset = keptComponentOffset + 1
+		else
+		   	-- kill !
+			componentList[componentOffset] = nil
+			EntityMap[entity][componentId] = nil
+			parentEntitiesMap[entity] = nil
+			if not next(EntityMap[entity]) then
+				-- dead !
+				CollectionService:RemoveTag(instance, "_WSEntity")
+				EntityMap[entity] = nil
+				FreedGuidCache[#FreedGuidCache + 1] = entity
+				TotalEntities = TotalEntities - 1
+				EntitiesByInstance[instance] = nil
 			end
 		end
 	end
+end
+
+---Iterates through the component lifetime caches and mutates entity-component maps accordingly
+-- Called after each system step and when RunService.Stepped fires
+local function stepComponentLifetime()
+   
+	for componentId, parentEntitiesMap in pairs(KilledComponents) do
+		doReorder(componentId, parentEntitiesMap)
+	end
+	
 	for i = 1, #AddedComponents do
 		local component = AddedComponents[i]
 		local componentId = component._componentId
