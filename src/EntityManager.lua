@@ -56,9 +56,9 @@ local function doReorder(componentId, parentEntitiesMap)
 
 	local componentList = ComponentMap[componentId]
 	local keptComponentOffset = 1
-	for componentOffset = 1, #componentList do
-		local entity = componentList[componentOffset]._entity
-		local instance = componentList[componentOffset].Instance
+	for _, component in ipairs(ComponentList) do
+		local entity = component._entity
+		local instance = component.Instance
 		if not parentEntitiesMap[entity] then
 			if componentOffset ~= keptComponentOffset then
 				-- swap !
@@ -73,7 +73,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			EntityMap[entity][componentId] = nil
 			parentEntitiesMap[entity] = nil
 			if not next(EntityMap[entity]) then
-				-- dead !
+				-- we dead !
 				CollectionService:RemoveTag(instance, "_WSEntity")
 				EntityMap[entity] = nil
 				FreedGuidCache[#FreedGuidCache + 1] = entity
@@ -90,10 +90,10 @@ local function stepComponentLifetime()
    
 	for componentId, parentEntitiesMap in pairs(KilledComponents) do
 		doReorder(componentId, parentEntitiesMap)
+		KilledComponents[componentId]
 	end
 	
-	for i = 1, #AddedComponents do
-		local component = AddedComponents[i]
+	for i, component in ipairs(AddedComponents) do
 		local componentId = component._componentId
 		local componentOffset = #ComponentMap[componentId] + 1
 		EntityMap[component._entity][componentId] = componentOffset
@@ -271,9 +271,9 @@ function EntityManager.StartSystems()
 	local numSystems = #systems
 	local lastFrameTime = RunService.Heartbeat:Wait()
 	while SystemsRunning do
-		for i = 1, numSystems do
+		for _, system in ipairs(Systems) do
 		   	stepComponentLifetime()
-			Systems[i](lastFrameTime)
+			system(lastFrameTime)
 		end
 		lastFrameTime = RunService.Heartbeat:Wait()
 	end

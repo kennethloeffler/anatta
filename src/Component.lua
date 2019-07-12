@@ -12,7 +12,7 @@ function Component.Define(componentTypeName, paramMap)
 		WSAssert(typeof(i) == "string", "expected string")
 	end
 
-	return componentTypeName, ParamMap
+	return componentTypeName, paramMap
 end
 
 return Component

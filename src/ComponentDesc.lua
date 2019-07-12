@@ -1,37 +1,29 @@
 local WSAssert = require(script.Parent.WSAssert)
 
-local ComponentDesc = {}
-
 local ComponentIdsByType = {}
 local ComponentTypesById = {}
 local ComponentParamIds = {}
 
-function ComponentDesc.LoadComponentDescriptor()
-   
-	if not script:FindFirstChild("ComponentDescriptor") then
-		ComponentDesc.ComponentDescriptor = {}
-		return
-	end
+local ComponentDesc = {
+	ComponentDescriptors = {}
+}
 
-	local ComponentDescriptorModule = script.ComponentDescriptor:Clone()
-	script.ComponentDescriptor:Destroy()
-	ComponentDescriptorModule.Parent = script
+if script:FindFirstChild("ComponentDescriptors") then 
+	local ComponentDescriptors = require(script.ComponentDescriptors)
+	ComponentDesc.ComponentDescriptors = ComponentDescriptors
 	
-	local ComponentDescriptor = require(ComponentDescriptorModule)
-	ComponentDesc.ComponentDescriptor = ComponentDescriptor
-	
-	for componentType, componentDescription in pairs(ComponentDescriptor) do
+	for componentType, componentDescriptor in pairs(ComponentDescriptors) do
 
 		WSAssert(typeof(componentType) == "string", "expected string")
 		WSAssert(typeof(componentData) == "table", "expected table")
 	
-		local componentId = componentData.ComponentId
+		local componentId = componentDescriptor.ComponentId
 		WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
 		ComponentIdsByType[componentType] = componentId
 		ComponentTypesById[componentId] = componentType
 		ComponentParamIds[componentId] = {}
 	
-		for paramName, paramId in pairs(componentDescription) do
+		for paramName, paramId in pairs(componentDescriptor) do
 			if paramName ~= "ComponentId" then
 				WSAssert(paramName == "string", "expected string")
 				WSAssert(paramId == "number", "expected number")

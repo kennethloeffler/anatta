@@ -51,19 +51,19 @@ function PluginWrapper.GetToolbar(toolbarName)
 	return toolbar
 end
 
-function PluginWrapper.GetButton(toolbarName, buttonName, buttonTooltip, buttonIcon)
+function PluginWrapper.GetButton(toolbar, buttonName, buttonTooltip, buttonIcon)
    
-	if Buttons[toolbarName] then
+	if Buttons[toolbar] then
 		local button = buttons[buttonName]
 		if button then
 			return button
 		end
 	else
-		Buttons[toolbarName] = {}
+		Buttons[toolbar] = {}
 	end
 
 	local button = plugin:CreateButton(buttonName, buttonTooltip, buttonIcon)
-	Buttons[toolbarName][buttonName] = button
+	Buttons[toolbar][buttonName] = button
 	
 	return button
 end
@@ -90,7 +90,7 @@ function PluginWrapper.Load()
 	success, result = pcall(loadedPlugin, PluginWrapper)
 
 	WSAssert(success, "plugin failed to run: %s", result)
-	WSAssert(PluginWrapper.OnUnloaded, "PluginWrapper.OnUnloading is nil")
+	WSAssert(PluginWrapper.OnUnloaded and typeof(PluginWrapper.OnUnloaded) == "function", "expected function PluginWrapper.OnUnloading")
 end
 
 function PluginWrapper.Reload()
