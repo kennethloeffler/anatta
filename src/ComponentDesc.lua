@@ -5,25 +5,25 @@ local ComponentTypesById = {}
 local ComponentParamIds = {}
 
 local ComponentDesc = {
-	ComponentDescriptors = {}
+	ComponentDefinitions = {}
 }
 
-if script:FindFirstChild("ComponentDescriptors") then 
-	local ComponentDescriptors = require(script.ComponentDescriptors)
-	ComponentDesc.ComponentDescriptors = ComponentDescriptors
+if script:FindFirstChild("ComponentDefinitions") then 
+	local ComponentDefinitions = require(script.ComponentDefinitions)
+	ComponentDesc.ComponentDefinitions = ComponentDefinitions
 	
-	for componentType, componentDescriptor in pairs(ComponentDescriptors) do
+	for componentType, componentDeinition in pairs(ComponentDefinitions) do
 
 		WSAssert(typeof(componentType) == "string", "expected string")
 		WSAssert(typeof(componentData) == "table", "expected table")
 	
-		local componentId = componentDescriptor.ComponentId
+		local componentId = componentDeinition.ComponentId
 		WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
 		ComponentIdsByType[componentType] = componentId
 		ComponentTypesById[componentId] = componentType
 		ComponentParamIds[componentId] = {}
 	
-		for paramName, paramId in pairs(componentDescriptor) do
+		for paramName, paramId in pairs(componentDeinition) do
 			if paramName ~= "ComponentId" then
 				WSAssert(paramName == "string", "expected string")
 				WSAssert(paramId == "number", "expected number")
