@@ -11,6 +11,9 @@ local SERVER = RunService:IsServer() and not RunService:IsClient()
 local STUDIO = RunService:IsStudio()
 local RUNMODE = RunService:IsRunMode()
 
+local bExtract = bit32.extract
+local bReplace = bit32.replace
+
 -- Internal
 --------------------------------------------------------------------------------------------------------------------------------------------------
 local TotalEntities = 0
@@ -23,7 +26,38 @@ local EntitiesByInstance = {}
 local ComponentAddedEvents = {}
 local ComponentRemovedEvents = {}
 local SystemsRunning = false
+local EntityFilters = {}
+local SystemEntities = {}
 local Systems = {}
+
+-- bitfield setter
+local function setComponentBitForEntity(entity, componentId, value)
+	local bitField = EntityMap[entity][0][math.ceil((componentId - 1) * 0.03125)] -- (componentId - 1) / 32
+	EntityMap[entity][0][math.ceil((componentId - 1)  * 0.03125)] = bReplace(bitField, value, ((componentId - (i * 32)) - 1))
+end
+
+-- bitfield getter
+local function getComponentBitForEntity(entity, componentId)
+	local bitField = EntityMap[entity][0][math.ceil((componentId - 1) * 0.03125)] -- (comoponentId - 1) / 32
+	return bExtract(bitField, ((componentId - (i * 32)) - 1)) == 1
+end
+
+local function filterEntity(instance)
+	local entityBitFields = EntityMap[entity][0]
+	for systemId, bitFields in ipairs(EntityFilters) do
+		local numEq = 0
+		for index, bitField in ipairs(bitFields) do
+			if bitField == entityBitFields[index] then
+				numEq = numEq + 1
+			end
+		end
+		if numEq == 4 then
+			SystemEntities[systemId][instance] = true
+		else
+			SystemEntities[systemId][instance] = nil
+		end
+	end
+end
 
 ---Gets an available GUID and attaches it to instance
 -- @param instance
@@ -72,6 +106,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			componentList[componentOffset] = nil
 			EntityMap[entity][componentId] = nil
 			parentEntitiesMap[entity] = nil
+			setComponentBitForEntity(entity, componentId, 0)
 			if not next(EntityMap[entity]) then
 				-- we dead !
 				CollectionService:RemoveTag(instance, "_WSEntity")
@@ -81,6 +116,7 @@ local function doReorder(componentId, parentEntitiesMap)
 				EntitiesByInstance[instance] = nil
 			end
 		end
+		filterEntity[instance]
 	end
 end
 
@@ -90,7 +126,6 @@ local function stepComponentLifetime()
    
 	for componentId, parentEntitiesMap in pairs(KilledComponents) do
 		doReorder(componentId, parentEntitiesMap)
-		KilledComponents[componentId]
 	end
 	
 	for i, component in ipairs(AddedComponents) do
@@ -99,12 +134,14 @@ local function stepComponentLifetime()
 		EntityMap[component._entity][componentId] = componentOffset
 		ComponentMap[componentId][componentOffset] = component
 		AddedComponents[i] = nil
+		setComponentBitForEntity(entity, componentId, 1)
+		filterEntity(component.Instance)
 	end
 end
 
 -- Initialization
-for componentType, componentDescriptor in pairs(ComponentDesc.ComponentDescriptors) do
-	local componentId = componentDescriptor.ComponentId
+for componentType, componentDescriptor in pairs(ComponentDesc.ComponentDefinitions) do
+	local componentId = componentDefinitions.ComponentId
 	ComponentMap[componentId] = {}
 	KilledComponents[componentId] = {}
 	ComponentKilledEvents[componentId] = Instance.new("BindableEvent")
@@ -125,7 +162,7 @@ function EntityManager.AddEntity(instance)
 	WSAssert(EntitiesByInstance[instance] == nil, "%s already has an associated entity", instance.Name)
 	
 	local entity = getNewGuid(instance)
-	EntityMap[entity] = {}
+	EntityMap[entity] = { [0] = {0, 0, 0, 0} } -- table of bitfields for fast component intersection tests
 	TotalEntities = TotalEntities + 1
 	CollectionService:AddTag(instance, "__WSEntity")
 	return entity
@@ -244,22 +281,35 @@ function EntityManager.FromPrefab(instance)
 
 end
 
-function EntityManager.LoadSystem(pathToSystemModule, plugin)
+function EntityManager.LoadSystem(module, plugin)
    
-	WSAssert(typeof(pathToSystemModule) == "Instance" and pathToSystemModule:IsA("ModuleScript"), "expected ModuleScript")
+	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "expected ModuleScript")
 
-	local system = require(pathToSystemModule)
-
+	local system = require(module)
 	system.plugin = plugin
 	
 	if system.Init then
-		WSAssert(typeof(system.Init) == "function", "expected function %s.Init", systemModule.Name)
+		WSAssert(typeof(system.Init) == "function", "expected function %s.Init", module.Name)
 		system.Init()
 	end
 	
 	if system.Heartbeat then
-		WSAssert(typeof(system.Heartbeat) == "function", "expected function %s.Heartbeat", systemModule.Name)
-		Systems[#Systems + 1] = system
+		WSAssert(typeof(system.Heartbeat) == "function", "expected function %s.Heartbeat", module.Name)
+		WSAssert(system.EntityFilter and typeof(system.EntityFilter) == "table", "expected array %s.EntityFilter", module.Name)
+
+		local systemId = #Systems + 1
+		Systems[systemId] = system
+		EntityFilters[systemId] = {}
+		SystemEntities[systemId] = {}
+
+		for i, componentType in pairs(system.EntityFilter) do
+			WSAssert(typeof(componentName) == "string" and typeof(i) == "number", "EntityFilter should be a string-valued array")
+		end
+
+		for i, componentType in ipairs(system.EntityFilter) do
+			local componentId = ComponentDesc.GetComponentIdFromType(componentName)
+			EntityFilters[systemId][math.ceil((componentId - 1) / 32)] = bReplace(0, 1, ((componentId - (i * 32)) - 1))
+		end
 	end
 end
 
@@ -271,9 +321,9 @@ function EntityManager.StartSystems()
 	local numSystems = #systems
 	local lastFrameTime = RunService.Heartbeat:Wait()
 	while SystemsRunning do
-		for _, system in ipairs(Systems) do
+		for systemId, system in ipairs(Systems) do
 		   	stepComponentLifetime()
-			system(lastFrameTime)
+			system(SystemEntities[systemId], lastFrameTime)
 		end
 		lastFrameTime = RunService.Heartbeat:Wait()
 	end
