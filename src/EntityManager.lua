@@ -32,8 +32,9 @@ local Systems = {}
 
 -- bitfield setter
 local function setComponentBitForEntity(entity, componentId, value)
-	local bitField = EntityMap[entity][0][math.ceil((componentId - 1) * 0.03125)] -- (componentId - 1) / 32
-	EntityMap[entity][0][math.ceil((componentId - 1)  * 0.03125)] = bReplace(bitField, value, ((componentId - (i * 32)) - 1))
+	local offset = math.ceil((componentId - 1) * 0.03125) -- (componentId - 1) / 32
+	local bitField = EntityMap[entity][0][offset]
+	EntityMap[entity][0][offset] = bReplace(bitField, value, ((componentId - (i * 32)) - 1))
 end
 
 -- bitfield getter
