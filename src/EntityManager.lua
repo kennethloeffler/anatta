@@ -53,6 +53,7 @@ local function filterEntity(instance)
 			end
 		end
 		if numEq == 4 then
+			-- all bitfields match
 			SystemEntities[systemId][instance] = true
 		else
 			SystemEntities[systemId][instance] = nil
@@ -108,6 +109,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			EntityMap[entity][componentId] = nil
 			parentEntitiesMap[entity] = nil
 			setComponentBitForEntity(entity, componentId, 0)
+			filterEntity(instance)
 			if not next(EntityMap[entity]) then
 				-- we dead !
 				CollectionService:RemoveTag(instance, "_WSEntity")
@@ -117,7 +119,6 @@ local function doReorder(componentId, parentEntitiesMap)
 				EntitiesByInstance[instance] = nil
 			end
 		end
-		filterEntity[instance]
 	end
 end
 
@@ -141,8 +142,8 @@ local function stepComponentLifetime()
 end
 
 -- Initialization
-for componentType, componentDescriptor in pairs(ComponentDesc.ComponentDefinitions) do
-	local componentId = componentDefinitions.ComponentId
+for componentType, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
+	local componentId = componentDefinition.ComponentId
 	ComponentMap[componentId] = {}
 	KilledComponents[componentId] = {}
 	ComponentKilledEvents[componentId] = Instance.new("BindableEvent")
