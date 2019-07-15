@@ -34,29 +34,25 @@ local Systems = {}
 local function setComponentBitForEntity(entity, componentId, value)
 	local offset = math.ceil((componentId - 1) * 0.03125) -- (componentId - 1) / 32
 	local bitField = EntityMap[entity][0][offset]
-	EntityMap[entity][0][offset] = bReplace(bitField, value, ((componentId - (i * 32)) - 1))
+	EntityMap[entity][0][offset] = bReplace(bitField, value, ((componentId - (offset * 32)) - 1))
 end
 
 -- bitfield getter
 local function getComponentBitForEntity(entity, componentId)
-	local bitField = EntityMap[entity][0][math.ceil((componentId - 1) * 0.03125)] -- (comoponentId - 1) / 32
-	return bExtract(bitField, ((componentId - (i * 32)) - 1)) == 1
+	local offset = math.ceil((componentId - 1) * 0.03125) -- (comoponentId - 1) / 32
+	local bitField = EntityMap[entity][0][offset]
+	return bExtract(bitField, ((componentId - (offset * 32)) - 1)) == 1
 end
 
 local function filterEntity(instance)
 	local entityBitFields = EntityMap[entity][0]
 	for systemId, bitFields in ipairs(EntityFilters) do
-		local numEq = 0
-		for index, bitField in ipairs(bitFields) do
-			if bitField == entityBitFields[index] then
-				numEq = numEq + 1
-			end
-		end
-		if numEq == 4 then
-			-- all bitfields match
-			SystemEntities[systemId][instance] = true
-		else
+		-- don't really want to do a loop here
+		local bitFieldsMatch = bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4]
+		if not bitFieldsMatch then
 			SystemEntities[systemId][instance] = nil
+		else
+			SystemEntities[systemId][instance] = true
 		end
 	end
 end
