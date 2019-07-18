@@ -119,7 +119,7 @@ local function doReorder(componentId, parentEntitiesMap)
 end
 
 ---Iterates through the component lifetime caches and mutates entity-component maps accordingly
--- Called after each system step and when RunService.Stepped fires
+-- Called before each system step
 local function stepComponentLifetime()
    
 	for componentId, parentEntitiesMap in pairs(KilledComponents) do
@@ -138,12 +138,20 @@ local function stepComponentLifetime()
 end
 
 -- Initialization
-for componentType, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
-	local componentId = componentDefinition.ComponentId
-	ComponentMap[componentId] = {}
-	KilledComponents[componentId] = {}
-	ComponentKilledEvents[componentId] = Instance.new("BindableEvent")
-	ComponentAddedEvents[componentId] = Instance.new("BindableEvent")
+local function initComponentDefs()
+	for componentType, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
+		local componentId = componentDefinition.ComponentId
+		ComponentMap[componentId] = not ComponentMap[componentId] and {}
+		KilledComponents[componentId] = not KilledComponents[componentId] and {}
+		ComponentKilledEvents[componentId] = not ComponentKilledEvents[componentId] and Instance.new("BindableEvent")
+		ComponentAddedEvents[componentId] = not ComponentAddedEvents[componentId] and Instance.new("BindableEvent")
+	end
+end
+
+initComponentDefs()
+
+if plugin then
+	ComponentDesc._defUpdateCallback = initComponentDefs
 end
 
 -- Public API
@@ -156,11 +164,8 @@ local EntityManager = {}
 -- @return The GUID, which represents the new entity
 function EntityManager.AddEntity(instance)
 	local typeofArg = typeof(instance)
-   	WSAssert(typeofArg == "Instance", "expected Instance (got %s)", typeofArg)
-	WSAssert(EntitiesByInstance[instance] == nil, "%s already has an associated entity", instance.Name)
-	
 	local entity = getNewGuid(instance)
-	EntityMap[entity] = { [0] = {0, 0, 0, 0} } -- table of bitfields for fast component intersection tests
+	EntityMap[entity] = { [0] = {0, 0, 0, 0} } -- table of bitfields for fast intersection tests
 	TotalEntities = TotalEntities + 1
 	CollectionService:AddTag(instance, "__WSEntity")
 	return entity
@@ -185,9 +190,10 @@ end
 ---Gets the entity associated with instance
 -- If instance is not associated with an entity, this function returns nil
 -- @param instance
--- @return The entity's GUID
+-- @return The entity's GUID and struct
 function EntityManager.GetEntity(instance)
-	return EntitiesByInstance[instance]
+	local guid = EntitiesByInstance[instance]
+	return guid, EntityMap[guid]
 end
 
 ---Gets the component of type componentType associated with instance
@@ -279,8 +285,7 @@ function EntityManager.FromPrefab(instance)
 
 end
 
-function EntityManager.LoadSystem(module, plugin)
-   
+function EntityManager.LoadSystem(module, plugin)   
 	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "expected ModuleScript")
 
 	local system = require(module)
@@ -288,18 +293,25 @@ function EntityManager.LoadSystem(module, plugin)
 	
 	if system.Init then
 		WSAssert(typeof(system.Init) == "function", "expected function %s.Init", module.Name)
+
 		system.Init()
 	end
 	
 	if system.Heartbeat then
 		WSAssert(typeof(system.Heartbeat) == "function", "expected function %s.Heartbeat", module.Name)
-		WSAssert(system.EntityFilter and typeof(system.EntityFilter) == "table", "expected array %s.EntityFilter", module.Name)
 
 		local systemId = #Systems + 1
 		Systems[systemId] = system
+		
+		if not system.EntityFilter then
+			return
+		end
+			
+		WSAssert(typeof(system.EntityFilter) == "table", "expected array %s.EntityFilter", module.Name)
+			
 		EntityFilters[systemId] = {}
-		SystemEntities[systemId] = {}
-
+		SystemEntities[systemId] = {}	
+		
 		for i, componentType in pairs(system.EntityFilter) do
 			WSAssert(typeof(componentName) == "string" and typeof(i) == "number", "EntityFilter should be a string-valued array")
 		end
@@ -323,6 +335,7 @@ function EntityManager.StartSystems()
 		   	stepComponentLifetime()
 			system(SystemEntities[systemId], lastFrameTime)
 		end
+		stepComponentLifetime()
 		lastFrameTime = RunService.Heartbeat:Wait()
 	end
 end
@@ -332,7 +345,7 @@ function EntityManager.StopSystems()
 end
 
 function EntityManager.Destroy()
-	-- maybe overkill idk lolll
+	-- maybe overkill
 	SystemsRunning = false
 	for componentId in pairs(ComponentDesc.ComponentDescriptors) do
 		ComponentRemovedEvents[componentId]:Destroy()
