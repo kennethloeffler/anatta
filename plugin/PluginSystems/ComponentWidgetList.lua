@@ -1,0 +1,3 @@
+local ComponentWidgetList = {}
+
+return ComponentWidgetList
