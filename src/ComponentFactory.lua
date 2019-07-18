@@ -27,7 +27,7 @@ function Component(instance, entity, componentType, paramMap)
 	
 	for paramName in pairs(paramMap) do
 		local paramId = ComponentDesc.GetParamIdFromName(newComponent._componentId, paramName)
-		newComponent[paramId] = paramList[paramName]
+		newComponent[paramId] = paramMap[paramName]
 	end
 	
 	return setmetatable(newComponent, ComponentMetatable)

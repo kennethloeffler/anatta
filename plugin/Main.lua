@@ -1,20 +1,19 @@
 -- Main.lua
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local root = script.Parent.Parent
 local GameRoot = ReplicatedStorage:FindFirstChild("WorldSmith")
-local Systems = root.plugin.PluginSystems
-local Components = root.plugin.PluginComponents
+local Systems = script.Parent.PluginSystems
+local Components = script.Parent.PluginComponents
 
-local Serial = require(root.plugin.Serial)
+local Serial = require(script.Parent.Serial)
 
-return function(plugin)
+function Main(pluginWrapper)
 	-- PluginComponents are not persistent
 	local numPluginComponents = 0
 	local componentDefinitions = {}
-	for _, componentModule in ipairs(Components:GetChildren())
-		local componentType, paramMap  = require(componentModule)
+	for _, componentModule in ipairs(Components:GetChildren()) do
+		local componentType, paramMap = require(componentModule)
 		numPluginComponents = numPluginComponents + 1 
 		componentDefinitions[componentType] = {}
 		componentDefinitions[componentType].ComponentId = numPluginComponents
@@ -25,7 +24,7 @@ return function(plugin)
 			componentDefinitions[componentType][paramName] = paramId
 		end
 	end
-
+	
 	local componentDefsModule = Instance.new("ModuleScript")
 	componentDefsModule.Name = "ComponentDefinitions"
 	componentDefsModule.Source = Serial.Serialize(componentDefinitions)
@@ -33,21 +32,22 @@ return function(plugin)
 
 	local pluginManager = require(root.src.EntityManager)
 
-	pluginManager.LoadSystem(Systems.GameComponentsLoader, plugin)
+	pluginManager.LoadSystem(Systems.GameComponentLoader, pluginWrapper)
 	
 	local gameManager = GameRoot and require(GameRoot.EntityManager)
 
-	plugin.GameManager = gameManager
-	plugin.PluginManager = pluginManager
+	pluginWrapper.GameManager = gameManager
+	pluginWrapper.PluginManager = pluginManager
 	
-	pluginManager.LoadSystem(Systems.ComponentWidget, plugin)
-	pluginManager.LoadSystem(Systems.EntityPersistence, plugin)
+	pluginManager.LoadSystem(Systems.ComponentWidget, pluginWrapper)
 
-	plugin.OnUnloaded = function()
+	pluginWrapper.OnUnloading = function()
 		pluginManager.Destroy()
 		gameManager.Destroy()
 	end
 
 	pluginManager.StartSystems()
 end
+
+return Main
 

@@ -5,7 +5,7 @@ local ComponentTypesById = {}
 local ComponentParamIds = {}
 
 local ComponentDesc = {
-	ComponentDefinitions = {}
+	ComponentDefinitions = {},
 	_defUpdateCallback = nil
 }
 
@@ -13,7 +13,7 @@ local function populateDefs(definitionTable)
 	for componentType, componentDefinition in pairs(definitionTable) do
 
 		WSAssert(typeof(componentType) == "string", "expected string")
-		WSAssert(typeof(componentData) == "table", "expected table")
+		WSAssert(typeof(componentDefinition) == "table", "expected table")
 	
 		local componentId = componentDefinition.ComponentId
 		WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
@@ -40,8 +40,8 @@ if script:FindFirstChild("ComponentDefinitions") then
 			return
 		end
 		populateDefs(require(script.ComponentDefinitions:Clone()))
-		if defUpdateCallback then
-			defUpdateCallback()
+		if ComponentDesc._defUpdateCallback then
+			ComponentDesc._defUpdateCallback()
 		end
 	end)	
 end

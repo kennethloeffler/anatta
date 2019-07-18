@@ -5,10 +5,10 @@ local ServerStorage = game:GetService("ServerStorage")
 local WSAssert = require(script.Parent.Parent.src.WSAssert)
 
 local CLIENT = RunService:IsClient()
-local RUNMODE = RunService:IsRunmode()
+local RUNMODE = RunService:IsRunMode()
 local SERVER = RunService:IsServer()
 
-local IsCustomSource = false
+local IsCustomSource = true
 local OriginalSource = script.Parent.Parent
 local WatchedSource = OriginalSource
 local CurrentSource = WatchedSource
@@ -84,13 +84,13 @@ function PluginWrapper.Load()
 	local success, result = pcall(require, CurrentSource.plugin.Main)
 
 	WSAssert(success, "plugin failed to load: %s", result)
-
+	
 	local loadedPlugin = result
 
 	success, result = pcall(loadedPlugin, PluginWrapper)
 
 	WSAssert(success, "plugin failed to run: %s", result)
-	WSAssert(PluginWrapper.OnUnloaded and typeof(PluginWrapper.OnUnloaded) == "function", "expected function PluginWrapper.OnUnloading")
+	WSAssert(PluginWrapper.OnUnloading and typeof(PluginWrapper.OnUnloading) == "function", "expected function PluginWrapper.OnUnloading")
 end
 
 function PluginWrapper.Reload()
@@ -99,12 +99,11 @@ function PluginWrapper.Reload()
 end
 
 function PluginWrapper.Watch(instance)
-
-	if WatchedInstances[instance] then
+	if instance == script then
 		return
 	end
 
-	if instance == script then
+	if WatchedInstances[instance] then
 		return
 	end
 
@@ -128,7 +127,6 @@ function PluginWrapper.Watch(instance)
 	end   
 end
 
-plugin.Unloading:Connect(PluginWrapper.OnUnloading)
 plugin.Unloading:Connect(function()
 	for _, t in pairs(WatchedInstances) do
 		t[1]:Disconnect()
@@ -139,4 +137,4 @@ end)
 PluginWrapper.Load()
 PluginWrapper.Watch(WatchedSource)
 
-
+plugin.Unloading:Connect(PluginWrapper.OnUnloading)

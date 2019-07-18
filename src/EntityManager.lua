@@ -210,7 +210,7 @@ function EntityManager.GetComponent(instance, componentType)
 
 	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
 	local componentIndex = EntityMap[entity][componentId]
-	if componentIndex
+	if componentIndex then
 		return ComponentMap[componentId][componentIndex]
 	end
 end
