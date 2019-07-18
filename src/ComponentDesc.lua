@@ -68,3 +68,4 @@ function ComponentDesc.GetAllParams(componentType)
 end
 
 return ComponentDesc
+

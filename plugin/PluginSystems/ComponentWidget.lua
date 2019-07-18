@@ -36,25 +36,27 @@ function ComponentWidget.Init(pluginWrapper)
 	Selection.SelectionChanged:Connect(function()
 		local selectedInstances = Selection:Get()
 
-		if next(selectedInstances) then	
-
-			if #selectedInstances > 1 then
-				widget.Title = "Components - " .. #selectedInstances .. " items"
-			else
-				widget.Title = "Components - " .. selectedInstances[1].ClassName .. " \"" .. selectedInstances[1].Name .. "\""
-			end
-
-			local entities = {}
-			for _, inst in ipairs(selectedInstances) do
-				local entity = GameManager:GetEntity(inst)
-				if entity then
-					entities[#entities + 1] = inst
-				end
-			end
-		
-			PluginManager.AddComponent(bgFrame, "SelectionUpdate", {EntityList = entities})
+		if not next(selectedInstances) then
+			return
 		end
+
+		if #selectedInstances > 1 then
+			widget.Title = "Components - " .. #selectedInstances .. " items"
+		else
+			widget.Title = "Components - " .. selectedInstances[1].ClassName .. " \"" .. selectedInstances[1].Name .. "\""
+		end
+
+		local entities = {}
+		for _, inst in ipairs(selectedInstances) do
+			local entity = GameManager:GetEntity(inst)
+			if entity then
+				entities[#entities + 1] = inst
+			end
+		end
+	
+		PluginManager.AddComponent(bgFrame, "SelectionUpdate", {EntityList = entities})
 	end)
 end
 
 return ComponentWidget
+

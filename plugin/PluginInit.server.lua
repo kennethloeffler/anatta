@@ -123,6 +123,9 @@ function PluginWrapper.Watch(instance)
 	end   
 end
 
+PluginWrapper.Watch(WatchedSource)
+PluginWrapper.Load()
+
 plugin.Unloading:Connect(function()
 	for _, t in pairs(WatchedInstances) do
 		t[1]:Disconnect()
@@ -130,7 +133,5 @@ plugin.Unloading:Connect(function()
 	end
 end)
 
-PluginWrapper.Watch(WatchedSource)
-PluginWrapper.Load()
-
 plugin.Unloading:Connect(PluginWrapper.OnUnloading)
+

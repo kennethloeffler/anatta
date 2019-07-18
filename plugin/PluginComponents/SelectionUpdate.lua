@@ -5,3 +5,4 @@ return Component.Define(
 	"SelectionUpdate",
 	{ EntityList = {} }
 )
+

@@ -16,11 +16,12 @@ function Main(pluginWrapper)
 		local rawComponent = require(componentModule)
 		local componentType = rawComponent[1]
 		local paramMap = rawComponent[2]
+		local paramId = 0
+		
 		numPluginComponents = numPluginComponents + 1 
 		componentDefinitions[componentType] = {}
 		componentDefinitions[componentType].ComponentId = numPluginComponents
 		
-		local paramId = 0
 		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
 			componentDefinitions[componentType][paramName] = paramId

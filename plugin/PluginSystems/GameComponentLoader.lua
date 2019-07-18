@@ -91,6 +91,9 @@ local function tryCollectComponent(instance)
 		
 		-- this component has not been serialized before
 		local componentIdListHole
+		local componentId
+		local paramId = 0
+
 		for i = 1, numUniqueComponents do
 			if not ComponentsArray[i] then
 				componentIdListHole = i
@@ -101,7 +104,6 @@ local function tryCollectComponent(instance)
 		numUniqueComponents = numUniqueComponents + 1
 		GameComponentDefs[componentType] = {}
 		
-		local componentId
 		if not componentIdListHole then
 			componentId = numUniqueComponents
 		else
@@ -110,7 +112,6 @@ local function tryCollectComponent(instance)
 
 		GameComponentDefs[componentType].ComponentId = componentId
 
-		local paramId = 0
 		for paramName  in pairs(paramMap) do
 			paramId = paramId + 1
 			GameComponentDefs[componentType][paramName] = paramId

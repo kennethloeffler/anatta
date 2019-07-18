@@ -14,3 +14,4 @@ function WSAssert(condition, ...)
 end
 
 return WSAssert
+

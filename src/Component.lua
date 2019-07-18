@@ -6,3 +6,4 @@ function Component.Define(componentTypeName, paramMap)
 end
 
 return Component
+

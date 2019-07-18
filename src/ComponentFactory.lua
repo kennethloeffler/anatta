@@ -21,6 +21,7 @@ local ComponentMetatable = {
 --@return The new component object
 function Component(instance, entity, componentType, paramMap)
 	local newComponent = {} 
+
 	newComponent._componentId = ComponentDesc.GetComponentIdFromType(componentType)
 	newComponent._entity = entity
 	newComponent.Instance = instance
@@ -34,3 +35,4 @@ function Component(instance, entity, componentType, paramMap)
 end
 
 return Component
+
