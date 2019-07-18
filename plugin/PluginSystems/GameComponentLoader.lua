@@ -134,8 +134,8 @@ function tryRemoveComponent(instance)
 end
 
 function ComponentsLoader.Init(plugin)
-	
-	local GameComponentDefModule = Instance.new("ModuleScript")
+
+	local GameComponentDefModule = GameSrc.ComponentDesc:FindFirstChild("ComponentDefinitions") or Instance.new("ModuleScript")
 
 	if GameComponentDesc then
 		for componentType, componentDef in pairs(GameComponentDesc.ComponentDefinitions) do

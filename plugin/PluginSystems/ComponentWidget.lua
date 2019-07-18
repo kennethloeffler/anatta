@@ -21,15 +21,16 @@ function ComponentWidget.Init(pluginWrapper)
 	local AddComponentButton = Instance.new("TextButton")
 	AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Button)
 	AddComponentButton.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
-	AddComponentButton.TextStrokeTransparency = 1
 	AddComponentButton.Text = "+"
-	AddComponentButton.Size = UDim2.new(0, 100, 0, 100)
-	AddComponentButton.Position = UDim2.new(1, 0, 0, 0)
-	AddComponentButton.AnchorPoint = Vector2.new(0.5, 0.5)
+	AddComponentButton.TextSize = 20
+	AddComponentButton.BorderSizePixel = 0
+	AddComponentButton.Size = UDim2.new(0, 32, 0, 32)
+	AddComponentButton.Position = UDim2.new(1, -32, 0, 0)
 	AddComponentButton.Parent = bgFrame
 
 	AddComponentButton.MouseButton1Down:Connect(function()
 		local components = GameComponentDesc.GetAllComponents()
+		print("clicked")
 		PluginManager.AddComponent(bgFrame, "AddComponentMenuOpen", {Components = components})
 	end)
 	
@@ -37,6 +38,7 @@ function ComponentWidget.Init(pluginWrapper)
 		local selectedInstances = Selection:Get()
 
 		if not next(selectedInstances) then
+			widget.Title = "Components"
 			return
 		end
 

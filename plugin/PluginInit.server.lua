@@ -90,6 +90,7 @@ function PluginWrapper.Load()
 end
 
 function PluginWrapper.Reload()
+	PluginWrapper.OnUnloading()
 	CurrentSource = WatchedSource:Clone()
 	PluginWrapper.Load()
 end
@@ -109,7 +110,7 @@ function PluginWrapper.Watch(instance)
 
 	local ChangedConnection = instance.Changed:Connect(function()
 		print("WorldSmith: plugin reloading; " .. instance:GetFullName() .. " changed")
-		PluginWrapper.Reload()
+		PluginWrapper.Reload()	
 	end)
 
 	local ChildAddedConnection = instance.ChildAdded:Connect(function(child)

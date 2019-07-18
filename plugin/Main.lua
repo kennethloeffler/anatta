@@ -1,10 +1,11 @@
 -- Main.lua
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
-local root = script.Parent.Parent
+local root = ServerStorage:WaitForChild("WorldSmith", 1) or script.Parent.Parent
 local GameRoot = ReplicatedStorage:FindFirstChild("WorldSmith")
-local Systems = script.Parent.PluginSystems
-local Components = script.Parent.PluginComponents
+local Systems = root.plugin.PluginSystems
+local Components = root.plugin.PluginComponents
 
 local Serial = require(script.Parent.Serial)
 
@@ -28,7 +29,7 @@ function Main(pluginWrapper)
 		end
 	end
 	
-	local componentDefsModule = Instance.new("ModuleScript")
+	local componentDefsModule = root.src.ComponentDesc:FindFirstChild("ComponentDefinitions") or Instance.new("ModuleScript")
 	componentDefsModule.Name = "ComponentDefinitions"
 	componentDefsModule.Source = Serial.Serialize(componentDefinitions)
 	componentDefsModule.Parent = root.src.ComponentDesc
@@ -45,6 +46,10 @@ function Main(pluginWrapper)
 	pluginManager.LoadSystem(Systems.ComponentWidget, pluginWrapper)
 
 	pluginWrapper.OnUnloading = function()
+		local dockWidget = pluginWrapper.GetDockWidget("Components")
+		if dockWidget then
+			dockWidget:ClearAllChildren()
+		end
 		pluginManager.Destroy()
 		gameManager.Destroy()
 	end

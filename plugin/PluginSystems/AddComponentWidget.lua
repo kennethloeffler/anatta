@@ -7,6 +7,7 @@ function AddComponentWidget.Init(plugin)
 	local GameManager = plugin.GameManager
 	
 	PluginManager.ComponentAdded("AddComponentWidgetOpen"):Connect(function(bgFrame)
+		print("opening")
 		local component = PluginManager.GetComponent(bgFrame, "AddComponentWidgetOpen")
 		for componentType in pairs(component.Components) do
 		end
