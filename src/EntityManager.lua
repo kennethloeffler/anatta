@@ -92,8 +92,9 @@ local function doReorder(componentId, parentEntitiesMap)
 
 	local componentList = ComponentMap[componentId]
 	local keptComponentOffset = 1
-	for _, component in ipairs(ComponentList) do
+	for _, component in ipairs(componentList) do
 		local entity = component._entity
+		local componentOffset = EntityMap[entity][componentId]
 		local instance = component.Instance
 		if not parentEntitiesMap[entity] then
 			if componentOffset ~= keptComponentOffset then
@@ -134,11 +135,13 @@ local function stepComponentLifetime()
 		local componentId = component._componentId
 		local componentOffset = #ComponentMap[componentId] + 1
 		local entity = component._entity
+		local instance = component.Instance
 		EntityMap[entity][componentId] = componentOffset
 		ComponentMap[componentId][componentOffset] = component
 		AddedComponents[i] = nil
 		setComponentBitForEntity(entity, componentId, 1)
-		filterEntity(component.Instance)
+		filterEntity(instance)
+		ComponentAddedEvents[componentId]:Fire(instance)
 	end
 end
 
@@ -188,7 +191,6 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 	local entity = EntityManager.GetEntity(instance) or EntityManager.AddEntity(instance)
 	local component = ComponentFactory(instance, entity, componentType, paramMap)
 	AddedComponents[#AddedComponents + 1] = component
-	ComponentAddedEvents[component._componentId]:Fire(instance)
 	return component
 end
 
