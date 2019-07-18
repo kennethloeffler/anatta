@@ -74,7 +74,7 @@ function PluginWrapper.GetDockWidget(dockWidgetName, ...)
 		return DockWidgets[dockWidgetName]
 	end
 
-	local dockWidget = plugin:CreateDockWidgetPluginGui(dockWidgetName, ...)
+	local dockWidget = plugin:CreateDockWidgetPluginGui(dockWidgetName, DockWidgetPluginGuiInfo.new(...))
 	DockWidgets[dockWidgetName] = dockWidget
 
 	return dockWidget
@@ -108,6 +108,10 @@ function PluginWrapper.Watch(instance)
 		return
 	end
 
+	if instance.Name == "ComponentDefinitions" then
+		return
+	end
+
 	local ChangedConnection = instance.Changed:Connect(function()
 		print("WorldSmith: plugin reloading; " .. instance:GetFullName() .. " changed")
 		PluginWrapper.Reload()
@@ -124,8 +128,15 @@ function PluginWrapper.Watch(instance)
 	end   
 end
 
+plugin.Unloading:Connect(PluginWrapper.OnUnloading)
+plugin.Unloading:Connect(function()
+	for _, t in pairs(WatchedInstances) do
+		t[1]:Disconnect()
+		t[2]:Disconnect()
+	end
+end)
+
 PluginWrapper.Load()
 PluginWrapper.Watch(WatchedSource)
 
-plugin.Unloading:Connect(PluginWrapper.OnUnloading)
 
