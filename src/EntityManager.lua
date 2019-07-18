@@ -352,8 +352,10 @@ end
 function EntityManager.Destroy()
 	-- maybe overkill
 	SystemsRunning = false
-	for componentId in pairs(ComponentDesc.ComponentDescriptors) do
+	for componentId in pairs(ComponentRemovedEvents) do
 		ComponentRemovedEvents[componentId]:Destroy()
+	end
+	for componentId in pairs(ComponentAddedEvents) do
 		ComponentAddedEvents[componentId]:Destroy()
 	end
 end
