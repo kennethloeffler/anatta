@@ -23,8 +23,8 @@ local function populateDefs(definitionTable)
 	
 		for paramName, paramId in pairs(componentDefinition) do
 			if paramName ~= "ComponentId" then
-				WSAssert(paramName == "string", "expected string")
-				WSAssert(paramId == "number", "expected number")
+				WSAssert(typeof(paramName) == "string", "expected string")
+				WSAssert(typeof(paramId) == "number", "expected number")
 				ComponentParamIds[componentId][paramName] = paramId
 			end
 		end

@@ -13,7 +13,9 @@ function Main(pluginWrapper)
 	local numPluginComponents = 0
 	local componentDefinitions = {}
 	for _, componentModule in ipairs(Components:GetChildren()) do
-		local componentType, paramMap = require(componentModule)
+		local rawComponent = require(componentModule)
+		local componentType = rawComponent[1]
+		local paramMap = rawComponent[2]
 		numPluginComponents = numPluginComponents + 1 
 		componentDefinitions[componentType] = {}
 		componentDefinitions[componentType].ComponentId = numPluginComponents

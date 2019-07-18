@@ -20,17 +20,13 @@ local WatchedInstances = {}
 
 local PluginWrapper = {}
 
-PluginWrapper.OnUnloading = nil
-
 if not SERVER and CLIENT and RUNMODE then
 	-- don't load plugin in runmode client
 	return
 end
 
-WSAssert(plugin ~= nil, "attempt to run plugin in non-plugin context")
-
 if IsCustomSource then
-	local customSource = ServerStorage:FindFirstChild("WorldSmith")
+	local customSource = ServerStorage:WaitForChild("WorldSmith", 2)
 	if customSource then
 		WatchedSource = customSource
 		CurrentSource = WatchedSource
@@ -134,7 +130,7 @@ plugin.Unloading:Connect(function()
 	end
 end)
 
-PluginWrapper.Load()
 PluginWrapper.Watch(WatchedSource)
+PluginWrapper.Load()
 
 plugin.Unloading:Connect(PluginWrapper.OnUnloading)

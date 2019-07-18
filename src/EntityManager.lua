@@ -32,19 +32,23 @@ local Systems = {}
 
 -- bitfield setter
 local function setComponentBitForEntity(entity, componentId, value)
-	local offset = math.ceil((componentId - 1) * 0.03125) -- (componentId - 1) / 32
+	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
 	local bitField = EntityMap[entity][0][offset]
-	EntityMap[entity][0][offset] = bReplace(bitField, value, ((componentId - (offset * 32)) - 1))
+	EntityMap[entity][0][offset] = bReplace(bitField, value, componentId - 1 - (32 * (offset - 1)))
 end
 
 -- bitfield getter
 local function getComponentBitForEntity(entity, componentId)
-	local offset = math.ceil((componentId - 1) * 0.03125) -- (comoponentId - 1) / 32
+	local offset = math.ceil((componentId * 0.03125)) -- comoponentId / 32
 	local bitField = EntityMap[entity][0][offset]
-	return bExtract(bitField, ((componentId - (offset * 32)) - 1)) == 1
+	return bExtract(bitField, componentId - 1 - (32 * (offset - 1))) == 1
 end
 
 local function filterEntity(instance)
+	local entity = EntitiesByInstance[instance]
+	if not entity then
+		return
+	end
 	local entityBitFields = EntityMap[entity][0]
 	for systemId, bitFields in ipairs(EntityFilters) do
 		-- don't really want to do a loop here
@@ -63,7 +67,7 @@ end
 local function getNewGuid(instance)
 	local guid
 	local numFreedGuids = #FreedGuidCache
-	if numFreedGUIDs > 0 then
+	if numFreedGuids > 0 then
 		guid = FreedGuidCache[numFreedGuids]
 		FreedGuidCache[numFreedGuids] = nil
 	else
@@ -129,7 +133,8 @@ local function stepComponentLifetime()
 	for i, component in ipairs(AddedComponents) do
 		local componentId = component._componentId
 		local componentOffset = #ComponentMap[componentId] + 1
-		EntityMap[component._entity][componentId] = componentOffset
+		local entity = component._entity
+		EntityMap[entity][componentId] = componentOffset
 		ComponentMap[componentId][componentOffset] = component
 		AddedComponents[i] = nil
 		setComponentBitForEntity(entity, componentId, 1)
@@ -143,7 +148,7 @@ local function initComponentDefs()
 		local componentId = componentDefinition.ComponentId
 		ComponentMap[componentId] = not ComponentMap[componentId] and {}
 		KilledComponents[componentId] = not KilledComponents[componentId] and {}
-		ComponentKilledEvents[componentId] = not ComponentKilledEvents[componentId] and Instance.new("BindableEvent")
+		ComponentRemovedEvents[componentId] = not ComponentRemovedEvents[componentId] and Instance.new("BindableEvent")
 		ComponentAddedEvents[componentId] = not ComponentAddedEvents[componentId] and Instance.new("BindableEvent")
 	end
 end
@@ -221,7 +226,7 @@ end
 -- @return The list of component objects
 function EntityManager.GetAllComponentsOfType(componentType)
 	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
-	return componentMap[componentId]
+	return ComponentMap[componentId]
 end
 
 function EntityManager.ComponentAdded(componentType)
@@ -285,16 +290,15 @@ function EntityManager.FromPrefab(instance)
 
 end
 
-function EntityManager.LoadSystem(module, plugin)   
+function EntityManager.LoadSystem(module, pluginWrapper)   
 	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "expected ModuleScript")
 
 	local system = require(module)
-	system.plugin = plugin
 	
 	if system.Init then
 		WSAssert(typeof(system.Init) == "function", "expected function %s.Init", module.Name)
 
-		system.Init()
+		system.Init(pluginWrapper)
 	end
 	
 	if system.Heartbeat then
@@ -313,11 +317,11 @@ function EntityManager.LoadSystem(module, plugin)
 		SystemEntities[systemId] = {}	
 		
 		for i, componentType in pairs(system.EntityFilter) do
-			WSAssert(typeof(componentName) == "string" and typeof(i) == "number", "EntityFilter should be a string-valued array")
+			WSAssert(typeof(componentType) == "string" and typeof(i) == "number", "EntityFilter should be a string-valued array")
 		end
 
 		for i, componentType in ipairs(system.EntityFilter) do
-			local componentId = ComponentDesc.GetComponentIdFromType(componentName)
+			local componentId = ComponentDesc.GetComponentIdFromType(componentType)
 			EntityFilters[systemId][math.ceil((componentId - 1) / 32)] = bReplace(0, 1, ((componentId - (i * 32)) - 1))
 		end
 	end
@@ -325,10 +329,11 @@ end
 
 function EntityManager.StartSystems()
    
-	WSAssert(systemsRunning == false, "systems already started")
+	if SystemsRunning then
+		return
+	end
    
 	SystemsRunning = true
-	local numSystems = #systems
 	local lastFrameTime = RunService.Heartbeat:Wait()
 	while SystemsRunning do
 		for systemId, system in ipairs(Systems) do

@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local GameSrc = ReplicatedStorage:FindFirstChild("WorldSmith")
+local GameSrc = ReplicatedStorage:WaitForChild("WorldSmith")
 local PluginSrc = script.Parent.Parent.Parent.src
 
 local GameComponentDesc = GameSrc and require(GameSrc.ComponentDesc)
@@ -17,7 +17,7 @@ local ComponentsLoader = {}
 local function tryRequire(moduleScript)
 	local env = Sandbox.new(moduleScript)
 	local success, result = xpcall(function()
-		return { env.require(moduleScript) } 
+		return env.require(moduleScript)
 	end,
 	function(err)
 		return err
@@ -155,7 +155,7 @@ function ComponentsLoader.Init(plugin)
 	ReplicatedStorage.DescendantAdded:Connect(function(inst)
 		tryCollectComponent(inst)
 		GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
-	end
+	end)
 
 	ReplicatedStorage.DescendantRemoving:Connect(function(inst)
 		tryRemoveComponent(inst)
