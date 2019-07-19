@@ -44,24 +44,7 @@ function AddComponentWidget.Init(pluginWrapper)
 			button.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
 					button.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar, Enum.StudioStyleGuideModifier.Pressed)
-					local selection = Selection:Get()
-					for _, instance in ipairs(selection) do
-						local module = instance:FindFirstChild("__WSEntity")
-						if not module then
-							module = Instance.new("ModuleScript")
-							module.Name = "__WSEntity"
-							module.Parent = instance
-						end
-						GameManager.AddComponent(instance, componentType)
-						local struct = module and Serial.Deserialize(module.Source) or {}
-						struct[componentType] = {}
-						for index, value in pairs(addedComponent) do
-							if typeof(index) == "number" then 
-								struct[componentType][#struct[componentType] + 1] = {paramId = index, paramVal = value}
-							end
-						end
-						module.Source = Serial.Serialize(struct)
-					end
+					PluginManager.AddComponent(scrollingFrame, "DoSerializeEntity", {InstanceList = selection:Get(), ComponentType = def.ComponentType})
 				end
 			end)
 			button.Parent = scrollingFrame
