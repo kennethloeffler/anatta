@@ -54,11 +54,11 @@ function AddComponentWidget.Init(pluginWrapper)
 						end
 						local addedComponent = GameManager.AddComponent(instance, componentType)
 						local struct = module and Serial.Deserialize(module.Source) or {}
-						struct[addedComponent._componentId] = {}
+						struct[componentType] = {}
 						struct.Entity = addedComponent._entity
 						for index, value in pairs(addedComponent) do
 							if typeof(index) == "number" then 
-								struct[addedComponent._componentId][index] = value
+								struct[componentType][index] = value
 							end
 						end
 						module.Source = Serial.Serialize(struct)
