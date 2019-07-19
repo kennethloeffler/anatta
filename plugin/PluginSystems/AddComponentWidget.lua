@@ -57,7 +57,7 @@ function AddComponentWidget.Init(pluginWrapper)
 						struct[componentType] = {}
 						for index, value in pairs(addedComponent) do
 							if typeof(index) == "number" then 
-								struct[componentType][index] = value
+								struct[componentType][#struct[componentType] + 1] = {paramId = index, paramVal = value}
 							end
 						end
 						module.Source = Serial.Serialize(struct)
