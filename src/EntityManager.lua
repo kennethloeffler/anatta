@@ -322,7 +322,7 @@ function EntityManager.LoadSystem(module, pluginWrapper)
 
 		for i, componentType in ipairs(system.EntityFilter) do
 			local componentId = ComponentDesc.GetComponentIdFromType(componentType)
-			EntityFilters[systemId][math.ceil((componentId - 1) / 32)] = bReplace(0, 1, ((componentId - (i * 32)) - 1))
+			EntityFilters[systemId][math.ceil(componentId / 32)] = bReplace(0, 1, (componentId - 1 - ((i - 1) * 32)))
 		end
 	end
 end
