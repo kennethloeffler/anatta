@@ -22,13 +22,21 @@ local ComponentMetatable = {
 function Component(instance, entity, componentType, paramMap)
 	local newComponent = {} 
 
-	newComponent._componentId = ComponentDesc.GetComponentIdFromType(componentType)
+	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+
+	newComponent._componentId = componentId
 	newComponent._entity = entity
 	newComponent.Instance = instance
 	
-	for paramName in pairs(paramMap) do
-		local paramId = ComponentDesc.GetParamIdFromName(newComponent._componentId, paramName)
-		newComponent[paramId] = paramMap[paramName]
+	if paramMap then
+		for paramName in pairs(paramMap) do
+			local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
+			newComponent[paramId] = paramMap[paramName]
+		end
+	else
+		for paramId, default in pairs(ComponentDesc.GetDefaults(componentId)) do
+			newComponent[paramId] = default
+		end
 	end
 	
 	return setmetatable(newComponent, ComponentMetatable)

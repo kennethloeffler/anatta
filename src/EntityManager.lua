@@ -273,7 +273,7 @@ end
 
 ---Removes the entity (and by extension, all components) associated with instance
 -- If instance is not associated with an entity, this function returns without doing anything
--- This operation is cached - destruction occurs when the RunService's heartbeat or between system calls
+-- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
 function EntityManager.KillEntity(instance)
 	local entity = EntityManager.GetEntity(instance)
@@ -334,15 +334,19 @@ function EntityManager.StartSystems()
 	if SystemsRunning then
 		return
 	end
-   
+
 	SystemsRunning = true
+
+	local hasSystems = #Systems > 0 and true or nil
 	local lastFrameTime = RunService.Heartbeat:Wait()
 	while SystemsRunning do
 		for systemId, system in ipairs(Systems) do
 		   	stepComponentLifetime()
 			system(SystemEntities[systemId], lastFrameTime)
 		end
-		stepComponentLifetime()
+		if not hasSytems then
+			stepComponentLifetime()
+		end
 		lastFrameTime = RunService.Heartbeat:Wait()
 	end
 end

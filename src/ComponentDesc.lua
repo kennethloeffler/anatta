@@ -3,6 +3,7 @@ local WSAssert = require(script.Parent.WSAssert)
 local ComponentIdsByType = {}
 local ComponentTypesById = {}
 local ComponentParamIds = {}
+local Defaults = {}
 
 local ComponentDesc = {
 	ComponentDefinitions = {},
@@ -20,12 +21,14 @@ local function populateDefs(definitionTable)
 		ComponentIdsByType[componentType] = componentId
 		ComponentTypesById[componentId] = componentType
 		ComponentParamIds[componentId] = {}
+		Defaults[componentId] = {}
 	
-		for paramName, paramId in pairs(componentDefinition) do
+		for paramName, paramDef in pairs(componentDefinition) do
 			if paramName ~= "ComponentId" then
 				WSAssert(typeof(paramName) == "string", "expected string")
-				WSAssert(typeof(paramId) == "number", "expected number")
-				ComponentParamIds[componentId][paramName] = paramId
+				WSAssert(typeof(paramDef) == "table", "expected table")
+				ComponentParamIds[componentId][paramName] = paramDef[1]
+				Defaults[componentId][paramDef[1]] = paramDef[2]
 			end
 		end
 	end
@@ -46,6 +49,10 @@ if script:FindFirstChild("ComponentDefinitions") then
 	end)	
 end
 
+function ComponentDesc.GetDefaults(componentId)
+	return Defaults[componentId]
+end
+
 function ComponentDesc.GetParamIdFromName(componentId, paramName)
 	return ComponentParamIds[componentId][paramName] or error(paramName .. " is not a valid parameter name", 3)
 end
@@ -60,11 +67,6 @@ end
 
 function ComponentDesc.GetAllComponents()
 	return ComponentIdsByType
-end
-
-function ComponentDesc.GetAllParams(componentType)
-	local componentId = ComponentIdsByType[componentType]
-	return ComponentParamIds[componentType]
 end
 
 return ComponentDesc
