@@ -1,1 +1,1 @@
-# WorldSmith -  a game creation plugin for Roblox Studiox
+# WorldSmith -  a game creation plugin for Roblox Studio
