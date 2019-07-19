@@ -21,11 +21,15 @@ local WatchedInstances = {}
 local PluginWrapper = {}
 
 if not SERVER and CLIENT and RUNMODE then
-	-- don't load plugin in runmode client
-	return
+	error("Not running plugin in RunMode")
+end
+
+if not plugin then
+	error("Attempted to run plugin in non-plugin context")
 end
 
 if IsCustomSource then
+	-- this script seems to run before children are loaded...
 	local customSource = ServerStorage:WaitForChild("WorldSmith", 2)
 	if customSource then
 		WatchedSource = customSource
@@ -83,7 +87,7 @@ function PluginWrapper.Load()
 	
 	local loadedPlugin = result
 
-	success, result = pcall(loadedPlugin, PluginWrapper)
+	success, result = pcall(loadedPlugin, PluginWrapper, CurrentSource)
 
 	WSAssert(success, "plugin failed to run: %s", result)
 	WSAssert(PluginWrapper.OnUnloading and typeof(PluginWrapper.OnUnloading) == "function", "expected function PluginWrapper.OnUnloading")
@@ -96,11 +100,12 @@ function PluginWrapper.Reload()
 end
 
 function PluginWrapper.Watch(instance)
-	if instance == script then
+	
+	if WatchedInstances[instance] then
 		return
 	end
 
-	if WatchedInstances[instance] then
+	if instance == script then
 		return
 	end
 
@@ -124,15 +129,6 @@ function PluginWrapper.Watch(instance)
 	end   
 end
 
-PluginWrapper.Watch(WatchedSource)
 PluginWrapper.Load()
-
-plugin.Unloading:Connect(function()
-	for _, t in pairs(WatchedInstances) do
-		t[1]:Disconnect()
-		t[2]:Disconnect()
-	end
-end)
-
-plugin.Unloading:Connect(PluginWrapper.OnUnloading)
+PluginWrapper.Watch(WatchedSource)
 

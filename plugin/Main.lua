@@ -2,14 +2,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
-local root = ServerStorage:WaitForChild("WorldSmith", 1) or script.Parent.Parent
 local GameRoot = ReplicatedStorage:FindFirstChild("WorldSmith")
-local Systems = root.plugin.PluginSystems
-local Components = root.plugin.PluginComponents
 
 local Serial = require(script.Parent.Serial)
 
-function Main(pluginWrapper)
+function Main(pluginWrapper, root)
+	local Systems = root.plugin.PluginSystems
+	local Components = root.plugin.PluginComponents
+
 	-- PluginComponents are not persistent
 	local numPluginComponents = 0
 	local componentDefinitions = {}
@@ -25,7 +25,7 @@ function Main(pluginWrapper)
 		
 		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
-			componentDefinitions[componentType][paramName] = paramId
+			componentDefinitions[componentType][paramName] = {paramId, defaultValue}
 		end
 	end
 	
@@ -44,6 +44,7 @@ function Main(pluginWrapper)
 	pluginWrapper.PluginManager = pluginManager
 	
 	pluginManager.LoadSystem(Systems.ComponentWidget, pluginWrapper)
+	pluginManager.LoadSystem(Systems.AddComponentWidget, pluginWrapper)
 
 	pluginWrapper.OnUnloading = function()
 		local dockWidget = pluginWrapper.GetDockWidget("Components")
@@ -54,7 +55,7 @@ function Main(pluginWrapper)
 		gameManager.Destroy()
 	end
 
-	pluginManager.StartSystems()
+	coroutine.resume(coroutine.create(pluginManager.StartSystems))
 end
 
 return Main
