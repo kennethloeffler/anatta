@@ -3,7 +3,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameSrc = ReplicatedStorage:WaitForChild("WorldSmith")
 local PluginSrc = script.Parent.Parent.Parent.src
 
-local GameComponentDesc = GameSrc and require(GameSrc.ComponentDesc)
 local Sandbox = require(script.Parent.Parent.SandboxEnv)
 local Serial = require(script.Parent.Parent.Serial)
 local WSAssert = require(PluginSrc.WSAssert)
@@ -13,6 +12,7 @@ local ComponentsArray = {}
 local GameComponentDefs = {}
 
 local ComponentsLoader = {}
+local WatchedModules = {}
 
 local function tryRequire(moduleScript)
 	local env = Sandbox.new(moduleScript)
@@ -23,7 +23,7 @@ local function tryRequire(moduleScript)
 		return err
 	end)
 
-	WSAssert(success, "tried to load component definition module: " .. result)
+	WSAssert(success, "tried to load component definition module: " .. moduleScript:GetFullName())
 
 	return result
 end
@@ -52,13 +52,14 @@ local function tryCollectComponent(instance)
 			
 			-- remove params that aren't in paramMap
 			for paramName in pairs(GameComponentDefs[componentType]) do
-				if not paramMap[paramName] then
+				if not paramMap[paramName] and paramName ~= "ComponentId" then
 					GameComponentDefs[componentType][paramName] = nil
 				end
 			end
 			
-			for paramName in pairs(paramMap) do
-				local paramId = GameComponentDefs[componentType][paramName]
+			for paramName, defaultValue in pairs(paramMap) do
+				
+				local paramId = GameComponentDefs[componentType][paramName][1]
 				if not paramId then
 					newParams[paramName] = defaultValue
 				else
@@ -76,13 +77,13 @@ local function tryCollectComponent(instance)
 			end
 				
 			-- add new params and fill any holes
-			for paramName in pairs(newParams) do
+			for paramName, defaultValue in pairs(newParams) do
 				currentIndex = currentIndex + 1
 				if indicesToFill[currentIndex] then
-					GameComponentDefs[componentType][paramName] = indicesToFill[currentIndex]
+					GameComponentDefs[componentType][paramName] = {indicesToFill[currentIndex], defaultValue}
 				else
 					maxParamIndex = maxParamIndex + 1
-					GameComponentDefs[componentType][paramName] = maxParamIndex
+					GameComponentDefs[componentType][paramName] = {maxParamIndex, defaultValue}
 				end
 			end
 			
@@ -94,27 +95,29 @@ local function tryCollectComponent(instance)
 		local componentId
 		local paramId = 0
 
-		for i = 1, numUniqueComponents do
+		for i = 1, NumUniqueComponents do
 			if not ComponentsArray[i] then
+				print("found hole")
 				componentIdListHole = i
 				break
 			end
 		end
 		
-		numUniqueComponents = numUniqueComponents + 1
+		NumUniqueComponents = NumUniqueComponents + 1
 		GameComponentDefs[componentType] = {}
 		
 		if not componentIdListHole then
-			componentId = numUniqueComponents
+			componentId = NumUniqueComponents
 		else
 			componentId = componentIdListHole
 		end
 
 		GameComponentDefs[componentType].ComponentId = componentId
+		ComponentsArray[componentId] = componentType
 
-		for paramName  in pairs(paramMap) do
+		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
-			GameComponentDefs[componentType][paramName] = paramId
+			GameComponentDefs[componentType][paramName] = {paramId, defaultValue}
 		end
 	end
 end
@@ -130,19 +133,29 @@ function tryRemoveComponent(instance)
 		local rawComponent = tryRequire(instance)
 		local componentType = rawComponent[1]
 		GameComponentDefs[componentType] = nil
+		for componentId, comtype in pairs(ComponentsArray) do
+			if comtype == componentType then
+				ComponentsArray[componentId] = nil
+				break
+			end
+		end
+		NumUniqueComponents = NumUniqueComponents - 1
 	end
 end
 
 function ComponentsLoader.Init(plugin)
 
-	local GameComponentDefModule = GameSrc.ComponentDesc:FindFirstChild("ComponentDefinitions") or Instance.new("ModuleScript")
+	local GameComponentDefModule = GameSrc.ComponentDesc:WaitForChild("ComponentDefinitions", 1)
 
-	if GameComponentDesc then
-		for componentType, componentDef in pairs(GameComponentDesc.ComponentDefinitions) do
-			GameComponentDefs[componentType] = componentDef
-			ComponentsArray[componentDef.ComponentId] = true
-			numUniqueComponents = numUniqueComponents + 1
+	if GameComponentDefModule then
+		for componentType, componentDef in pairs(require(GameComponentDefModule)) do
+			GameComponentDefs[componentType] = componentDef	
+			GameComponentDefs[componentType].ComponentId = componentDef.ComponentId
+			ComponentsArray[componentDef.ComponentId] = componentType
+			NumUniqueComponents = NumUniqueComponents + 1
 		end
+	else
+		GameComponentDefModule = Instance.new("ModuleScript")
 	end
 
 	for _, inst in pairs(ReplicatedStorage:GetDescendants()) do

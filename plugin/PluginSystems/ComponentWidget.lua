@@ -3,37 +3,91 @@ local Selection = game:GetService("Selection")
 local Theme = settings().Studio.Theme
 
 local GameRoot = ReplicatedStorage:FindFirstChild("WorldSmith")
-local GameComponentDesc = GameRoot and require(GameRoot.ComponentDesc)
+local GameComponentDesc = GameRoot and GameRoot.ComponentDesc
+local ComponentDefs = GameComponentDesc:FindFirstChild("ComponentDefinitions") and GameComponentDesc.ComponentDefinitions
+
+local Serial = require(script.Parent.Parent.Serial)
+
 local ComponentWidget = {}
 
 function ComponentWidget.Init(pluginWrapper)
 	local GameManager = pluginWrapper.GameManager
 	local PluginManager = pluginWrapper.PluginManager
+	local entities = {}
+
 	local widget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
 	widget.Title = "Components"
 	
 	local bgFrame = Instance.new("Frame")
-	bgFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+	bgFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
 	bgFrame.Size = UDim2.new(1, 0, 1, 0)
+	bgFrame.BorderSizePixel = 0
 	PluginManager.AddComponent(bgFrame, "ComponentWidget", {})
 	bgFrame.Parent = widget
 
+	local scrollingFrame = Instance.new("ScrollingFrame")
+	scrollingFrame.TopImage = ""
+	scrollingFrame.BottomImage = ""
+	scrollingFrame.ScrollBarImageColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Light)
+	scrollingFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
+	scrollingFrame.BorderSizePixel = 0
+	scrollingFrame.ScrollBarThickness = 16
+	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollingFrame.Position = UDim2.new(0, 0, 0, 1)
+	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
+	scrollingFrame.Parent = bgFrame
+
 	local AddComponentButton = Instance.new("TextButton")
-	AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Button)
+	AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar)
 	AddComponentButton.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+	AddComponentButton.AutoButtonColor = false
 	AddComponentButton.Text = "+"
-	AddComponentButton.TextSize = 20
+	AddComponentButton.TextSize = 18
+	AddComponentButton.Font = Enum.Font.Code
+	AddComponentButton.TextYAlignment = Enum.TextYAlignment.Bottom
 	AddComponentButton.BorderSizePixel = 0
-	AddComponentButton.Size = UDim2.new(0, 32, 0, 32)
-	AddComponentButton.Position = UDim2.new(1, -32, 0, 0)
+	AddComponentButton.Size = UDim2.new(0, 16, 0, 16)
+	AddComponentButton.Position = UDim2.new(1, -17, 0, 1)
+	AddComponentButton.Name = "AddComponentButton"
 	AddComponentButton.Parent = bgFrame
 
-	AddComponentButton.MouseButton1Down:Connect(function()
-		local components = GameComponentDesc.GetAllComponents()
-		print("clicked")
-		PluginManager.AddComponent(bgFrame, "AddComponentMenuOpen", {Components = components})
+	AddComponentButton.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar, Enum.StudioStyleGuideModifier.Pressed)
+			
+			if not PluginManager.GetComponent(scrollingFrame, "AddComponentMenuClick") then
+				PluginManager.AddComponent(scrollingFrame, "AddComponentMenuClick", {Components = Serial.Deserialize(ComponentDefs.Source)})
+			else
+				scrollingFrame:ClearAllChildren()
+				AddComponentButton.Text = "+"
+				PluginManager.KillComponent(scrollingFrame, "AddComponentMenuClick")
+				PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", {EntityList = entities})
+			end
+		end
+	end)
+
+	AddComponentButton.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar)
+		end
 	end)
 	
+	scrollingFrame.ChildAdded:Connect(function(child)
+		if not child:IsA("GuiBase") then
+			return
+		end
+		
+		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize + UDim2.new(0, 0, 0, child.AbsoluteSize.Y) 
+	end)
+
+	scrollingFrame.ChildRemoved:Connect(function(child)
+		if not child:IsA("GuiBase") then
+			return
+		end
+		
+		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize - UDim2.new(0, 0, 0, child.AbsoluteSize.Y) 
+	end)
+
 	Selection.SelectionChanged:Connect(function()
 		local selectedInstances = Selection:Get()
 
@@ -41,6 +95,8 @@ function ComponentWidget.Init(pluginWrapper)
 			widget.Title = "Components"
 			return
 		end
+		
+		entities = {}
 
 		if #selectedInstances > 1 then
 			widget.Title = "Components - " .. #selectedInstances .. " items"
@@ -48,7 +104,6 @@ function ComponentWidget.Init(pluginWrapper)
 			widget.Title = "Components - " .. selectedInstances[1].ClassName .. " \"" .. selectedInstances[1].Name .. "\""
 		end
 
-		local entities = {}
 		for _, inst in ipairs(selectedInstances) do
 			local entity = GameManager:GetEntity(inst)
 			if entity then
@@ -56,7 +111,7 @@ function ComponentWidget.Init(pluginWrapper)
 			end
 		end
 	
-		PluginManager.AddComponent(bgFrame, "SelectionUpdate", {EntityList = entities})
+		PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", {EntityList = entities})
 	end)
 end
 
