@@ -157,10 +157,8 @@ local function initComponentDefs()
 end
 
 initComponentDefs()
+ComponentDesc._defUpdateCallback = initComponentDefs
 
-if plugin then
-	ComponentDesc._defUpdateCallback = initComponentDefs
-end
 
 -- Public API
 --------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 -- PluginInit.lua - stole lots of idea from tiffany352 !!!
 local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local WSAssert = require(script.Parent.Parent.src.WSAssert)
 
@@ -87,7 +88,7 @@ function PluginWrapper.Load()
 	
 	local loadedPlugin = result
 
-	success, result = pcall(loadedPlugin, PluginWrapper, CurrentSource)
+	success, result = pcall(loadedPlugin, PluginWrapper, CurrentSource, ReplicatedStorage:WaitForChild("WorldSmith", 1))
 
 	WSAssert(success, "plugin failed to run: %s", result)
 	WSAssert(PluginWrapper.OnUnloading and typeof(PluginWrapper.OnUnloading) == "function", "expected function PluginWrapper.OnUnloading")

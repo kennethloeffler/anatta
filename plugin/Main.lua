@@ -2,11 +2,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
-local GameRoot = ReplicatedStorage:FindFirstChild("WorldSmith")
-
 local Serial = require(script.Parent.Serial)
 
-function Main(pluginWrapper, root)
+function Main(pluginWrapper, root, gameRoot)
 	local Systems = root.plugin.PluginSystems
 	local Components = root.plugin.PluginComponents
 
@@ -38,8 +36,8 @@ function Main(pluginWrapper, root)
 
 	pluginManager.LoadSystem(Systems.GameComponentLoader, pluginWrapper)
 	
-	local gameManager = GameRoot and require(GameRoot.EntityManager)
-
+	local gameManager = gameRoot and require(gameRoot.EntityManager)
+	
 	pluginWrapper.GameManager = gameManager
 	pluginWrapper.PluginManager = pluginManager
 	

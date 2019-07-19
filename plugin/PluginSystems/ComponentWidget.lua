@@ -110,8 +110,9 @@ function ComponentWidget.Init(pluginWrapper)
 				entities[#entities + 1] = inst
 			end
 		end
-	
-		PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", {EntityList = entities})
+		if not PluginManager.GetComponent(scrollingFrame, "AddComponentMenuClick") then
+			PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", {EntityList = entities})
+		end
 	end)
 end
 

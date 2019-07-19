@@ -35,7 +35,7 @@ local function populateDefs(definitionTable)
 	ComponentDesc.ComponentDefinitions = definitionTable
 end
 
-if script:FindFirstChild("ComponentDefinitions") then 
+if script:WaitForChild("ComponentDefinitions", 1) then 
 	local componentDefinitions = require(script.ComponentDefinitions)
 	populateDefs(componentDefinitions)
 	script.ComponentDefinitions.Changed:Connect(function(prop)

@@ -1,11 +1,8 @@
 local Serial = require(script.Parent.Parent.Serial)
 local Theme = settings().Studio.Theme
+local Selection = game:GetService("Selection")
 
 local AddComponentWidget = {}
-
-local function setComponent(componentType)
-
-end
 
 local function makeComponentButton(componentType, componentId)
 	local button = Instance.new("TextButton")
@@ -47,7 +44,7 @@ function AddComponentWidget.Init(pluginWrapper)
 			button.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
 					button.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar, Enum.StudioStyleGuideModifier.Pressed)
-					local selection = plugin:GetSelection()
+					local selection = Selection:Get()
 					for _, instance in ipairs(selection) do
 						local module = instance:FindFirstChild("__WSEntity")
 						if not module then
@@ -55,7 +52,16 @@ function AddComponentWidget.Init(pluginWrapper)
 							module.Name = "__WSEntity"
 							module.Parent = instance
 						end
-						GameManager.AddComponent(instance, componentType)
+						local addedComponent = GameManager.AddComponent(instance, componentType)
+						local struct = module and Serial.Deserialize(module.Source) or {}
+						struct[addedComponent._componentId] = {}
+						struct.Entity = addedComponent._entity
+						for index, value in pairs(addedComponent) do
+							if typeof(index) == "number" then 
+								struct[addedComponent._componentId][index] = value
+							end
+						end
+						module.Source = Serial.Serialize(struct)
 					end
 				end
 			end)
