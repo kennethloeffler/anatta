@@ -53,6 +53,10 @@ function ComponentDesc.GetDefaults(componentId)
 	return Defaults[componentId]
 end
 
+function ComponentDesc.GetParamDefault(componentId, paramId)
+	return Defaults[componentId][paramId]
+end
+
 function ComponentDesc.GetParamIdFromName(componentId, paramName)
 	return ComponentParamIds[componentId][paramName] or error(paramName .. " is not a valid parameter name", 3)
 end

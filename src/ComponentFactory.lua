@@ -9,7 +9,10 @@ local ComponentMetatable = {
 		return component[paramId]
 	end,
 	__newindex = function(component, index, value)
-		local paramId = ComponentDesc.GetParamIdFromName(component._componentId, index)
+		local componentId = component._componentId
+		local paramId = ComponentDesc.GetParamIdFromName(componentId, index)
+		local ty = typeof(ComponentDesc.GetParamDefault(componentId, paramId))
+		WSAssert(ty == typeof(value), "expected %s", ty)
 		component[paramId] = value
 	end
 }
