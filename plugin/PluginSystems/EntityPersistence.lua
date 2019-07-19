@@ -38,6 +38,7 @@ function EntityPersistence.Init(pluginWrapper)
 
 			module.Source = Serial.Serialize(struct)
 		end
+		PluginManager.KillComponent(scrollingFrame, "DoSerializeEntity")
 	end)
 end
 
