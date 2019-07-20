@@ -23,18 +23,21 @@ function EntityPersistence.Init(pluginWrapper)
 	PluginManager.ComponentAdded("DoSerializeEntity"):Connect(function(scrollingFrame)
 		local doSerializeEntity = PluginManager.GetComponent(scrollingFrame, "DoSerializeEntity")
 		for _, inst in ipairs(doSerializeEntity.InstanceList) do
-			
-			local componentToSerialize = GameManager.AddComponent(inst, doSerializeEntity.ComponentType, doSerializeEntity.Params)
-			
 			local struct, module = getEntityStruct(inst)
 			local componentType = doSerializeEntity.ComponentType
+			if not struct[componentType] then
+				local componentToSerialize = GameManager.AddComponent(inst, doSerializeEntity.ComponentType, doSerializeEntity.Params)
 
-			struct[componentType] = {}
+				struct[componentType] = {}
 
-			for index, value in pairs(componentToSerialize) do
-				if typeof(index) == "number" then
-					struct[componentType][#struct[componentType] + 1] = {paramId = index, paramValue = value}
+				for index, value in pairs(componentToSerialize) do
+					if typeof(index) == "number" then
+						struct[componentType][#struct[componentType] + 1] = {paramId = index, paramValue = value}
+					end
 				end
+			else
+				struct[componentType] = nil
+				GameManager.KillComponent(inst, componentType)
 			end
 
 			module.Source = Serial.Serialize(struct)
