@@ -44,6 +44,7 @@ function Main(pluginWrapper, root, gameRoot)
 	pluginManager.LoadSystem(Systems.ComponentWidget, pluginWrapper)
 	pluginManager.LoadSystem(Systems.AddComponentWidget, pluginWrapper)
 	pluginManager.LoadSystem(Systems.EntityPersistence, pluginWrapper)
+	pluginManager.LoadSystem(Systems.ComponentWidgetList, pluginWrapper)
 
 	pluginWrapper.OnUnloading = function()
 		local dockWidget = pluginWrapper.GetDockWidget("Components")
