@@ -24,7 +24,7 @@ function EntityPersistence.Init(pluginWrapper)
 		local doSerializeEntity = PluginManager.GetComponent(scrollingFrame, "DoSerializeEntity")
 		for _, inst in ipairs(doSerializeEntity.InstanceList) do
 			
-			local componentToSerialize = GameManager.AddComponent(inst, doSerializeEntity.ComponentType, next(doSerializeEntity.Params) and doSerializeEntity.Params or nil)
+			local componentToSerialize = GameManager.AddComponent(inst, doSerializeEntity.ComponentType, doSerializeEntity.Params)
 			
 			local struct, module = getEntityStruct(inst)
 			local componentType = doSerializeEntity.ComponentType

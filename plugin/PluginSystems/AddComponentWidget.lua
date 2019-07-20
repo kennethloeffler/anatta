@@ -44,7 +44,7 @@ function AddComponentWidget.Init(pluginWrapper)
 			button.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
 					button.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar, Enum.StudioStyleGuideModifier.Pressed)
-					PluginManager.AddComponent(scrollingFrame, "DoSerializeEntity", {InstanceList = Selection:Get(), ComponentType = componentType, Params = {}})
+					PluginManager.AddComponent(scrollingFrame, "DoSerializeEntity", {InstanceList = Selection:Get(), ComponentType = componentType})
 				end
 			end)
 			button.Parent = scrollingFrame
