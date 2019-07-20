@@ -6,9 +6,10 @@ local AddComponentWidget = {}
 
 local function makeComponentButton(componentType, componentId)
 	local button = Instance.new("TextButton")
-	button.Size = UDim2.new(1, -19, 0, 20)
+	button.Size = UDim2.new(1, -18, 0, 20)
 	button.BorderSizePixel = 0
-	button.Text = componentType
+	button.Text = "     " .. componentType
+	button.TextXAlignment = Enum.TextXAlignment.Left
 	button.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 	button.TextSize = 8
 	button.AutoButtonColor = false
