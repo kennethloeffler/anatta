@@ -353,6 +353,10 @@ function EntityManager.StopSystems()
 	SystemsRunning = false
 end
 
+function EntityManager.GetComponentDesc()
+	return ComponentDesc
+end
+
 function EntityManager.Destroy()
 	-- maybe overkill
 	SystemsRunning = false

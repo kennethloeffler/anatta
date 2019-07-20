@@ -61,6 +61,14 @@ function ComponentDesc.GetParamIdFromName(componentId, paramName)
 	return ComponentParamIds[componentId][paramName] or error(paramName .. " is not a valid parameter name", 3)
 end
 
+function ComponentDesc.GetParamNameFromId(componentId, paramId)
+	for paramName, paramIdx in pairs(ComponentParamIds[componentId]) do
+		if paramIdx == paramId then
+			return paramName
+		end
+	end
+end
+
 function ComponentDesc.GetComponentIdFromType(componentType)
 	return ComponentIdsByType[componentType] or error(componentType .. " is not a valid ComponentType", 3)
 end

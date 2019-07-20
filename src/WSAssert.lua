@@ -6,10 +6,10 @@ function WSAssert(condition, ...)
 				return string.format(unpack(var))
 			end)
 			if success then
-				error("WorldSmith: assertion failed: " .. msg, 2)
+				error("WorldSmith: assertion failed: " .. msg, 3)
 			end
 		end
-		error("WorldSmith: assertion failed", 2)
+		error("WorldSmith: assertion failed", 3)
 	end
 end
 
