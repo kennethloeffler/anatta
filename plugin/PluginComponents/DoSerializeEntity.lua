@@ -3,6 +3,6 @@ local Component = require(root.src.Component)
 
 return Component.Define(
 	"DoSerializeEntity",
-	{ InstanceList = {}, ComponentType = "none" }
+	{ InstanceList = {}, ComponentType = "none", Params = {} }
 )
 
