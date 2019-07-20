@@ -31,15 +31,9 @@ function Component(instance, entity, componentType, paramMap)
 	newComponent._entity = entity
 	newComponent.Instance = instance
 	
-	if paramMap then
-		for paramName in pairs(paramMap) do
-			local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
-			newComponent[paramId] = paramMap[paramName]
-		end
-	else
-		for paramId, default in pairs(ComponentDesc.GetDefaults(componentId)) do
-			newComponent[paramId] = default
-		end
+	for paramName, default in pairs(ComponentDesc.GetDefaults(componentId)) do
+		local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
+		newComponent[paramId] = paramMap[paramName] and paramMap[paramName] or default
 	end
 	
 	return setmetatable(newComponent, ComponentMetatable)

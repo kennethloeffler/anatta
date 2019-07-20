@@ -28,7 +28,7 @@ local function populateDefs(definitionTable)
 				WSAssert(typeof(paramName) == "string", "expected string")
 				WSAssert(typeof(paramDef) == "table", "expected table")
 				ComponentParamIds[componentId][paramName] = paramDef[1]
-				Defaults[componentId][paramDef[1]] = paramDef[2]
+				Defaults[componentId][paramName] = paramDef[2]
 			end
 		end
 	end
@@ -53,8 +53,8 @@ function ComponentDesc.GetDefaults(componentId)
 	return Defaults[componentId]
 end
 
-function ComponentDesc.GetParamDefault(componentId, paramId)
-	return Defaults[componentId][paramId]
+function ComponentDesc.GetParamDefault(componentId, paramName)
+	return Defaults[componentId][paramName]
 end
 
 function ComponentDesc.GetParamIdFromName(componentId, paramName)
