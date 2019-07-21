@@ -92,6 +92,7 @@ function ComponentWidget.Init(pluginWrapper)
 		local selectedInstances = Selection:Get()
 
 		if not next(selectedInstances) then
+			scrollingFrame:ClearAllChildren()
 			widget.Title = "Components"
 			return
 		end
