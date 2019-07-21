@@ -35,13 +35,11 @@ local function populateDefs(definitionTable)
 	ComponentDesc.ComponentDefinitions = definitionTable
 end
 
-if script:WaitForChild("ComponentDefinitions", 1) then 
+if script:WaitForChild("ComponentDefinitions", 2) then 
 	local componentDefinitions = require(script.ComponentDefinitions)
 	populateDefs(componentDefinitions)
-	script.ComponentDefinitions.Changed:Connect(function(prop)
-		if prop ~= "Source" then
-			return
-		end
+	print(script:GetFullName())
+	script.ComponentDefinitions:GetPropertyChangedSignal("Source"):Connect(function()
 		populateDefs(require(script.ComponentDefinitions:Clone()))
 		if ComponentDesc._defUpdateCallback then
 			ComponentDesc._defUpdateCallback()
