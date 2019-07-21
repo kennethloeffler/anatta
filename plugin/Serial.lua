@@ -53,7 +53,7 @@ function Serial.SerializeValue(data, depth)
 	elseif ty == "UDim" then
 		str = string.format("UDim.new(%f, %f)", data.Scale, data.Offset)
 	elseif ty == "UDim2" then
-		str = string.format("UDim2.new(%f, %f, %f, %f)", data.X.Scale, data.X.Offset, data.Y.Scale, data.X.Offset)
+		str = string.format("UDim2.new(%f, %f, %f, %f)", data.X.Scale, data.X.Offset, data.Y.Scale, data.Y.Offset)
 	elseif ty == "Color3" then
 		str = string.format("Color3.new(%f, %f, %f)", data.R, data.G, data.B)
 	else
