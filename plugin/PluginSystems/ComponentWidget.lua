@@ -105,11 +105,9 @@ function ComponentWidget.Init(pluginWrapper)
 		end
 
 		for _, inst in ipairs(selectedInstances) do
-			local entity = GameManager:GetEntity(inst)
-			if entity then
-				entities[#entities + 1] = inst
-			end
+			entities[#entities + 1] = inst
 		end
+
 		if not PluginManager.GetComponent(scrollingFrame, "AddComponentMenuClick") then
 			PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", {EntityList = entities})
 		end
