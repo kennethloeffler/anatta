@@ -33,7 +33,11 @@ function Component(instance, entity, componentType, paramMap)
 	
 	for paramName, default in pairs(ComponentDesc.GetDefaults(componentId)) do
 		local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
-		newComponent[paramId] = paramMap[paramName] or default
+		if paramMap[paramName] ~= nil then
+			newComponent[paramId] = paramMap[paramName]
+		else
+			newComponent[paramId] = default
+		end
 	end
 	
 	return setmetatable(newComponent, ComponentMetatable)
