@@ -46,6 +46,16 @@ function Serial.SerializeValue(data, depth)
 		end
 
 		str[#str + 1] = indent.."}"
+	elseif ty == "Vector2" then
+		str = string.format("Vector2.new(%f, %f)", data.X, data.Y)
+	elseif ty == "Vector3" then
+		str = string.format("Vector3.new(%f, %f, %f)", data.X, data.Y, data.Z)
+	elseif ty == "UDim" then
+		str = string.format("UDim.new(%f, %f)", data.Scale, data.Offset)
+	elseif ty == "UDim2" then
+		str = string.format("UDim2.new(%f, %f, %f, %f)", data.X.Scale, data.X.Offset, data.Y.Scale, data.X.Offset)
+	elseif ty == "Color3" then
+		str = string.format("Color3.new(%f, %f, %f)", data.R, data.G, data.B)
 	else
 		error("Unexpected type: "..ty)
 	end
