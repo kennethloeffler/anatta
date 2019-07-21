@@ -27,7 +27,6 @@ function EntityPersistence.Init(pluginWrapper)
 			local componentType = doSerializeEntity.ComponentType
 			if not struct[componentType] or next(doSerializeEntity.Params) then
 				local componentToSerialize = GameManager.AddComponent(inst, doSerializeEntity.ComponentType, doSerializeEntity.Params)
-
 				struct[componentType] = {}
 
 				for index, value in pairs(componentToSerialize) do

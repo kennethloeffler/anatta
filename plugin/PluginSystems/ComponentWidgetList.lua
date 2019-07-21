@@ -3,7 +3,135 @@ local Theme = settings().Studio.Theme
 
 local ComponentWidgetList = {}
 
-local function makeParamValueField(paramType)
+local function splitCommaDelinNumStr(str)	
+	local list = {}
+	for s in string.gmatch(str, "([^,]+)") do
+		list[#list + 1] = tonumber(s)
+	end
+	return unpack(list)
+end
+
+local function makeParamValueField(paramValue, paramName, componentType, entityList, pluginManager)
+	local valueField
+	local paramType = typeof(paramValue)
+	if paramType == "boolean" then
+		valueField = Instance.new("Frame")
+		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+		valueField.Size = UDim2.new(0.7, 0, 1, 0)
+		valueField.Position = UDim2.new(0.3, 1, 0, 0)
+		valueField.BorderSizePixel = 0
+		local box = Instance.new("ImageButton")
+		box.AutoButtonColor = false
+		box.BackgroundColor3 = Color3.new(1, 1, 1)
+		box.Size = UDim2.new(0, 16, 0, 16)
+		box.BorderSizePixel = 0
+		box.Position = UDim2.new(0, 20, 0, 2)
+		box.Image = "rbxasset://textures/TerrainTools/checkbox_square.png"
+		box.Parent = valueField
+		local check = Instance.new("ImageLabel")
+		check.Active = false
+		check.Size = UDim2.new(1, 0, 1, 0)
+		check.Image = "rbxasset://textures/TerrainTools/icon_tick.png"
+		check.BackgroundTransparency = 1
+		check.BorderSizePixel = 0
+		check.ImageTransparency = paramValue and 0 or 1 
+		check.Parent = box
+		box.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				paramValue = not paramValue
+				print("my value : " .. tostring(paramValue))
+				check.ImageTransparency = paramValue and 0 or 1 
+				pluginManager.AddComponent(box, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = paramValue}})
+			end
+		end)
+	elseif paramType == "string" then
+		valueField = Instance.new("TextBox")
+		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+		valueField.Size = UDim2.new(0.7, 0, 1, 0)
+		valueField.Position = UDim2.new(0.3, 1, 0, 0)
+		valueField.BorderSizePixel = 0
+		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
+		valueField.Text = "     " .. paramValue
+		valueField.FocusLost:Connect(function()
+			valueField.Text = "     " .. valueField.Text
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = tostring(valueField.Text)}})
+		end)
+	elseif paramType == "number" then
+		valueField = Instance.new("TextBox")
+		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+		valueField.Size = UDim2.new(0.7, 0, 1, 0)
+		valueField.Position = UDim2.new(0.3, 1, 0, 0)
+		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
+		valueField.BorderSizePixel = 0
+		valueField.Text = "     " .. paramValue
+		valueField.FocusLost:Connect(function()
+			valueField.Text = "     " .. valueField.Text
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = tonumber(valueField.Text)}})
+		end)
+	elseif paramType == "Vector2" then
+		valueField = Instance.new("TextBox")
+		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+		valueField.Size = UDim2.new(0.7, 0, 1, 0)
+		valueField.Position = UDim2.new(0.3, 1, 0, 0)
+		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
+		valueField.BorderSizePixel = 0
+		valueField.Text = "     " .. tostring(paramValue) 
+		valueField.FocusLost:Connect(function()
+			valueField.Text = "     " .. tostring(val)
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = Vector2.new(splitCommaDelinNumStr(valueField.Text))}})
+		end)
+	elseif paramType == "Vector3" then
+		valueField = Instance.new("TextBox")
+		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+		valueField.Size = UDim2.new(0.7, 0, 1, 0)
+		valueField.Position = UDim2.new(0.3, 1, 0, 0)
+		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
+		valueField.BorderSizePixel = 0
+		valueField.Text = "     " .. tostring(paramValue)
+		valueField.FocusLost:Connect(function()
+			valueField.Text = "     " .. valueField.Text
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = Vector3.new(splitCommaDelinNumStr(valueField.Text))}})
+		end)
+	elseif paramType == "UDim" then
+		valueField = Instance.new("TextBox")
+		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+		valueField.Size = UDim2.new(0.7, 0, 1, 0)
+		valueField.Position = UDim2.new(0.3, 1, 0, 0)
+		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
+		valueField.BorderSizePixel = 0
+		valueField.Text = "     " .. tostring(paramValue) 
+		valueField.FocusLost:Connect(function()
+			valueField.Text = "     " .. valueField.Text
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = UDim.new(splitCommaDelinNumStr(valueField.Text))}})
+		end)
+	elseif paramType == "UDim2" then
+		valueField = Instance.new("TextBox")
+		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+		valueField.Size = UDim2.new(0.7, 0, 1, 0)
+		valueField.Position = UDim2.new(0.3, 1, 0, 0)
+		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
+		valueField.BorderSizePixel = 0
+		valueField.Text = "     " .. tostring(paramValue) 
+		valueField.FocusLost:Connect(function()
+			valueField.Text = "     " .. valueField.Text
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = UDim2.new(splitCommaDelinNumStr(valueField.Text))}})
+		end)
+	elseif paramType == "Color3" then
+		valueField = Instance.new("TextBox")
+		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
+		valueField.Size = UDim2.new(0.7, 0, 1, 0)
+		valueField.Position = UDim2.new(0.3, 1, 0, 0)
+		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
+		valueField.BorderSizePixel = 0
+		valueField.Text = "     " .. tostring(paramValue) 
+		valueField.FocusLost:Connect(function()
+			valueField.Text = "     " .. valueField.Text
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = Color3.new(splitCommaDelinNumStr(valueField.Text))}})
+		end)
+	else
+		error("Unexpected type: " .. paramType)
+	end	
+	return valueField
 end
 
 local function clearParamFields(componentType, numParams, scrollingFrame)
@@ -43,20 +171,8 @@ local function makeParamFields(componentId, paramList, scrollingFrame, gameManag
 		paramNameLabel.TextSize = 8
 		paramNameLabel.Parent = frame
 		
-		local valueField = Instance.new("TextBox")
-		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
-		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
-		valueField.Size = UDim2.new(0.7, 0, 1, 0)
-		valueField.Position = UDim2.new(0.3, 1, 0, 0)
-		valueField.TextXAlignment = Enum.TextXAlignment.Left
-		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. paramDef.paramValue
-		valueField.TextSize = 8
-		valueField.Parent = frame
-
-		valueField.FocusLost:Connect(function()
-			pluginManager.AddComponent(scrollingFrame, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = 0}})
-		end)
+		local valueField = makeParamValueField(paramDef.paramValue, paramName, componentType, entityList, pluginManager)
+		valueField.Parent = frame		
 	end
 end
 
