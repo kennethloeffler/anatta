@@ -110,6 +110,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			EntityMap[entity][componentId] = nil
 			parentEntitiesMap[entity] = nil
 			setComponentBitForEntity(entity, componentId, 0)
+			ComponentRemovedEvents[componentId]:Fire(instance)
 			filterEntity(instance)
 			if not next(EntityMap[entity]) then
 				-- we dead !
@@ -265,7 +266,6 @@ function EntityManager.KillComponent(instance, componentType)
 	local componentIndex = EntityMap[entity][componentId]
 	if componentIndex then
 		cacheComponentKilled(entity, componentId)
-		ComponentRemovedEvents[componentId]:Fire(instance)
 	end
 end
 
@@ -282,7 +282,6 @@ function EntityManager.KillEntity(instance)
 
 	for componentId in pairs(EntityMap[entity]) do
 		cacheComponentKilled(entity, componentId)
-	   	ComponentRemovedEvents[componentId]:Fire(instance)
 	end
 end
 
