@@ -64,7 +64,7 @@ end
 ---Gets an available GUID and attaches it to instance
 -- @param instance
 -- @return the new GUID
-local function getNewGuid(instance)
+local function getGuid(instance)
 	local guid
 	local numFreedGuids = #FreedGuidCache
 	if numFreedGuids > 0 then
@@ -171,7 +171,7 @@ local EntityManager = {}
 -- @return The GUID, which represents the new entity
 function EntityManager.AddEntity(instance)
 	local typeofArg = typeof(instance)
-	local entity = getNewGuid(instance)
+	local entity = getGuid(instance)
 	EntityMap[entity] = { [0] = {0, 0, 0, 0} } -- table of bitfields for fast intersection tests
 	TotalEntities = TotalEntities + 1
 	CollectionService:AddTag(instance, "__WSEntity")
