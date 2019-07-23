@@ -22,13 +22,12 @@ local ComponentMetatable = {
 --@param componentType
 --@param paramMap
 --@return The new component object
-function Component(instance, entity, componentType, paramMap)
+function Component(instance, componentType, paramMap)
 	local newComponent = {} 
 
 	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
 
 	newComponent._componentId = componentId
-	newComponent._entity = entity
 	newComponent.Instance = instance
 	
 	for paramName, default in pairs(ComponentDesc.GetDefaults(componentId)) do
