@@ -77,7 +77,7 @@ local function doReorder(componentId, parentEntitiesMap)
 	local keptComponentOffset = 1
 	for _, component in ipairs(componentList) do
 		local instance = component.Instance
-		local componentOffset = EntityMap[entity][componentId]
+		local componentOffset = EntityMap[instance][componentId]
 		if not parentEntitiesMap[instance] then
 			if componentOffset ~= keptComponentOffset then
 				-- swap !
@@ -220,7 +220,7 @@ function EntityManager.FilteredEntityAdded(entityFilter)
 		
 		ComponentAddedEvents[componentId]:Connect(function(instance)
 			local entityBitFields = EntityMap[instance][0]
-			local bitFieldsMatch =  bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4] then
+			local bitFieldsMatch = bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4]
 			if bitFieldsMatch then
 				bindable.Event:Fire(instance)
 			end
@@ -242,7 +242,7 @@ function EntityManager.FilteredEntityRemoved(entityFilter)
 		
 		ComponentRemovedEvents[componentId]:Connect(function(instance)
 			local entityBitFields = EntityMap[instance][0]
-			local bitFieldsMatch =  bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4] then
+			local bitFieldsMatch =  bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4]
 			if not bitFieldsMatch then
 				bindable.Event:Fire(instance)
 			end
