@@ -6,7 +6,6 @@ local RunService = game:GetService("RunService")
 local WSAssert = require(script.Parent.WSAssert)
 
 local SERVER = RunService:IsServer() and not RunService:IsClient()
-local NUM_SENT_COMPONENTS_PER_NETWORK_STEP = 50
 
 local EntityReplicator = {}
 
@@ -21,7 +20,7 @@ local NetworkIdsByInstance = {}
 local InstancesByNetworkId = {}
 local Vector2int16Pool = {}
 
-local b32Extract = bit32.extract
+local bExtract = bit32.extract
 
 EntityReplicator._componentMap = nil
 EntityReplicator._entityMap = nil
@@ -39,22 +38,31 @@ local function getNetworkId(instance)
 	return networkId
 end
 
-local function serializeEntity(instance)
+local function serializeEntityWithNetworkId(instance, networkId, prefabEntityId)
 	local entityStruct = EntityReplicator._entityMap[instance]
+	local componentBitFields = entityStruct[0]
 	local numComponents = 0
-	local componentStruct = {}
+	local serialEntityStruct = {}
 	local paramStruct = {}
-	entityStruct[1] = Vector2int.new()
-	for bitFieldIndex, bitField in ipairs(entityStruct[0])
-		local firstShort = b32Extract(bitField, 0, 16)
-		local secondShort = b32Extract(bitField, 16, 16)
-		componentStruct[#componentStruct + 1] = Vector2int16.new(firstShort, secondShort)
-	end
+	local index = 1
+	
+	serialEntityStruct[1] = Vector2int16.new(networkId, prefabEntityId)
+	serialEntityStruct[2] = Vector2int16.new(bExtract(entityStruct[0][1], 0, 16), bExtract(entityStruct[0][1], 15, 16))
+	serialEntityStruct[3] = Vector2int16.new(bExtract(entityStruct[0][2], 0, 16), bExtract(entityStruct[0][2], 15, 16))
+	serialEntityStruct[4] = Vector2int16.new(bExtract(entityStruct[0][3], 0, 16), bExtract(entityStruct[0][3], 15, 16))
+	serialEntityStruct[5] = Vector2int16.new(bExtract(entityStruct[0][4], 0, 16), bExtract(entityStruct[0][4], 15, 16))
+
 	for componentId, offset in pairs(entityStruct) do
 		if componentId ~= 0 then
-			
+			local componentParams = EntityReplicator._componentMap[offset]
+			paramStruct[index] = {}
+			-- array part of component struct must must be contigous!
+			for i, v in ipairs(componentParams)
+				paramStruct[index][i] = v
+			end
 		end
 	end
+	return componentStruct, paramStruct
 end
 
 function EntityReplicator.Reference(player, instance)
@@ -68,12 +76,16 @@ end
 function EntityReplicator.UniqueFromPrefab(player, rootInstance)
 	WSAssert(RootInstance[rootInstance], "%s is not a prefab", rootInstance.Name)
 	
-	coroutine.create(coroutine.resume(pcall(function()
+	coroutine.create(coroutine.resume(function()
 		local clone = instance:Clone()
+		for _, entity in ipairs(instance._WSEntities:GetChildren()) do
+			
+		end
 		clone.Parent = player.PlayerGui
-		Remotes[player][2]:InvokeClient(player, instance, PrefabRootInstances[instance])
+		-- yield until client acknowledges the instance
+		pcall(function() Remotes[player][2]:InvokeClient(player, instance, PrefabRootInstances[instance]) end)
 		clone:Destroy()
-	end)))
+	end))
 end
 
 function EntityReplicator.AddToPrefab(rootInstance)
@@ -109,7 +121,7 @@ end
 local function destroyPlayerReplicatorFor(player)
 	WSAssert(SERVER)
 	Remotes[player][1]:Destroy()
-	Remotes[player[1]:Dertroy()
+	Remotes[player][1]:Destroy()
 	Remotes[player] = nil
 	PlayerReferences[player] = {}
 	PlayerQueues[player] = nil
@@ -160,3 +172,4 @@ else
 end
 
 return EntityReplicator
+
