@@ -46,8 +46,8 @@ end
 local function serializeEntityWithNetworkId(instance, networkId)
 	local entityStruct = EntityReplicator._entityMap[instance]
 	local bitFields = entityStruct[0]
-	local serialEntityStruct
-	local paramStruct = {true}
+	local serialEntityStruct = {true}
+	local paramStruct = {}
 	local fieldFlags = 0
 
 	for i, bitField in ipairs(bitFields) do
