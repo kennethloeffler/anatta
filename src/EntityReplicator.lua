@@ -1,8 +1,10 @@
--- EntityReplicator.lua
+-- EntityReplicator.lua (experimental)
+
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
+local ComponentDesc = require(script.Parent.ComponentDesc)
 local WSAssert = require(script.Parent.WSAssert)
 
 local SERVER = RunService:IsServer() and not RunService:IsClient()
@@ -18,12 +20,14 @@ local PlayerUpdateQueues
 local NumNetworkIds = 0
 local NetworkIdsByInstance = {}
 local InstancesByNetworkId = {}
-local Vector2int16Pool = {}
+local ClientSerializableParams = {}
 
 local bExtract = bit32.extract
+local bReplace = bit32.replace
 
 EntityReplicator._componentMap = nil
 EntityReplicator._entityMap = nil
+EntityReplicator.EntityManager = nil
 
 local function getNetworkId(instance)
 	local networkId
@@ -34,35 +38,43 @@ local function getNetworkId(instance)
 	else
 		networkId = NumNetworkIds + 1
 	end
-	InstancesByNetworkId[instance] = networkId
+	InstancesByNetworkId[networkId] = instance
+	NetworkIdsByInstance[instance] = networkId
 	return networkId
 end
 
-local function serializeEntityWithNetworkId(instance, networkId, prefabEntityId)
+local function serializeEntityWithNetworkId(instance, networkId)
 	local entityStruct = EntityReplicator._entityMap[instance]
-	local componentBitFields = entityStruct[0]
-	local numComponents = 0
-	local serialEntityStruct = {}
-	local paramStruct = {}
-	local index = 1
-	
-	serialEntityStruct[1] = Vector2int16.new(networkId, prefabEntityId)
-	serialEntityStruct[2] = Vector2int16.new(bExtract(entityStruct[0][1], 0, 16), bExtract(entityStruct[0][1], 15, 16))
-	serialEntityStruct[3] = Vector2int16.new(bExtract(entityStruct[0][2], 0, 16), bExtract(entityStruct[0][2], 15, 16))
-	serialEntityStruct[4] = Vector2int16.new(bExtract(entityStruct[0][3], 0, 16), bExtract(entityStruct[0][3], 15, 16))
-	serialEntityStruct[5] = Vector2int16.new(bExtract(entityStruct[0][4], 0, 16), bExtract(entityStruct[0][4], 15, 16))
+	local bitFields = entityStruct[0]
+	local serialEntityStruct
+	local paramStruct = {true}
+	local fieldFlags = 0
+
+	for i, bitField in ipairs(bitFields) do
+		if bitField ~= 0 then
+			bReplace(fieldFlags, i, 1)
+			serialEntityStruct[#serialEntityStruct + 1] = Vector2int16.new(bExtract(bitField, 0, 16), bExtract(bitField, 15, 16))
+		end
+	end
+
+	serialEntityStruct[1] = Vector2int16.new(networkId, fieldFlags)
 
 	for componentId, offset in pairs(entityStruct) do
 		if componentId ~= 0 then
 			local componentParams = EntityReplicator._componentMap[offset]
-			paramStruct[index] = {}
 			-- array part of component struct must must be contigous!
 			for i, v in ipairs(componentParams)
-				paramStruct[index][i] = v
+				paramStruct[#paramStruct + 1] = v
 			end
+			paramStruct[#paramStruct + 1] = false
 		end
 	end
 	return componentStruct, paramStruct
+end
+
+local function deserializeEntity(instance)
+	-- cast to number
+	local networkId = instance.Name - 0
 end
 
 function EntityReplicator.Reference(player, instance)
@@ -91,8 +103,17 @@ end
 function EntityReplicator.AddToPrefab(rootInstance)
 end
 
-function EntityReplicator.ClientSerializable(componentType, paramName)
+function EntityReplicator.ServerCreatedClientSerializable(componentType, paramName)
 	WSAssert(SERVER)
+	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+	local paramId = paramName and ComponentDesc.GetParamIdFromName(componentId, paramName)
+	setSerializationBehavior(true, componentId, paramName)
+end
+
+function EntityReplicator.ServerCreatedServerSerializable(componentType)
+	WSAssert(SERVER)
+	local componentId = ComponentDesc.GetComponentIdFromType(componentType)	
+	setSerializationBehavior(false, componentId, paramName)
 end
 
 function EntityReplicator.Step()
