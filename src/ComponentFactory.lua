@@ -29,16 +29,21 @@ function Component(instance, componentType, paramMap)
 
 	newComponent._componentId = componentId
 	newComponent.Instance = instance
-	
-	for paramName, default in pairs(ComponentDesc.GetDefaults(componentId)) do
-		local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
-		if paramMap[paramName] ~= nil then
-			newComponent[paramId] = paramMap[paramName]
-		else
-			newComponent[paramId] = default
+	if #paramMap == 0 then
+		for paramName, default in pairs(ComponentDesc.GetDefaults(componentId)) do
+			local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
+			if paramMap[paramName] ~= nil then
+				newComponent[paramId] = paramMap[paramName]
+			else
+				newComponent[paramId] = default
+			end
+		end
+	else
+		for paramId, v in ipairs(paramMap) do
+			newComponent[paramId] = v
 		end
 	end
-	
+
 	return setmetatable(newComponent, ComponentMetatable)
 end
 
