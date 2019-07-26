@@ -83,7 +83,7 @@ end
 --  0	    0   |   0   |   0   |   0       0       0       0       0       0       0       0   |   0       0       0       0
 --              |       |       |                                                               |                            |
 --      N/A     |if set,|if set,|                           numParams                           |   nonZeroBitFieldIndices   |
---              |destroy| isRef |                                                               |                            |
+--              | isRef |destroy|                                                               |                            |
 ------------------------------------------------------------------------------------------------------------------------------
 -- @param instance Instance to which the entity to be serialized is attached
 -- @param networkId number signifying the networkId of this entity
