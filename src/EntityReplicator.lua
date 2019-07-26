@@ -79,8 +79,8 @@ end
 -- entities table spec: 
 --	{ Vector2int16(uint16 networkId, uint16 flags), Vector2int16(uint16 halfWord1, uint16 halfWord2), ... } (one additional Vector2int16 per non-zero component word)
 -- flags spec:
---	15______14______13______12______11______10______9_______8_______7_______6_______5_______4_______3_______2_______1_______0
---	0	    0   |   0   |   0   |   0       0       0       0       0       0       0       0   |   0       0       0       0
+--  15______14______13______12______11______10______9_______8_______7_______6_______5_______4_______3_______2_______1_______0
+--  0	    0   |   0   |   0   |   0       0       0       0       0       0       0       0   |   0       0       0       0
 --              |       |       |                                                               |                            |
 --      N/A     |if set,|if set,|                           numParams                           |   nonZeroBitFieldIndices   |
 --              |destroy| isRef |                                                               |                            |
