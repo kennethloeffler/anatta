@@ -81,9 +81,9 @@ end
 -- flags spec:
 --	15______14______13______12______11______10______9_______8_______7_______6_______5_______4_______3_______2_______1_______0
 --	0	    0   |   0   |   0   |   0       0       0       0       0       0       0       0   |   0       0       0       0
---	            |       |       |                                                               |                            |
---      N/A   	|if set,|if set,|                           numParams                           |   nonZeroBitFieldIndices   |
---			    |destroy| isRef |                                                               |                            |
+--              |       |       |                                                               |                            |
+--      N/A     |if set,|if set,|                           numParams                           |   nonZeroBitFieldIndices   |
+--              |destroy| isRef |                                                               |                            |
 ------------------------------------------------------------------------------------------------------------------------------
 -- @param instance Instance to which the entity to be serialized is attached
 -- @param networkId number signifying the networkId of this entity
