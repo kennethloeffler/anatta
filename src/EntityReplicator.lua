@@ -449,7 +449,7 @@ end
 -- @param networkId number
 local function sendConstructionTo(player, instance, networkId)
 	local playerBuffer = PlayerBuffers[player]
-	local entitiesIndex, paramsIndex = serializeNextEntity(instance, networkId, playerBuffer[1], playerBuffer[2], playerBuffer[3], playerBuffer[4])
+	local entitiesIndex, paramsIndex = serializeNext(instance, networkId, playerBuffer[1], playerBuffer[2], playerBuffer[3], playerBuffer[4])
 	playerBuffer[3] = entitiesIndex
 	playerBuffer[4] = paramsIndex
 end
@@ -461,7 +461,7 @@ end
 -- @param networkId number
 local function sendDestructionTo(player, instance, networkId)
 	local playerBuffer = PlayerBuffers[player]
-	local entitiesIndex, paramsIndex = serializeNextEntity(instance, networkId, playerBuffer[1], playerBuffer[2], playerBuffer[3], playerBuffer[4], true, true)
+	local entitiesIndex, paramsIndex = serializeNext(instance, networkId, playerBuffer[1], playerBuffer[2], playerBuffer[3], playerBuffer[4], true, true)
 	playerBuffer[3] = entititesIndex
 	playerBuffer[4] = paramsIndex
 end
@@ -588,7 +588,7 @@ function EntityReplicator.Unique(player, instance)
 	local paramsIndex = 0
 	local ref = NetworkIdsByInstance[instance]
 	local networkId = ref or 1
-	entities, params = serializeNextEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, nil, ref and true or nil)
+	entities, params = serializeNext(instance, networkId, entities, params, entitiesIndex, paramsIndex, nil, ref and true or nil)
 	doSendUnique(player, instance, entities, params)
 end
 
@@ -646,7 +646,7 @@ if SERVER then
 					RootInstanceEntitiesNum[rootInstance] = RootInstanceEntitiesNum[rootInstance] + 1
 					local id = getTempIdString(RootInstanceEntitiesNum[rootInstance])
 					name = id
-					static[1], static[2], static[3], static[4] = serializeNextEntity(instance, id, static[1], static[2], static[3], static[4])
+					static[1], static[2], static[3], static[4] = serializeNext(instance, id, static[1], static[2], static[3], static[4])
 				end
 
 				instance.Name = name
