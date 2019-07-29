@@ -4,6 +4,8 @@
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
 local WSAssert = require(script.Parent.WSAssert)
@@ -13,7 +15,7 @@ local SERVER = RunService:IsServer() and not RunService:IsClient()
 local EntityReplicator = {}
 
 -- Internal
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------
 local Remotes
 local RemoteEvent
 local RemoteFunction
@@ -25,9 +27,14 @@ local NumNetworkIds = 0
 local NetworkIdsByInstance = {}
 local InstancesByNetworkId = {}
 local ClientSerializableParams = {}
+local BitsSetTable = {}
 
 local bExtract = bit32.extract
 local bReplace = bit32.replace
+local blShift = bit32.lshift
+local bOr = bit32.bor
+local bAnd = bit32.band
+local bNot = bit32.bnot
 
 EntityReplicator._componentMap = nil
 EntityReplicator._entityMap = nil
@@ -50,14 +57,23 @@ local function getNetworkId(instance)
 	return networkId
 end
 
+local function setBitAtPos(n, pos)
+	local mask = blShift(1, pos)
+	return bOr(bAnd(n, bNot(mask)), bAnd(blShift(pos), mask))
+end
+
+local function bitIsSetAtPos(n, pos)
+	return bAnd(n, blShift(1, pos)) ~= 0
+end
+
 ---Calculates next char for id string
 local __IdLen, __IdNum = 0, 0
 local function calcIdString()
-	return string.char(__IdNum - ((len - 1) * 256) - 1)
+	return string.char(__IdNum - ((__IdLen- 1) * 256) - 1)
 end
 
 ---Gets the id string of a positive integer num
--- WARNING: for use on client ONLY
+-- WARNING: not safe to use inside simultaneous coroutines
 -- @param num number 
 local function getIdStringFromNum(num)
 	__IdLen = math.ceil(num * .00390625) -- num / 256
@@ -75,63 +91,87 @@ local function getIdNumFromString(str)
 	return id
 end
 
----Serializes the entity data attached to instance
--- entities table spec: 
---	{ Vector2int16(uint16 networkId, uint16 flags), Vector2int16(uint16 halfWord1, uint16 halfWord2), ... } (one additional Vector2int16 per non-zero component word)
--- flags spec:
---  15______14______13______12______11______10______9_______8_______7_______6_______5_______4_______3_______2_______1_______0
---  0	    0   |   0   |   0   |   0       0       0       0       0       0       0       0   |   0       0       0       0
---              |       |       |                                                               |                            |
---      N/A     |if set,|if set,|                           numParams                           |   nonZeroBitFieldIndices   |
---              | isRef |destroy|                                                               |                            |
-------------------------------------------------------------------------------------------------------------------------------
+---Serializes the creation or destruction of an entity
+
 -- @param instance Instance to which the entity to be serialized is attached
 -- @param networkId number signifying the networkId of this entity
--- @param entities table to which entity data is serialized 
--- @param params table to which param data is serialized
--- @param entitiesIndex number indicatingcurrent index of entites
--- @param paramsIndex number indicating current index of params
+-- @param entities table to which entity data is serialized
+-- table entities: 
+--
+--    { ..., Vector2int16(uint16 networkId, uint16 flags), Vector2int16(uint16 halfWord1, uint16 halfWord2), ...* } 
+--    
+--    *one additional Vector2int16 struct per non-zero component word
+--
+-- unint16 flags:
+--
+--___15______14______13______12______11______10______9_______8_______7_______6_______5_______4_______3_______2_______1_______0
+--   0	 |   0   |   0   |   0       0       0       0       0       0       0       0       0   |   0       0       0       0
+--       |       |       |                                                                       |                            |
+-- if set| if set| if set|                           numParams****                               |nonZeroBitFieldIndices***** |
+--update*| isRef*|dest***|                                                                       |                            |
+------------------------------------------------------------------------------------------------------------------------------
+-- * bit representing whether this is an update message
+-- ** bit representing whether entity is referenced in the system
+-- *** bit representing whether this is a destruction message
+-- **** 9-bit integer representing the total number of parameters on this entity [maximum 512 parameters per entity]
+-- ***** field representing indices of non-zero values of _entityMap[instance][0]
+------------------------------------------------------------------------------------------------------------------------------
+-- @param params table to which parameter values are serialized
+-- table params:
+--
+--    { ..., value, value, value, ...* } 
+--    
+--    *one additional value for each parameter on this entity
+------------------------------------------------------------------------------------------------------------------------------
+-- @param entitiesIndex number indicating current index of entities; initial value should be 1
+-- @param paramsIndex number indicating current index of params; initial value should be 0
+-- @param isDestruction boolean indicating whether this is a creation message or a destruction message
 -- @param isReferenced boolean indicating whether this entity is referenced
 -- @return entitiesIndex
 -- @return paramsIndex
-local function serializeNextEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isReferenced)
+local function serializeNextEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isDestruction, isReferenced)
 	local entityStruct = EntityReplicator._entityMap[instance]
 	local bitFields = entityStruct[0]
 	local flags = 0
 	local numBitFields = 0
 	local numParams = 0
+	local mask
 
 	for i, bitField in ipairs(bitFields) do
 		if bitField ~= 0 then
-			entitiesIndex = entitiesIndex + 1
-			numBitFields = numBitFields + 1
-			flags = bReplace(flags, i - 1, 1)
-			entities[entitiesIndex] = Vector2int16.new(bExtract(bitField, 0, 16), bExtract(bitField, 16, 16))
-
-			for offset = 1, 32 do
-				if bExtract(bitField, offset - 1) == 1 then
+			for pos = 0, 31 do
+				if bitIsSetAtPos(bitField, pos) then
 					numParams = 0
 					-- array part of component struct must be contigous!
-					for _, v in ipairs(EntityReplicator._componentMap[entityStruct[offset + ((i - 1) * 32)]]) do
+					for _, v in ipairs(EntityReplicator._componentMap[entityStruct[pos + ((i - 1) * 32))] do
 						paramsIndex = paramsIndex + 1
 						numParams = numParams + 1
 						params[paramsIndex] = v
 					end
-					flags = bReplace(flags, 4, numParams, 8)
+					-- set 5th through 13th bits to numParams 
+					flags = bReplace(flags, 4, numParams, 9)
 				end
 			end
+
+			-- set ith bit (i <= 4)
+			flags = setBitAtPos(flags, i - 1)
+
+			-- increment numBitFields, entitiesIndex; set component word in entities at entitiesIndex
+			entitiesIndex = entitiesIndex + 1
+			numBitFields = numBitFields + 1
+			entities[entitiesIndex] = Vector2int16.new(bExtract(bitField, 0, 16), bExtract(bitField, 16, 16))
 		end
 	end
 	
 	if isDestruction then
+		flags = setBitAtPos(flags, 13)
 		entities[entitiesIndex] = Vector2int16.new(networkId, flags)
-		flags = bReplace(flags, 12, 1)
 		entitiesIndex = entitiesIndex + 1
 		return entitiesIndex, paramsIndex
 	end
 
 	if isReferenced then
-		flags = bReplace(flags, 13, 1)
+		flags = setBitAtPos(flags, 14)
 	end
 
 	entities[entitiesIndex - numBitFields] = Vector2int16.new(networkId, flags)
@@ -139,6 +179,87 @@ local function serializeNextEntity(instance, networkId, entities, params, entiti
 	
 	return entitiesIndex, paramsIndex
 end
+
+---Serializes the changed parameters of components on the entity attached to instance
+-- @param instance Instance to which this entity is attached
+-- @param networkId number the networkId for this entity
+-- @param entities table to which entity data is serialized
+-- table entities:
+--
+--    { ..., Vector2int16(uint16 networkId, uint16 flags), 
+--        Vector2int16(uint16 halfWord1, uint16 halfWord2), ...,* 
+--        Vector2int16(uint16 paramField1, uint16 paramField2), ...**
+--    } 
+--    
+--    * one (1) additional Vector2int16 struct per non-zero component word
+--    ** one (1) additional Vector2int16 struct per two (2) changed components [max 16 (16) parameters per component]
+
+-- uint16 flags:
+
+--___15______14______13______12______11______10______9_______8_______7_______6_______5_______4_______3_______2_______1_______0
+--   0	 |   0       0       0   |   0       0       0       0       0       0       0       0   |   0       0       0       0
+--       |                       |                                                               |                            |
+-- if set|       (unused)        |                       numParamIdStructs**                     |  nonZeroBitFieldIndices*** |
+--update*|                       |                                                               |                            |
+-------------------------------------------------------------------------------------------------------------------------------
+--
+-- * bit representing whether this is an update message
+-- ** 8-bit integer representing number of Vector2int16 objects containing param id fields [max 512 parameters per entity]
+-- *** field representing indices of non-zero component fields
+------------------------------------------------------------------------------------------------------------------------------
+-- @param params table to which parameter values are serialized
+-- table params:
+--
+--    { ..., value, value, ...* }
+--
+--    * one (1) additional value per parameter
+------------------------------------------------------------------------------------------------------------------------------
+-- @param entitiesIndex number indicating the current index of entities
+-- @param paramsIndex number indicating the current index of params
+-- @param changedParamsMap table mapping component ids to changed parameter fields
+local function serializeNextEntityUpdate(instance, networkId, entities, params, entitiesIndex, paramsIndex, changedParamsMap)
+	local entityStruct = EntityReplicator._entityMap[instance]
+	local flags = 0
+	local numDataStructs = 0
+	local numParamStructs = 0
+	local bitFields = {0, 0, 0, 0}
+
+	for componentId, changedParams in pairs(changedParamsMap) do
+		local offset = math.ceil(componentId * 0.03125) -- componentId / 32
+		bitFields[offset] = setBitAtPosition(bitFields[offset], componentId - 1 + (32 * (offset - 1)))
+		numBitFields = offset
+		fieldOffsetToNumComponents[offset] = fieldOffsetToNumComponents + 1
+		flags = setBitAtPosition(flags, offset - 1)
+	end
+
+	for offset, bitField in ipairs(bitFields) do
+		local numComponents  = 0
+		local lastComponentId = 0
+		if bitField ~= 0 then
+			entitiesIndex = entitiesIndex + 1
+			numDataStructs = numDataStructs + 1
+			entitiesIndex[entitiesIndex] = Vector2int16.new(bExtract(bitField, 0, 16), bExtract(bitField, 16, 16))
+			for pos = 0, 31 do
+				if bAnd(bitField, pos) ~= 0 then
+					numComponents = numComponents + 1
+					lastComponentId = pos + 1
+					if bAnd(numComponents, 1) == 0 then
+						numDataStructs = numDataStructs + 1
+						entities[entitiesIndex + numDataStructs] = Vector2int16.new(changedParamsMap[lastComponentId], changedParamsMap[pos + 1])
+						numComponents = 0
+					end
+				end
+			end
+		end
+	end
+
+	flags = setBitAtPos(flags, 15)
+	entities[entitiesIndex - numDataObjs] = Vector2int16.new(networkId, flags)
+	entitiesIndex = entitiesIndex + 1
+	
+	return entitiesIndex, paramsIndex
+end
+
 
 ---Deserializes the next entity in entities
 -- @param entities table containing serial entity data
@@ -149,48 +270,39 @@ end
 -- @return componentIdsToParams table
 -- @return entitiesIndex number
 -- @return paramsIndex number
+-- @return isDestruction boolean
 -- @return isReferenced boolean
 local function deserializeNextEntity(entities, params, entitiesIndex, paramsIndex)
 	local networkIdDataObj = entities[entitiesIndex]
 	local networkId = networkIdDataObj.X
 	local flags = networkIdDataObj.Y
-	local numParams = bExtract(flags, 4, 8)
+	local numParams = bExtract(flags, 4, 10)
 	local numBitFields = 0
 	local bitFieldOffsets = {}
 	local componentIdsToParams = {}
 
 	-- destruction msg
-	if bExtract(flags, 12) == 1 then
+	if bitIsSetAtPos(flags, 14) ~= 0 then
 		entitiesIndex = entitiesIndex + 1
 		return networkId, nil, entitiesIndex, paramsIndex
 	end
 
-	for offset = 1, 4 do
-		if bExtract(flags, offset - 1) == 1 then
+	for pos = 0, 3 do
+		if bAnd(flags, pos) ~= 0 then
 			numBitFields = numBitFields + 1
-			bitFieldOffsets[numBitFieldOffsets] = offset - 1
+			bitFieldOffsets[numBitFieldOffsets] = pos
 		end
 	end
 
 	for i = 1, numBitFields do
 		entitiesIndex = entitiesIndex = 1
 		local dataObj = entities[entitiesIndex]
-		local firstField = dataObj.X
-		local secondField = dataObj.Y
+		local bitField = bReplace(dataObj.X, dataObj.Y, 16, 16)
 		local bitFieldOffset = bitFieldOffsets[i]
 		
-		for offset = 1, 32 do
-			local componentId
-			if offset <= 16 then
-				if bExtract(firstField, offset - 1) == 1 then
-					componentId = offset + (32 * bitFieldOffset)
-				end
-			else
-				if bExtract(secondField, offset - 17) == 1 then
-					componentId = offset + (32 * bitFieldOffset)
-				end
-			end
-			if componentId then
+		for pos = 0, 31 do
+			if bAnd(bitField, pos) ~= 0 then
+				local componentId = pos + 1 + (bitFieldOffset * 32)
 				componentIdsToParams[componentId] = {}
 				for i = 1, numParams do
 					paramsIndex = paramsIndex + 1
@@ -201,51 +313,62 @@ local function deserializeNextEntity(entities, params, entitiesIndex, paramsInde
 	end
 
 	entitiesIndex = entitiesIndex + 1
-	return networkId, componentIdsToParams, entitiesIndex, paramsIndex, bExtract(flags, 13) == 1
+	return networkId, componentIdsToParams, entitiesIndex, paramsIndex, bitIsSetAtPos(flags, 15)
 end
 
-local function sendConstruction(player, instance, networkId)
+local function sendConstructionTo(player, instance, networkId)
 	local playerBuffer = PlayerBuffers[player]
 	local entitiesIndex, paramsIndex = serializeNextEntity(instance, networkId, playerBuffer[1], playerBuffer[2], playerBuffer[3], playerBuffer[4])
 	playerBuffer[3] = entitiesIndex
 	playerBuffer[4] = paramsIndex
 end
 
-local function sendDestruction(player, instance, networkId)
+local function sendDestructionTo(player, instance, networkId)
 	local playerBuffer = PlayerBuffers[player]
-	local entitiesIndex, paramsIndex = serializeNextEntity(instance, networkId, playerBuffer[1], playerBuffer[2], playerBuffer[3], playerBuffer[4], true)
+	local entitiesIndex, paramsIndex = serializeNextEntity(instance, networkId, playerBuffer[1], playerBuffer[2], playerBuffer[3], playerBuffer[4], true, true)
 	playerBuffer[3] = entititesIndex
 	playerBuffer[4] = paramsIndex
 end
 
-local function serializePrefab(prefabRootInstance, player)
-	local rootClone = prefabRootInstance:Clone()
-	local entities = {}
-	local params = {}
-	local entitiesIndex = 1
-	local paramsIndex = 0
-	for _, instance in ipairs(prefabRootInstance.__WSEntities:GetChildren()) do
-		local reference = NetworkIdsByInstance[instance]
-		local networkId = reference and reference or getIdNumFromString(instance.Name) 
-		
-		entitiesIndex, paramsIndex = serializeNextEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, reference and true or false)
-		
-		if reference then
-			EntityReplicator.ReferenceForPlayer(player, instance)
-		end
+local function doSendPrefab(player, rootInstance, entities, params, isUnique)
+	rootInstance = isUnique and rootInstance:Clone() or rootInstance
+	Remotes[player][2]:InvokeClient(player, rootInstance, entities, unpack(params))
+	if isUnique then
+		rootInstance:Destroy()
 	end
-	return rootClone, entities, params
 end
 
-local function deserializePrefab(entitiesFolder, entities, params)
+local function doSendUnique(player, instance, entities, params)
+	instance = instance:Clone()
+	Remotes[player][2]:InvokeClient(player, instance, entities, unpack(params))
+	instance:Destroy()
+end
+
+local function serializePrefabFor(player, rootInstance)
+	local static = StaticPrefabEntities[rootInstance]
+	local entities = static[1]
+	local params = static[2]
+	local entitiesIndex = static[3]
+	local paramsIndex = static[4]
+		
+	for instance, networkId in pairs(static[5]) do
+		entitiesIndex, paramsIndex = serializeNextEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, true)
+		EntityReplicator.ReferenceForPlayer(player, instance)
+	end
+
+	return static[1], static[2]
+end
+
+local function deserializePrefab(entitiesFolder, entities, ...)
 	for _, v in ipairs(entitiesFolder:GetChildren()) do
 		local entitiesIndex = 1
 		local paramsIndex = 0
-		local networkId, componentIdsToParams, temp
+		local networkId, componentIdsToParams, isReferenced
 		
-		networkId, componentIdsToParams, entitiesIndex, paramsIndex, isReferenced = deserializeNextEntity(entities, params, entitiesIndex, paramsIndex)
+		networkId, componentIdsToParams, entitiesIndex, paramsIndex, isReferenced = deserializeNextEntity(entities, arg, entitiesIndex, paramsIndex)
 
 		local instance = entitiesFolder[getIdStringFromNum(networkId)]
+		instance.Name = "__WSEntity"
 		
 		if isReferenced then
 			NetworkIdsByInstance[instance] = networkId
@@ -258,7 +381,7 @@ local function deserializePrefab(entitiesFolder, entities, params)
 	end
 end
 
-local function newReplicatorFor(player)
+local function newPlayerReplicator(player)
 	-- probably unnecessary for each client to have its own private remote pair... but why not?
 	WSAssert(SERVER)
 	local remoteEvent = Instance.new("RemoteEvent")
@@ -279,7 +402,7 @@ local function newReplicatorFor(player)
 	end
 end
 
-local function destroyPlayerReplicatorFor(player)
+local function destroyPlayerReplicator(player)
 	WSAssert(SERVER)
 	Remotes[player][1]:Destroy()
 	Remotes[player][1]:Destroy()
@@ -333,16 +456,25 @@ function EntityReplicator.Dereference(instance, sendDestructionMessage)
 	NetworkIdsByInstance[instance] = nil
 end
 
+function EntityReplicator.Unique(player, instance)
+	local entities = {}
+	local params = {}
+	local entitiesIndex = 1
+	local paramsIndex = 0
+	local ref = NetworkIdsByInstance[instance]
+	local networkId = ref or 1
+	entities, params = serializeNextEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, nil, ref and true or nil)
+	doSendUnique(player, instance, entities, params)
+end
+
+function EntityReplicator.FromPrefab(player, rootInstance)
+	local entities, params = serializePrefabFor(player, rootInstance)
+	coroutine.resume(coroutine.create(pcall, doSendPrefab, player, rootInstance, entities, params, false))
+end
+
 function EntityReplicator.UniqueFromPrefab(player, rootInstance)
-	WSAssert(RootInstance[rootInstance], "%s is not a prefab", rootInstance.Name)
-	WSAssert(SERVER)
-	coroutine.create(coroutine.resume(function()
-		local clone, entitiesStruct, paramsStruct = serializePrefab(rootInstance, player)  
-		clone.Parent = player.PlayerGui
-		-- yield until client acknowledges or invocation fails
-		pcall(function() Remotes[player][2]:InvokeClient(player, clone, entitiesStruct, paramsStruct) end)
-		clone:Destroy()
-	end))
+	local entities, params = serializePrefabFor(player, rootInstance)
+	coroutine.resume(coroutine.create(pcall, doSendPrefab, player, rootInstance, entities, params, true))
 end
 
 function EntityReplicator.SetClientSerializable(componentType, paramName)
@@ -358,32 +490,40 @@ end
 function EntityReplicator.Step()
 end
 
--- initialization
 if SERVER then
+	PrefabEntities = {}
+
+	CollectionService:AddTag(Workspace, "__WSReplicatorRootInstance")
+	CollectionService:AddTag(ReplicatedStorage, "__WSReplicatorRootInstance")
+
 	local RootInstances = CollectionService:GetTagged("__WSReplicatorRootInstance")
 	local Entities = CollectionService:GetTagged("__WSEntity")
-	local RootInstanceEntities = {}
 
 	for _, rootInstance in pairs(RootInstances) do
 		local entitiesFolder = Instance.new("Folder")
 		entitiesFolder.Name = "__WSEntities"
 		entitiesFolder.Parent = rootInstance
 		RootInstanceEntitiesNum[rootInstance] = 0
+		PrefabEntities[rootInstance] = { {}, {}, 1, 0, {} }
 	end
 
 	for _, instance in pairs(Entities) do
 		for _, rootInstance in pairs(RootInstances) do
 			if instance:IsDescendantOf(rootInstance) then
 				local name
+				local prefab = PrefabEntities[rootInstance]
 				if instance:HasTag("__WSReplicatorRef")
-					name = getNetworkId(instance)
+					local networkId = getNetworkId(instance)
+					local id = getTempIdString(networkId)
+					static[5][instance] = networkId
+					name = id
 				else
 					RootInstanceEntitiesNum[rootInstance] = RootInstanceEntitiesNum[rootInstance] + 1
-					local tempId = getTempIdString(RootInstanceEntitiesNum[rootInstance])
-					local tonum = tonum(tempId)
-					name = tempId
+					local id = getTempIdString(RootInstanceEntitiesNum[rootInstance])
+					name = id
+					static[1], static[2], static[3], static[4] = serializeNextEntity(instance, id, static[1], static[2], static[3], static[4])
 				end
-				
+
 				instance.Name = name
 				instance.Parent = rootInstance.__WSEntities
 			end
@@ -395,12 +535,8 @@ if SERVER then
 	PlayerReferences = {}
 	PlayerBuffers = {}
 
-	Players.PlayerAdded:Connect(function(player)
-		newReplicatorFor(player)
-	end)
-	Players.PlayerRemoving:Connect(function(player)
-		destroyReplicatorFor(player)
-	end)
+	Players.PlayerAdded:Connect(newPlayerReplicator)
+	Players.PlayerRemoving:Connect(destroyPlayerReplicator)
 
 	for _, player in ipairs(Players:GetPlayers()) do
 		newReplicatorFor(player)
@@ -412,15 +548,21 @@ else
 	RemoteEvent.OnServerEvent:Connect(function()
 	end)
 
-	RemoteFunction.OnServerInvoke = function(rootInstance, entitiesStruct, paramsStruct)
+	local function onServerInvoke(rootInstance, entitiesStruct, ...)
 		local prefab = rootInstance:FindFirstChild("__WSEntities")
 		if prefab then
-			deserializePrefab(prefab, entitiesStruct, paramsStruct)
-			rootInstance.Parent = workspace
+			if rootInstance.Parent == Players.LocalPlayer.PlayerGui then
+				rootInstance = rootInstance:Clone()
+				rootInstance.Parent = Workspace
+			end
+			deserializePrefab(rootInstance.__WSEntities, entitiesStruct, ...)
 		else
-			deserializeUnique(rootInstance, entitiesStruct, paramsStruct)
+			deserializeUnique(rootInstance, entitiesStruct, ...)
 		end
-		return
+	end
+
+	RemoteFunction.OnServerInvoke = function(rootInstance, entitiesStruct, ...)
+		coroutine.resume(coroutine.create(onServerInvoke, rootInstance, entitiesStruct, ...))
 	end)
 end
 
