@@ -1,0 +1,13 @@
+return {
+	-- flag name to bit position
+	UPDATE = 0xF,
+	PARAMS_UPDATE = 0xE,
+	ADD_COMPONENT = 0xD,
+	KILL_COMPONENT = 0xC,
+	CLIENT_CREATABLE = 0xB,
+	CLIENT_SERIALIZABLE = 0xA,
+	IS_REFERENCED = 0xE,
+	DESTRUCTION = 0xD,
+	PREFAB_ENTITY = 0xC,
+}
+
