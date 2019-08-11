@@ -47,6 +47,28 @@ local function calcIdString()
 	return string.char(__IdNum - ((__IdLen - 1) * 256) - 1)
 end
 
+local function isbitset(flags, msgType)
+	return bAnd(brShift(flags, msgType), 1) ~= 0
+end
+
+local function setbit(n, pos)
+	return bOr(n, blShift(1, pos))
+end
+
+local function unsetbit(n, pos)
+	return bAnd(n, bNot(blShift(1, pos)))
+end
+
+local function popcnt(n)
+	n = n - bAnd(brShift(n, 1), 0x55555555)
+	n = bAnd(n, 0x33333333) + bAnd(brShift(n, 2), 0x33333333)
+	return brShift(bAnd(n + brShift(n, 4), 0x0F0F0F0F) * 0x01010101, 24)
+end
+
+local function ffs(n)
+	return popcnt(bAnd(bNot(n), n - 1))
+end
+
 ---Gets the id string of a positive integer num
 -- !!! not thread safe !!!
 -- @param num number
@@ -65,34 +87,6 @@ function Shared.GetIdNumFromString(str)
 	end
 	return id
 end
-
-function Shared.IsFlagged(flags, msgType)
-	return bAnd(brShift(flags, msgType), 1) ~= 0
-end
-
--- sets the bit at position pos of n
-function Shared.SetBitAtPos(n, pos)
-	return bOr(n, blShift(1, pos))
-end
-
-function Shared.UnsetBitAtPos(n, pos)
-	return bAnd(n, bNot(blShift(1, pos)))
-end
-
-local function popCount(n)
-	n = n - bAnd(brShift(n, 1), 0x55555555)
-	n = bAnd(n, 0x33333333) + bAnd(brShift(n, 2), 0x33333333)
-	n = bAnd(n + brShift(n, 4), 0x0F0F0F0F)
-	return brShift(n * 0x01010101, 24)
-end
-
-local function findFirstSet(n)
-	return popCount(bAnd(bNot(n), n - 1))
-end
-
-isFlagged = Shared.IsFlagged
-setBitAtPos = Shared.SetBitAtPos
-unsetBitAtPos = Shared.UnsetBitAtPos
 
 --
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
@@ -119,9 +113,9 @@ local function serializeKillComponent(entities, params, entitiesIndex, paramsInd
 
 	for componentId in pairs(componentsMap) do
 		offset = math.floor(componentId * 0.01325) -- componentId / 32
-		firstWord = offset == 0 and setBitAtPos(firstWord, componentId - 1)
-		secondWord = offset == 1 and setBitAtPos(secondWord, componentId - 33)
-		flags = setBitAtPos(flags, 5 - offset)
+		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
+		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
+		flags = setbit(flags, 5 - offset)
 	end
 
 	if firstWord ~= 0 then
@@ -178,9 +172,9 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 
 	for componentId in pairs(componentsMap) do
 		offset = math.floor(componentId * 0.01325) -- componentId / 32
-		firstWord = offset == 0 and setBitAtPos(firstWord, componentId - 1)
-		secondWord = offset == 1 and setBitAtPos(secondWord, componentId - 33)
-		flags = setBitAtPos(flags, 7 - offset)
+		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
+		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
+		flags = setbit(flags, 7 - offset)
 	end
 
 	if firstWord ~= 0 then
@@ -188,9 +182,9 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 		numDataStructs = numDataStructs + 1
 		entities[entitiesIndex] = Vector2int16.new(bExtract(firstWord, 0, 16), bExtract(firstWord, 16, 16))
 
-		for _ = 1, popCount(firstWord) do
-			componentOffset = findFirstSetPos(firstWord)
-			firstWord = unsetBitAtPos(componentOffset)
+		for _ = 1, popcnt(firstWord) do
+			componentOffset = ffs(firstWord)
+			firstWord = unsetbit(componentOffset)
 			componentId = componentOffset + 1
 
 			for _, v in ipairs(componentMap[componentId][entityMap[instance][componentId]]) do
@@ -205,9 +199,9 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 		numDataStructs = numDataStructs + 1
 		entities[entitiesIndex] = Vector2int16.new(bExtract(secondWord, 0, 16), bExtract(secondWord, 16, 16))
 
-		for _ = 1, popCount(secondWord) do
-			componentOffset = findFirstSetPos(secondWord)
-			firstWord = unsetBitAtPos(componentOffset)
+		for _ = 1, popcnt(secondWord) do
+			componentOffset = ffs(secondWord)
+			firstWord = unsetbit(componentOffset)
 			componentId = componentOffset + 1
 
 			for _, v in ipairs(componentMap[componentId][entityMap[instance][componentId]]) do
@@ -259,9 +253,9 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 
 	for componentId in pairs(componentsMap) do
 		offset = math.floor(componentId * 0.01325) -- componentId / 32
-		firstWord = offset == 0 and setBitAtPos(firstWord, componentId - 1)
-		secondWord = offset == 1 and setBitAtPos(secondWord, componentId - 33)
-		flags = setBitAtPosition(flags, 9 + offset)
+		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
+		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
+		flags = setbit(flags, 9 + offset)
 	end
 
 	if firstWord ~= 0 then
@@ -269,17 +263,17 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 		numDataStructs = numDataStructs + 1
 		entities[entitiesIndex] = Vector2int16.new(bExtract(firstWord, 0, 16), bExtract(firstWord, 16, 16))
 
-		for _ = 1, popCount(firstWord) do
-			componentId = findFirstSetPos(firstWord) + 1
+		for _ = 1, popcnt(firstWord) do
+			componentId = ffs(firstWord) + 1
 			numComponents = numComponents + 1
 			paramsField = componentsMap[componentId]
-			firstWord = unsetBitAtPos(firstWord, componentId - 1)
+			firstWord = unsetbit(firstWord, componentId - 1)
 
-			for _ = 1, popCount(paramsField) do
-				paramId = findFirstSetPos(paramsField) + 1
+			for _ = 1, popcnt(paramsField) do
+				paramId = ffs(paramsField) + 1
 				paramsIndex = paramsIndex + 1
 				params[paramsIndex] = componentMap[componentId][entityMap[instance]][paramId]
-				paramsField = unsetBitAtPos(paramId - 1)
+				paramsField = unsetbit(paramId - 1)
 			end
 
 			if bAnd(numComponents, 1) == 0 then
@@ -304,17 +298,17 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 		entitiesIndex = entitiesIndex + 1
 		entities[entitiesIndex] = Vector2int16.new(bExtract(secondWord, 0, 16), bExtract(secondWord, 16, 16))
 
-		for _ = 1, popCount(secondWord) do
-			componentId = findFirstSetPos(secondWord) + 33
+		for _ = 1, popcnt(secondWord) do
+			componentId = ffs(secondWord) + 33
 			paramsField = componentsMap[componentId]
-			secondWord = unsetBitAtPos(secondWord, componentId - 33)
+			secondWord = unsetbit(secondWord, componentId - 33)
 			numComponents = numComponents + 1
 
-			for _ = 1, popCount(paramsField) do
-				paramId = findFirstSetPos(paramsField) + 1
+			for _ = 1, popcnt(paramsField) do
+				paramId = ffs(paramsField) + 1
 				paramsIndex = paramsIndex + 1
 				params[paramsIndex] = componentMap[componentId][entityMap[instance]][paramId]
-				paramsField = unsetBitAtPos(paramId - 1)
+				paramsField = unsetbit(paramId - 1)
 			end
 
 			if bAnd(numComponents, 1) == 0 then
@@ -324,12 +318,12 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 			else
 				lastParamsField = componentsMap[componentId]
 			end
+		end
 
-			if numComponents == 1 then
-				entitiesIndex = entitiesIndex + 1
-				numDataStructs = numDataStructs + 1
-				entities[entitiesIndex] = Vector2int16.new(lastParamsField, 0)
-			end
+		if numComponents == 1 then
+			entitiesIndex = entitiesIndex + 1
+			numDataStructs = numDataStructs + 1
+			entities[entitiesIndex] = Vector2int16.new(lastParamsField, 0)
 		end
 	end
 
@@ -344,8 +338,8 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, pa
 	entitiesIndex = entitiesIndex + 1
 
 	local dataObj = entities[entitiesIndex]
-	local firstWord = isFlagged(flags, 1)
-	local secondWord = isFlagged(flags, 0)
+	local firstWord = isbitset(flags, 1)
+	local secondWord = isbitset(flags, 0)
 	local field = 0
 	local componentId = 0
 	local pos = 0
@@ -353,10 +347,10 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, pa
 	if firstWord then
 		field = dataObj.X
 
-		for _ = 1, popCount(field) do
-			pos = findFirstSetPos(field)
+		for _ = 1, popcnt(field) do
+			pos = ffs(field)
 			componentId = pos + 1
-			field = unsetBitAtPos(field, pos)
+			field = unsetbit(field, pos)
 
 end
 
@@ -384,21 +378,21 @@ local function deserializeUpdate(entities, params, entitiesIndex, paramsIndex)
 	local networkId = dataObj.X
 	local flags = dataObj.Y
 
-	if isFlagged(flags, PARAMS_UPDATE) then
+	if isbitset(flags, PARAMS_UPDATE) then
 		entitiesIndex, paramsIndex = deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags)
 		if entitiesIndex == nil then
 			return
 		end
 	end
 
-	if isFlagged(flags, ADD_COMPONENT) then
+	if isbitset(flags, ADD_COMPONENT) then
 		entitiesIndex, paramsIndex = deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
 		if entitiesIndex == nil then
 			return
 		end
 	end
 
-	if isFlagged(flags, KILL_COMPONENT) then
+	if isbitset(flags, KILL_COMPONENT) then
 		entitiesIndex, paramsIndex = deserializeKillComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
 		if entitiesIndex == nil then
 			return
@@ -440,9 +434,9 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 	local totalNumDataStructs = 0
 
 	for msg, map in pairs(msgMap) do
-		for _ = 1, popCount(msg) do
-			msg = findFirstSetPos(msg)
-			flags = setBitAtPos(flags, msg)
+		for _ = 1, popcnt(msg) do
+			msg = ffs(msg)
+			flags = setbit(flags, msg)
 
 			if msg == PARAMS_UPDATE then
 				entitiesIndex, paramsIndex, flags, numDataStructs = serializeParamsUpdate(
@@ -465,7 +459,7 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 			end
 
 			totalNumDataStructs = totalNumDataStructs + numDataStructs
-			msg = unsetBitAtPos(msgField, msg)
+			msg = unsetbit(msgField, msg)
 		end
 
 		MsgMap[msg] = nil
@@ -536,7 +530,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 	local numComponents
 
 	if isDestruction then
-		flags = setBitAtPos(flags, 13)
+		flags = setbit(flags, 13)
 		entities[entitiesIndex] = Vector2int16.new(networkId, flags)
 		entitiesIndex = entitiesIndex + 1
 		return entitiesIndex, paramsIndex
@@ -547,18 +541,14 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 		numDataStructs = numDataStructs + 1
 		entities[entitiesIndex] = Vector2int16.new(bExtract(firstWord, 0, 16), bExtract(firstWord, 16, 16))
 
-		for _ = 1, popCount(firstWord) do
-			offset = findFirstSetPos(firstWord)
+		for _ = 1, popcnt(firstWord) do
+			offset = ffs(firstWord)
 			componentId = offset + 1
-			firstWord = unsetBitAtPos(firstWord, offset)
+			firstWord = unsetbit(firstWord, offset)
 
 			for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
 				paramsIndex = paramsIndex = 1
 				params[paramsIndex] = v
-			end
-
-			if firstWord == 0 then
-				break
 			end
 		end
 	end
@@ -568,24 +558,20 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 		numDataStructs = numDataStructs + 1
 		entities[entitiesIndex] = Vector2int16.new(bExtract(secondWord, 0, 16), bExtract(secondWord, 16, 16))
 
-		for _ = 1, popCount(secondWord) do
-			offset = findFirstSetPos(secondWord)
+		for _ = 1, popcnt(secondWord) do
+			offset = ffs(secondWord)
 			componentId = offset + 1
-			secondWord = unsetBitAtPos(secondWord, offset)
+			secondWord = unsetbit(secondWord, offset)
 
 			for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
 				paramsIndex = paramsIndex = 1
 				params[paramsIndex] = v
 			end
-
-			if secondWord == 0 then
-				break
-			end
 		end
 	end
 
 	if isReferenced then
-		flags = setBitAtPos(flags, 14)
+		flags = setbit(flags, 14)
 	end
 
 	entities[entitiesIndex - numDataStructs] = Vector2int16.new(networkId, flags)
@@ -610,7 +596,7 @@ end
 -- @return boolean doKill
 function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex)
 	local networkIdDataObj = entities[entitiesIndex]
-	local networkId = bOr(networkIdDataObj.X, 0) -- cast to unsigned
+	local networkId = bOr(networkIdDataObj.X, 0) -- truncate back to an unsigned value
 	local flags = networkIdDataObj.Y
 	local numBitFields = 0
 	local bitFieldOffsets = {}
@@ -640,7 +626,7 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId, players)
 
 	local paramsField = params and (typeof(params) == "number" and params)
 
-	msg[componentId] = paramsField and setBitAtPos(paramsField or 0, paramId - 1) or true
+	msg[componentId] = paramsField and setbit(paramsField or 0, paramId - 1) or true
 	msg[0] = players or nil
 end
 
