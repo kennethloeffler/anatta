@@ -1,4 +1,23 @@
--- Shared.lua
+---Shared.lua
+-- @module shared
+
+-- Because the usage of Vector2int16 in this module may be confusing, a summary of why this data type was chosen is given below:
+
+-- The bit32 functions truncate their arguments (signed 64 bit floats) to unsigned 32 bit integers. However, the result of
+-- of these operations still result in a normal Lua number (a signed 64 bit float). What this means practically is that
+-- *half* of the data will be "junk" and waste valuable bandwidth when sent across the network. Because one of the design
+-- goals of EntityReplicator is to minimize the amount of data sent among peers, this is an obvious non-starter.
+
+-- Nevertheless, there exists a way to efficently pack integers. A Vector2int16 contains two signed 16 bit integers:
+-- one in its 'X' field, and one in its 'Y' field. It is thus possible to split an unsigned 32-bit integer into two 16-bit
+-- fields, which are placed in the Vector2int16, then send the Vector2int16 across the network where it is deserialized by
+-- the receiver.
+
+-- If any one of these two 16-bit fields represents an integer that is greater than (2^15) - 1, it  will result in the same
+-- unsigned value when it it is used again as an argument in a bit32 function. This is because the signed 16-bit integer dealt with
+-- here are in two's complement form, so inputting a positive integer outside of the range they can represent will result in a
+-- negative number whose binary representation is identical  to that of the original number.
+
 local Constants = require(script.Parent.Constants)
 
 local UPDATE = Constants.UPDATE
@@ -12,16 +31,6 @@ local DESTRUCTION = Constants.DESTRUCTION
 local PREFAB_ENTITY = Constants.PREFAB_ENTITY
 local IS_SERVER = Constants.IS_SERVER
 
-local bAnd = bit32.band
-local bOr = bit32.bor
-local bNot = bit32.bnot
-local blShift = bit32.lshift
-local brShift = bit32.rshift
-local bReplace = bit32.replace
-local bExtract = bit32.extract
-local setBitAtPos
-local unsetBitAtPos
-
 local Shared = {}
 
 local Queued = {}
@@ -30,7 +39,6 @@ local NetworkIdsByInstance = {}
 local GlobalRefs = {}
 local PlayerRefs = {}
 
-local bitSetLookup = {}
 local entityMap
 local componentMap
 
@@ -42,36 +50,60 @@ Shared.PlayerRefs = PlayerRefs
 
 ---Calculates next char for id string
 -- gsub function for getIdStringFromNum
+
 local __IdLen, __IdNum = 0, 0
 local function calcIdString()
 	return string.char(__IdNum - ((__IdLen - 1) * 256) - 1)
 end
 
-local function isbitset(flags, msgType)
-	return bAnd(brShift(flags, msgType), 1) ~= 0
+---Returns TRUE if the bit at position pos is set, FALSE otherwise
+-- n is truncated to a 32-bit integer by bit32
+
+local function isbitset(flags, pos)
+	return bit32.band(bit32.rshift(flags, pos), 1) ~= 0
 end
+
+---Sets the bit at position pos in the binary representation of n
+-- n is truncated to a 32-bit integer by bit32
 
 local function setbit(n, pos)
-	return bOr(n, blShift(1, pos))
+	return bit32.bor(n, blShift(1, pos))
 end
+
+---Unsets the bit at position pos in the binary representation of n
+-- n is truncated to an unsigned 32-bit integer by bit32
 
 local function unsetbit(n, pos)
-	return bAnd(n, bNot(blShift(1, pos)))
+	return bit32.band(n, bit32.bnot(blShift(1, pos)))
 end
+
+---Counts the number of set bits in the binary representation of n
+-- n is truncated to an unsigned 32-bit integer by bit32
+-- in-depth explanations of this function may be found at:
+
+--    https://web.archive.org/web/20060111231946/http://www.amd.com/us-en/assets/content_type/white_papers_and_tech_docs/25112.PDF
+--    8.6, "Efficient Implementation of Population-Count Function in 32-Bit Mode"
+
+--    https://doc.lagout.org/security/Hackers%20Delight.pdf
+--    5-1, "Counting 1-Bits"
 
 local function popcnt(n)
-	n = n - bAnd(brShift(n, 1), 0x55555555)
-	n = bAnd(n, 0x33333333) + bAnd(brShift(n, 2), 0x33333333)
-	return brShift(bAnd(n + brShift(n, 4), 0x0F0F0F0F) * 0x01010101, 24)
+	n = n - bit32.band(bit32.rshift(n, 1), 0x55555555)
+	n = bit32.band(n, 0x33333333) + bit32.band(bit32.rshift(n, 2), 0x33333333)
+	return bit32.rshift(bit32.band(n + bit32.rshift(n, 4), 0x0F0F0F0F) * 0x01010101, 24)
 end
+
+---Finds the position of the first set bit (starting from LSB) in the binary representation of n
+-- n is truncated to an unsigned 32-bit integer by bit32
 
 local function ffs(n)
-	return popcnt(bAnd(bNot(n), n - 1))
+	return popcnt(bit32.band(bit32.bnot(n), n - 1))
 end
 
----Gets the id string of a positive integer num
+---Gets the id string corresponding to a positive integer num
 -- !!! not thread safe !!!
 -- @param num number
+
 function Shared.GetIdStringFromNum(num)
 	__IdLen = math.ceil(num * .00390625) -- num / 256
 	__IdNum = num
@@ -80,6 +112,7 @@ end
 
 ---Gets the number corresponding to an id string str
 -- @param str string
+
 function Shared.GetIdNumFromString(str)
 	local id = 1
 	for c in str:gmatch(".") do
@@ -121,13 +154,13 @@ local function serializeKillComponent(entities, params, entitiesIndex, paramsInd
 	if firstWord ~= 0 then
 		entitiesIndex = entitiesIndex + 1
 		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bExtract(firstWord, 0, 16), bExtract(firstWord, 16, 16))
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
 	end
 
 	if secondWord ~= 0 then
 		entitiesIndex = entitiesIndex + 1
 		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bExtract(secondWord, 0, 16), bExtract(secondWord, 16, 16))
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(secondWord, 0, 16), bit32.extract(secondWord, 16, 16))
 	end
 
 	return entitiesIndex, paramsIndex, flags, numDataStructs
@@ -180,7 +213,7 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 	if firstWord ~= 0 then
 		entitiesIndex = entitiesIndex + 1
 		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bExtract(firstWord, 0, 16), bExtract(firstWord, 16, 16))
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
 
 		for _ = 1, popcnt(firstWord) do
 			componentOffset = ffs(firstWord)
@@ -197,12 +230,12 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 	if secondWord ~= 0 then
 		entitiesIndex = entitiesIndex + 1
 		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bExtract(secondWord, 0, 16), bExtract(secondWord, 16, 16))
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(secondWord, 0, 16), bit32.extract(secondWord, 16, 16))
 
 		for _ = 1, popcnt(secondWord) do
 			componentOffset = ffs(secondWord)
 			firstWord = unsetbit(componentOffset)
-			componentId = componentOffset + 1
+			componentId = componentOffset + 33
 
 			for _, v in ipairs(componentMap[componentId][entityMap[instance][componentId]]) do
 				paramsIndex = paramsIndex + 1
@@ -255,13 +288,13 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 		offset = math.floor(componentId * 0.01325) -- componentId / 32
 		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
 		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
-		flags = setbit(flags, 9 + offset)
+		flags = setbit(flags, offset + 4)
 	end
 
 	if firstWord ~= 0 then
 		entitiesIndex = entitiesIndex + 1
 		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bExtract(firstWord, 0, 16), bExtract(firstWord, 16, 16))
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
 
 		for _ = 1, popcnt(firstWord) do
 			componentId = ffs(firstWord) + 1
@@ -276,7 +309,7 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 				paramsField = unsetbit(paramId - 1)
 			end
 
-			if bAnd(numComponents, 1) == 0 then
+			if bit32.band(numComponents, 1) == 0 then
 				entitiesIndex = entitiesIndex + 1
 				numDataStructs = numDataStructs + 1
 				entities[entitiesIndex] = Vector2int16.new(lastParamsField, componentsMap[componentId])
@@ -296,7 +329,7 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 
 	if secondWord ~= 0 then
 		entitiesIndex = entitiesIndex + 1
-		entities[entitiesIndex] = Vector2int16.new(bExtract(secondWord, 0, 16), bExtract(secondWord, 16, 16))
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(secondWord, 0, 16), bit32.extract(secondWord, 16, 16))
 
 		for _ = 1, popcnt(secondWord) do
 			componentId = ffs(secondWord) + 33
@@ -311,7 +344,7 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 				paramsField = unsetbit(paramId - 1)
 			end
 
-			if bAnd(numComponents, 1) == 0 then
+			if bit32.band(numComponents, 1) == 0 then
 				entitiesIndex = entitiesIndex + 1
 				numDataStructs = numDataStructs + 1
 				entities[entitiesIndex] = Vector2int16.new(lastParamsField, componentsMap[componentId])
@@ -330,6 +363,73 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 	return entitiesIndex, paramsIndex, flags, numDataStructs
 end
 
+local function deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags)
+	local instance = InstancesByNetworkId[networkId]
+	local firstWord = isbitset(flags, 4)
+	local secondWord = isbitset(flags, 5)
+	local field = 0
+	local paramsField = 0
+	local componentId = 0
+	local pos = 0
+	local paramPos = 0
+	local even = false
+	local dataObj
+
+	if firstWord then
+		entitiesIndex = enititiesIndex + 1
+		dataObj = entities[entitiesIndex]
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+
+		for i = 1, popcnt(field) do
+			pos = ffs(field)
+			even = bit32.band(i, 0) == 0
+			componentId = pos + 1
+			entitiesIndex = entitiesIndex + (even and 1 or 0)
+			dataObj = entities[entitiesIndex]
+			paramsField = even and dataObj.X or dataObj.Y
+
+			for _ = 1, popcnt(paramsField) do
+				paramPos = ffs(paramsField)
+				componentMap[componentId][entityMap[instance]][paramPos + 1] = params[paramsIndex]
+				paramsIndex = paramsIndex + 1
+				paramsField = unsetbit(paramsField, paramPos)
+			end
+
+			field = unsetbit(field, pos)
+		end
+	end
+
+	if secondWord then
+		entitiesIndex = enititiesIndex + 1
+		dataObj = entities[entitiesIndex]
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+
+		for i = 1, popcnt(field) do
+			pos = ffs(field)
+			even = bit32.band(i, 0) == 0
+			componentId = pos + 33
+			entitiesIndex = entitiesIndex + (even and 1 or 0)
+			dataObj = entities[entitiesIndex]
+			paramsField = even and dataObj.X or dataObj.Y
+
+			for _ = 1, popcnt(paramsField) do
+				paramPos = ffs(paramsField)
+				componentMap[componentId][entityMap[instance]][paramPos + 1] = params[paramsIndex]
+				paramsIndex = paramsIndex + 1
+				paramsField = unsetbit(paramsField, paramPos)
+			end
+
+			field = unsetbit(field, pos)
+		end
+	end
+
+	return entitiesIndex, paramsIndex
+end
+
+local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
+
+end
+
 function deserializeKillComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
 	if IS_SERVER then
 		return
@@ -338,8 +438,8 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, pa
 	entitiesIndex = entitiesIndex + 1
 
 	local dataObj = entities[entitiesIndex]
-	local firstWord = isbitset(flags, 1)
-	local secondWord = isbitset(flags, 0)
+	local firstWord = isbitset(flags, 0)
+	local secondWord = isbitset(flags, 1)
 	local field = 0
 	local componentId = 0
 	local pos = 0
@@ -352,12 +452,6 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, pa
 			componentId = pos + 1
 			field = unsetbit(field, pos)
 
-end
-
-local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
-end
-
-local function deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags)
 end
 
 local function deserializeEntity(entities, params, entitiesIndex, paramsIndex)
@@ -418,7 +512,7 @@ end
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
 --   1	 |   0   |   0   |   0   |   0       0       0       0       0       0   |   0       0   |   0       0   |   0       0  |
 --       |       |       |       |                                               |               |               |              |
--- if set| if set| if set| if set|                                               | paramsOffset  |   addOffset   |   killOffset |
+-- if set| if set| if set| if set|                                               | paramsOffset  |   addOffset   |  killOffset  |
 -- update| params|  add  |  kill |                                               |               |               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
@@ -539,7 +633,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 	if firstWord ~= 0 then
 		entitiesIndex = entitiesIndex + 1
 		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bExtract(firstWord, 0, 16), bExtract(firstWord, 16, 16))
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
 
 		for _ = 1, popcnt(firstWord) do
 			offset = ffs(firstWord)
@@ -556,7 +650,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 	if secondWord ~= 0 then
 		entitiesIndex = entitiesIndex + 1
 		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bExtract(secondWord, 0, 16), bExtract(secondWord, 16, 16))
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(secondWord, 0, 16), bit32.extract(secondWord, 16, 16))
 
 		for _ = 1, popcnt(secondWord) do
 			offset = ffs(secondWord)
@@ -628,6 +722,16 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId, players)
 
 	msg[componentId] = paramsField and setbit(paramsField or 0, paramId - 1) or true
 	msg[0] = players or nil
+end
+
+function Shared.OnNewReference(instance, networkId)
+	InstancesByNetworkId[networkId] = instance
+	NetworkIdsByInstance[instance] = networkId
+end
+
+function Shared.OnDereference(instance, networkId)
+	InstancesByNetworkId[networkId] = instance
+	NetworkIdsNyInstance[instance] = networkId
 end
 
 function Shared.Init(entityMap, componentMap)
