@@ -3,20 +3,28 @@
 
 -- Because the usage of Vector2int16 in this module may be confusing, a summary of why this data type was chosen is given below:
 
--- The bit32 functions truncate their arguments (signed 64 bit floats) to unsigned 32 bit integers. However, the result of
--- of these operations still result in a normal Lua number (a signed 64 bit float). What this means practically is that
--- *half* of the data will be "junk" and waste valuable bandwidth when sent across the network. Because one of the design
--- goals of EntityReplicator is to minimize the amount of data sent among peers, this is an obvious non-starter.
+-- The bit32 functions truncate their arguments (signed 64 bit floats) to unsigned 32 bit integers. However, these functions
+-- still return a normal Lua number (a signed 64 bit float). What this means practically is that *half* of the data will be
+-- "junk" and waste valuable bandwidth when sent across the network. Because one of the design goals of EntityReplicator is
+-- to minimize the amount of data sent among peers, this is an obvious non-starter.
 
--- Nevertheless, there exists a way to efficently pack integers. A Vector2int16 contains two signed 16 bit integers:
--- one in its 'X' field, and one in its 'Y' field. It is thus possible to split an unsigned 32-bit integer into two 16-bit
--- fields, which are placed in the Vector2int16, then send the Vector2int16 across the network where it is deserialized by
--- the receiver.
+-- Nevertheless, there does exist a way to efficently pack integers to send across the network. A Vector2int16 contains two
+-- signed 16 bit integers: one in its 'X' field, and one in its 'Y' field. It is thus possible to split an unsigned 32-bit
+-- integer into two 16-bit fields, which are placed in the Vector2int16, then send the Vector2int16 across the network where
+-- it is deserialized by the receiving system.
 
 -- If any one of these two 16-bit fields represents an integer that is greater than (2^15) - 1, it  will result in the same
--- unsigned value when it it is used again as an argument in a bit32 function. This is because the signed 16-bit integer dealt with
--- here are in two's complement form, so inputting a positive integer outside of the range they can represent will result in a
--- negative number whose binary representation is identical  to that of the original number.
+-- unsigned value when it is used again as an argument in a bit32 function. This is because the signed 16-bit integers dealt with
+-- here are in two's complement form, so inputting a positive integer n outside of the range they can represent will result in a
+-- negative number -(~(n - 1)) whose binary representation is identical to that of the original number, as long as the original
+-- number does not exceed (2^16) - 1.
+
+-- Additional note - the block in each serialilation/deserialization function that begins with:
+
+--     if secondWord then
+--         ...
+
+-- may be safely commented out (or removed) if no componentId exceeds 32.
 
 local Constants = require(script.Parent.Constants)
 
@@ -24,8 +32,6 @@ local UPDATE = Constants.UPDATE
 local PARAMS_UPDATE = Constants.PARAMS_UPDATE
 local ADD_COMPONENT = Constants.ADD_COMPONENT
 local KILL_COMPONENT = Constants.KILL_COMPONENT
-local CLIENT_SERIALIZABLE = Constants.CLIENT_SERIALIZABLE
-local CLIENT_CREATABLE = Constants.CLIENT_CREATABLE
 local IS_REFERENCED = Constants.IS_REFERENCED
 local DESTRUCTION = Constants.DESTRUCTION
 local PREFAB_ENTITY = Constants.PREFAB_ENTITY
@@ -39,8 +45,10 @@ local NetworkIdsByInstance = {}
 local GlobalRefs = {}
 local PlayerRefs = {}
 
-local entityMap
-local componentMap
+local EntityMap
+local ComponentMap
+local ClientCreatable
+local ClientSerializable
 
 Shared.Queued = Queued
 Shared.InstancesByNetworkId = InstancesByNetworkId
@@ -58,6 +66,8 @@ end
 
 ---Returns TRUE if the bit at position pos is set, FALSE otherwise
 -- n is truncated to a 32-bit integer by bit32
+-- @param flags number
+-- @param pos number
 
 local function isbitset(flags, pos)
 	return bit32.band(bit32.rshift(flags, pos), 1) ~= 0
@@ -65,27 +75,34 @@ end
 
 ---Sets the bit at position pos in the binary representation of n
 -- n is truncated to a 32-bit integer by bit32
+-- @param n number
+-- @param pos number
+-- @return n
 
 local function setbit(n, pos)
-	return bit32.bor(n, blShift(1, pos))
+	return bit32.bor(n, bit32.lshift(1, pos))
 end
 
 ---Unsets the bit at position pos in the binary representation of n
 -- n is truncated to an unsigned 32-bit integer by bit32
+-- @param n number
+-- @return n
 
 local function unsetbit(n, pos)
-	return bit32.band(n, bit32.bnot(blShift(1, pos)))
+	return bit32.band(n, bit32.bnot(bit32.lshift(1, pos)))
 end
 
 ---Counts the number of set bits in the binary representation of n
 -- n is truncated to an unsigned 32-bit integer by bit32
--- in-depth explanations of this function may be found at:
+-- in-depth explanations of this function can be found at:
 
 --    https://web.archive.org/web/20060111231946/http://www.amd.com/us-en/assets/content_type/white_papers_and_tech_docs/25112.PDF
 --    8.6, "Efficient Implementation of Population-Count Function in 32-Bit Mode"
 
 --    https://doc.lagout.org/security/Hackers%20Delight.pdf
 --    5-1, "Counting 1-Bits"
+-- @param n number
+-- @return PopCount
 
 local function popcnt(n)
 	n = n - bit32.band(bit32.rshift(n, 1), 0x55555555)
@@ -95,14 +112,39 @@ end
 
 ---Finds the position of the first set bit (starting from LSB) in the binary representation of n
 -- n is truncated to an unsigned 32-bit integer by bit32
+-- @param n number
+-- @param FirstSet
 
 local function ffs(n)
 	return popcnt(bit32.band(bit32.bnot(n), n - 1))
 end
 
+local function invalidDataObj(dataObj)
+	if not typeof(dataObj) == "Vector2int16" then
+		return true
+	end
+end
+
+local function 
+
+local function hasPermission(player, networkId, componentId, paramId)
+
+	-- checking if player is allowed to create this component
+	if componentId and not paramId then
+		if not (PlayerCreatable == ALL_CLIENTS or PlayerCreatable[networkId][componentId][1][player]) then
+			return
+		end
+
+		return true
+	end
+
+	if not 
+end
+
 ---Gets the id string corresponding to a positive integer num
 -- !!! not thread safe !!!
 -- @param num number
+-- @return IdString
 
 function Shared.GetIdStringFromNum(num)
 	__IdLen = math.ceil(num * .00390625) -- num / 256
@@ -112,6 +154,7 @@ end
 
 ---Gets the number corresponding to an id string str
 -- @param str string
+-- @return IdNum
 
 function Shared.GetIdNumFromString(str)
 	local id = 1
@@ -123,10 +166,10 @@ end
 
 --
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
---   1	 |   0   |   0   |   1   |   0   |   0   |   0       0   |   0       0   |   0       0   |   0       0   |   0       0  |
---       |       |       |       |       |       |               |               |               |               |              |
--- if set|  n/a  |  n/a  | if set|  n/a  |  n/a  |      n/a      |      n/a      |   killOffset  |      n/a      |      n/a     |
--- update|       |       |  kill |       |       |               |               |               |               |              |
+--   1	 |   0   |   0   |   1   |   0       0       0       0       0       0   |   0       0   |   0       0   |   0       0  |
+--       |       |       |       |                                               |               |               |              |
+-- if set|  n/a  |  n/a  | if set|                    (unused)                   |      n/a      |      n/a      |  killOffset  |
+-- update|       |       |  kill |                                               |               |               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
 -- @param params
@@ -138,6 +181,7 @@ end
 -- @return paramsIndex
 -- @return flags
 -- @return numDataStructs
+
 local function serializeKillComponent(entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
 	local numDataStructs = 0
 	local firstWord = 0
@@ -178,10 +222,10 @@ end
 -- uint16 flags:
 --
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
---   1	 |   0   |   1   |   0   |   0   |   0   |   0       0   |   0       0   |   0       0   |   0       0   |   0       0  |
---       |       |       |       |       |       |               |               |               |               |              |
--- if set|  n/a  | if set|  n/a  |  n/a  |  n/a  |      n/a      |   addOffset   |      n/a      |      n/a      |      n/a     |
--- update|       |  add  |       |       |       |               |               |               |               |              |
+--   1	 |   0   |   1   |   0   |   0       0       0       0       0       0   |   0       0   |   0       0   |   0       0  |
+--       |       |       |       |                                               |               |               |              |
+-- if set|  n/a  | if set|  n/a  |                    (unused)                   |      n/a      |   addOffset   |      n/a     |
+-- update|       |  add  |       |                                               |               |               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
 -- @param instance
@@ -259,10 +303,10 @@ end
 -- uint16 flags:
 --
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
---   1	 |   1   |   0   |   0   |   0   |   0   |   0       0   |   0       0   |   0       0   |   0       0   |   0       0  |
---       |       |       |       |       |       |               |               |               |               |              |
--- if set| if set|  n/a  |  n/a  |  n/a  |  n/a  |  paramsOffset |      n/a      |      n/a      |      n/a      |      n/a     |
--- update| params|       |       |       |       |               |               |               |               |              |
+--   1	 |   1   |   0   |   0   |   0       0       0       0       0       0   |   0       0   |   0       0   |   0       0  |
+--       |       |       |       |                                               |               |               |              |
+-- if set| if set|  n/a  |  n/a  |                    (unused)                   |  paramsOffset |      n/a      |      n/a     |
+-- update| params|       |       |                                               |               |               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
 -- @param params
@@ -363,7 +407,7 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 	return entitiesIndex, paramsIndex, flags, numDataStructs
 end
 
-local function deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags)
+local function deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags, player)
 	local instance = InstancesByNetworkId[networkId]
 	local firstWord = isbitset(flags, 4)
 	local secondWord = isbitset(flags, 5)
@@ -378,6 +422,13 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 	if firstWord then
 		entitiesIndex = enititiesIndex + 1
 		dataObj = entities[entitiesIndex]
+
+		if player then
+			if invalidDataObj(dataObj) then
+				return nil
+			end
+		end
+
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
 
 		for i = 1, popcnt(field) do
@@ -386,13 +437,27 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 			componentId = pos + 1
 			entitiesIndex = entitiesIndex + (even and 1 or 0)
 			dataObj = entities[entitiesIndex]
+
+			if player then
+				if invalidDataObj(dataObj) then
+					return nil
+				end
+			end
+
 			paramsField = even and dataObj.X or dataObj.Y
 
 			for _ = 1, popcnt(paramsField) do
-				paramPos = ffs(paramsField)
-				componentMap[componentId][entityMap[instance]][paramPos + 1] = params[paramsIndex]
+				paramId = ffs(paramsField) + 1
+
+				if player then
+					if not hasPermission(networkId, player, componentId, paramId) then
+						return nil
+					end
+				end
+
+				componentMap[componentId][entityMap[instance]][paramId] = params[paramsIndex]
 				paramsIndex = paramsIndex + 1
-				paramsField = unsetbit(paramsField, paramPos)
+				paramsField = unsetbit(paramsField, paramId - 1)
 			end
 
 			field = unsetbit(field, pos)
@@ -402,6 +467,13 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 	if secondWord then
 		entitiesIndex = enititiesIndex + 1
 		dataObj = entities[entitiesIndex]
+
+		if player then
+			if invalidDataObj(dataObj) then
+				return nil
+			end
+		end
+
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
 
 		for i = 1, popcnt(field) do
@@ -413,10 +485,17 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 			paramsField = even and dataObj.X or dataObj.Y
 
 			for _ = 1, popcnt(paramsField) do
-				paramPos = ffs(paramsField)
-				componentMap[componentId][entityMap[instance]][paramPos + 1] = params[paramsIndex]
+				paramId = ffs(paramsField) + 1
+
+				if player then
+					if not hasPermission(networkId, player, componentId, paramId) then
+						return nil
+					end
+				end
+
+				componentMap[componentId][entityMap[instance]][paramId] = params[paramsIndex]
 				paramsIndex = paramsIndex + 1
-				paramsField = unsetbit(paramsField, paramPos)
+				paramsField = unsetbit(paramsField, paramId - 1)
 			end
 
 			field = unsetbit(field, pos)
@@ -426,32 +505,62 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 	return entitiesIndex, paramsIndex
 end
 
-local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
+local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags, player)
 
 end
 
-function deserializeKillComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
-	if IS_SERVER then
-		return
-	end
-
-	entitiesIndex = entitiesIndex + 1
-
-	local dataObj = entities[entitiesIndex]
+function deserializeKillComponent(networkId, entities, params, entitiesIndex, flags)
+	local instance = InstancesByNetworkId[networkId]
 	local firstWord = isbitset(flags, 0)
 	local secondWord = isbitset(flags, 1)
 	local field = 0
+	local paramsField = 0
 	local componentId = 0
 	local pos = 0
+	local paramPos = 0
+	local dataObj
 
 	if firstWord then
-		field = dataObj.X
+		entitiesIndex = entitiesIndex + 1
+		dataObj = entities[entitiesIndex]
+
+		if strict then
+			if invalidDataObj(dataObj) then
+				return
+			end
+		end
+
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
 
 		for _ = 1, popcnt(field) do
 			pos = ffs(field)
 			componentId = pos + 1
 			field = unsetbit(field, pos)
+			entityManager.KillComponent(instance, componentId)
+		end
+	end
 
+	if secondWord then
+		entitiesIndex = entitiesIndex + 1
+		dataObj = entities[entitiesIndex]
+
+		if strict then
+			if invalidDataObj(dataObj) then
+				return
+			end
+		end
+
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+
+		for _ = 1, popcnt(field) do
+			pos = ffs(field)
+			componentId = pos + 33
+			field = unsetbit(field, pos)
+			entityManager.KillComponent(instance, componentId)
+		end
+	end
+
+	return entitiesIndex
 end
 
 local function deserializeEntity(entities, params, entitiesIndex, paramsIndex)
@@ -467,30 +576,39 @@ end
 -- @return number entitiesIndex
 -- @return number paramsIndex
 -- @return table componentIdsToParams
-local function deserializeUpdate(entities, params, entitiesIndex, paramsIndex)
+local function deserializeUpdate(entities, params, entitiesIndex, paramsIndex, playerArg)
 	local dataObj = entities[entitiesIndex]
+
+	-- if this message is from a client, data must be validated
+	if playerArg then
+		if invalidDataObj(dataObj) then
+			return
+		end
+	end
+
 	local networkId = dataObj.X
 	local flags = dataObj.Y
 
 	if isbitset(flags, PARAMS_UPDATE) then
-		entitiesIndex, paramsIndex = deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags)
-		if entitiesIndex == nil then
-			return
-		end
+		entitiesIndex, paramsIndex = deserializeParamsUpdate(
+			networkId, entities, params,
+			entitiesIndex, paramsIndex,
+			flags, playerArg
+		)
 	end
 
 	if isbitset(flags, ADD_COMPONENT) then
-		entitiesIndex, paramsIndex = deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
-		if entitiesIndex == nil then
-			return
-		end
+		entitiesIndex, paramsIndex = deserializeAddComponent(
+			networkId, entities, params,
+			entitiesIndex, paramsIndex,
+			flags, playerArg)
 	end
 
 	if isbitset(flags, KILL_COMPONENT) then
-		entitiesIndex, paramsIndex = deserializeKillComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags)
-		if entitiesIndex == nil then
-			return
-		end
+		entitiesIndex = deserializeKillComponent(
+			networkId, entities, params,
+			entitiesIndex, flags, playerArg
+		)
 	end
 
 	return entitiesIndex, paramsIndex, networkId
@@ -512,7 +630,7 @@ end
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
 --   1	 |   0   |   0   |   0   |   0       0       0       0       0       0   |   0       0   |   0       0   |   0       0  |
 --       |       |       |       |                                               |               |               |              |
--- if set| if set| if set| if set|                                               | paramsOffset  |   addOffset   |  killOffset  |
+-- if set| if set| if set| if set|                    (unused)                   |  paramsOffset |   addOffset   |  killOffset  |
 -- update| params|  add  |  kill |                                               |               |               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
@@ -527,6 +645,7 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 	local numDataStructs = 0
 	local totalNumDataStructs = 0
 
+	-- read message fields to figure out which msgTypes we're sending for each component type
 	for msg, map in pairs(msgMap) do
 		for _ = 1, popcnt(msg) do
 			msg = ffs(msg)
@@ -559,6 +678,7 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 		MsgMap[msg] = nil
 	end
 
+	-- create header and increment entity table index
 	entities[entitiesIndex - totalNumDataStructs] = Vector2int16.new(networkId, flags)
 	entitesIndex = entitiesIndex + 1
 
@@ -624,7 +744,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 	local numComponents
 
 	if isDestruction then
-		flags = setbit(flags, 13)
+		flags = setbit(flags, DESTRUCTION)
 		entities[entitiesIndex] = Vector2int16.new(networkId, flags)
 		entitiesIndex = entitiesIndex + 1
 		return entitiesIndex, paramsIndex
@@ -665,7 +785,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 	end
 
 	if isReferenced then
-		flags = setbit(flags, 14)
+		flags = setbit(flags, IS_REFERENCED)
 	end
 
 	entities[entitiesIndex - numDataStructs] = Vector2int16.new(networkId, flags)
@@ -688,7 +808,7 @@ end
 -- @return boolean isUpdate
 -- @return boolean doAdd
 -- @return boolean doKill
-function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex)
+function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, player)
 	local networkIdDataObj = entities[entitiesIndex]
 	local networkId = bOr(networkIdDataObj.X, 0) -- truncate back to an unsigned value
 	local flags = networkIdDataObj.Y
@@ -696,13 +816,13 @@ function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex)
 	local bitFieldOffsets = {}
 
 	if checkFlag(flags, UPDATE) then
-		return deserializeUpdate(entities, params, entitiesIndex, paramsIndex)
+		return deserializeUpdate(entities, params, entitiesIndex, paramsIndex, player)
 	else
 		return deserializeEntity(entities, params, entitiesIndex, paramsIndex)
 	end
 end
 
-function Shared.QueueUpdate(instance, msgType, componentId, paramId, players)
+function Shared.QueueUpdate(instance, msgType, componentId, paramId)
 	local messages = Queued[instance]
 
 	if not messages then
@@ -721,7 +841,6 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId, players)
 	local paramsField = params and (typeof(params) == "number" and params)
 
 	msg[componentId] = paramsField and setbit(paramsField or 0, paramId - 1) or true
-	msg[0] = players or nil
 end
 
 function Shared.OnNewReference(instance, networkId)
@@ -734,9 +853,11 @@ function Shared.OnDereference(instance, networkId)
 	NetworkIdsNyInstance[instance] = networkId
 end
 
-function Shared.Init(entityMap, componentMap)
-	entityMap = entityMap
-	componentMap = componentMap
+function Shared.Init(entityMap, componentMap, clientCreatable, clientSerializable)
+	EntityMap = entityMap
+	ComponentMap = componentMap
+	ClientCreatable = clientCreatable
+	ClientSerializable = clientSerializable
 end
 
 return Shared
