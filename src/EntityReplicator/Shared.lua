@@ -125,8 +125,6 @@ local function invalidDataObj(dataObj)
 	end
 end
 
-local function 
-
 local function hasPermission(player, networkId, componentId, paramId)
 
 	-- checking if player is allowed to create this component
@@ -241,8 +239,7 @@ end
 -- @return numDataStructs
 local function serializeAddComponent(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
 	local numDataStructs = 0
-	local firstWord = 0
-	local secondWord = 0
+	local offsetField = 0
 	local componentOffset = 0
 	local componentId = 0
 	local offset = 0
@@ -251,7 +248,8 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 		offset = math.floor(componentId * 0.01325) -- componentId / 32
 		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
 		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
-		flags = setbit(flags, 7 - offset)
+		flags = setbit(flags, 2 + offset)
+		offsetField = setBit(flags, 2 + offset)
 	end
 
 	if firstWord ~= 0 then
@@ -409,8 +407,8 @@ end
 
 local function deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags, player)
 	local instance = InstancesByNetworkId[networkId]
-	local firstWord = isbitset(flags, 4)
-	local secondWord = isbitset(flags, 5)
+	local fieldOffset = bit32.extract(flags, 4, 2)
+	local offsetFactor = 0
 	local field = 0
 	local paramsField = 0
 	local componentId = 0
@@ -419,9 +417,11 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 	local even = false
 	local dataObj
 
-	if firstWord then
+	for _ = 1, popcnt(fieldOffset) do
 		entitiesIndex = enititiesIndex + 1
 		dataObj = entities[entitiesIndex]
+		offsetFactor = ffs(fieldOffset)
+		fieldOffset = unsetbit(fieldOffset, offsetFactor)
 
 		if player then
 			if invalidDataObj(dataObj) then
@@ -434,7 +434,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 		for i = 1, popcnt(field) do
 			pos = ffs(field)
 			even = bit32.band(i, 0) == 0
-			componentId = pos + 1
+			componentId = pos + (32 * offsetFactor) + 1
 			entitiesIndex = entitiesIndex + (even and 1 or 0)
 			dataObj = entities[entitiesIndex]
 
@@ -464,99 +464,33 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 		end
 	end
 
-	if secondWord then
-		entitiesIndex = enititiesIndex + 1
-		dataObj = entities[entitiesIndex]
-
-		if player then
-			if invalidDataObj(dataObj) then
-				return nil
-			end
-		end
-
-		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
-
-		for i = 1, popcnt(field) do
-			pos = ffs(field)
-			even = bit32.band(i, 0) == 0
-			componentId = pos + 33
-			entitiesIndex = entitiesIndex + (even and 1 or 0)
-			dataObj = entities[entitiesIndex]
-			paramsField = even and dataObj.X or dataObj.Y
-
-			for _ = 1, popcnt(paramsField) do
-				paramId = ffs(paramsField) + 1
-
-				if player then
-					if not hasPermission(networkId, player, componentId, paramId) then
-						return nil
-					end
-				end
-
-				componentMap[componentId][entityMap[instance]][paramId] = params[paramsIndex]
-				paramsIndex = paramsIndex + 1
-				paramsField = unsetbit(paramsField, paramId - 1)
-			end
-
-			field = unsetbit(field, pos)
-		end
-	end
-
 	return entitiesIndex, paramsIndex
 end
 
 local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags, player)
-
+	local instance = InstancesByNetworkId[networkId]
 end
 
 function deserializeKillComponent(networkId, entities, params, entitiesIndex, flags)
 	local instance = InstancesByNetworkId[networkId]
-	local firstWord = isbitset(flags, 0)
-	local secondWord = isbitset(flags, 1)
-	local field = 0
-	local paramsField = 0
 	local componentId = 0
+	local fieldOffset = bit32.extract(flags, 0, 2)
 	local pos = 0
-	local paramPos = 0
+	local offsetFactor = 0
 	local dataObj
 
-	if firstWord then
+	for i = 1, popcnt(fieldOffset) do
 		entitiesIndex = entitiesIndex + 1
 		dataObj = entities[entitiesIndex]
-
-		if strict then
-			if invalidDataObj(dataObj) then
-				return
-			end
-		end
-
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		offsetFactor = ffs(fieldOffset)
+		fieldOffset = unsetbit(fieldOffset, offsetFactor)
 
 		for _ = 1, popcnt(field) do
 			pos = ffs(field)
-			componentId = pos + 1
+			componentId = pos + (32 * offsetFactor) + 1
 			field = unsetbit(field, pos)
-			entityManager.KillComponent(instance, componentId)
-		end
-	end
-
-	if secondWord then
-		entitiesIndex = entitiesIndex + 1
-		dataObj = entities[entitiesIndex]
-
-		if strict then
-			if invalidDataObj(dataObj) then
-				return
-			end
-		end
-
-		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
-
-		for _ = 1, popcnt(field) do
-			pos = ffs(field)
-			componentId = pos + 33
-			field = unsetbit(field, pos)
-			entityManager.KillComponent(instance, componentId)
+			EntityManager.KillComponent(instance, componentId)
 		end
 	end
 
