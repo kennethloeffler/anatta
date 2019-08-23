@@ -19,13 +19,7 @@
 -- negative number -(~(n - 1)) whose binary representation is identical to that of the original number, as long as the original
 -- number does not exceed (2^16) - 1.
 
--- Additional note - the block in each serialilation/deserialization function that begins with:
-
---     if secondWord then
---         ...
-
--- may be safely commented out (or removed) if no componentId exceeds 32.
-
+local ComponentDesc = require(script.Parent.Parent.ComponentDesc)
 local Constants = require(script.Parent.Constants)
 
 local UPDATE = Constants.UPDATE
@@ -44,6 +38,7 @@ local InstancesByNetworkId = {}
 local NetworkIdsByInstance = {}
 local GlobalRefs = {}
 local PlayerRefs = {}
+local NumParamsByComponentId = ComponentDesc.NumParamsByComponentId
 
 local EntityMap
 local ComponentMap
@@ -66,11 +61,11 @@ end
 
 ---Returns TRUE if the bit at position pos is set, FALSE otherwise
 -- n is truncated to a 32-bit integer by bit32
--- @param flags number
+-- @param n number
 -- @param pos number
 
-local function isbitset(flags, pos)
-	return bit32.band(bit32.rshift(flags, pos), 1) ~= 0
+local function isbitset(n, pos)
+	return bit32.band(bit32.rshift(n, pos), 1) ~= 0
 end
 
 ---Sets the bit at position pos in the binary representation of n
@@ -105,8 +100,11 @@ end
 -- @return PopCount
 
 local function popcnt(n)
+	-- add each two bits, store result in respective field
 	n = n - bit32.band(bit32.rshift(n, 1), 0x55555555)
+	-- add each four bits
 	n = bit32.band(n, 0x33333333) + bit32.band(bit32.rshift(n, 2), 0x33333333)
+	-- add each eight bits, sixteen bits; final value is last eight bits
 	return bit32.rshift(bit32.band(n + bit32.rshift(n, 4), 0x0F0F0F0F) * 0x01010101, 24)
 end
 
@@ -127,17 +125,37 @@ end
 
 local function hasPermission(player, networkId, componentId, paramId)
 
+	local componentOffset = math.floor(componentId * 0.03125)
+	local bitOffset = componentOffset - 1 - (componentOffset * 32)
+	local playerArg
+	local componentArg
+	local paramArg
+
 	-- checking if player is allowed to create this component
 	if componentId and not paramId then
-		if not (PlayerCreatable == ALL_CLIENTS or PlayerCreatable[networkId][componentId][1][player]) then
+		playerArg = PlayerCreatable[networkId][1]
+		componentArg = PlayerCreatable[networkId][componentOffset + 2]
+
+		if not ((playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(componentArg, bitOffset)) then
 			return
+		else
+			return true
 		end
+	-- checking if player is allowed to serialize to this parameter
+	elseif paramId and componentId then
+		playerArg = PlayerSerializable[networkId][1]
+		paramArg = PlayerSerializable[componentId]
 
-		return true
+		if not (paramsArg and (playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(paramArg, paramId - 1)) then
+			return
+		else
+			return true
+		end
 	end
-
-	if not 
 end
+
+
+
 
 ---Gets the id string corresponding to a positive integer num
 -- !!! not thread safe !!!
@@ -450,7 +468,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 				paramId = ffs(paramsField) + 1
 
 				if player then
-					if not hasPermission(networkId, player, componentId, paramId) then
+					if not hasPermission(player, networkId, componentId, paramId) then
 						return nil
 					end
 				end
@@ -469,6 +487,34 @@ end
 
 local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags, player)
 	local instance = InstancesByNetworkId[networkId]
+	local componentId = 0
+	local fieldOffset = bit32.extract(flags, 2, 2)
+	local componentStruct = { _componentId = true, Instance = true}
+	local pos = 0
+	local offsetFactor = 0
+	local dataObj
+
+	for _ = 1, popcnt(fieldOffset) do
+		entitiesIndex = entitiesIndex + 1
+		dataObj = entities[entitiesIndex]
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		offsetFactor = ffs(fieldOffset)
+		fieldOffset = unsetbit(fieldOffset, offsetFactor)
+
+		for _ = 1, popcnt(field) do
+			pos = ffs(field)
+			componentId = pos + (32 * offsetFactor) + 1
+			field = unsetbit(field, pos)
+
+			if player then
+				if not hasPermission(player, networkId, componentId) then
+					return nil
+				end
+			end
+
+			
+
+			AddComponent(instance, componentId
 end
 
 function deserializeKillComponent(networkId, entities, params, entitiesIndex, flags)
@@ -479,7 +525,7 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, fl
 	local offsetFactor = 0
 	local dataObj
 
-	for i = 1, popcnt(fieldOffset) do
+	for _ = 1, popcnt(fieldOffset) do
 		entitiesIndex = entitiesIndex + 1
 		dataObj = entities[entitiesIndex]
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
@@ -744,7 +790,7 @@ end
 -- @return boolean doKill
 function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, player)
 	local networkIdDataObj = entities[entitiesIndex]
-	local networkId = bOr(networkIdDataObj.X, 0) -- truncate back to an unsigned value
+	local networkId = bOr(networkIdDataObj.X, 0) -- back to an unsigned value
 	local flags = networkIdDataObj.Y
 	local numBitFields = 0
 	local bitFieldOffsets = {}
