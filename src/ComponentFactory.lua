@@ -7,7 +7,7 @@ local ReplicatorShared = require(script.Parent.EntityReplicator.Shared)
 local PARAMS_UPDATE = Constants.PARAMS_UPDATE
 local IS_SERVER = Constants.IS_SERVER
 
-local queue = ReplicatorShared.Queue
+local queue = ReplicatorShared.QueueUpdate
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
 local WSAssert = require(script.Parent.WSAssert)
@@ -27,7 +27,7 @@ local ComponentMetatable = {
 
 		component[paramId] = value
 
-		if CollectionService:HasTag(instance, "__WSReplicatorRef") then
+		if SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") then
 			queue(component.Instance, PARAMS_UPDATE, componentId, paramId)
 		end
 	end
@@ -72,7 +72,7 @@ function Component(instance, componentType, paramMap)
 
 	setmetatable(newComponent, ComponentMetatable)
 
-	if CollectionService:HasTag(instance, "__WSReplicatorRef") and SERVER then then
+	if SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") then
 		queue(instance, ADD_COMPONENT, componentId)
 	end
 
