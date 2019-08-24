@@ -38,10 +38,12 @@ local InstancesByNetworkId = {}
 local NetworkIdsByInstance = {}
 local GlobalRefs = {}
 local PlayerRefs = {}
-local NumParamsByComponentId = ComponentDesc.NumParamsByComponentId
+local NumParams = ComponentDesc.NumParamsByComponentId
 
 local EntityMap
 local ComponentMap
+local AddComponent
+local KillComponent
 local ClientCreatable
 local ClientSerializable
 
@@ -124,7 +126,6 @@ local function invalidDataObj(dataObj)
 end
 
 local function hasPermission(player, networkId, componentId, paramId)
-
 	local componentOffset = math.floor(componentId * 0.03125)
 	local bitOffset = componentOffset - 1 - (componentOffset * 32)
 	local playerArg
@@ -155,7 +156,6 @@ local function hasPermission(player, networkId, componentId, paramId)
 end
 
 ---Gets the id string corresponding to a positive integer num
--- !!! not thread safe !!!
 -- @param num number
 -- @return IdString
 
@@ -490,10 +490,18 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 	local pos = 0
 	local offsetFactor = 0
 	local dataObj
+	local paramValue
 
 	for _ = 1, popcnt(fieldOffset) do
 		entitiesIndex = entitiesIndex + 1
 		dataObj = entities[entitiesIndex]
+
+		if player then
+			if invalidDataObj(dataObj) then
+				return
+			end
+		end
+
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
 		offsetFactor = ffs(fieldOffset)
 		fieldOffset = unsetbit(fieldOffset, offsetFactor)
@@ -509,9 +517,20 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 				end
 			end
 
-			
+			for paramId = 1, NumParams[componentId] do
+				paramsIndex = paramsIndex + 1
+				paramValue = params[paramsIndex]
 
-			AddComponent(instance, componentId
+				if not typeof(paramValue) == typeof(GetParamDefault(componentId, paramId)) then
+					return nil
+				end
+
+				componentStruct[paramId] = params[paramsIndex]
+			end
+
+			AddComponent(instance, componentId, componentStruct)
+		end
+	end
 end
 
 function deserializeKillComponent(networkId, entities, params, entitiesIndex, flags)
@@ -533,7 +552,7 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, fl
 			pos = ffs(field)
 			componentId = pos + (32 * offsetFactor) + 1
 			field = unsetbit(field, pos)
-			EntityManager.KillComponent(instance, componentId)
+			KillComponent(instance, componentId)
 		end
 	end
 
@@ -541,7 +560,24 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, fl
 end
 
 local function deserializeEntity(entities, params, entitiesIndex, paramsIndex)
-end
+	local dataObj = entities[entitiesIndex]
+	local networkId = dataObj.X
+	local instance = InstancesByNetworkId[networkId]
+	local flags = dataObj.Y
+	local field = 0
+	local fieldOffset = bit32.extract(flags, 0, 2)
+	local offsetFactor = 0
+
+	for _ = 1, popcnt(fieldOffset) do
+		entitiesIndex = entitiesIndex + 1
+		dataObj = entities[entitiesIndex]
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		offsetFactor = ffs(fieldOffset)
+		fieldOffset = unsetbit(fieldOffsets, offsetFactor)
+
+		for _ = 1, popcnt(field) do
+			pos = ffs(field)
+			componentId = pos + (32 * offsetFactor) + 1
 
 ---Deserializes the update message in entities at position entitiesIndex
 -- @param entities table
@@ -555,14 +591,6 @@ end
 -- @return table componentIdsToParams
 local function deserializeUpdate(entities, params, entitiesIndex, paramsIndex, playerArg)
 	local dataObj = entities[entitiesIndex]
-
-	-- if this message is from a client, data must be validated
-	if playerArg then
-		if invalidDataObj(dataObj) then
-			return
-		end
-	end
-
 	local networkId = dataObj.X
 	local flags = dataObj.Y
 
@@ -578,7 +606,8 @@ local function deserializeUpdate(entities, params, entitiesIndex, paramsIndex, p
 		entitiesIndex, paramsIndex = deserializeAddComponent(
 			networkId, entities, params,
 			entitiesIndex, paramsIndex,
-			flags, playerArg)
+			flags, playerArg
+		)
 	end
 
 	if isbitset(flags, KILL_COMPONENT) then
@@ -685,14 +714,11 @@ end
 -- update| isRef |destroy|prefabE|                                                                               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
---[ 0, 3 ] : field representing indices of non-zero values of _entityMap[instance][0]
---[ 4, 10] : 7-bit integer representing the total number of components on this entity
---           (unused if 14th bit is set)
---[11, 12] : N/A
---     13  : bit representing whether this is a destruction message
---     14  : bit representing whether entity is referenced in the system
---           (unused if 14th bit is set)
---     15  : bit representing whether this is an update message or a creation/destruction message
+--[ 0, 1 ] : field representing indices of non-zero values of _entityMap[instance][0]
+--     D  : bit representing whether this is a destruction message
+--     E  : bit representing whether entity is referenced in the system
+--           (unused if bit D is set)
+--     F  : bit representing whether this is an update message or a creation/destruction message
 --           (always unset for messages generated by this function)
 ------------------------------------------------------------------------------------------------------------------------------
 -- @param params table to which parameter values are serialized
@@ -779,20 +805,16 @@ end
 -- @return number networkId
 -- @return table componentIdsToParams
 -- @return number entitiesIndex
--- @return number paramsIndex
--- @return boolean isDestruction
--- @return boolean isReferenced
--- @return boolean isUpdate
--- @return boolean doAdd
--- @return boolean doKill
 function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, player)
-	local networkIdDataObj = entities[entitiesIndex]
-	local networkId = bOr(networkIdDataObj.X, 0) -- back to an unsigned value
-	local flags = networkIdDataObj.Y
-	local numBitFields = 0
-	local bitFieldOffsets = {}
+	local dataObj = entities[entitiesIndex]
 
-	if checkFlag(flags, UPDATE) then
+	if player then
+		if invalidDataObj(dataObj) then
+			return
+		end
+	end
+
+	if isbitset(dataObj.Y, UPDATE) then
 		return deserializeUpdate(entities, params, entitiesIndex, paramsIndex, player)
 	else
 		return deserializeEntity(entities, params, entitiesIndex, paramsIndex)
@@ -830,9 +852,11 @@ function Shared.OnDereference(instance, networkId)
 	NetworkIdsNyInstance[instance] = networkId
 end
 
-function Shared.Init(entityMap, componentMap, clientCreatable, clientSerializable)
+function Shared.Init(entityManager, entityMap, componentMap, clientCreatable, clientSerializable)
 	EntityMap = entityMap
 	ComponentMap = componentMap
+	AddComponent = entityManager.AddComponent
+	KillComponent = entityManager.KillComponent
 	ClientCreatable = clientCreatable
 	ClientSerializable = clientSerializable
 end
