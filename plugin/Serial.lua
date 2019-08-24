@@ -56,6 +56,8 @@ function Serial.SerializeValue(data, depth)
 		str = string.format("UDim2.new(%f, %f, %f, %f)", data.X.Scale, data.X.Offset, data.Y.Scale, data.Y.Offset)
 	elseif ty == "Color3" then
 		str = string.format("Color3.new(%f, %f, %f)", data.R, data.G, data.B)
+	elseif ty == "Vector2int16" then
+		str = string.format("Vector2int16.new(%d, %d)", data.X, data.Y)
 	else
 		error("Unexpected type: "..ty)
 	end
