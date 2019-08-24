@@ -51,7 +51,7 @@ local ComponentMetatable = {
 --@return The new component object
 
 function Component(instance, componentType, paramMap)
-	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+	local componentId = typeof(componentType) == "number" and componentType or ComponentDesc.GetComponentIdFromType(componentType)
 	local newComponent = paramMap
 
 	if #newComponent == 0 then
@@ -72,7 +72,7 @@ function Component(instance, componentType, paramMap)
 
 	setmetatable(newComponent, ComponentMetatable)
 
-	if CollectionService:HasTag(instance, "__WSReplicatorRef") then
+	if CollectionService:HasTag(instance, "__WSReplicatorRef") and SERVER then then
 		queue(instance, ADD_COMPONENT, componentId)
 	end
 
