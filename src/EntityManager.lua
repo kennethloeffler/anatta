@@ -27,26 +27,33 @@ local EntityFilters = {}
 local SystemEntities = {}
 local Systems = {}
 
--- bitfield setter
-local function setComponentBitForEntity(entity, componentId, value)
+local function setComponentBitForEntity(entity, componentId)
 	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
 	local bitField = EntityMap[entity][0][offset]
-	EntityMap[entity][0][offset] = bReplace(bitField, value, componentId - 1 - (32 * (offset - 1)))
+
+	EntityMap[entity][0][offset] = bit32.bor(bitField, bit32.lshift(1, componentId - 1 - (32 * (offset - 1))))
 end
 
--- bitfield getter
-local function getComponentBitForEntity(entity, componentId)
+local function unsetComponentBitForEntity(entity, componentId)
+	local offset = math.ceil(componentId * 0.03125)
+	local bitField = EntityMap[entity][0][offset]
+
+	EntityMap[entity][0][offset] = bit32.band(bitField, bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (offset - 1)))))
+end
+
+local function isComponentBitSet(entity, componentId)
 	local offset = math.ceil((componentId * 0.03125)) -- comoponentId / 32
 	local bitField = EntityMap[entity][0][offset]
-	return bExtract(bitField, componentId - 1 - (32 * (offset - 1))) == 1
+
+	return bit32.band(bit32.rshift(bitField, componentId - 1 - (32 * (offset - 1)))) == 1
 end
 
 local function filterEntity(instance)
 	local entityBitFields = EntityMap[instance][0]
+
 	for systemId, bitFields in ipairs(EntityFilters) do
-		-- don't really want to do a loop here
-		local bitFieldsMatch = bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4]
-		if not bitFieldsMatch then
+		-- check if bit fields match
+		if not bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] then
 			SystemEntities[systemId][instance] = nil
 		else
 			SystemEntities[systemId][instance] = true
@@ -55,7 +62,7 @@ local function filterEntity(instance)
 end
 
 local function addEntity(instance)
-	EntityMap[instance] = { [0] = {0, 0, 0, 0} } -- table of bitfields for fast intersection tests
+	EntityMap[instance] = { [0] = {0, 0} } -- table of bitfields for fast intersection tests
 	CollectionService:AddTag(instance, "__WSEntity")
 	return instance
 end
@@ -91,7 +98,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			componentList[componentOffset] = nil
 			EntityMap[instance][componentId] = nil
 			parentEntitiesMap[instance] = nil
-			setComponentBitForEntity(instance, componentId, 0)
+			unsetComponentBitForEntity(instance, componentId)
 			ComponentRemovedEvents[componentId]:Fire(instance)
 			filterEntity(instance)
 			if not next(EntityMap[instance]) then
@@ -118,7 +125,7 @@ local function stepComponentLifetime()
 		EntityMap[instance][componentId] = componentOffset
 		ComponentMap[componentId][componentOffset] = component
 		AddedComponents[i] = nil
-		setComponentBitForEntity(instance, componentId, 1)
+		setComponentBitForEntity(instance, componentId)
 		filterEntity(instance)
 		ComponentAddedEvents[componentId]:Fire(instance)
 	end
