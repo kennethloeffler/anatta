@@ -60,8 +60,8 @@ function ComponentDesc.GetDefaults(componentId)
 	return Defaults[componentId]
 end
 
-function ComponentDesc.GetParamDefault(componentId, paramName)
-	return Defaults[componentId][paramName]
+function ComponentDesc.GetParamDefault(componentId, paramId)
+	return Defaults[componentId][paramId]
 end
 
 function ComponentDesc.GetParamIdFromName(componentId, paramName)
