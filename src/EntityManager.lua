@@ -80,14 +80,14 @@ local function doReorder(componentId, parentEntitiesMap)
 		local componentOffset = EntityMap[instance][componentId]
 		if not parentEntitiesMap[instance] then
 			if componentOffset ~= keptComponentOffset then
-				-- swap !
+				-- swap
 				componentList[keptComponentOffset] = componentList[componentOffset]
 				EntityMap[instance][componentId] = keptComponentOffset
-				componentList[componentOffset] = nil					
+				componentList[componentOffset] = nil
 			end
 			keptComponentOffset = keptComponentOffset + 1
 		else
-		   	-- kill !
+		   	-- kill
 			componentList[componentOffset] = nil
 			EntityMap[instance][componentId] = nil
 			parentEntitiesMap[instance] = nil
@@ -95,7 +95,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			ComponentRemovedEvents[componentId]:Fire(instance)
 			filterEntity(instance)
 			if not next(EntityMap[instance]) then
-				-- we dead !
+				-- dead
 				CollectionService:RemoveTag(instance, "__WSEntity")
 				EntityMap[instance] = nil
 			end
@@ -106,11 +106,11 @@ end
 ---Iterates through the component lifetime caches and mutates entity-component maps accordingly
 -- Called before each system step
 local function stepComponentLifetime()
-   
+
 	for componentId, parentEntitiesMap in pairs(KilledComponents) do
 		doReorder(componentId, parentEntitiesMap)
 	end
-	
+
 	for i, component in ipairs(AddedComponents) do
 		local componentId = component._componentId
 		local componentOffset = #ComponentMap[componentId] + 1
@@ -146,14 +146,18 @@ local EntityManager = {}
 -- If instance does not already have an associated entity, a new entity will be created
 -- If instance already has componentType, the instance's componentType will be overwritten
 -- This operation is cached - creation occurs on the RunService's heartbeat or between system steps
+-- See ~/src/ComponentFactory for performance notes
+
 -- @param instance
--- @param componentType 
+-- @param componentType
 -- @param paramMap Table containing values of parameters that will be set for this component, indexed by parameter name
 -- @return The new component object
+
 function EntityManager.AddComponent(instance, componentType, paramMap)
 	if not EntityMap[instance] then
 		addEntity(instance)
 	end
+
 	local component = ComponentFactory(instance, componentType, paramMap)
 	AddedComponents[#AddedComponents + 1] = component
 	return component
@@ -192,7 +196,7 @@ function EntityManager.ComponentAdded(componentType)
 
 	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
 	WSAssert(componentId ~= nil, "%s is not a vaiid ComponentType", componentType)
-	
+
 	local bindable = ComponentAddedEvents[componentId]
 	return bindable.Event
 end
@@ -212,12 +216,12 @@ function EntityManager.FilteredEntityAdded(entityFilter)
 	local bitFields = {0, 0, 0, 0}
 	for i, componentType in ipairs(entityFilter) do
 		WSAssert(typeof(i) == "number", typeof(componentType) == "string", "argument should be a string-valued array")
-		
+
 		local offset = math.ceil(componentId * 0.03125) -- componentId / 32
 		local componentId = ComponentDesc.GetComponentIdFromType(componentType)
-			
-		bitFields[offset] = bReplace(bitField, value, componentId - 1 - (32 * (offset - 1))) 
-		
+
+		bitFields[offset] = bReplace(bitField, value, componentId - 1 - (32 * (offset - 1)))
+
 		ComponentAddedEvents[componentId]:Connect(function(instance)
 			local entityBitFields = EntityMap[instance][0]
 			local bitFieldsMatch = bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4]
@@ -234,12 +238,12 @@ function EntityManager.FilteredEntityRemoved(entityFilter)
 	local bitFields = {0, 0, 0, 0}
 	for i, componentType in ipairs(entityFilter) do
 		WSAssert(typeof(i) == "number", typeof(componentType) == "string", "argument should be a string-valued array")
-		
+
 		local offset = math.ceil(componentId * 0.03125) -- componentId / 32
 		local componentId = ComponentDesc.GetComponentIdFromType(componentType)
-			
-		bitFields[offset] = bReplace(bitField, value, componentId - 1 - (32 * (offset - 1))) 
-		
+
+		bitFields[offset] = bReplace(bitField, value, componentId - 1 - (32 * (offset - 1)))
+
 		ComponentRemovedEvents[componentId]:Connect(function(instance)
 			local entityBitFields = EntityMap[instance][0]
 			local bitFieldsMatch =  bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4]
@@ -262,8 +266,8 @@ function EntityManager.KillComponent(instance, componentType)
 	if not entityStruct then
 		return
 	end
-	
-	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+
+	local componentId = typeof(componentType) == "number" and componentType or ComponentDesc.GetComponentIdFromType(componentType)
 	local componentIndex = entityStruct[componentId]
 	if componentIndex then
 		cacheComponentKilled(instance, componentId)
@@ -274,13 +278,13 @@ end
 -- If instance is not associated with an entity, this function returns without doing anything
 -- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
-function EntityManager.KillEntity(instance)
+function EntityManager.KillEntity(instance, supressInstanceDestruction)
 	local entityStruct = EntityMap[instance]
 
 	if not entityStruct then
 		return
 	end
-	
+
 	-- can be switched to ipairs if there are no holes in component ids
 	for componentId in pairs(entityStruct) do
 		-- if statement may be removed if using ipairs
@@ -288,25 +292,29 @@ function EntityManager.KillEntity(instance)
 			cacheComponentKilled(instance, componentId)
 		end
 	end
+
+	if not supressInstanceDestruction then
+		instance:Destroy()
+	end
 end
 
-function EntityManager.LoadSystem(module, pluginWrapper)   
+function EntityManager.LoadSystem(module, pluginWrapper)
 	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "expected ModuleScript")
 
 	local system = require(module)
 
 	if system.Init then
 		WSAssert(typeof(system.Init) == "function", "expected function %s.Init", module.Name)
-		
+
 		system.Init(pluginWrapper)
 	end
-	
+
 	if system.Heartbeat then
 		WSAssert(typeof(system.Heartbeat) == "function", "expected function %s.Heartbeat", module.Name)
 
 		local systemId = #Systems + 1
-		Systems[systemId] = system	
-		
+		Systems[systemId] = system
+
 		if system.EntityFilter then
 			WSAssert(typeof(system.EntityFilter) == "table", "expected array %s.EntityFilter", module.Name)
 			for i, componentType in pairs(system.EntityFilter) do
@@ -320,12 +328,12 @@ function EntityManager.LoadSystem(module, pluginWrapper)
 				local bitField = EntityFilters[systemId][offset]
 				EntityFilters[systemId][offset] = bReplace(bitField, 1, (componentId - 1 - ((i - 1) * 32)))
 			end
-		end				
+		end
 	end
 end
 
 function EntityManager.StartSystems()
-   
+
 	if SystemsRunning then
 		return
 	end
@@ -337,7 +345,7 @@ function EntityManager.StartSystems()
 	while SystemsRunning do
 		for systemId, system in ipairs(Systems) do
 		   	stepComponentLifetime()
-			system(SystemEntities[systemId], lastFrameTime)
+			system(lastFrameTime, SystemEntities[systemId])
 		end
 		if not hasSytems then
 			stepComponentLifetime()
@@ -366,4 +374,3 @@ function EntityManager.Destroy()
 end
 
 return EntityManager
-
