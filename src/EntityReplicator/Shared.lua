@@ -144,7 +144,7 @@ local function hasPermission(player, networkId, componentId, paramId)
 	-- checking if player is allowed to serialize to this parameter
 	elseif paramId and componentId then
 		playerArg = PlayerSerializable[networkId][1]
-		paramArg = PlayerSerializable[componentId]
+		paramArg = PlayerSerializable[networkId][componentId + 1]
 
 		if not (paramsArg and (playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(paramArg, paramId - 1)) then
 			return
@@ -153,9 +153,6 @@ local function hasPermission(player, networkId, componentId, paramId)
 		end
 	end
 end
-
-
-
 
 ---Gets the id string corresponding to a positive integer num
 -- !!! not thread safe !!!
