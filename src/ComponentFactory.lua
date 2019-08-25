@@ -1,13 +1,12 @@
 -- ComponentFactory.lua
 local CollectionService = game:GetService("CollectionService")
-local
 local Constants = require(scipt.Parent.EntityReplicator.Constants)
-local ReplicatorShared = require(script.Parent.EntityReplicator.Shared)
+local Replicator = require(script.Parent.EntityReplicator.Shared)
 
 local PARAMS_UPDATE = Constants.PARAMS_UPDATE
 local IS_SERVER = Constants.IS_SERVER
 
-local queue = ReplicatorShared.QueueUpdate
+local QueueUpdate = Replicator.QueueUpdate
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
 local WSAssert = require(script.Parent.WSAssert)
@@ -28,7 +27,7 @@ local ComponentMetatable = {
 		component[paramId] = value
 
 		if SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") then
-			queue(component.Instance, PARAMS_UPDATE, componentId, paramId)
+			QueueUpdate(component.Instance, PARAMS_UPDATE, componentId, paramId)
 		end
 	end
 }
@@ -73,7 +72,7 @@ function Component(instance, componentType, paramMap)
 	setmetatable(newComponent, ComponentMetatable)
 
 	if SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") then
-		queue(instance, ADD_COMPONENT, componentId)
+		QueueUpdate(instance, ADD_COMPONENT, componentId)
 	end
 
 	return newComponent
