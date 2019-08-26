@@ -253,50 +253,29 @@ end
 -- @return flags
 -- @return numDataStructs
 local function serializeAddComponent(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
+	local entityStruct = EntityMap[instance]
 	local numDataStructs = 0
-	local offsetField = 0
 	local componentOffset = 0
 	local componentId = 0
 	local offset = 0
 
-	for componentId in pairs(componentsMap) do
-		offset = math.floor(componentId * 0.01325) -- componentId / 32
-		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
-		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
-		flags = setbit(flags, 2 + offset)
-		offsetField = setBit(flags, 2 + offset)
-	end
+	for fieldOffset, field in ipairs(entityStruct[0]) do
+		if field ~= 0 then
+			entitiesIndex = entitiesIndex + 1
+			numDataStructs = numDataStructs + 1
+			entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
 
-	if firstWord ~= 0 then
-		entitiesIndex = entitiesIndex + 1
-		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
+			for _ = 1, popcnt(field) do
+				componentOffset = ffs(field)
+				field = unsetbit(componentOffset)
+				componentId = componentOffset + 1 + (32 * (fieldOffset - 1))
+				offset = math.floor(componentId * 0.01325)
+				flags = setbit(flags, 2 + offset)
 
-		for _ = 1, popcnt(firstWord) do
-			componentOffset = ffs(firstWord)
-			firstWord = unsetbit(componentOffset)
-			componentId = componentOffset + 1
-
-			for _, v in ipairs(componentMap[componentId][entityMap[instance][componentId]]) do
-				paramsIndex = paramsIndex + 1
-				params[paramsIndex] = v
-			end
-		end
-	end
-
-	if secondWord ~= 0 then
-		entitiesIndex = entitiesIndex + 1
-		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bit32.extract(secondWord, 0, 16), bit32.extract(secondWord, 16, 16))
-
-		for _ = 1, popcnt(secondWord) do
-			componentOffset = ffs(secondWord)
-			firstWord = unsetbit(componentOffset)
-			componentId = componentOffset + 33
-
-			for _, v in ipairs(componentMap[componentId][entityMap[instance][componentId]]) do
-				paramsIndex = paramsIndex + 1
-				params[paramsIndex] = v
+				for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
+					paramsIndex = paramsIndex + 1
+					params[paramsIndex] = v
+				end
 			end
 		end
 	end
@@ -332,7 +311,7 @@ end
 -- @return flags
 -- @return numDataStructs
 local function serializeParameterUpdate(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
-	local firstWord, secondWord = 0, 0
+	local entityStruct = entityMap[instance]
 	local offset = 0
 	local numDataStructs = 0
 	local numComponents = 0
@@ -341,79 +320,43 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 	local paramId = 0
 	local componentId
 
-	for componentId in pairs(componentsMap) do
-		offset = math.floor(componentId * 0.01325) -- componentId / 32
-		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
-		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
-		flags = setbit(flags, offset + 4)
-	end
-
-	if firstWord ~= 0 then
-		entitiesIndex = entitiesIndex + 1
-		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
-
-		for _ = 1, popcnt(firstWord) do
-			componentId = ffs(firstWord) + 1
-			numComponents = numComponents + 1
-			paramsField = componentsMap[componentId]
-			firstWord = unsetbit(firstWord, componentId - 1)
-
-			for _ = 1, popcnt(paramsField) do
-				paramId = ffs(paramsField) + 1
-				paramsIndex = paramsIndex + 1
-				params[paramsIndex] = componentMap[componentId][entityMap[instance]][paramId]
-				paramsField = unsetbit(paramId - 1)
-			end
-
-			if bit32.band(numComponents, 1) == 0 then
-				entitiesIndex = entitiesIndex + 1
-				numDataStructs = numDataStructs + 1
-				entities[entitiesIndex] = Vector2int16.new(lastParamsField, componentsMap[componentId])
-			else
-				lastParamsField = componentsMap[componentId]
-			end
-
-			componentsMap[componentId] = nil
-		end
-
-		if numComponents == 1 then
+	for fieldOffset, field in ipairs(entityStruct[0]) do
+		if field ~= 0 then
 			entitiesIndex = entitiesIndex + 1
 			numDataStructs = numDataStructs + 1
-			entities[entitiesIndex] = Vector2int16.new(lastParamsField, 0)
-		end
-	end
+			entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
 
-	if secondWord ~= 0 then
-		entitiesIndex = entitiesIndex + 1
-		entities[entitiesIndex] = Vector2int16.new(bit32.extract(secondWord, 0, 16), bit32.extract(secondWord, 16, 16))
+			for _ = 1, popcnt(firstWord) do
+				componentId = ffs(firstWord) + 1 + (32 * (fieldOffset - 1))
+				offset = math.floor(componentId * 0.03125)
+				flags = setbit(flags, offset + 4)
+				numComponents = numComponents + 1
+				paramsField = componentsMap[componentId]
+				firstWord = unsetbit(firstWord, componentId - 1)
 
-		for _ = 1, popcnt(secondWord) do
-			componentId = ffs(secondWord) + 33
-			paramsField = componentsMap[componentId]
-			secondWord = unsetbit(secondWord, componentId - 33)
-			numComponents = numComponents + 1
+				for _ = 1, popcnt(paramsField) do
+					paramId = ffs(paramsField) + 1
+					paramsIndex = paramsIndex + 1
+					params[paramsIndex] = componentMap[componentId][entityStruct[componentId]][paramId]
+					paramsField = unsetbit(paramId - 1)
+				end
 
-			for _ = 1, popcnt(paramsField) do
-				paramId = ffs(paramsField) + 1
-				paramsIndex = paramsIndex + 1
-				params[paramsIndex] = componentMap[componentId][entityMap[instance]][paramId]
-				paramsField = unsetbit(paramId - 1)
+				if bit32.band(numComponents, 1) == 0 then
+					entitiesIndex = entitiesIndex + 1
+					numDataStructs = numDataStructs + 1
+					entities[entitiesIndex] = Vector2int16.new(lastParamsField, componentsMap[componentId])
+				else
+					lastParamsField = componentsMap[componentId]
+				end
+
+				componentsMap[componentId] = nil
 			end
 
-			if bit32.band(numComponents, 1) == 0 then
+			if numComponents == 1 then
 				entitiesIndex = entitiesIndex + 1
 				numDataStructs = numDataStructs + 1
-				entities[entitiesIndex] = Vector2int16.new(lastParamsField, componentsMap[componentId])
-			else
-				lastParamsField = componentsMap[componentId]
+				entities[entitiesIndex] = Vector2int16.new(lastParamsField, 0)
 			end
-		end
-
-		if numComponents == 1 then
-			entitiesIndex = entitiesIndex + 1
-			numDataStructs = numDataStructs + 1
-			entities[entitiesIndex] = Vector2int16.new(lastParamsField, 0)
 		end
 	end
 
@@ -486,7 +429,11 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 	local instance = InstancesByNetworkId[networkId]
 	local componentId = 0
 	local fieldOffset = bit32.extract(flags, 2, 2)
-	local componentStruct = { _componentId = true, Instance = true}
+	-- don't want to rehash while populating this
+	local componentStruct = {
+		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+		_componentId = true, Instance = true
+	}
 	local pos = 0
 	local offsetFactor = 0
 	local dataObj
@@ -559,10 +506,8 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, fl
 	return entitiesIndex
 end
 
-local function deserializeEntity(entities, params, entitiesIndex, paramsIndex)
+local function deserializeEntity(entities, params, entitiesIndex, paramsIndex, instance)
 	local dataObj = entities[entitiesIndex]
-	local networkId = dataObj.X
-	local instance = InstancesByNetworkId[networkId]
 	local flags = dataObj.Y
 	local field = 0
 	local fieldOffset = bit32.extract(flags, 0, 2)
@@ -576,8 +521,27 @@ local function deserializeEntity(entities, params, entitiesIndex, paramsIndex)
 		fieldOffset = unsetbit(fieldOffsets, offsetFactor)
 
 		for _ = 1, popcnt(field) do
+			-- dont want to rehash when filling this
+			local componentStruct = {
+				true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+				_componentId = true, Instance = true
+			}
+
 			pos = ffs(field)
+			field = unsetbit(field, pos)
 			componentId = pos + (32 * offsetFactor) + 1
+
+			for paramId = 1, NumParams[componentId] do
+				paramsIndex = paramsIndex + 1
+				componentStruct[paramId] = params[paramsIndex]
+			end
+
+			AddComponent(instance, componentId, componentStruct)
+		end
+	end
+
+	return entitiesIndex, paramsIndex
+end
 
 ---Deserializes the update message in entities at position entitiesIndex
 -- @param entities table
@@ -617,7 +581,7 @@ local function deserializeUpdate(entities, params, entitiesIndex, paramsIndex, p
 		)
 	end
 
-	return entitiesIndex, paramsIndex, networkId
+	return entitiesIndex, paramsIndex
 end
 
 ---Serializes an entity update network message
@@ -745,6 +709,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 	local setBitPos = 0
 	local componentId = 0
 	local numComponents
+	local default
 
 	if isDestruction then
 		flags = setbit(flags, DESTRUCTION)
@@ -753,36 +718,24 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 		return entitiesIndex, paramsIndex
 	end
 
-	if firstWord ~= 0 then
-		entitiesIndex = entitiesIndex + 1
-		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
+	for fieldOffset, field in ipairs(entityStruct[0]) do
+		if field ~= 0 then
+			entitiesIndex = entitiesIndex + 1
+			numDataStructs = numDataStructs + 1
+			entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
 
-		for _ = 1, popcnt(firstWord) do
-			offset = ffs(firstWord)
-			componentId = offset + 1
-			firstWord = unsetbit(firstWord, offset)
+			for _ = 1, popcnt(field) do
+				offset = ffs(field)
+				componentId = offset + 1 + (32 * (fieldOffset - 1))
+				default = Defaults[componentId]
+				field = unsetbit(field, offset)
 
-			for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
-				paramsIndex = paramsIndex = 1
-				params[paramsIndex] = v
-			end
-		end
-	end
-
-	if secondWord ~= 0 then
-		entitiesIndex = entitiesIndex + 1
-		numDataStructs = numDataStructs + 1
-		entities[entitiesIndex] = Vector2int16.new(bit32.extract(secondWord, 0, 16), bit32.extract(secondWord, 16, 16))
-
-		for _ = 1, popcnt(secondWord) do
-			offset = ffs(secondWord)
-			componentId = offset + 1
-			secondWord = unsetbit(secondWord, offset)
-
-			for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
-				paramsIndex = paramsIndex = 1
-				params[paramsIndex] = v
+				for paramId, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
+					if default[paramId] then
+						paramsIndex = paramsIndex = 1
+						params[paramsIndex] = v
+					end
+				end
 			end
 		end
 	end
