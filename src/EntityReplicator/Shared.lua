@@ -205,7 +205,7 @@ local function serializeKillComponent(entities, params, entitiesIndex, paramsInd
 		offset = math.floor(componentId * 0.01325) -- componentId / 32
 		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
 		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
-		flags = setbit(flags, 5 - offset)
+		flags = setbit(flags, offset)
 	end
 
 	if firstWord ~= 0 then
@@ -324,12 +324,12 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 		if field ~= 0 then
 			entitiesIndex = entitiesIndex + 1
 			numDataStructs = numDataStructs + 1
-			entities[entitiesIndex] = Vector2int16.new(bit32.extract(firstWord, 0, 16), bit32.extract(firstWord, 16, 16))
+			entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
 
 			for _ = 1, popcnt(firstWord) do
 				componentId = ffs(firstWord) + 1 + (32 * (fieldOffset - 1))
 				offset = math.floor(componentId * 0.03125)
-				flags = setbit(flags, offset + 4)
+				flags = setbit(flags, 4 + offset)
 				numComponents = numComponents + 1
 				paramsField = componentsMap[componentId]
 				firstWord = unsetbit(firstWord, componentId - 1)
@@ -396,10 +396,8 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 			entitiesIndex = entitiesIndex + (even and 1 or 0)
 			dataObj = entities[entitiesIndex]
 
-			if player then
-				if invalidDataObj(dataObj) then
-					return nil
-				end
+			if player and invalidDataObj(dataObj)
+				return nil
 			end
 
 			paramsField = even and dataObj.X or dataObj.Y
@@ -407,10 +405,8 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 			for _ = 1, popcnt(paramsField) do
 				paramId = ffs(paramsField) + 1
 
-				if player then
-					if not hasPermission(player, networkId, componentId, paramId) then
-						return nil
-					end
+				if player and not hasPermission(player, networkId, componentId, paramId) then
+					return nil
 				end
 
 				componentMap[componentId][EntityMap[instance]][paramId] = params[paramsIndex]
@@ -443,10 +439,8 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 		entitiesIndex = entitiesIndex + 1
 		dataObj = entities[entitiesIndex]
 
-		if player then
-			if invalidDataObj(dataObj) then
-				return
-			end
+		if player and invalidDataObj(dataObj) then
+			return
 		end
 
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
@@ -458,17 +452,15 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 			componentId = pos + (32 * offsetFactor) + 1
 			field = unsetbit(field, pos)
 
-			if player then
-				if not hasPermission(player, networkId, componentId) then
+			if player and not hasPermission(player, networkId, componentId) then
 					return nil
-				end
 			end
 
 			for paramId = 1, NumParams[componentId] do
 				paramsIndex = paramsIndex + 1
 				paramValue = params[paramsIndex]
 
-				if not typeof(paramValue) == typeof(GetParamDefault(componentId, paramId)) then
+				if player and not typeof(paramValue) == typeof(GetParamDefault(componentId, paramId)) then
 					return nil
 				end
 
@@ -678,7 +670,7 @@ end
 -- update| isRef |destroy|prefabE|                                                                               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
---[ 0, 1 ] : field representing indices of non-zero values of _entityMap[instance][0]
+--[ 0, 1 ] : field representing non-zero indices of EntityMap[instance][0]
 --     D  : bit representing whether this is a destruction message
 --     E  : bit representing whether entity is referenced in the system
 --           (unused if bit D is set)
@@ -698,11 +690,8 @@ end
 -- @param isReferenced boolean indicating whether this entity is referenced
 -- @return number entitiesIndex
 -- @return number paramsIndex
-function Shared.SerializeEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isDestruction, isReferenced, isPrefab)
+function Shared.SerializeEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isDestruction, isReferenced)
 	local entityStruct = EntityMap[instance]
-	local bitFields = entityStruct[0]
-	local firstWord = bitFields[1]
-	local secondWord = bitFields[2]
 	local flags = 0
 	local offset = 0
 	local numDataStructs = 0
@@ -758,19 +747,17 @@ end
 -- @return number networkId
 -- @return table componentIdsToParams
 -- @return number entitiesIndex
-function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, player)
+function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, playerOrEntityRef)
 	local dataObj = entities[entitiesIndex]
 
-	if player then
-		if invalidDataObj(dataObj) then
-			return
-		end
+	if invalidDataObj(dataObj) then
+		return
 	end
 
 	if isbitset(dataObj.Y, UPDATE) then
-		return deserializeUpdate(entities, params, entitiesIndex, paramsIndex, player)
+		return deserializeUpdate(entities, params, entitiesIndex, paramsIndex, playerOrEntityRef)
 	else
-		return deserializeEntity(entities, params, entitiesIndex, paramsIndex)
+		return deserializeEntity(entities, params, entitiesIndex, paramsIndex, playerOrEntityRef)
 	end
 end
 
