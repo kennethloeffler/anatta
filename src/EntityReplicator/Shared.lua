@@ -340,13 +340,13 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 			numDataStructs = numDataStructs + 1
 			entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
 
-			for _ = 1, popcnt(firstWord) do
-				componentId = ffs(firstWord) + 1 + (32 * (fieldOffset - 1))
+			for _ = 1, popcnt(field) do
+				componentId = ffs(field) + 1 + (32 * (fieldOffset - 1))
 				offset = math.floor(componentId * 0.03125)
 				flags = setbit(flags, 4 + offset)
 				numComponents = numComponents + 1
 				paramsField = componentsMap[componentId]
-				firstWord = unsetbit(firstWord, componentId - 1)
+				field = unsetbit(field, componentId - 1)
 
 				for _ = 1, popcnt(paramsField) do
 					paramId = ffs(paramsField) + 1
