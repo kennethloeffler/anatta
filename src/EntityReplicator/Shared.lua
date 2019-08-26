@@ -177,6 +177,17 @@ function Shared.GetIdNumFromString(str)
 	return id
 end
 
+---Serializes a KILL_COMPONENT network message
+-- @param entities
+-- table entities:
+--
+--      { Vector2int16(halfWord1, halfWord2), ... }
+--
+--------------------------------------------------------------------------------------------------------------------------------
+-- @param entitiesIndex
+-- @param componentsMap
+-- @param flags
+-- uint16 flags:
 --
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
 --   1	 |   0   |   0   |   1   |   0       0       0       0       0       0   |   0       0   |   0       0   |   0       0  |
@@ -185,17 +196,11 @@ end
 -- update|       |       |  kill |                                               |               |               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
--- @param params
--- @param entitiesIndex
--- @param paramsIndex
--- @param componentsMap
--- @param flags
 -- @return entitiesIndex
--- @return paramsIndex
 -- @return flags
 -- @return numDataStructs
 
-local function serializeKillComponent(entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
+local function serializeKillComponent(entities, entitiesIndex, componentsMap, flags)
 	local numDataStructs = 0
 	local firstWord = 0
 	local secondWord = 0
@@ -220,18 +225,29 @@ local function serializeKillComponent(entities, params, entitiesIndex, paramsInd
 		entities[entitiesIndex] = Vector2int16.new(bit32.extract(secondWord, 0, 16), bit32.extract(secondWord, 16, 16))
 	end
 
-	return entitiesIndex, paramsIndex, flags, numDataStructs
+	return entitiesIndex, flags, numDataStructs
 end
 
 ---Serializes an ADD_COMPONENT network message
 -- @param instance
 -- @param entities
---
 -- table entities:
---     { ..., Vector2int16[uint16 halfWord1, halfWord2], ...,*
---       Vector2int16[uint16 paramField1, paramField2], ...**
---     }
 --
+--      { ..., Vector2int16(halfWord1, halfWord2), ... }
+--
+--------------------------------------------------------------------------------------------------------------------------------
+-- @param instance
+-- @param entities
+-- @param params
+-- table params:
+--
+--      { ..., value, value, value, ... }
+--
+--------------------------------------------------------------------------------------------------------------------------------
+-- @param entitiesIndex
+-- @param paramsIndex
+-- @param componentsMap
+-- @param flags
 -- uint16 flags:
 --
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
@@ -241,13 +257,6 @@ end
 -- update|       |  add  |       |                                               |               |               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
--- @param instance
--- @param entities
--- @param params
--- @param entitiesIndex
--- @param paramsIndex
--- @param componentsMap
--- @param flags
 -- @return entitiesIndex
 -- @return paramsIndex
 -- @return flags
@@ -286,12 +295,22 @@ end
 ---Serializes a PARAM_UPDATE network message
 -- @param instance
 -- @param entities
---
 -- table entities:
---     { ..., Vector2int16[uint16 halfWord1, halfWord2], ...,*
---       Vector2int16[uint16 paramField1, paramField2], ...**
---     }
 --
+--      { ..., Vector2int16(halfWord1, halfWord2), ...
+--        Vector2int16(paramsField1, paramsField2), ... }
+--
+--------------------------------------------------------------------------------------------------------------------------------
+-- @param params
+-- table params:
+--
+--      { ..., value, value, value, ... }
+--
+--------------------------------------------------------------------------------------------------------------------------------
+-- @param entitiesIndex
+-- @param paramsIndex
+-- @param componentsMap
+-- @param flags
 -- uint16 flags:
 --
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
@@ -300,12 +319,7 @@ end
 -- if set| if set|  n/a  |  n/a  |                    (unused)                   |  paramsOffset |      n/a      |      n/a     |
 -- update| params|       |       |                                               |               |               |              |
 --------------------------------------------------------------------------------------------------------------------------------
---
--- @param params
--- @param entitiesIndex
--- @param paramsIndex
--- @param componentsMap
--- @param flags
+
 -- @return entitiesIndex
 -- @return paramsIndex
 -- @return flags
@@ -580,22 +594,6 @@ end
 -- @param instance Instance to which this entity is attached
 -- @param networkId number the networkId for this entity
 -- @param entities table to which entity data is written
---
--- table entities:
---     { Vector2int16[uint16 networkId, uint16 flags],
---       Vector2int16[uint16 halfWord1, uint16 halfWord2], ...,*
---       Vector2int16[uint16 paramField1, uint16 paramField2], ...**
---     }
---
--- uint16 flags:
---
---___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0__
---   1	 |   0   |   0   |   0   |   0       0       0       0       0       0   |   0       0   |   0       0   |   0       0  |
---       |       |       |       |                                               |               |               |              |
--- if set| if set| if set| if set|                    (unused)                   |  paramsOffset |   addOffset   |  killOffset  |
--- update| params|  add  |  kill |                                               |               |               |              |
---------------------------------------------------------------------------------------------------------------------------------
---
 -- @param params table to which parameter values are written
 -- @param entitiesIndex number indicating the current index of entities
 -- @param paramsIndex number indicating the current index of params
@@ -626,9 +624,8 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 					map, flags
 				)
 			elseif msg == KILL_COMPONENT then
-				entitiesIndex, paramsIndex, flags, numDataStructs = serializeKillComponent(
-					entities, params,
-					entitiesIndex, paramsIndex,
+				entitiesIndex, flags, numDataStructs = serializeKillComponent(
+					entities, entitiesIndex
 					map, flags
 				)
 			end
@@ -647,13 +644,10 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 	return entitiesIndex, paramsIndex
 end
 
-
+---Serializes a creation or destruction message for an entire entity
 -- @param instance Instance to which the entity to be serialized is attached
 -- @param networkId number signifying the networkId of this entity
 -- @param entities table to which entity data is serialized
---
--- NOTE: a Vector2int16 actually contains 2 values of the type int16, but these may be treated as uint16 (two's complement)
---
 -- table entities:
 --
 --    { ..., Vector2int16[uint16 networkId, uint16 flags], Vector2int16[uint16 halfWord1, uint16 halfWord2], ...* }
@@ -661,6 +655,7 @@ end
 --    *one additional Vector2int16 struct per non-zero componentId field word
 --     (If this is a destruction message, zero additional Vector2int16s are created)
 --
+--------------------------------------------------------------------------------------------------------------------------------
 -- uint16 flags:
 --
 --___F_______E_______D_______C_______B_______A_______9_______8_______7_______6_______5_______4_______3_______2_______1_______0 _
@@ -670,20 +665,13 @@ end
 -- update| isRef |destroy|prefabE|                                                                               |              |
 --------------------------------------------------------------------------------------------------------------------------------
 --
---[ 0, 1 ] : field representing non-zero indices of EntityMap[instance][0]
---     D  : bit representing whether this is a destruction message
---     E  : bit representing whether entity is referenced in the system
---           (unused if bit D is set)
---     F  : bit representing whether this is an update message or a creation/destruction message
---           (always unset for messages generated by this function)
-------------------------------------------------------------------------------------------------------------------------------
 -- @param params table to which parameter values are serialized
 -- table params:
 --
 --    { ..., value, value, value, ...* }
 --
 --    *one additional value for each parameter on this entity, if applicable
-------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
 -- @param entitiesIndex number indicating current index of entities; initial value should be 1
 -- @param paramsIndex number indicating current index of params; initial value should be 0
 -- @param isDestruction boolean indicating whether this is a creation message or a destruction message
