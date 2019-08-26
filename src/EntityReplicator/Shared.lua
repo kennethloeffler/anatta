@@ -311,7 +311,7 @@ end
 -- @return flags
 -- @return numDataStructs
 local function serializeParameterUpdate(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
-	local entityStruct = entityMap[instance]
+	local entityStruct = EntityMap[instance]
 	local offset = 0
 	local numDataStructs = 0
 	local numComponents = 0
@@ -413,7 +413,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 					end
 				end
 
-				componentMap[componentId][entityMap[instance]][paramId] = params[paramsIndex]
+				componentMap[componentId][EntityMap[instance]][paramId] = params[paramsIndex]
 				paramsIndex = paramsIndex + 1
 				paramsField = unsetbit(paramsField, paramId - 1)
 			end
@@ -699,7 +699,7 @@ end
 -- @return number entitiesIndex
 -- @return number paramsIndex
 function Shared.SerializeEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isDestruction, isReferenced, isPrefab)
-	local entityStruct = entityMap[instance]
+	local entityStruct = EntityMap[instance]
 	local bitFields = entityStruct[0]
 	local firstWord = bitFields[1]
 	local secondWord = bitFields[2]
