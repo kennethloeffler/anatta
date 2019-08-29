@@ -26,6 +26,7 @@ local SystemsRunning = false
 local EntityFilters = {}
 local SystemEntities = {}
 local Systems = {}
+local SystemsToUnload = {}
 
 local function setComponentBitForEntity(entity, componentId)
 	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
@@ -42,7 +43,7 @@ local function unsetComponentBitForEntity(entity, componentId)
 end
 
 local function isComponentBitSet(entity, componentId)
-	local offset = math.ceil((componentId * 0.03125)) -- comoponentId / 32
+	local offset = math.ceil((componentId * 0.03125))
 	local bitField = EntityMap[entity][0][offset]
 
 	return bit32.band(bit32.rshift(bitField, componentId - 1 - (32 * (offset - 1)))) == 1
@@ -50,19 +51,20 @@ end
 
 local function filterEntity(instance)
 	local entityBitFields = EntityMap[instance][0]
+	local firstField = 0
+	local secondField = 0
 
 	for systemId, bitFields in ipairs(EntityFilters) do
-		-- check if bit fields match
-		if not bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] then
-			SystemEntities[systemId][instance] = nil
-		else
+		if bit32.band(firstField, entityBitFields[1]) == firstField and bit32.band(secondField, entityBitFields[2]) == secondField then
 			SystemEntities[systemId][instance] = true
+		else
+			SystemEntities[systemId][instance] = nil
 		end
 	end
 end
 
 local function addEntity(instance)
-	EntityMap[instance] = { [0] = {0, 0} } -- table of bitfields for fast intersection tests
+	EntityMap[instance] = { [0] = { 0, 0 } } -- bit fields for fast intersection tests
 	CollectionService:AddTag(instance, "__WSEntity")
 	return instance
 end
@@ -72,6 +74,25 @@ end
 -- @param componentId
 local function cacheComponentKilled(entity, componentId)
 	KilledComponents[componentId][entity] = true
+end
+
+local function doUnloadSystem(onUnloadedCallback, systemId)
+	if onUnloadedCallback then
+		onUnloadedCallback()
+	end
+
+	if systemId then
+		local heartbeatLen = #Systems
+		local entitiesLen = #SystemEntities
+		local filtersLen = #EntityFilters
+
+		Systems[systemId] = Systems[heartbeatLen]
+		Systems[heartbeatLen] = nil
+		SystemEntities[systemId] = SystemEntities[entitiesLen]
+		SystemEntities[entitiesLen] = nil
+		EntityFilters[systemId] = EntityFilters[filtersLen]
+		EntityFilters[systemId] = nil
+	end
 end
 
 local function doReorder(componentId, parentEntitiesMap)
@@ -220,7 +241,8 @@ end
 
 function EntityManager.FilteredEntityAdded(entityFilter)
 	local bindable = Instance.new("BindableEvent")
-	local bitFields = {0, 0, 0, 0}
+	local bitFields = { 0, 0 }
+
 	for i, componentType in ipairs(entityFilter) do
 		WSAssert(typeof(i) == "number", typeof(componentType) == "string", "argument should be a string-valued array")
 
@@ -231,8 +253,10 @@ function EntityManager.FilteredEntityAdded(entityFilter)
 
 		ComponentAddedEvents[componentId]:Connect(function(instance)
 			local entityBitFields = EntityMap[instance][0]
-			local bitFieldsMatch = bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4]
-			if bitFieldsMatch then
+			local firstField = bitFields[1]
+			local secondField = bitFields[2]
+
+			if bit32.band(firstField, entityBitFields[1]) == firstField and bit32.band(secondField, entityBitFields[2]) then
 				bindable.Event:Fire(instance)
 			end
 		end)
@@ -242,7 +266,8 @@ end
 
 function EntityManager.FilteredEntityRemoved(entityFilter)
 	local bindable = Instance.new("BindableEvent")
-	local bitFields = {0, 0, 0, 0}
+	local bitFields = { 0, 0 }
+
 	for i, componentType in ipairs(entityFilter) do
 		WSAssert(typeof(i) == "number", typeof(componentType) == "string", "argument should be a string-valued array")
 
@@ -253,12 +278,15 @@ function EntityManager.FilteredEntityRemoved(entityFilter)
 
 		ComponentRemovedEvents[componentId]:Connect(function(instance)
 			local entityBitFields = EntityMap[instance][0]
-			local bitFieldsMatch =  bitFields[1] == entityBitFields[1] and bitFields[2] == entityBitFields[2] and bitFields[3] == entityBitFields[3] and bitFields[4] == entityBitFields[4]
-			if not bitFieldsMatch then
+			local firstField = bitFields[1]
+			local secondField = bitFields[2]
+
+			if not (bit32.band(firstField, entityBitFields[1]) == firstField and bit32.band(secondField, entityBitFields[2])) then
 				bindable.Event:Fire(instance)
 			end
 		end)
 	end
+
 	return bindable.Event
 end
 
@@ -305,15 +333,21 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 	end
 end
 
+---Loads the system defined by module
+-- If the system has a .OnLoaded() member, then it is called by this function
+-- If the system has a .Heartbeat() member, then it is loaded to be ran when EntityManager.StartSystems() is called
+
+-- @param module
+-- @param pluginWrapper
 function EntityManager.LoadSystem(module, pluginWrapper)
-	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "expected ModuleScript")
+	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1: expected ModuleScript")
 
 	local system = require(module)
 
-	if system.Init then
-		WSAssert(typeof(system.Init) == "function", "expected function %s.Init", module.Name)
+	if system.OnLoaded then
+		WSAssert(typeof(system.OnLoaded) == "function", "expected function %s.OnLoaded", module.Name)
 
-		system.Init(pluginWrapper)
+		system.OnLoaded(pluginWrapper)
 	end
 
 	if system.Heartbeat then
@@ -321,42 +355,70 @@ function EntityManager.LoadSystem(module, pluginWrapper)
 
 		local systemId = #Systems + 1
 		Systems[systemId] = system
+		system._systemId = systemId
 
 		if system.EntityFilter then
-			WSAssert(typeof(system.EntityFilter) == "table", "expected array %s.EntityFilter", module.Name)
+			WSAssert(typeof(system.EntityFilter) == "table" and #system.EntityFilter > 0, "expected array %s.EntityFilter", module.Name)
+
 			for i, componentType in pairs(system.EntityFilter) do
 				WSAssert(typeof(componentType) == "string" and typeof(i) == "number", "EntityFilter should be a string-valued array")
 			end
-			EntityFilters[systemId] = {0, 0, 0, 0}
+
+			EntityFilters[systemId] = { 0, 0 }
 			SystemEntities[systemId] = {}
+
 			for i, componentType in ipairs(system.EntityFilter) do
 				local componentId = ComponentDesc.GetComponentIdFromType(componentType)
 				local offset = math.ceil(componentId * 0.03125)
 				local bitField = EntityFilters[systemId][offset]
-				EntityFilters[systemId][offset] = bReplace(bitField, 1, (componentId - 1 - ((i - 1) * 32)))
+
+				EntityFilters[systemId][offset] = bit32.bor(bitField, bit32.lshift(1, componentId - 1 - (32 * (offset - 1))))
 			end
 		end
 	end
 end
+---Unloads the system defined by module
+-- If the system has a .OnUnloaded member, then it is called by this function
+-- System is unloaded by EntityManager.StartSystem()'s loop on the next RunServive.Heartbeat step
+function EntityManager.UnloadSystem(module)
+	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1: expected ModuleScript")
 
+	local system = require(module)
+	local systemId = system._systemId
+
+	WSAssert(not system.Locked, "system is locked")
+
+	if system.OnUnloaded then
+		WSAssert(typeof(system.OnUnloaded) == "function", "expected function %s.OnUnloaded", module.Name)
+	end
+
+	SystemsToUnload
+
+---Starts execution of continuously run systems and component lifetime loop
+-- If no system has a .Step() member, then only the component lifetime loop will be executed
+-- This is a blocking function
 function EntityManager.StartSystems()
 
 	if SystemsRunning then
+		warn("Systems already running")
 		return
 	end
 
 	SystemsRunning = true
 
-	local hasSystems = #Systems > 0 and true or nil
+	local hasContinuouslyRunningSystems = #Systems > 0 and true or nil
 	local lastFrameTime = RunService.Heartbeat:Wait()
+
 	while SystemsRunning do
+		if not hasContinuouslyRunningSystems then
+			stepComponentLifetime()
+		end
+
 		for systemId, system in ipairs(Systems) do
 		   	stepComponentLifetime()
 			system(lastFrameTime, SystemEntities[systemId])
 		end
-		if not hasSytems then
-			stepComponentLifetime()
-		end
+
 		lastFrameTime = RunService.Heartbeat:Wait()
 	end
 end
