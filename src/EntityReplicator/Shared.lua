@@ -1,18 +1,17 @@
 ---Shared.lua
--- @module shared
 
 -- Because the usage of Vector2int16 in this module may be confusing, a summary of why this data type was chosen is given below:
-
+--
 -- The bit32 functions truncate their arguments (signed 64 bit floats) to unsigned 32 bit integers. However, these functions
 -- still return a normal Lua number (a signed 64 bit float). What this means practically is that *half* of the data will be
 -- "junk" and waste valuable bandwidth when sent across the network. Because one of the design goals of EntityReplicator is
 -- to minimize the amount of data sent among peers, this is an obvious non-starter.
-
+--
 -- Nevertheless, there does exist a way to efficently pack integers to send across the network. A Vector2int16 contains two
 -- signed 16 bit integers: one in its 'X' field, and one in its 'Y' field. It is thus possible to split an unsigned 32-bit
 -- integer into two 16-bit fields, which are placed in the Vector2int16, then send the Vector2int16 across the network where
 -- it is deserialized by the receiving system.
-
+--
 -- If any one of these two 16-bit fields represents an integer that is greater than (2^15) - 1, it  will result in the same
 -- unsigned value when it is used again as an argument in a bit32 function. This is because the signed 16-bit integers dealt with
 -- here are in two's complement form, so inputting a positive integer n outside of the range they can represent will result in a
@@ -120,9 +119,7 @@ local function ffs(n)
 end
 
 local function invalidDataObj(dataObj)
-	if not typeof(dataObj) == "Vector2int16" then
-		return true
-	end
+	return not typeof(dataObj) == "Vector2int16"
 end
 
 local function hasPermission(player, networkId, componentId, paramId)
@@ -132,7 +129,7 @@ local function hasPermission(player, networkId, componentId, paramId)
 	local componentArg
 	local paramArg
 
-	-- checking if player is allowed to create this component
+	-- checking if player is allowed to create this component on this entity
 	if componentId and not paramId then
 		playerArg = PlayerCreatable[networkId][1]
 		componentArg = PlayerCreatable[networkId][componentOffset + 2]
@@ -142,7 +139,7 @@ local function hasPermission(player, networkId, componentId, paramId)
 		else
 			return true
 		end
-	-- checking if player is allowed to serialize to this parameter
+	-- checking if player is allowed to serialize to this parameter on this entity
 	elseif paramId and componentId then
 		playerArg = PlayerSerializable[networkId][1]
 		paramArg = PlayerSerializable[networkId][componentId + 1]
@@ -263,12 +260,18 @@ end
 -- @return numDataStructs
 local function serializeAddComponent(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
 	local entityStruct = EntityMap[instance]
+	local struct = { 0, 0 }
 	local numDataStructs = 0
 	local componentOffset = 0
 	local componentId = 0
 	local offset = 0
 
-	for fieldOffset, field in ipairs(entityStruct[0]) do
+	for componentId in pairs(componentsMap) do
+		struct[1] = componentId <= 32 and setbit(struct[1], componentId - 1) or struct[1]
+		struct[2] = componentId > 32 and setbit(struct[2], componentId - 33) or struct[2]
+	end
+
+	for fieldOffset, field in ipairs(enti) do
 		if field ~= 0 then
 			entitiesIndex = entitiesIndex + 1
 			numDataStructs = numDataStructs + 1
@@ -282,8 +285,8 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 				flags = setbit(flags, 2 + offset)
 
 				for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
-					paramsIndex = paramsIndex + 1
 					params[paramsIndex] = v
+					paramsIndex = paramsIndex + 1
 				end
 			end
 		end
@@ -325,7 +328,7 @@ end
 -- @return flags
 -- @return numDataStructs
 local function serializeParameterUpdate(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
-	local entityStruct = EntityMap[instance]
+	local struct = { 0, 0 }
 	local offset = 0
 	local numDataStructs = 0
 	local numComponents = 0
@@ -334,8 +337,14 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 	local paramId = 0
 	local componentId
 
-	for fieldOffset, field in ipairs(entityStruct[0]) do
+	for componentId, cParamField in pairs(componentsMap) do
+		struct[1] = componentId <= 32 and setbit(struct[1], componentId - 1) or struct[1]
+		struct[2] = componentId > 32 and setbit(struct[2], componentId - 33) or struct[2]
+	end
+
+	for fieldOffset, field in ipairs(struct) do
 		if field ~= 0 then
+			numComponents = 0
 			entitiesIndex = entitiesIndex + 1
 			numDataStructs = numDataStructs + 1
 			entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
@@ -350,8 +359,8 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 
 				for _ = 1, popcnt(paramsField) do
 					paramId = ffs(paramsField) + 1
+					params[paramsIndex] = ComponentMap[componentId][entityStruct[componentId]][paramId]
 					paramsIndex = paramsIndex + 1
-					params[paramsIndex] = componentMap[componentId][entityStruct[componentId]][paramId]
 					paramsField = unsetbit(paramId - 1)
 				end
 
@@ -365,12 +374,12 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 
 				componentsMap[componentId] = nil
 			end
+		end
 
-			if numComponents == 1 then
-				entitiesIndex = entitiesIndex + 1
-				numDataStructs = numDataStructs + 1
-				entities[entitiesIndex] = Vector2int16.new(lastParamsField, 0)
-			end
+		if numComponents == 1 then
+			entitiesIndex = entitiesIndex + 1
+			numDataStructs = numDataStructs + 1
+			entities[entitiesIndex] = Vector2int16.new(lastParamsField, 0)
 		end
 	end
 
@@ -392,13 +401,12 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 	for _ = 1, popcnt(fieldOffset) do
 		entitiesIndex = enititiesIndex + 1
 		dataObj = entities[entitiesIndex]
+		entiites[entitiesIndex] = nil
 		offsetFactor = ffs(fieldOffset)
 		fieldOffset = unsetbit(fieldOffset, offsetFactor)
 
-		if player then
-			if invalidDataObj(dataObj) then
-				return nil
-			end
+		if player and invalidDataObj(dataObj) then
+			return nil
 		end
 
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
@@ -409,12 +417,12 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 			componentId = pos + (32 * offsetFactor) + 1
 			entitiesIndex = entitiesIndex + (even and 1 or 0)
 			dataObj = entities[entitiesIndex]
+			paramsField = even and dataObj.X or dataObj.Y
+			entities[entitiesIndex] = nil
 
 			if player and invalidDataObj(dataObj)
 				return nil
 			end
-
-			paramsField = even and dataObj.X or dataObj.Y
 
 			for _ = 1, popcnt(paramsField) do
 				paramId = ffs(paramsField) + 1
@@ -458,6 +466,7 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 		end
 
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		entities[entitiesIndex] = nil
 		offsetFactor = ffs(fieldOffset)
 		fieldOffset = unsetbit(fieldOffset, offsetFactor)
 
@@ -467,7 +476,7 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 			field = unsetbit(field, pos)
 
 			if player and not hasPermission(player, networkId, componentId) then
-					return nil
+				return nil
 			end
 
 			for paramId = 1, NumParams[componentId] do
@@ -498,6 +507,7 @@ function deserializeKillComponent(networkId, entities, params, entitiesIndex, fl
 		entitiesIndex = entitiesIndex + 1
 		dataObj = entities[entitiesIndex]
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		entities[entitiesIndex] = nil
 		offsetFactor = ffs(fieldOffset)
 		fieldOffset = unsetbit(fieldOffset, offsetFactor)
 
@@ -519,10 +529,15 @@ local function deserializeEntity(entities, params, entitiesIndex, paramsIndex, i
 	local fieldOffset = bit32.extract(flags, 0, 2)
 	local offsetFactor = 0
 
+	if SERVER then
+		return
+	end
+
 	for _ = 1, popcnt(fieldOffset) do
 		entitiesIndex = entitiesIndex + 1
 		dataObj = entities[entitiesIndex]
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		entities[entitiesIndex] = nil
 		offsetFactor = ffs(fieldOffset)
 		fieldOffset = unsetbit(fieldOffsets, offsetFactor)
 
@@ -559,11 +574,7 @@ end
 -- @return number entitiesIndex
 -- @return number paramsIndex
 -- @return table componentIdsToParams
-local function deserializeUpdate(entities, params, entitiesIndex, paramsIndex, playerArg)
-	local dataObj = entities[entitiesIndex]
-	local networkId = dataObj.X
-	local flags = dataObj.Y
-
+local function deserializeUpdate(networkId, flags, entities, params, entitiesIndex, paramsIndex, playerArg)
 	if isbitset(flags, PARAMS_UPDATE) then
 		entitiesIndex, paramsIndex = deserializeParamsUpdate(
 			networkId, entities, params,
@@ -727,6 +738,8 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 	return entitiesIndex, paramsIndex
 end
 
+
+
 ---Deserializes the next message in entities
 -- @param entities table containing serial entity data
 -- @param params table containing serial param data
@@ -735,18 +748,24 @@ end
 -- @return number networkId
 -- @return table componentIdsToParams
 -- @return number entitiesIndex
-function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, playerOrEntityRef)
-	local dataObj = entities[entitiesIndex]
+function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, player)
+	local header = entities[entitiesIndex]
+	local networkId = header.X
+	local instance = InstancesByNetworkId[networkId]
+	local flags = header.Y
+	local headerIndex = entitiesIndex
 
 	if invalidDataObj(dataObj) then
 		return
 	end
 
-	if isbitset(dataObj.Y, UPDATE) then
-		return deserializeUpdate(entities, params, entitiesIndex, paramsIndex, playerOrEntityRef)
+	if isbitset(flags, UPDATE) then
+		return deserializeUpdate(networkId, entities, params, entitiesIndex, paramsIndex, instance)
 	else
-		return deserializeEntity(entities, params, entitiesIndex, paramsIndex, playerOrEntityRef)
+		return deserializeEntity(entities, params, entitiesIndex, paramsIndex, player)
 	end
+
+	entities[headerIndex] = nil
 end
 
 function Shared.QueueUpdate(instance, msgType, componentId, paramId)
