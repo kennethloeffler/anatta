@@ -68,6 +68,7 @@ function SandboxEnv.new(script, baseEnv)
 	env.UDim2 = UDim2
 	env.Vector2 = Vector2
 	env.Vector3 = Vector3
+	env.Vector2int16 = Vector2int16
 	-- excluded: Instance, DockWidgetPluginGuiInfo, PathWaypoint, Random, Vector3int16, Region3int16
 
 	function env.require(module)
@@ -106,6 +107,7 @@ function SandboxEnv.lson()
 	env.UDim2 = UDim2
 	env.Vector2 = Vector2
 	env.Vector3 = Vector3
+	env.Vector2int16 = Vector2int16
 	-- excluded: Instance, DockWidgetPluginGuiInfo, PathWaypoint, Random, Vector3int16, Region3int16
 
 	return env
