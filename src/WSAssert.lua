@@ -8,11 +8,11 @@ function WSAssert(condition, ...)
 			end)
 
 			if success then
-				error("WorldSmith: assertion failed: " .. msg, 3)
+				error(msg, 3)
 			end
 		end
 
-		error("WorldSmith: assertion failed", 3)
+		error("WorldSmith: assertion failed!", 3)
 	end
 end
 
