@@ -1,33 +1,38 @@
 -- ComponentFactory.lua
 local CollectionService = game:GetService("CollectionService")
+
+local ComponentDesc = require(script.Parent.ComponentDesc)
 local Constants = require(scipt.Parent.EntityReplicator.Constants)
 local Replicator = require(script.Parent.EntityReplicator.Shared)
+local WSAssert = require(script.Parent.WSAssert)
 
 local PARAMS_UPDATE = Constants.PARAMS_UPDATE
 local IS_SERVER = Constants.IS_SERVER
 
+local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
+local GetParamIdFromName = ComponentDesc.GetParamIdFromName
+local GetParamDefault = ComponentDesc.GetParamDefault
+local GetDefaults = ComponentDesc.GetDefaults
+
 local QueueUpdate = Replicator.QueueUpdate
 local BlackListed = Replicator.GetBlacklistedComponents()
 
-local ComponentDesc = require(script.Parent.ComponentDesc)
-local WSAssert = require(script.Parent.WSAssert)
-
 local ComponentMetatable = {
 	__index = function(component, index)
-		local paramId = ComponentDesc.GetParamIdFromName(component._componentId, index)
+		local paramId = GetParamIdFromName(component._componentId, index)
 		return component[paramId]
 	end,
 
 	__newindex = function(component, index, value)
 		local componentId = component._componentId
-		local paramId = ComponentDesc.GetParamIdFromName(componentId, index)
-		local ty = typeof(ComponentDesc.GetParamDefault(componentId, paramId))
+		local paramId = GetParamIdFromName(componentId, index)
+		local ty = typeof(GetParamDefault(componentId, paramId))
 
 		WSAssert(ty == typeof(value), "expected %s", ty)
 
 		component[paramId] = value
 
-		if SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") and not BlackListed[componentId] then
+		if IS_SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") and not BlackListed[componentId] then
 			QueueUpdate(component.Instance, PARAMS_UPDATE, componentId, paramId)
 		end
 	end
@@ -51,12 +56,12 @@ local ComponentMetatable = {
 --@return The new component object
 
 function Component(instance, componentType, paramMap)
-	local componentId = typeof(componentType) == "number" and componentType or ComponentDesc.GetComponentIdFromType(componentType)
+	local componentId = typeof(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
 	local newComponent = paramMap
 
 	if #newComponent == 0 then
-		for paramName, default in pairs(ComponentDesc.GetDefaults(componentId)) do
-			local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
+		for paramName, default in pairs(GetDefaults(componentId)) do
+			local paramId = GetParamIdFromName(componentId, paramName)
 
 			if newComponent[paramName] ~= nil then
 				newComponent[paramId] = newComponent[paramName]
@@ -72,7 +77,7 @@ function Component(instance, componentType, paramMap)
 
 	setmetatable(newComponent, ComponentMetatable)
 
-	if SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") and not BlackListed[componentId] then
+	if IS_SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") and not BlackListed[componentId] then
 		QueueUpdate(instance, ADD_COMPONENT, componentId)
 	end
 
