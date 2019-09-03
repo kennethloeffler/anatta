@@ -814,7 +814,7 @@ end
 
 function Shared.OnDereference(instance, networkId)
 	InstancesByNetworkId[networkId] = instance
-	NetworkIdsNyInstance[instance] = networkId
+	NetworkIdsByInstance[instance] = networkId
 end
 
 function Shared.GetBlackListedComponents()
