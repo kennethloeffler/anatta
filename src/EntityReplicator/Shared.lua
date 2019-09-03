@@ -535,7 +535,7 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 	local field = 0
 	local isDestruction = isbitset(flags, IS_DESTRUCTION)
 	local isReferenced = isbitset(flags, IS_REFERENCED)
-	local isPrefab = isbitset =(flags, IS_PREFAB)
+	local isPrefab = isbitset(flags, IS_PREFAB)
 	local idStr = GetIdStringFromNum(networkId)
 	local instance = isPrefab and
                      (isReferenced and arg._r[idStr] or arg._s[idStr])
