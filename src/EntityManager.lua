@@ -1,6 +1,5 @@
 -- EntityManager.lua
 local CollectionService = game:GetService("CollectionService")
-local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
@@ -26,15 +25,6 @@ local SystemsToUnload = {}
 local SystemsRunning = false
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
-
-local function popcnt(n)
-	-- add each two bits, store result in respective field
-	n = n - bit32.band(bit32.rshift(n, 1), 0x55555555)
-	-- add each four bits
-	n = bit32.band(n, 0x33333333) + bit32.band(bit32.rshift(n, 2), 0x33333333)
-	-- add each eight bits, sixteen bits; final value is last eight bits
-	return bit32.rshift(bit32.band(n + bit32.rshift(n, 4), 0x0F0F0F0F) * 0x01010101, 24)
-end
 
 local function setComponentBitForEntity(entity, componentId)
 	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
@@ -429,7 +419,6 @@ end
 -- If no system has a .Step() member, then only the component lifetime loop will be executed
 -- This function blocks execution in the calling thread
 function EntityManager.StartSystems()
-
 	WSAssert(not SystemsRunning, "Systems already started")
 
 	SystemsRunning = true
