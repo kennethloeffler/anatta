@@ -1,30 +1,35 @@
-local RunService = game:GetService("RunService")
+local Constants = require(script.Constants)
 
-local SERVER = RunService:IsServer() and not RunService:IsClient()
+local IS_SERVER = Constants.IS_SERVER
 
-local Server = SERVER and require(script.Server)
-local Client = not SERVER and require(script.Client)
-
-local function Init(EntityManager, entityMap, componentMap)
-	if SERVER then
-		Server.Init(EntityManager, entityMap, componentMap)
-	else
-		Client.Init(EntityManager, entityMap, componentMap)
-	end
-end
+local Server = IS_SERVER and require(script.Server)
+local Shared = require(script.Shared)
+local Client = not IS_SERVER and require(script.Client)
 
 return {
-	Init = Init
+	Init = function(EntityManager, entityMap, componentMap)
+		Shared.Init(EntityManager, entityMap, componentMap)
 
-	Reference = SERVER and Server.Reference
-	Dereference = SERVER and Server.Dereference
-	ReferenceForPlayer = SERVER and Server.ReferenceForPlayer
-	DereferenceForPlayer = SERVER and Server.DereferenceForPlayer
-	Unique = SERVER and Server.Unique
-	UniqueFromPrefab = SERVER and Server.UniqueFromPrefab
-	PlayerSerializable = SERVER and Server.PlayerSerializable
-	PlayerCreatable = SERVER and Server.ServerCreatable
-	
-	Step = SERVER and Server.Step or Client.Step
+		if Server then
+			Server.Init()
+		elseif Client then
+			Client.Init()
+		end
+	end
+
+	SendAddComponent = Client and Client.SendAddComponent
+	SendParameterUpdate = Client and Client.SendParameterUpdate
+
+	Reference = Server and Server.Reference
+	ReferenceGlobal = Server and Server.ReferenceGlobal
+	DereferenceGlobal = Server and Server.DereferenceGlobal
+	ReferenceFor = Server and Server.ReferenceFor
+	DereferenceFor = Server and Server.DereferenceFor
+	Unique = Server and Server.Unique
+	UniqueFromPrefab = Server and Server.UniqueFromPrefab
+	PlayerSerializable = Server and Server.PlayerSerializable
+	PlayerCreatable = Server and Server.PlayerCreatable
+
+	Step = Server and Server.Step or Client.Step
 }
 
