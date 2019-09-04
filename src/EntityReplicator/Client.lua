@@ -10,6 +10,7 @@ local SendBuffer = {}
 
 local Queued = Shared.Queued
 local DeserializeNext = Shared.DeserializeNext
+local SerializeUpdate = Shared.SerializeUpdate
 local GetIdStringFromNum = Shared.GetIdStringFromNum
 
 local RemoteEvent
@@ -55,7 +56,7 @@ function Client.Step()
 		local paramsIndex = 1
 
 		for instance, msgMap in pairs(Queued) do
-			paramsIndex, entitiesIndex = SerializeNext(
+			paramsIndex, entitiesIndex = SerializeUpdate(
 				entities, params,
 				entitiesIndex, paramsIndex,
 				msgMap
