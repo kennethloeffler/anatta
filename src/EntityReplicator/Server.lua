@@ -39,6 +39,7 @@ Server.PlayerSerializable = PlayerSerializable
 Server.PlayerCreatable = PlayerCreatable
 
 local SerializeEntity = Shared.SerializeEntity
+local SerializeUpdate = Shared.SerializeUpdate
 local DeserializeNext = Shared.DeserializeNext
 local setBitAtPos = Shared.setbit
 local getIdStringFromNum = Shared.GetIdStringFromNum
