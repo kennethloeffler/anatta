@@ -1,15 +1,16 @@
 local RunService = game:GetService("RunService")
 
 return {
-	-- flag name to bit position
-	UPDATE = 0xF
+	IS_UPDATE = 0xF
 	PARAMS_UPDATE = 0xE,
 	ADD_COMPONENT = 0xD,
 	KILL_COMPONENT = 0xC,
 	IS_REFERENCED = 0xE,
-	DESTRUCTION = 0xD,
-	PREFAB_REF = 0xC,
+	IS_DESTRUCTION = 0xD,
+	IS_PREFAB = 0xC,
+	IS_UNIQUE = 0xB,
 
-	ALL_CLIENTS = 0xABCDEF
+	ALL_CLIENTS = true
 	IS_SERVER = RunService:IsServer()
 }
+
