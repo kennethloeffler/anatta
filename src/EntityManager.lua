@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
 local ComponentFactory = require(script.Parent.ComponentFactory)
+local EntityReplicator = (not RunService:IsStudio() or RunService:IsRunMode()) and require(script.Parent.EntityReplicator)
 local WSAssert = require(script.Parent.WSAssert)
 
 -- Internal
@@ -25,6 +26,7 @@ local SystemsToUnload = {}
 local SystemsRunning = false
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
+local ReplicatorStep = EntityReplicator and EntityReplicator.Step
 
 local function setComponentBitForEntity(entity, componentId)
 	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
@@ -140,21 +142,19 @@ local function doReorder(componentId, parentEntitiesMap)
 	end
 
 	local componentList = ComponentMap[componentId]
-	local componentOffset = 0
 	local keptComponentOffset = 1
 	local numRemovedComponents = 0
 	local instance
 	local entityStruct
 
-	for _, component in ipairs(componentList) do
+	for componentOffset, component in ipairs(componentList) do
 		instance = component.Instance
 		entityStruct = EntityMap[instance]
-		componentOffset = entityStruct[componentId]
 
 		if not parentEntitiesMap[instance] then
 			if componentOffset ~= keptComponentOffset then
 				-- swap
-				componentList[keptComponentOffset] = componentList[componentOffset]
+				componentList[keptComponentOffset] = component
 				entityStruct[componentId] = keptComponentOffset
 				componentList[componentOffset] = nil
 			end
@@ -237,6 +237,10 @@ local EntityManager = {}
 -- @return The new component object
 
 function EntityManager.AddComponent(instance, componentType, paramMap)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
+	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
+	WSAssert(paramMap and typeof(paramMap) == "table", "bad argument #3: expected table")
+
 	if not EntityMap[instance] then
 		addEntity(instance)
 	end
@@ -254,6 +258,9 @@ end
 -- @param componentType
 -- @return The component object of type componentType associated with instance
 function EntityManager.GetComponent(instance, componentType)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
+	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
+
 	local entityStruct = EntityMap[instance]
 
 	if not entityStruct then
@@ -273,6 +280,8 @@ end
 -- @param componentType
 -- @return The list of component objects
 function EntityManager.GetAllComponentsOfType(componentType)
+	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
+
 	return ComponentMap[GetComponentIdFromType(componentType)]
 end
 
@@ -296,12 +305,14 @@ end
 
 function EntityManager.FilteredEntityAdded(system, func)
 	WSAssert(system.EntityFilter, "expected table .EntityFilter")
+	WSAssert(typeof(func) == "function", "bad argument #2: expected function")
 
 	FilteredEntityAddedFuncs[FilterIdsBySystem[system]] = func
 end
 
 function EntityManager.FilteredEntityRemoved(system, func)
 	WSAssert(system.EntityFilter, "expected table .EntityFilter")
+	WSAssert(typeof(func) == "function", "bad argument #2: expected function")
 
 	FilteredEntityRemovedFuncs[FilterIdsBySystem[system]] = func
 end
@@ -312,6 +323,9 @@ end
 -- @param instance
 -- @param componentType
 function EntityManager.KillComponent(instance, componentType)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
+	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
+
 	local entityStruct = EntityMap[instance]
 
 	if not entityStruct then
@@ -331,6 +345,9 @@ end
 -- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
 function EntityManager.KillEntity(instance, supressInstanceDestruction)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
+	WSAssert(supressInstanceDestruction and typeof(supressInstanceDestruction) == "boolean", "bad argument #2: expected boolean")
+
 	local entityStruct = EntityMap[instance]
 
 	if not entityStruct then
@@ -354,13 +371,13 @@ end
 
 -- @param module
 -- @param pluginWrapper
-function EntityManager.LoadSystem(module, pluginWrapper)
+function EntityManager.LoadSystem(module, _pluginWrapper)
 	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1: expected ModuleScript")
 
 	if system.OnLoaded then
 		WSAssert(typeof(system.OnLoaded) == "function", "expected function %s.OnLoaded", module.Name)
 
-		system.OnLoaded(pluginWrapper)
+		system.OnLoaded(_pluginWrapper)
 	end
 
 	if system.Heartbeat then
@@ -421,6 +438,10 @@ end
 function EntityManager.StartSystems()
 	WSAssert(not SystemsRunning, "Systems already started")
 
+	if EntityReplicator then
+		EntityReplicator.Init(EntityManager, EntityMap, ComponentMap)
+	end
+
 	SystemsRunning = true
 
 	local hasHeartbeat = #HeartbeatSystems > 0 and true or nil
@@ -439,6 +460,10 @@ function EntityManager.StartSystems()
 		for _, systemStep in ipairs(HeartbeatSystems) do
 		   	stepComponentLifetime()
 			systemStep(lastFrameTime)
+		end
+
+		if ReplicatorStep then
+			ReplicatorStep(lastFrameTime)
 		end
 
 		lastFrameTime = RunService.Heartbeat:Wait()
