@@ -44,7 +44,7 @@ function Client.SendAddComponent(component)
 end
 
 function Client.SendParameterUpdate(component, paramName)
-	QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramsName))
+	QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
 end
 
 function Client.Step()
