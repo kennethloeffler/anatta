@@ -40,13 +40,29 @@ local function deserializeUnique(rootInstance, entities, ...)
 	rootInstance.Parent = Workspace
 end
 
+---Sends a message to the server requesting to add the component defined by component
+-- component must be a component struct (i.e. the return value of EntityManager.GetComponent, etc.)
+-- @param component
+
 function Client.SendAddComponent(component)
+	WSAssert(typeof(component) == "table" and component._componentId, "bad argument #1 (expected component struct)")
+
 	QueueUpdate(instance, ADD_COMPONENT, component._componentId)
 end
 
+---Sends a message to the server requesting to set the parameter matching paramName to this client's current value
+-- component must be a component struct (i.e. the return value of EntityManager.GetComponent, etc.)
+-- @param component
+-- @param paramName
+
 function Client.SendParameterUpdate(component, paramName)
+	WSAssert(typeof(component) == "table" and component._componentId, "bad argument #1 (expected component struct)")
+	WSAssert(typeof(paramName) == "string", "bad argument #2 (expected string)")
+
 	QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
 end
+
+---Steps the client's replicator
 
 function Client.Step()
 	if next(Queued) then
@@ -76,6 +92,8 @@ function Client.Step()
 		end
 	end
 end
+
+---Gets and initializes this client's remote objects
 
 function Client.Init()
 	RemoteEvent = Players.LocalPlayer.PlayerGui:WaitForChild("RemoteEvent")

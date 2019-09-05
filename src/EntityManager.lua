@@ -230,16 +230,15 @@ local EntityManager = {}
 -- If instance already has componentType, the instance's componentType will be overwritten
 -- This operation is cached - creation occurs on the RunService's heartbeat or between system steps
 -- See ~/src/ComponentFactory for performance notes
-
 -- @param instance
 -- @param componentType
 -- @param paramMap Table containing values of parameters that will be set for this component, indexed by parameter name
 -- @return The new component object
 
 function EntityManager.AddComponent(instance, componentType, paramMap)
-	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
-	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
-	WSAssert(paramMap and typeof(paramMap) == "table", "bad argument #3: expected table")
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
+	WSAssert(paramMap and typeof(paramMap) == "table", "bad argument #3 (expected table)")
 
 	if not EntityMap[instance] then
 		addEntity(instance)
@@ -253,13 +252,14 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 end
 
 ---Gets the component of type componentType associated with instance
--- If instance is not associated with an entity or does not have componentTpye, this function returns nil
+-- If instance is not associated with an entity or does not have componentType, this function returns nil
 -- @param instance
 -- @param componentType
 -- @return The component object of type componentType associated with instance
+
 function EntityManager.GetComponent(instance, componentType)
-	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
-	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
 
 	local entityStruct = EntityMap[instance]
 
@@ -276,43 +276,66 @@ function EntityManager.GetComponent(instance, componentType)
 end
 
 ---Gets the list of components of type componentType
--- If there exists no components of type componentType, this function returns an empty table
+-- If there exist no components of type componentType, this function returns an empty table
 -- @param componentType
 -- @return The list of component objects
+
 function EntityManager.GetAllComponentsOfType(componentType)
-	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
+	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
 
 	return ComponentMap[GetComponentIdFromType(componentType)]
 end
 
+---Hooks a function func to be called whenever just before of type componentType are added to an entity
+-- The component object is passed as a parameter to func
+-- @param componentType
+-- @param func
+
 function EntityManager.ComponentAdded(componentType, func)
-	WSAssert(typeof(componentType) == "string", "bad argument #1: expected string")
-	WSAssert(typeof(func) == "function", "bad argument #2: expected function")
+	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
+	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
 
 	local componentId = GetComponentIdFromType(componentType)
 
 	ComponentAddedFuncs[componentId] = func
 end
 
+---Hooks a function func to be called just before components of type componentType are removed from an entity
+-- The component object is passed as a parameter to func
+-- @param componentType
+-- @param func
+
 function EntityManager.ComponentKilled(componentType, func)
-	WSAssert(typeof(componentType) == "string", "bad argument #1: expected string")
-	WSAssert(typeof(func) == "function", "bad argument #2: expected function")
+	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
+	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
 
 	local componentId = GetComponentIdFromType(componentType)
 
 	ComponentRemovedFuncs[componentId] = func
 end
 
+---Hooks a function func to be called just after an entity matches the .EntityFilter table in system
+-- system must have a .EntityFilter field
+-- The instance associated with the filtered entity is passed as a parameter to func
+-- @param system
+-- @param func
+
 function EntityManager.FilteredEntityAdded(system, func)
 	WSAssert(system.EntityFilter, "expected table .EntityFilter")
-	WSAssert(typeof(func) == "function", "bad argument #2: expected function")
+	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
 
 	FilteredEntityAddedFuncs[FilterIdsBySystem[system]] = func
 end
 
+---Hooks a function func to be called just after a filtered entity fails to match the .EntityFilter table in system
+-- system must have a .EntityFilter field
+-- The instance associated with the filtered entity is passed as a parameter to func
+-- @param system
+-- @param func
+
 function EntityManager.FilteredEntityRemoved(system, func)
 	WSAssert(system.EntityFilter, "expected table .EntityFilter")
-	WSAssert(typeof(func) == "function", "bad argument #2: expected function")
+	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
 
 	FilteredEntityRemovedFuncs[FilterIdsBySystem[system]] = func
 end
@@ -322,6 +345,7 @@ end
 -- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
 -- @param componentType
+
 function EntityManager.KillComponent(instance, componentType)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
 	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
@@ -342,8 +366,11 @@ end
 
 ---Removes the entity (and by extension, all components) associated with instance
 -- If instance is not associated with an entity, this function returns without doing anything
+-- supressInstanceDestruction is a boolean which determines whether to destroy the instance, along with its associated entity
 -- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
+-- @param supressInstanceDestruction
+
 function EntityManager.KillEntity(instance, supressInstanceDestruction)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
 	WSAssert(supressInstanceDestruction and typeof(supressInstanceDestruction) == "boolean", "bad argument #2: expected boolean")
@@ -368,9 +395,9 @@ end
 ---Loads the system defined by module
 -- If the system has a .OnLoaded() member, then it is called by this function
 -- If the system has a .Heartbeat() member, then it is loaded to be ran when EntityManager.StartSystems() is called
-
 -- @param module
--- @param pluginWrapper
+-- @param _pluginWrapper
+
 function EntityManager.LoadSystem(module, _pluginWrapper)
 	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1: expected ModuleScript")
 
@@ -418,6 +445,8 @@ end
 ---Unloads the system defined by module
 -- If the system has a .OnUnloaded member, then it is called by this function
 -- System is unloaded by EntityManager.StartSystem()'s loop on the next RunServive.Heartbeat step
+-- @param module
+
 function EntityManager.UnloadSystem(module)
 	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1: expected ModuleScript")
 
@@ -435,6 +464,7 @@ end
 ---Starts execution of continuously run systems and the component lifetime loop
 -- If no system has a .Step() member, then only the component lifetime loop will be executed
 -- This function blocks execution in the calling thread
+
 function EntityManager.StartSystems()
 	WSAssert(not SystemsRunning, "Systems already started")
 

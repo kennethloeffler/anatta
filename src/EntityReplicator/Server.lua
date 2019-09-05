@@ -21,6 +21,9 @@ local CAN_RECEIVE_UPDATES = 3
 -- network step rate
 local TICK_RATE = 1/30
 
+-- whether ReplicatedStorage and Workspace are automatically converted to prefabs
+local AUTO_SERIALIZE_GLOBAL_ENV = false
+
 local Server = {}
 
 local NumNetworkIds = 0
@@ -38,6 +41,7 @@ local StaticPrefabEntities = {}
 Server.PlayerSerializable = PlayerSerializable
 Server.PlayerCreatable = PlayerCreatable
 
+local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
 local SerializeEntity = Shared.SerializeEntity
 local SerializeUpdate = Shared.SerializeUpdate
 local DeserializeNext = Shared.DeserializeNext
@@ -52,6 +56,7 @@ local InstancesByNetworkId = Shared.InstancesByNetworkId
 
 ---Gets an available networkId
 -- @param instance Instance
+
 local function getNetworkId(instance)
 	local networkId
 	local numFreedNetworkIds = #FreedNetworkIds
@@ -89,6 +94,7 @@ end
 -- @param player Player
 -- @param instance Instance
 -- @param networkId number
+
 local function queueConstruction(player, instance, networkId)
 	local buffer = PlayerBuffers[player]
 
@@ -103,6 +109,7 @@ end
 -- @param player Player
 -- @param instance Instance
 -- @param networkId number
+
 local function queueDestruction(player, instance, networkId)
 	local buffer = PlayerBuffers[player]
 
@@ -118,6 +125,7 @@ end
 -- @param player Player
 -- @param rootInstance Instance
 -- @param inUnique boolean
+
 local function serializePrefabFor(player, rootInstance, isUnique)
 	local static = StaticPrefabEntities[rootInstance]
 	local prefabRefsIndex = 1
@@ -155,6 +163,7 @@ end
 -- @param instance Instance
 -- @param entities table
 -- @param params table
+
 local function doSendUnique(player, instance, entities, params)
 	instance = instance:Clone()
 	Remotes[player][REMOTE_FUNCTION]:InvokeClient(player, instance, entities, table.unpack(params))
@@ -198,11 +207,27 @@ end
 
 -- Public API
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+---References the entity associated with instance in the system with no side effects
+-- @param instance
+-- @return networkId
+
 function Server.Reference(instance)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+
 	return NetworkIdsByInstance[instance] or getNetworkId(instance)
 end
 
+---References the entity associated with instance for all connected systems
+-- If entity is not referenced, this function references it
+-- suppressConstructionMessage is a boolean which determines if a construction message is sent
+-- @param instance
+-- @param supressConstructionMessage
+
 function Server.ReferenceGlobal(instance, supressConstructionMessage)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(supressConstructionMessage and typeof(supressConstructionMessage) == "boolean" or true, "bad argument #2 (expected boolean)")
+
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
 
 	CollectionService:AddTag(instance, GetIdStringFromNum(networkId))
@@ -216,7 +241,16 @@ function Server.ReferenceGlobal(instance, supressConstructionMessage)
 	GlobalRefs[instance] = true
 end
 
+---Dereferences the entity associated with instance for all connected systems
+-- If entity is not referenced, this function returns without doing anything
+-- supressDestructionMessage is a boolean which determines if a destruction message is sent
+-- @param instance
+-- @param supressDestructionMessage
+
 function Server.DereferenceGlobal(instance, supressDestructionMessage)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(supressDestructionMessage and typeof(supressDestructionMessage) == "boolean" or true, "bad argument #2 (expected boolean)")
+
 	local networkId = NetworkIdsByInstance[instance]
 
 	if not networkId or not GlobalRefs[instance] then
@@ -233,7 +267,17 @@ function Server.DereferenceGlobal(instance, supressDestructionMessage)
 	onDereference(instance, networkId)
 end
 
+---References the entity associated with instance for player
+-- If entity is not referenced, this function references it
+-- suppressConstructionMessage is a boolean which determines if a construction message is sent
+-- @param player
+-- @param instance
+-- @param supressConstructionMessage
 function Server.ReferenceFor(player, instance, supressConstructionMessage)
+	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
+	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
+	WSAssert(supressConstructionMessage and typeof(supressConstructionMessage) == "boolean" or true, "bad argument #3 (expected boolean)")
+
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
 
 	if not PlayerReferences[instance] then
@@ -253,7 +297,18 @@ function Server.ReferenceFor(player, instance, supressConstructionMessage)
 	players[player] = true
 end
 
+---Dereferences the entity associated with instance for player
+-- If entity is not referenced, this function returns without doing anything
+-- supressConstructionMessage is a boolean which determines if a destruction message is sent
+-- @param player
+-- @param isntance
+-- @param supressDestructionMessage
+
 function Server.DereferenceFor(player, instance, supressDestructionMessage)
+	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
+	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
+	WSAssert(supressDestructionMessage and typeof(supressDestructionMessage) == "boolean" or true, "bad argument #3 (expected boolean)")
+
 	local networkId = NetworkIdsByInstance[instance]
 
 	if not networkId then
@@ -262,23 +317,24 @@ function Server.DereferenceFor(player, instance, supressDestructionMessage)
 
 	local players = PlayerReferences[instance]
 
-	if players and players[player] then
-		if not supressDestructionMessage then
-			queueDestruction(player, instance, networkId)
-		end
+	players[player] = nil
 
-		players[player] = nil
+	if not supressDestructionMessage then
+		queueDestruction(player, instance, networkId)
+	end
 
-		if not next(players) then
-			PlayerReferences[instance] = nil
-		end
+	if not next(players) then
+		PlayerReferences[instance] = nil
 	end
 end
+
+---Sends instance and the entity associated with instance uniquely to player via PlayerGui
+-- @param player
+-- @param instance
 
 function Server.Unique(player, instance)
 	WSAssert(player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #2 (expected Instance)")
-	WSAssert(CollectionService:HasTag(instance, "__WSEntity"), "%s is not a prefab", instance.Name)
 
 	local entities = {}
 	local params = {}
@@ -297,13 +353,22 @@ function Server.Unique(player, instance)
 	coroutine.resume(coroutine.create(pcall, doSendUnique, player, instance, entities, params))
 end
 
+---Sends all the entities associated with a globally accessible rootInstance to player
+-- @param player
+-- @param rootInstance
+
 function Server.FromPrefab(player, rootInstance)
 	WSAssert(player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #2 (expected Instance)")
+	WSAssert(rootInstance:IsDescendantOf(Workspace) or rootInstance:IsDescendantOf(ReplicatedStorage), "Root instance must be a descendant of Workspace or ReplicatedStorage")
 	WSAssert(CollectionService:HasTag(rootInstance, "__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
 
 	coroutine.resume(coroutine.create(pcall, serializePrefabFor, player, rootInstance, false))
 end
+
+---Sends rootInstance and all its associated entities uniquely to player
+-- @param player
+-- @param rootInstance
 
 function Server.UniqueFromPrefab(player, rootInstance)
 	WSAssert(player:IsA("Player"), "bad argument #1 (expected Player)")
@@ -313,19 +378,36 @@ function Server.UniqueFromPrefab(player, rootInstance)
 	coroutine.resume(coroutine.create(pcall, serializePrefabFor, player, rootInstance, true))
 end
 
+---Removes player from the player list associated with rootInstance
+-- @param player
+-- @param rootInstance
+
 function Server.RemovePlayerFromPrefab(player, rootInstance)
 	WSAssert(player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #2 (expected Instance)")
-	WSAssert(CollectionService:HasTag(rootInstance, "__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
+	WSAssert(PlayersInPrefab[rootInstance], "%s is not a prefab", rootInstance.Name)
 
 	PlayersInPrefab[rootInstance][player] = nil
 end
 
+---Returns the player list associated with rootInstance
+-- @param rootInstance
+
 function Server.GetPlayersInPrefab(rootInstance)
+	WSAssert(PlayersInPrefab[rootInstance], "%s is not a prefab", rootInstance.Name)
+
 	return PlayersInPrefab[rootInstance]
 end
 
+---Associates a new prefab with rootInstance
+-- entitiesFolder is a folder which should contain all the instances in the prefab that are associated with entities
+-- @param rootInstance
+-- @param entitiesFolder
+
 function Server.NewPrefab(rootInstance, entitiesFolder)
+	WSAssert(typeof(rootInstance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(typeof(entitiesFolder) == "Instance" and entitiesFolder:IsA("Folder"), "bad argument #2 (expected Folder)")
+
 	local refFolder = Instance.new("Folder")
 	local static
 
@@ -354,10 +436,27 @@ function Server.NewPrefab(rootInstance, entitiesFolder)
 	return rootInstance
 end
 
-function Server.PlayerSerializable(players, instance, componentType, paramName)
-	local networkId = NetworkIdsByInstance[networkId]
+---Allows players to serialize to the parameter matching paramName of the componentType on instance
+-- players may be a single Player instance, a table with keys that are Player instances, or a boolean.
+-- If players is a Player instance, only that player may serialize to the parameter. If players is a table,
+-- each player in the table may serialize to the table. If players is a boolean or nil, then all players
+-- in the game may serialize to the parameter.
 
-	WSAssert(networkId, "Entity is not referenced")
+-- instance must have a referenced entity associated with it
+-- @param players
+-- @param instance
+-- @param componentType
+-- @param paramName
+
+function Server.PlayerSerializable(players, instance, componentType, paramName)
+	WSAssert((typeof(players) == "Instance" and players:IsA("Player")) or typeof(players) == "table" or typeof(players) == "boolean", "bad argument #1 (expected Player, table, boolean, or nil)")
+	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
+	WSAssert(typeof(componentType) == "string", "bad argument #3 (expected string)")
+	WSAssert(typeof(paramName) == "string", "bad argument #4 (expected string)")
+
+	local networkId = NetworkIdsByInstance[instance]
+
+	WSAssert(networkId, "entity is not referenced")
 
 	if not players then
 		PlayerSerializable[networkId] = nil
@@ -366,9 +465,9 @@ function Server.PlayerSerializable(players, instance, componentType, paramName)
 	end
 
 	local struct = PlayerSerializable[networkId]
-	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+	local componentId = GetComponentIdFromType(componentType)
 	local componentOffset = math.floor(componentId * 0.03125) -- componentId / 32
-	local paramId = paramName and ComponentDesc.GetParamIdFromName(componentId, paramName)
+	local paramId = paramName and GetParamIdFromName(componentId, paramName)
 	local paramsField
 	local buffer
 
@@ -386,10 +485,26 @@ function Server.PlayerSerializable(players, instance, componentType, paramName)
 	end
 end
 
-function Server.PlayerCreatable(players, instance, componentType)
-	local networkId = NetworkIdsByInstance[networkId]
+---Allows players to create componentType on instance
+-- players may be a single Player instance, a table with keys that are Player instances, or a boolean.
+-- If players is a Player instance, only that player may create the component. If players is a table,
+-- each player in the table may create the component. If players is a boolean or nil, then all players
+-- in the game may create the component.
 
-	WSAssert(networkId, "Entity is not referenced")
+-- instance must have a referenced entity associated with it
+-- @param players
+-- @param instance
+-- @param componentType
+-- @param paramName
+
+function Server.PlayerCreatable(players, instance, componentType)
+	WSAssert((typeof(players) == "Instance" and players:IsA("Player")) or typeof(players) == "table" or typeof(players) == "boolean", "bad argument #1 (expected Player, table, boolean, or nil)")
+	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
+	WSAssert(typeof(componentType) == "string", "bad argument #3 (expected string)")
+
+	local networkId = NetworkIdsByInstance[instance]
+
+	WSAssert(networkId, "entity is not referenced")
 
 	if not players then
 		PlayerCreatable[networkId] = nil
@@ -398,7 +513,7 @@ function Server.PlayerCreatable(players, instance, componentType)
 	end
 
 	local struct = PlayerCreatable[networkId]
-	local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+	local componentId = GetComponentIdFromType(componentType)
 
 	if not struct then
 		local firstWord = componentOffset == 0 and setBitAtPos(0, componentId - 1) or 0
@@ -411,6 +526,10 @@ function Server.PlayerCreatable(players, instance, componentType)
 		struct[3] = componentOffset == 1 and setBitAtPos(struct[3], componentId - 33) or struct[3]
 	end
 end
+
+---Steps the server's replicator
+-- default rate 30hz
+-- @param dt
 
 function Server.Step(dt)
 	local playerBuffer
@@ -479,11 +598,15 @@ function Server.Step(dt)
 	end
 end
 
+---Serializes extant prefabs and starts listening to PlayerAdded and PlayerRemoved to create buffers for clients
+
 function Server.Init()
 	local PrefabEntities = {}
 
-	CollectionService:AddTag(Workspace, "__WSReplicatorRootInstance")
-	CollectionService:AddTag(ReplicatedStorage, "__WSReplicatorRootInstance")
+	if AUTO_SERIALIZE_GLOBAL_ENV then
+		CollectionService:AddTag(Workspace, "__WSReplicatorRootInstance")
+		CollectionService:AddTag(ReplicatedStorage, "__WSReplicatorRootInstance")
+	end
 
 	local RootInstances = CollectionService:GetTagged("__WSReplicatorRootInstance")
 	local Entities = CollectionService:GetTagged("__WSEntity")
@@ -534,6 +657,7 @@ function Server.Init()
 	Players.PlayerAdded:Connect(newPlayerReplicator)
 	Players.PlayerRemoving:Connect(destroyPlayerReplicator)
 
+	-- if we took too long, create buffers for extant players
 	for _, player in ipairs(Players:GetPlayers()) do
 		newReplicatorFor(player)
 	end

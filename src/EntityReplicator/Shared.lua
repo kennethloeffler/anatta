@@ -31,7 +31,6 @@ local IS_REFERENCED = Constants.IS_REFERENCED
 local DESTRUCTION = Constants.DESTRUCTION
 local PREFAB_ENTITY = Constants.PREFAB_ENTITY
 local IS_SERVER = Constants.IS_SERVER
-local Server
 
 local Shared = {}
 
@@ -40,6 +39,7 @@ local InstancesByNetworkId = {}
 local NetworkIdsByInstance = {}
 local BlackListedComponents = {}
 local NumParams = ComponentDesc.NumParamsByComponentId
+local Server
 local ClientSerializable
 local ClientCreatable
 
@@ -154,7 +154,7 @@ local function hasPermission(player, networkId, componentId, paramId)
 	end
 end
 
-Shared.setbit = sitbit
+Shared.setbit = setbit
 
 ---Gets the id string corresponding to a positive integer num
 -- @param num number
@@ -262,6 +262,7 @@ end
 -- @return paramsIndex
 -- @return flags
 -- @return numDataStructs
+
 local function serializeAddComponent(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
 	local entityStruct = EntityMap[instance]
 	local struct = { 0, 0 }
@@ -331,6 +332,7 @@ end
 -- @return paramsIndex
 -- @return flags
 -- @return numDataStructs
+
 local function serializeParameterUpdate(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
 	local struct = { 0, 0 }
 	local offset = 0
@@ -593,6 +595,7 @@ end
 -- @return number entitiesIndex
 -- @return number paramsIndex
 -- @return table componentIdsToParams
+
 local function deserializeUpdate(networkId, flags, entities, params, entitiesIndex, paramsIndex, instance, player)
 	if isbitset(flags, PARAMS_UPDATE) then
 		entitiesIndex, paramsIndex = deserializeParamsUpdate(
@@ -630,6 +633,7 @@ end
 -- @param componentsMap table mapping componentIds to either messageTypes or paramId fields
 -- @return number entitiesIndex
 -- @return number paramsIndex
+
 function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesIndex, paramsIndex, msgMap)
 	local flags = 0
 	local numDataStructs = 0
@@ -707,6 +711,7 @@ end
 -- @param isReferenced boolean indicating whether this entity is referenced
 -- @return number entitiesIndex
 -- @return number paramsIndex
+
 function Shared.SerializeEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isDestruction, isReferenced, isPrefab)
 	local entityStruct = EntityMap[instance]
 	local flags = 0
@@ -764,6 +769,7 @@ end
 -- @return number networkId
 -- @return table componentIdsToParams
 -- @return number entitiesIndex
+
 function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, arg)
 	local header = entities[entitiesIndex]
 
@@ -817,6 +823,8 @@ end
 function Shared.OnDereference(instance, networkId)
 	InstancesByNetworkId[networkId] = instance
 	NetworkIdsByInstance[instance] = networkId
+	PlayerSerializable[networkId] = nil
+	PlayerCreatable[networkId] = nil
 end
 
 function Shared.GetBlackListedComponents()
