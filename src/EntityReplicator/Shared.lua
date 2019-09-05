@@ -37,9 +37,9 @@ local Shared = {}
 local Queued = {}
 local InstancesByNetworkId = {}
 local NetworkIdsByInstance = {}
-local BlackListedComponents = {}
 local NumParams = ComponentDesc.NumParamsByComponentId
 local Server
+local BlacklistedComponent
 local ClientSerializable
 local ClientCreatable
 
@@ -796,6 +796,10 @@ function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, ar
 end
 
 function Shared.QueueUpdate(instance, msgType, componentId, paramId)
+	if BlacklistedComponents[componentId] then
+		return
+	end
+
 	local messages = Queued[instance]
 
 	if not messages then
@@ -827,18 +831,18 @@ function Shared.OnDereference(instance, networkId)
 	PlayerCreatable[networkId] = nil
 end
 
-function Shared.GetBlackListedComponents()
-	return BlackListedComponents
-end
-
 function Shared.Init(entityManager, entityMap, componentMap)
 	EntityMap = entityMap
 	ComponentMap = componentMap
 	AddComponent = entityManager.AddComponent
 	KillComponent = entityManager.KillComponent
-	Server = IS_SERVER and require(script.Parent.Server)
-	PlayerSerializable = Server and Server.PlayerSerializable
-	PlayerCreatable = Server and Server.PlayerCreatable
+
+	if IS_SERVER then
+		Server = require(script.Parent.Server)
+		BlacklistedComponents = Server.BlacklistedComponents
+		PlayerSerializable = Server.PlayerSerializable
+		PlayerCreatable = Server.PlayerCreatable
+	end
 end
 
 return Shared

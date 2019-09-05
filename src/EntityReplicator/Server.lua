@@ -37,6 +37,7 @@ local PlayerReferences = {}
 local PlayerSerializable = {}
 local PlayerCreatable = {}
 local StaticPrefabEntities = {}
+local BlacklistedComponent = {}
 
 Server.PlayerSerializable = PlayerSerializable
 Server.PlayerCreatable = PlayerCreatable
@@ -525,6 +526,15 @@ function Server.PlayerCreatable(players, instance, componentType)
 		struct[2] = componentOffset == 0 and setBitAtPos(struct[2], componentId - 1) or struct[2]
 		struct[3] = componentOffset == 1 and setBitAtPos(struct[3], componentId - 33) or struct[3]
 	end
+end
+
+---Blacklists componentType, preventing it from ever being serialized and sent to clients
+-- @param componentType
+
+function Server.Blacklist(componentType)
+	WSAssert(typeof(componentType) == "string", "expected string")
+
+	BlacklistedComponents[GetComponentIdFromType(componentType)] = true
 end
 
 ---Steps the server's replicator
