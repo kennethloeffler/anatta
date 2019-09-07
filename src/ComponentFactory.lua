@@ -63,11 +63,11 @@ function Component(instance, componentType, paramMap)
 		for paramName, default in pairs(GetDefaults(componentId)) do
 			local paramId = GetParamIdFromName(componentId, paramName)
 
-			if newComponent[paramName] ~= nil then
+			if newComponent and newComponent[paramName] then
 				newComponent[paramId] = newComponent[paramName]
 				newComponent[paramName] = nil
 			else
-				paramMap[paramId] = default
+				newComponent[paramId] = default
 			end
 		end
 	end
