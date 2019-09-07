@@ -37,7 +37,8 @@ local PlayerReferences = {}
 local PlayerSerializable = {}
 local PlayerCreatable = {}
 local StaticPrefabEntities = {}
-local BlacklistedComponent = {}
+local PrefabsByPlayer
+local BlacklistedComponents = {}
 
 Server.PlayerSerializable = PlayerSerializable
 Server.PlayerCreatable = PlayerCreatable
@@ -129,6 +130,7 @@ end
 
 local function serializePrefabFor(player, rootInstance, isUnique)
 	local static = StaticPrefabEntities[rootInstance]
+	local remoteEvent = Remotes[player]
 	local prefabRefsIndex = 1
 	local prefabRefsParamIndex = 1
 	local prefabRefs = {}
@@ -143,16 +145,18 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 		)
 	end
 
-	Remotes[player][CAN_RECEIVE_UPDATES] = false
+	remoteEvent[CAN_RECEIVE_UPDATES] = false
 
 	rootInstance = isUnique and rootInstance:Clone() or rootInstance
 	rootInstance.Parent = isUnique and player.PlayerGui or rootInstance.Parent
 
-	Remotes[player][REMOTE_FUNCTION]:InvokeClient(player, rootInstance, static[ENTITIES], table.unpack(static[PARAMS]))
-	Remotes[player][REMOTE_EVENT]:FireClient(player, rootInstance, prefabRefs, table.unpack(prefabRefsParams))
+	remoteEvent[REMOTE_FUNCTION]:InvokeClient(player, rootInstance, static[ENTITIES], table.unpack(static[PARAMS]))
+	remoteEvent[REMOTE_EVENT]:FireClient(player, rootInstance, prefabRefs, table.unpack(prefabRefsParams))
+
+	PrefabsByPlayer[player] = rootInstance
 	PlayersInPrefab[rootInstance][player] = true
 
-	Remotes[player][CAN_RECEIVE_UPDATES] = true
+	remoteEvent[CAN_RECEIVE_UPDATES] = true
 
 	if isUnique then
 		rootInstance:Destroy()
@@ -388,6 +392,7 @@ function Server.RemovePlayerFromPrefab(player, rootInstance)
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #2 (expected Instance)")
 	WSAssert(PlayersInPrefab[rootInstance], "%s is not a prefab", rootInstance.Name)
 
+	PlayersByPrefab[player] = nil
 	PlayersInPrefab[rootInstance][player] = nil
 end
 
@@ -553,14 +558,22 @@ function Server.Step(dt)
 
 		for instance, msgMap in pairs(QueuedUpdates) do
 			prefab = PrefabRefs[instance]
+			global = GlobalRefs[instance]
 			playerReferences = PlayerReferences[instance]
-			buffer = prefab and PrefabBuffers[prefab] or GlobalBuffer
 
-			buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX] = SerializeUpdate(
-				buffer[ENTITIES], buffer[PARAMS],
-				buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX],
-				msgMap
-			)
+			if prefab and next(PlayersInPrefab[prefab] then
+				buffer = PrefabBuffers[prefab]
+			elseif global then
+				buffer = GlobalBuffer
+			end
+
+			if buffer then
+				buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX] = SerializeUpdate(
+					buffer[ENTITIES], buffer[PARAMS],
+					buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX],
+					msgMap
+				)
+			end
 
 			if playerReferences then
 				for player in pairs(playerReferences) do
@@ -579,32 +592,29 @@ function Server.Step(dt)
 		for _, player in ipairs(Players:GetPlayers()) do
 			playerBuffer = PlayerBuffers[player]
 			playerRefs = PlayerRefs[player]
+			playerPrefab = PrefabsByPlayer[player]
+			remoteEvent = Remotes[player][REMOTE_EVENT]
 
 			if next(PlayerBuffers[ENTITIES]) then
-				Remotes[player][REMOTE_EVENT]:FireClient(player, nil, playerBuffer[ENTITIES], table.unpack(playerBuffer[PARAMS]))
-				clearBuffer[playerBuffer]
+				remoteEvent:FireClient(player, nil, playerBuffer[ENTITIES], table.unpack(playerBuffer[PARAMS]))
+				clearBuffer(playerBuffer)
 			end
 
 			if next(GlobalBuffer[ENTIITES]) then
-				Remotes[player][REMOTE_EVENT]:FireClient(player, nil, GlobalBuffer[ENTIITES], table.unpack(GlobalBuffer[PARAMS]))
+				remoteEvent:FireClient(player, nil, GlobalBuffer[ENTIITES], table.unpack(GlobalBuffer[PARAMS]))
 			end
-		end
 
-		if next(GlobalBuffer[ENTITIES]) then
-			clearBuffer(GlobalBuffer)
+			if playerPrefab then
+				prefabBuffer = PrefabBuffers[playerPrefab]
+				remoteEvent:FireClient(player, nil, prefabBuffer[ENTITIES], table.unpack(prefabBuffer[PARAMS]))
+			end
 		end
 
 		for rootInstance, prefabBuffer in pairs(PrefabBuffers) do
-			if next(prefabBuffer[ENTITIES]) and next(PlayersInPrefab[rootInstance]) then
-				for player in pairs(PlayersInPrefab[rootInstance]) do
-					if Remotes[player][CAN_RECEIVE_UPDATES] then
-						Remotes[player][REMOTE_EVENT]:FireClient(player, nil, prefabBuffer[ENTITIES], table.unpack(prefabBuffer[PARAMS]))
-					end
-				end
-
-				clearBuffer(prefabBuffer)
-			end
+			clearBuffer(prefabBuffer)
 		end
+
+		clearBuffer(GlobalBuffer)
 	end
 end
 
