@@ -550,6 +550,7 @@ function Server.Step(dt)
 	local playerBuffer
 	local buffer
 	local prefab
+	local global
 
 	AccumulatedTime = AccumulatedTime + dt
 
@@ -561,7 +562,7 @@ function Server.Step(dt)
 			global = GlobalRefs[instance]
 			playerReferences = PlayerReferences[instance]
 
-			if prefab and next(PlayersInPrefab[prefab] then
+			if prefab and next(PlayersInPrefab[prefab]) then
 				buffer = PrefabBuffers[prefab]
 			elseif global then
 				buffer = GlobalBuffer
