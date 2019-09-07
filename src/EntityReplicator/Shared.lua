@@ -529,8 +529,12 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 
 	if isDestruction then
 		entitiesIndex = entitiesIndex + 1
+		InstancesByNetworkId[networkId] = nil
+		NetworkIdsByInstance[instance] = nil
+
 		CollectionService:RemoveTag(instance, idStr)
 		KillEntity(instance)
+
 		return entitiesIndex, paramsIndex
 	end
 
@@ -561,6 +565,9 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 			AddComponent(instance, componentId, componentStruct)
 		end
 	end
+
+	NetworkIdsByInstance[instance] = networkId
+	InstancesByNetworkId[networkId] = instance
 
 	return entitiesIndex, paramsIndex
 end
