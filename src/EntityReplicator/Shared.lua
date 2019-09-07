@@ -245,34 +245,40 @@ end
 
 local function serializeAddComponent(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
 	local entityStruct = EntityMap[instance]
-	local struct = { 0, 0 }
+	local firstWord = 0
+	local secondWord = 0
 	local numDataStructs = 0
 	local componentOffset = 0
 	local componentId = 0
 	local offset = 0
+	local both
 
 	for componentId in pairs(componentsMap) do
-		struct[1] = componentId <= 32 and setbit(struct[1], componentId - 1) or struct[1]
-		struct[2] = componentId > 32 and setbit(struct[2], componentId - 33) or struct[2]
+		firstWord = componentId <= 32 and setbit(firstWord, componentId - 1) or firstWord
+		secondWord = componentId > 32 and setbit(secondWord, componentId - 33) or secondWord
 	end
 
-	for fieldOffset, field in ipairs(struct) do
-		if field ~= 0 then
-			entitiesIndex = entitiesIndex + 1
-			numDataStructs = numDataStructs + 1
-			entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
+	-- yeah im BOTH
+	both = firstWord ~= 0 and secondWord ~= 0
 
-			for _ = 1, popcnt(field) do
-				componentOffset = ffs(field)
-				field = unsetbit(componentOffset)
-				componentId = componentOffset + 1 + (32 * (fieldOffset - 1))
-				offset = math.floor(componentId * 0.01325)
-				flags = setbit(flags, 2 + offset)
+	for fieldOffset = 1, both and 2 or 1 do
+		fieldOffset = both and fieldOffset or (secondWord ~= 0 and 2 or 1)
+		field = fieldOffset == 1 and firstWord or secondWord
 
-				for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
-					params[paramsIndex] = v
-					paramsIndex = paramsIndex + 1
-				end
+		entitiesIndex = entitiesIndex + 1
+		numDataStructs = numDataStructs + 1
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
+
+		for _ = 1, popcnt(field) do
+			componentOffset = ffs(field)
+			field = unsetbit(componentOffset)
+			componentId = componentOffset + 1 + (32 * (fieldOffset - 1))
+			offset = math.floor(componentId * 0.01325)
+			flags = setbit(flags, 2 + offset)
+
+			for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
+				params[paramsIndex] = v
+				paramsIndex = paramsIndex + 1
 			end
 		end
 	end
@@ -314,52 +320,57 @@ end
 -- @return numDataStructs
 
 local function serializeParameterUpdate(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
-	local struct = { 0, 0 }
+	local firstWord = 0
+	local secondWord = 0
 	local offset = 0
 	local numDataStructs = 0
 	local numComponents = 0
 	local paramsField = 0
 	local lastParamsField = 0
 	local paramId = 0
+	local both
 	local componentId
 
 	for componentId, cParamField in pairs(componentsMap) do
-		struct[1] = componentId <= 32 and setbit(struct[1], componentId - 1) or struct[1]
-		struct[2] = componentId > 32 and setbit(struct[2], componentId - 33) or struct[2]
+		firstWord = componentId <= 32 and setbit(firstWord, componentId - 1) or firstWord
+		secondWord = componentId > 32 and setbit(secondWord, componentId - 33) or secondWord
 	end
 
-	for fieldOffset, field in ipairs(struct) do
-		if field ~= 0 then
-			numComponents = 0
-			entitiesIndex = entitiesIndex + 1
-			numDataStructs = numDataStructs + 1
-			entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
+	both = firstWord ~= 0 and secondWord ~= 0
 
-			for _ = 1, popcnt(field) do
-				componentId = ffs(field) + 1 + (32 * (fieldOffset - 1))
-				offset = math.floor(componentId * 0.03125)
-				flags = setbit(flags, 4 + offset)
-				numComponents = numComponents + 1
-				paramsField = componentsMap[componentId]
-				field = unsetbit(field, componentId - 1)
+	for fieldOffset = 1, (both and 2 or 1) do
+		fieldOffset = both and fieldOffset or (secondWord ~= 0 and 2 or 1)
+		field = fieldOffset == 1 and firstWord or secondWord
 
-				for _ = 1, popcnt(paramsField) do
-					paramId = ffs(paramsField) + 1
-					params[paramsIndex] = ComponentMap[componentId][entityStruct[componentId]][paramId]
-					paramsIndex = paramsIndex + 1
-					paramsField = unsetbit(paramId - 1)
-				end
+		numComponents = 0
+		entitiesIndex = entitiesIndex + 1
+		numDataStructs = numDataStructs + 1
+		entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
 
-				if bit32.band(numComponents, 1) == 0 then
-					entitiesIndex = entitiesIndex + 1
-					numDataStructs = numDataStructs + 1
-					entities[entitiesIndex] = Vector2int16.new(lastParamsField, componentsMap[componentId])
-				else
-					lastParamsField = componentsMap[componentId]
-				end
+		for _ = 1, popcnt(field) do
+			componentId = ffs(field) + 1 + (32 * (fieldOffset - 1))
+			offset = math.floor(componentId * 0.03125)
+			flags = setbit(flags, 4 + offset)
+			numComponents = numComponents + 1
+			paramsField = componentsMap[componentId]
+			field = unsetbit(field, componentId - 1)
 
-				componentsMap[componentId] = nil
+			for _ = 1, popcnt(paramsField) do
+				paramId = ffs(paramsField) + 1
+				params[paramsIndex] = ComponentMap[componentId][entityStruct[componentId]][paramId]
+				paramsIndex = paramsIndex + 1
+				paramsField = unsetbit(paramId - 1)
 			end
+
+			if bit32.band(numComponents, 1) == 0 then
+				entitiesIndex = entitiesIndex + 1
+				numDataStructs = numDataStructs + 1
+				entities[entitiesIndex] = Vector2int16.new(lastParamsField, componentsMap[componentId])
+			else
+				lastParamsField = componentsMap[componentId]
+			end
+
+			componentsMap[componentId] = nil
 		end
 
 		if numComponents == 1 then
@@ -520,10 +531,7 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 	local isPrefab = isbitset(flags, IS_PREFAB)
 	local isUnique = isbitset(flags, IS_UNIQUE)
 	local idStr = GetStringFromNetworkId(networkId)
-	local instance = isPrefab and
-                     (isReferenced and arg._r[idStr] or arg._s[idStr])
-					 or (isUnique and arg
-						 or CollectionService:GetTagged(idStr)[1])
+	local instance = isPrefab and (isReferenced and arg._r[idStr] or arg._s[idStr]) or (isUnique and arg or CollectionService:GetTagged(idStr)[1])
 	local fieldOffset = bit32.extract(flags, 0, 2)
 	local offsetFactor = 0
 
