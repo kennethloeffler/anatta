@@ -47,8 +47,8 @@ local SerializeEntity = Shared.SerializeEntity
 local SerializeUpdate = Shared.SerializeUpdate
 local DeserializeNext = Shared.DeserializeNext
 local setBitAtPos = Shared.setbit
-local getIdStringFromNum = Shared.GetIdStringFromNum
-local getIdNumFromString = Shared.GetIdNumFromString
+local GetStringFromNetworkId = Shared.GetStringFromNetworkId
+local GetNetworkIdFromString = Shared.GetNetworkIdFromString
 local onNewReference = Shared.OnNewReference
 local onDereference = Shared.OnDereference
 local QueueUpdate = Shared.QueueUpdate
@@ -231,7 +231,7 @@ function Server.ReferenceGlobal(instance, supressConstructionMessage)
 
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
 
-	CollectionService:AddTag(instance, GetIdStringFromNum(networkId))
+	CollectionService:AddTag(instance, GetStringFromNetworkId(networkId))
 
 	if not supressConstructionMessage then
 		for _, player in ipairs(Players:GetPlayers()) do
@@ -288,7 +288,7 @@ function Server.ReferenceFor(player, instance, supressConstructionMessage)
 	local players = PlayerReferences[instance]
 
 	if instance:IsDescendantOf(Workspace) or instance:IsDescendantOf(ReplicatedStorage) or instance:IsDescendantOf(Players) then
-		CollectionService:AddTag(instance, GetIdStringFromNum(networkId))
+		CollectionService:AddTag(instance, GetStringFromNetworkId(networkId))
 	end
 
 	if not supressConstructionMessage then
@@ -348,7 +348,7 @@ function Server.Unique(player, instance)
 		instance, networkId,
 		entities, params,
 		entitiesIndex, paramsIndex,
-		nil, ref and true or nil
+		nil, ref and true, true
 	)
 
 	coroutine.resume(coroutine.create(pcall, doSendUnique, player, instance, entities, params))
@@ -645,13 +645,13 @@ function Server.Init()
 				if instance:HasTag("__WSReplicatorRef")
 					local networkId = getNetworkId(instance)
 
-					instance.Name = getTempIdString(networkId)
+					instance.Name = GetStringFromNetworkId(networkId)
 					instance.Parent = rootInstance._r
 					static[PREFAB_REFS][instance] = networkId
 					PrefabRefs[instance] = rootInstance
 				else
 					RootInstanceEntitiesNum[rootInstance] = RootInstanceEntitiesNum[rootInstance] + 1
-					instance.Name = getTempIdString(RootInstanceEntitiesNum[rootInstance])
+					instance.Name = GetStringFromNetworkId(RootInstanceEntitiesNum[rootInstance])
 					instance.Parent = rootInstance._s
 
 					static[ENTITIES], static[PARAMS], static[ENTITIES_INDEX], static[PARAMS_INDEX] = serializeEntity(

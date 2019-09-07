@@ -39,7 +39,7 @@ local InstancesByNetworkId = {}
 local NetworkIdsByInstance = {}
 local NumParams = ComponentDesc.NumParamsByComponentId
 local Server
-local BlacklistedComponent
+local BlacklistedComponents
 local ClientSerializable
 local ClientCreatable
 
@@ -53,14 +53,6 @@ local ClientSerializable
 Shared.Queued = Queued
 Shared.InstancesByNetworkId = InstancesByNetworkId
 Shared.NetworkIdsByInstance  NetworkIdsByInstance
-
----Calculates next char for id string
--- gsub function for getIdStringFromNum
-
-local __IdLen, __IdNum = 0, 0
-local function calcIdString()
-	return string.char(__IdNum - ((__IdLen - 1) * 256) - 1)
-end
 
 ---Returns TRUE if the bit at position pos is set, FALSE otherwise
 -- n is truncated to a 32-bit integer by bit32
@@ -156,27 +148,15 @@ end
 
 Shared.setbit = setbit
 
----Gets the id string corresponding to a positive integer num
--- @param num number
+---Converts a networkId to a string
+-- @param networkId number
 -- @return IdString
 
-function Shared.GetIdStringFromNum(num)
-	__IdLen = math.ceil(num * .00390625) -- num / 256
-	__IdNum = num
-	return string.rep("_", __IdLen):gsub(".", calcIdString())
+function Shared.GetStringFromNetworkId(networkId)
+	return string.char(bit32.extract(networkId, 0, 8), bit32.extract(networkId, 8, 8))
 end
 
----Gets the number corresponding to an id string str
--- @param str string
--- @return IdNum
-
-function Shared.GetIdNumFromString(str)
-	local id = 1
-	for c in str:gmatch(".") do
-		id = id + string.byte(c)
-	end
-	return id
-end
+local GetStringFromNetworkId = Shared.GetStringFromNetworkId
 
 ---Serializes a KILL_COMPONENT network message
 -- @param entities
@@ -539,7 +519,7 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 	local isReferenced = isbitset(flags, IS_REFERENCED)
 	local isPrefab = isbitset(flags, IS_PREFAB)
 	local isUnique = isbitset(flags, IS_UNIQUE)
-	local idStr = GetIdStringFromNum(networkId)
+	local idStr = GetStringFromNetworkId(networkId)
 	local instance = isPrefab and
                      (isReferenced and arg._r[idStr] or arg._s[idStr])
 					 or (isUnique and arg
@@ -712,7 +692,7 @@ end
 -- @return number entitiesIndex
 -- @return number paramsIndex
 
-function Shared.SerializeEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isDestruction, isReferenced, isPrefab)
+function Shared.SerializeEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isDestruction, isReferenced, isPrefab, isUnique)
 	local entityStruct = EntityMap[instance]
 	local flags = 0
 	local offset = 0
