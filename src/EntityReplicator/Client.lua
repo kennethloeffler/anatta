@@ -11,22 +11,9 @@ local SendBuffer = {}
 local Queued = Shared.Queued
 local DeserializeNext = Shared.DeserializeNext
 local SerializeUpdate = Shared.SerializeUpdate
-local GetIdStringFromNum = Shared.GetIdStringFromNum
 
 local RemoteEvent
 local RemoteFunction
-
-local function deserializePrefab(rootInstance, entities, ...)
-	local entitiesIndex = 1
-	local paramsIndex = 1
-	local params = table.pack(...)
-
-	for _ in next, entities do
-		entitiesIndex, paramsIndex = DeserializeNext(entities, params, entitiesIndex, paramsIndex, rootInstance)
-	end
-
-	rootInstance.Parent = Workspace
-end
 
 local function deserializeUnique(rootInstance, entities, ...)
 	local entitiesIndex = 1
@@ -117,7 +104,7 @@ function Client.Init()
 				rootInstance = rootInstance:Clone()
 			end
 
-			coroutine.resume(coroutine.create(deserializePrefab, rootInstance, entitiesStruct, ...))
+			coroutine.resume(coroutine.create(deserializeUnique, rootInstance, entitiesStruct, ...))
 		else
 			rootInstance = rootInstance:Clone()
 			coroutine.resume(coroutine.create(deserializeUnique, rootInstance, entitiesStruct, ...))
