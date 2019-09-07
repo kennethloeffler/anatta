@@ -1,7 +1,9 @@
+local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local ComponentDesc = require(script.Parent.Parent.ComponentDesc)
 local Constants = require(script.Parent.Constants)
+local PlayerGui = Player.LocalPlayer:WaitForChild("PlayerGui")
 local Shared = require(script.Parent.Shared)
 
 local Client = {}
@@ -15,7 +17,7 @@ local SerializeUpdate = Shared.SerializeUpdate
 local RemoteEvent
 local RemoteFunction
 
-local function deserializeUnique(rootInstance, entities, ...)
+local function deserializeEntity(rootInstance, isUnique, entities, ...)
 	local entitiesIndex = 1
 	local paramsIndex = 1
 	local params = table.pack(...)
@@ -24,7 +26,9 @@ local function deserializeUnique(rootInstance, entities, ...)
 		entitiesIndex, paramsIndex = DeserializeNext(entities, params, entitiesIndex, paramsIndex, rootInstance)
 	end
 
-	rootInstance.Parent = Workspace
+	if isUnique then
+		rootInstance.Parent = Workspace
+	end
 end
 
 ---Sends a message to the server requesting to add the component defined by component
@@ -46,7 +50,7 @@ function Client.SendParameterUpdate(component, paramName)
 	WSAssert(typeof(component) == "table" and component._componentId, "bad argument #1 (expected component struct)")
 	WSAssert(typeof(paramName) == "string", "bad argument #2 (expected string)")
 
-	QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
+ QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
 end
 
 ---Steps the client's replicator
@@ -97,18 +101,10 @@ function Client.Init()
 	end)
 
 	local function onServerInvoke(rootInstance, entitiesStruct, ...)
-		local prefab = rootInstance:FindFirstChild("__WSEntities")
+		local isUnique = rootInstance:IsDescendantOf(PlayerGui)
 
-		if prefab then
-			if rootInstance.Parent == Players.LocalPlayer.PlayerGui then
-				rootInstance = rootInstance:Clone()
-			end
-
-			coroutine.resume(coroutine.create(deserializeUnique, rootInstance, entitiesStruct, ...))
-		else
-			rootInstance = rootInstance:Clone()
-			coroutine.resume(coroutine.create(deserializeUnique, rootInstance, entitiesStruct, ...))
-		end
+		rootInstance = isUnique and rootInstance:Clone() or rootInstance
+		coroutine.wrap(deserializeEntities, rootInstance, isUnique, entitiesStruct, ...)()
 	end
 
 	RemoteFunction.OnServerInvoke = onServerInvoke
