@@ -581,15 +581,16 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 end
 
 ---Deserializes the update message in entities at position entitiesIndex
+-- @param networkId
+-- @param flags
 -- @param entities table
 -- @param params table
 -- @param entitiesIndex number
--- @param bitFieldOffsets table
--- @param numBitFields number
--- @param flags uint16 field
+-- @param paramsIndex number
+-- @param instance
+-- @param player
 -- @return number entitiesIndex
 -- @return number paramsIndex
--- @return table componentIdsToParams
 
 local function deserializeUpdate(networkId, flags, entities, params, entitiesIndex, paramsIndex, instance, player)
 	if isbitset(flags, PARAMS_UPDATE) then
@@ -625,7 +626,7 @@ end
 -- @param params table to which parameter values are written
 -- @param entitiesIndex number indicating the current index of entities
 -- @param paramsIndex number indicating the current index of params
--- @param componentsMap table mapping componentIds to either messageTypes or paramId fields
+-- @param msgMap table mapping message ids to component maps
 -- @return number entitiesIndex
 -- @return number paramsIndex
 
@@ -704,6 +705,8 @@ end
 -- @param paramsIndex number indicating current index of params; initial value should be 0
 -- @param isDestruction boolean indicating whether this is a creation message or a destruction message
 -- @param isReferenced boolean indicating whether this entity is referenced
+-- @param isPrefab boolean indicating whether this entity belongs to a prefab
+-- @param isUnique boolean indicating whether this is a uniquely replicated entity
 -- @return number entitiesIndex
 -- @return number paramsIndex
 
@@ -717,16 +720,16 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 	local numComponents
 	local default
 
-	flags = isReferenced and setbit(flags, IS_REFERENCED) or flags
-	flags = isPrefab and setbit(flags, IS_PREFAB) or flags
-	flags = isUnique and setbit(flags, IS_UNIQUE) or flags
-
 	if isDestruction then
 		flags = setbit(flags, DESTRUCTION)
 		entities[entitiesIndex] = Vector2int16.new(networkId, flags)
 		entitiesIndex = entitiesIndex + 1
 		return entitiesIndex, paramsIndex
 	end
+
+	flags = isReferenced and setbit(flags, IS_REFERENCED) or flags
+	flags = isPrefab and setbit(flags, IS_PREFAB) or flags
+	flags = isUnique and setbit(flags, IS_UNIQUE) or flags
 
 	for fieldOffset, field in ipairs(entityStruct[0]) do
 		if field ~= 0 then
@@ -761,9 +764,8 @@ end
 -- @param params table containing serial param data
 -- @param entitiesIndex number indicating current index in entities
 -- @param paramsIndex number indicating current index in params
--- @return number networkId
--- @return table componentIdsToParams
--- @return number entitiesIndex
+-- @param arg a prefab rootInstance or Player instance
+-- @return variant
 
 function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, arg)
 	local header = entities[entitiesIndex]
