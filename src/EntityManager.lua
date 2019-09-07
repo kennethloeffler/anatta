@@ -347,8 +347,8 @@ end
 -- @param componentType
 
 function EntityManager.KillComponent(instance, componentType)
-	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
-	WSAssert(typeof(componentType) == "string", "bad argument #2: expected string")
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
 
 	local entityStruct = EntityMap[instance]
 
@@ -372,8 +372,8 @@ end
 -- @param supressInstanceDestruction
 
 function EntityManager.KillEntity(instance, supressInstanceDestruction)
-	WSAssert(typeof(instance) == "Instance", "bad argument #1: expected Instance")
-	WSAssert(supressInstanceDestruction and typeof(supressInstanceDestruction) == "boolean", "bad argument #2: expected boolean")
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(supressInstanceDestruction and typeof(supressInstanceDestruction) == "boolean", "bad argument #2 (expected boolean)")
 
 	local entityStruct = EntityMap[instance]
 
@@ -399,7 +399,7 @@ end
 -- @param _pluginWrapper
 
 function EntityManager.LoadSystem(module, _pluginWrapper)
-	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1: expected ModuleScript")
+	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1 (expected ModuleScript)")
 
 	if system.OnLoaded then
 		WSAssert(typeof(system.OnLoaded) == "function", "expected function %s.OnLoaded", module.Name)
@@ -448,7 +448,7 @@ end
 -- @param module
 
 function EntityManager.UnloadSystem(module)
-	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1: expected ModuleScript")
+	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1 (expected ModuleScript)")
 
 	local system = require(module)
 
