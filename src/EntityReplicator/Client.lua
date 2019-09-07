@@ -49,8 +49,8 @@ end
 function Client.SendParameterUpdate(component, paramName)
 	WSAssert(typeof(component) == "table" and component._componentId, "bad argument #1 (expected component struct)")
 	WSAssert(typeof(paramName) == "string", "bad argument #2 (expected string)")
-v
- QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
+
+	QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
 end
 
 ---Steps the client's replicator
