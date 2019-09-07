@@ -130,7 +130,7 @@ end
 
 local function serializePrefabFor(player, rootInstance, isUnique)
 	local static = StaticPrefabEntities[rootInstance]
-	local remoteEvent = Remotes[player]
+	local remote = Remotes[player]
 	local prefabRefsIndex = 1
 	local prefabRefsParamIndex = 1
 	local prefabRefs = {}
@@ -145,18 +145,18 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 		)
 	end
 
-	remoteEvent[CAN_RECEIVE_UPDATES] = false
+	remote[CAN_RECEIVE_UPDATES] = false
 
 	rootInstance = isUnique and rootInstance:Clone() or rootInstance
 	rootInstance.Parent = isUnique and player.PlayerGui or rootInstance.Parent
 
-	remoteEvent[REMOTE_FUNCTION]:InvokeClient(player, rootInstance, static[ENTITIES], table.unpack(static[PARAMS]))
-	remoteEvent[REMOTE_EVENT]:FireClient(player, rootInstance, prefabRefs, table.unpack(prefabRefsParams))
+	remote[REMOTE_FUNCTION]:InvokeClient(player, rootInstance, static[ENTITIES], table.unpack(static[PARAMS]))
+	remote[REMOTE_EVENT]:FireClient(player, rootInstance, prefabRefs, table.unpack(prefabRefsParams))
 
 	PrefabsByPlayer[player] = rootInstance
 	PlayersInPrefab[rootInstance][player] = true
 
-	remoteEvent[CAN_RECEIVE_UPDATES] = true
+	remote[CAN_RECEIVE_UPDATES] = true
 
 	if isUnique then
 		rootInstance:Destroy()
