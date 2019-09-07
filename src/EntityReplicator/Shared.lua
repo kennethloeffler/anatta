@@ -735,6 +735,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 		if field ~= 0 then
 			entitiesIndex = entitiesIndex + 1
 			numDataStructs = numDataStructs + 1
+			flags = setbit(flags, fieldOffset - 1)
 			entities[entitiesIndex] = Vector2int16.new(bit32.extract(field, 0, 16), bit32.extract(field, 16, 16))
 
 			for _ = 1, popcnt(field) do
