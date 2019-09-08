@@ -223,6 +223,36 @@ function Server.Reference(instance)
 	return NetworkIdsByInstance[instance] or getNetworkId(instance)
 end
 
+---Completely dereferences the entity associated with instance from the system
+-- Referenced prefab entities that were created before runtime or through NewPrefab will have their instance's Parent property set to the prefab's static entity Folder (rootInstance._s)
+-- @param instance
+
+function Server.Dereference(instance)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+
+	local networkId = NetworkIdsByInstance[instance]
+
+	FreedNetworkIds[#FreedNetworkIds + 1] = networkId
+	GlobalRefs[instance] = nil
+	PlayerRefs[instance] = nil
+	PlayerSerializable[instance] = nil
+	PlayerCreatable[instance] = nil
+
+	if PrefabRefs[instance] then
+		local rootInstance = PrefabRefs[instance]
+		local static = StaticPrefabEntities[rootInstance]
+
+		PrefabRefs[instance] = nil
+
+		if static then
+			static[PREFAB_REFS][instance] = nil
+			instance.Parent = rootInstance._s
+		end
+	end
+
+	OnDereference(instance, networkId)
+end
+
 ---References the entity associated with instance for all connected systems
 -- If entity is not referenced, this function references it
 -- suppressConstructionMessage is a boolean which determines if a construction message is sent

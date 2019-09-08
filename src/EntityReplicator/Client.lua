@@ -53,7 +53,7 @@ function Client.SendParameterUpdate(component, paramName)
 	QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
 end
 
----Steps the client's replicator
+---Steps this client's replicator
 
 function Client.Step()
 	if next(Queued) then
