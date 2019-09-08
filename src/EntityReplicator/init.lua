@@ -23,10 +23,16 @@ return {
 	Reference = Server and Server.Reference
 	ReferenceGlobal = Server and Server.ReferenceGlobal
 	DereferenceGlobal = Server and Server.DereferenceGlobal
-	ReferenceFor = Server and Server.ReferenceFor
-	DereferenceFor = Server and Server.DereferenceFor
+
+	ReferenceForPlayer = Server and Server.ReferenceForPlayer
+	DereferenceForPlayer = Server and Server.DereferenceForPlayer
+
+	ReferenceForPrefab = Server and Server.ReferenceForPrefab
+	DereferenceForPrefab = Server and Server.DereferenceForPrefab
+
 	Unique = Server and Server.Unique
 	UniqueFromPrefab = Server and Server.UniqueFromPrefab
+
 	PlayerSerializable = Server and Server.PlayerSerializable
 	PlayerCreatable = Server and Server.PlayerCreatable
 

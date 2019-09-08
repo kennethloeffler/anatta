@@ -308,7 +308,8 @@ end
 -- @param player
 -- @param instance
 -- @param supressConstructionMessage
-function Server.ReferenceFor(player, instance, supressConstructionMessage)
+
+function Server.ReferenceForPlayer(player, instance, supressConstructionMessage)
 	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
 	WSAssert(supressConstructionMessage and typeof(supressConstructionMessage) == "boolean" or true, "bad argument #3 (expected boolean)")
@@ -339,7 +340,7 @@ end
 -- @param isntance
 -- @param supressDestructionMessage
 
-function Server.DereferenceFor(player, instance, supressDestructionMessage)
+function Server.DereferenceForPlayer(player, instance, supressDestructionMessage)
 	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
 	WSAssert(supressDestructionMessage and typeof(supressDestructionMessage) == "boolean" or true, "bad argument #3 (expected boolean)")
