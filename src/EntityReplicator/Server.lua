@@ -367,7 +367,7 @@ end
 -- @param player
 -- @param instance
 
-function Server.Unique(player, instance)
+function Server.Unique(player, instance, doReference)
 	WSAssert(player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #2 (expected Instance)")
 
@@ -375,15 +375,19 @@ function Server.Unique(player, instance)
 	local params = {}
 	local entitiesIndex = 1
 	local paramsIndex = 1
-	local ref = NetworkIdsByInstance[instance]
+	local ref = NetworkIdsByInstance[instance] or (doReference and getNetworkId(instance))
 	local networkId = ref or 0
 
 	entities, params = SerializeEntity(
 		instance, networkId,
 		entities, params,
 		entitiesIndex, paramsIndex,
-		nil, ref and true, true
+		nil, doReference, nil, true
 	)
+
+	if doReference then
+		Server.ReferenceForPlayer(player, instance, true)
+	end
 
 	coroutine.resume(coroutine.create(pcall, doSendUnique, player, instance, entities, params))
 end
