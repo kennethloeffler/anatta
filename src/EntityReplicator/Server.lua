@@ -699,7 +699,7 @@ function Server.Init()
 					instance.Name = GetStringFromNetworkId(RootInstanceEntitiesNum[rootInstance])
 					instance.Parent = rootInstance._s
 
-					static[ENTITIES], static[PARAMS], static[ENTITIES_INDEX], static[PARAMS_INDEX] = serializeEntity(
+					static[ENTITIES_INDEX], static[PARAMS_INDEX] = serializeEntity(
 						instance, id,
 						static[ENTITIES], static[PARAMS],
 						static[ENTITIES_INDEX], static[PARAMS_INDEX]

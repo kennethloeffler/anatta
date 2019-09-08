@@ -116,7 +116,7 @@ local function invalidDataObj(dataObj)
 	return not typeof(dataObj) == "Vector2int16"
 end
 
-local function hasPermission(player, networkId, componentId, paramId)
+local function hasPermission(player, instance, componentId, paramId)
 	local componentOffset = math.floor(componentId * 0.03125)
 	local bitOffset = componentOffset - 1 - (componentOffset * 32)
 	local playerArg
@@ -125,8 +125,8 @@ local function hasPermission(player, networkId, componentId, paramId)
 
 	-- checking if player is allowed to create this component on this entity
 	if componentId and not paramId then
-		playerArg = PlayerCreatable[networkId][1]
-		componentField = PlayerCreatable[networkId][componentOffset + 2]
+		playerArg = PlayerCreatable[instance][1]
+		componentField = PlayerCreatable[instance][componentOffset + 2]
 
 		if not ((playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(componentField, bitOffset)) then
 			return
@@ -135,8 +135,8 @@ local function hasPermission(player, networkId, componentId, paramId)
 		end
 	-- checking if player is allowed to serialize to this parameter on this entity
 	elseif paramId and componentId then
-		playerArg = PlayerSerializable[networkId][1]
-		paramField = PlayerSerializable[networkId][componentId + 1]
+		playerArg = PlayerSerializable[instance][1]
+		paramField = PlayerSerializable[instance][componentId + 1]
 
 		if not (paramField and (playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(paramField, paramId - 1)) then
 			return
@@ -424,7 +424,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 			for _ = 1, popcnt(paramsField) do
 				paramId = ffs(paramsField) + 1
 
-				if player and not hasPermission(player, networkId, componentId, paramId) then
+				if player and not hasPermission(player, instance, componentId, paramId) then
 					return
 				end
 
@@ -472,7 +472,7 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 			componentId = pos + (32 * offsetFactor) + 1
 			field = unsetbit(field, pos)
 
-			if player and not hasPermission(player, networkId, componentId) then
+			if player and not hasPermission(player, instance, componentId) then
 				return
 			end
 
@@ -825,8 +825,6 @@ end
 function Shared.OnDereference(instance, networkId)
 	InstancesByNetworkId[networkId] = instance
 	NetworkIdsByInstance[instance] = networkId
-	PlayerSerializable[networkId] = nil
-	PlayerCreatable[networkId] = nil
 end
 
 function Shared.Init(entityManager, entityMap, componentMap)
