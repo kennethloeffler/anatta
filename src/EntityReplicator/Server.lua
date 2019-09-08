@@ -50,8 +50,8 @@ local DeserializeNext = Shared.DeserializeNext
 local setBitAtPos = Shared.setbit
 local GetStringFromNetworkId = Shared.GetStringFromNetworkId
 local GetNetworkIdFromString = Shared.GetNetworkIdFromString
-local onNewReference = Shared.OnNewReference
-local onDereference = Shared.OnDereference
+local OnNewReference = Shared.OnNewReference
+local OnDereference = Shared.OnDereference
 local QueueUpdate = Shared.QueueUpdate
 local NetworkIdsByInstance = Shared.NetworkIdsByInstance
 local InstancesByNetworkId = Shared.InstancesByNetworkId
@@ -70,7 +70,7 @@ local function getNetworkId(instance)
 		networkId = NumNetworkIds + 1
 	end
 
-	onNewReference(instance, networkId)
+	OnNewReference(instance, networkId)
 	CollectionService:AddTag(instance, "__WSReplicatorRef")
 
 	return networkId
@@ -299,7 +299,6 @@ function Server.DereferenceGlobal(instance, supressDestructionMessage)
 	end
 
 	GlobalRefs[instance] = nil
-	onDereference(instance, networkId)
 end
 
 ---References the entity associated with instance for player
@@ -496,12 +495,12 @@ function Server.PlayerSerializable(players, instance, componentType, paramName)
 	WSAssert(networkId, "entity is not referenced")
 
 	if not players then
-		PlayerSerializable[networkId] = nil
+		PlayerSerializable[instance] = nil
 
 		return
 	end
 
-	local struct = PlayerSerializable[networkId]
+	local struct = PlayerSerializable[instance]
 	local componentId = GetComponentIdFromType(componentType)
 	local componentOffset = math.floor(componentId * 0.03125) -- componentId / 32
 	local paramId = paramName and GetParamIdFromName(componentId, paramName)
@@ -513,11 +512,11 @@ function Server.PlayerSerializable(players, instance, componentType, paramName)
 		local secondWord = componentOffset == 1 and setBitAtPos(0, componentId - 33) or 0
 
 		paramsField = paramName and setBitAtPos(0, paramId - 1) or 0xFFFF
-		PlayerSerializable[networkId][1] = players
-		PlayerSerializable[networkId][componentId + 1] = paramsField
+		PlayerSerializable[instance][1] = players
+		PlayerSerializable[instance][componentId + 1] = paramsField
 	else
 		paramsField = paramName and setBitAtPos(struct[componentId + 1] or 0, paramId - 1) or 0xFFFF
-		struct[1] = players or ALL_CLIENTS
+		struct[1] = players
 		struct[componentId + 1] = paramsField
 	end
 end
@@ -544,7 +543,7 @@ function Server.PlayerCreatable(players, instance, componentType)
 	WSAssert(networkId, "entity is not referenced")
 
 	if not players then
-		PlayerCreatable[networkId] = nil
+		PlayerCreatable[instance] = nil
 
 		return
 	end
@@ -556,9 +555,9 @@ function Server.PlayerCreatable(players, instance, componentType)
 		local firstWord = componentOffset == 0 and setBitAtPos(0, componentId - 1) or 0
 		local secondWord = componentOffset == 0 and setBitAtPos(0, componentId - 33) or 0
 
-		PlayerCreatable[networkId] = { players, firstWord, secondWord }
+		PlayerCreatable[instance] = { players, firstWord, secondWord }
 	else
-		struct[1] = players or ALL_CLIENTS
+		struct[1] = players
 		struct[2] = componentOffset == 0 and setBitAtPos(struct[2], componentId - 1) or struct[2]
 		struct[3] = componentOffset == 1 and setBitAtPos(struct[3], componentId - 33) or struct[3]
 	end
