@@ -21,6 +21,7 @@ local HeartbeatIdsBySystem = {}
 local EntityFilters = {}
 local FilteredEntityAddedFuncs = {}
 local FilteredEntityRemovedFuncs = {}
+local SystemFilteredEntities = {}
 local SystemsToUnload = {}
 
 local SystemsRunning = false
@@ -53,20 +54,22 @@ function filterEntity(instance)
 	local entityBitFields = EntityMap[instance][0]
 	local addedFunc
 	local removedFunc
+	local systemEntities
 
 	for filterId, bitFields in ipairs(EntityFilters) do
 		addedFunc = FilteredEntityAddedFuncs[filterId]
 		removedFunc = FilteredEntityRemovedFuncs[filterId]
+		systemEntities = SystemFilteredEntities[filterId]
 
 		if bit32.band(bitFields[1], entityBitFields[1]) == bitFields[1] and bit32.band(bitFields[2], entityBitFields[2]) == bitFields[2] then
-			if not SystemEntities[instance] then
-				SystemEntities[filterId][instance] = true
+			if not systemEntities[instance] then
+				systemEntities[instance] = true
 
 				addedFunc = addedFunc and addedFunc(instance)
 			end
 		else
 			if systemEntities[instance] then
-				SystemEntities[filterId][instance] = nil
+				systemEntities[instance] = nil
 
 				removedFunc = removedFunc and removedFunc(instance)
 			end
