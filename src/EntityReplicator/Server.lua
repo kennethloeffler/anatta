@@ -301,6 +301,12 @@ function Server.DereferenceGlobal(instance, supressDestructionMessage)
 	GlobalRefs[instance] = nil
 end
 
+function Server.ReferenceForPrefab(rootInstance, instance, supressConstructionMessage)
+end
+
+function Server.DereferenceForPrefab(rootInstance, instance, supressDestructionMessage)
+end
+
 ---References the entity associated with instance for player
 -- If entity is not referenced, this function references it
 -- suppressConstructionMessage is a boolean which determines if a construction message is sent
