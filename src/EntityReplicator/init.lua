@@ -17,10 +17,13 @@ return {
 		end
 	end
 
+	-- client-side functions
 	SendAddComponent = Client and Client.SendAddComponent
 	SendParameterUpdate = Client and Client.SendParameterUpdate
 
+	-- server-side functions
 	Reference = Server and Server.Reference
+
 	ReferenceGlobal = Server and Server.ReferenceGlobal
 	DereferenceGlobal = Server and Server.DereferenceGlobal
 

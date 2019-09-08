@@ -531,7 +531,7 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 	local isPrefab = isbitset(flags, IS_PREFAB)
 	local isUnique = isbitset(flags, IS_UNIQUE)
 	local idStr = GetStringFromNetworkId(networkId)
-	local instance = isPrefab and (isReferenced and arg._r[idStr] or arg._s[idStr]) or (isUnique and arg or CollectionService:GetTagged(idStr)[1])
+	local instance = isPrefab and (isReferenced and arg._r[idStr] or arg._s[idStr]) or (isUnique and arg or next(CollectionService:GetTagged(idStr)))
 	local fieldOffset = bit32.extract(flags, 0, 2)
 	local offsetFactor = 0
 
@@ -574,8 +574,10 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 		end
 	end
 
-	NetworkIdsByInstance[instance] = networkId
-	InstancesByNetworkId[networkId] = instance
+	if isReferenced then
+		NetworkIdsByInstance[instance] = networkId
+		InstancesByNetworkId[networkId] = instance
+	end
 
 	return entitiesIndex, paramsIndex
 end
