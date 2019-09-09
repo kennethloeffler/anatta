@@ -145,18 +145,28 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 	end
 
 	remote[CAN_RECEIVE_UPDATES] = false
+	PlayersInPrefab[rootInstance][player] = true
 
 	rootInstance = isUnique and rootInstance:Clone() or rootInstance
 	rootInstance.Parent = isUnique and player.PlayerGui or rootInstance.Parent
 
-	remote[REMOTE_FUNCTION]:InvokeClient(player, rootInstance, static[ENTITIES], table.unpack(static[PARAMS]))
+	local success = pcall(function()
+		remote[REMOTE_FUNCTION]:InvokeClient(player, rootInstance, static[ENTITIES], table.unpack(static[PARAMS]))
+	end)
+
+	if not success then
+		if isUnique then
+			rootInstance:Destroy()
+		end
+
+		return
+	end
+
 	remote[REMOTE_EVENT]:FireClient(player, rootInstance, prefabRefs, table.unpack(prefabRefsParams))
 
 	PrefabsByPlayer[player] = rootInstance
-	PlayersInPrefab[rootInstance][player] = true
-
 	remote[CAN_RECEIVE_UPDATES] = true
-
+	
 	if isUnique then
 		rootInstance:Destroy()
 	end
@@ -170,7 +180,11 @@ end
 
 local function doSendUnique(player, instance, entities, params)
 	instance = instance:Clone()
-	Remotes[player][REMOTE_FUNCTION]:InvokeClient(player, instance, entities, table.unpack(params))
+	
+	pcall(function()
+		Remotes[player][REMOTE_FUNCTION]:InvokeClient(player, instance, entities, table.unpack(params))
+	end)
+
 	instance:Destroy()
 end
 
@@ -457,7 +471,7 @@ function Server.Unique(player, instance, doReference)
 		Server.ReferenceForPlayer(player, instance, true)
 	end
 
-	coroutine.resume(coroutine.create(pcall, doSendUnique, player, instance, entities, params))
+	coroutine.wrap(doSendUnique, player, instance, entities, params)()
 end
 
 ---Sends all the entities associated with a globally accessible rootInstance to player
@@ -470,7 +484,7 @@ function Server.FromPrefab(player, rootInstance)
 	WSAssert(rootInstance:IsDescendantOf(Workspace) or rootInstance:IsDescendantOf(ReplicatedStorage), "Root instance must be a descendant of Workspace or ReplicatedStorage")
 	WSAssert(CollectionService:HasTag(rootInstance, "__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
 
-	coroutine.resume(coroutine.create(pcall, serializePrefabFor, player, rootInstance, false))
+	coroutine.wrap(serializePrefabFor, player, rootInstance, false)()
 end
 
 ---Sends rootInstance and all its associated entities uniquely to player
@@ -482,7 +496,7 @@ function Server.UniqueFromPrefab(player, rootInstance)
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #2 (expected Instance)")
 	WSAssert(CollectionService:HasTag(rootInstance, "__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
 
-	coroutine.resume(coroutine.create(pcall, serializePrefabFor, player, rootInstance, true))
+	coroutine.wrap(serializePrefabFor, player, rootInstance, true)()
 end
 
 ---Removes player from the player list associated with rootInstance
