@@ -298,13 +298,76 @@ function Server.DereferenceGlobal(instance, supressDestructionMessage)
 		end
 	end
 
+	CollectionService:RemoveTag(instance, GetStringFromNetworkId(networkId))
 	GlobalRefs[instance] = nil
 end
 
-function Server.ReferenceForPrefab(rootInstance, instance, supressConstructionMessage)
+---References the entity associated with instance for the prefab associated with rootInstance
+-- If entity is not referenced, this function references it
+-- deepCopyInstance is a boolean which when TRUE places the entity in the prefab's referenced entity folder (rootInstance._r)
+-- suppressConstructionMessage is a boolean which determines if a construction message is sent
+-- @param rootInstance
+-- @param instance
+-- @param deepCopyInstance
+-- @param supressConstructionMessage
+
+function Server.ReferenceForPrefab(rootInstance, instance, deepCopyInstance, supressConstructionMessage)
+	WSAssert(typeof(rootInstance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(CollectionService:HasTag("__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
+	WSAssert(deepCopyInstance ~= nil and typeof(deepCopyInstance) == "boolean", "bad argument #3 (expected boolean)")
+	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean", "bad argument #4 (expected boolean)")
+
+	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
+	local idStr = GetStringFromNetworkId(networkId)
+
+	if deepCopyInstance then
+		instance.Parent = rootInstance._r
+		instance.Name = idStr
+	end
+
+	if instance:IsDescendantOf(Workspace) or instance:IsDescendantOf(ReplicatedStorage) or instance:IsDescendantOf(Players) then
+		CollectionService:AddTag(instance, idStr)
+	end
+
+	if not supressConstructionMessage then
+		for player in pairs(PlayersInPrefab[rootInstance]) do
+			queueConstruction(player, instance, networkId)
+		end
+	end
+
+	StaticPrefabEntities[rootInstance][PREFAB_REFS][instance] = networkId
 end
 
+---Dereferences the entity associated with instance for all connected systems
+-- If entity is not referenced for this prefab, this function returns without doing anything
+-- supressDestructionMessage is a boolean which determines if a destruction message is sent
+-- @param rootInstance
+-- @param instance
+-- @param supressDestructionMessage
+
 function Server.DereferenceForPrefab(rootInstance, instance, supressDestructionMessage)
+	WSAssert(typeof(rootInstance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(CollectionService:HasTag("__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
+	WSAssert(deepCopyInstance ~= nil and typeof(deepCopyInstance) == "boolean", "bad argument #3 (expected boolean)")
+	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean", "bad argument #4 (expected boolean)")
+
+	local networkId = StaticPrefabEntities[rootInstance][PREFAB_REFS][instance]
+
+	if not networkId then
+		return
+	end
+
+	local idStr = GetStringFromNetworkId(networkId)
+
+	if not supressDestructionMessage then
+		for player in pairs(PlayersInPrefab[rootInstance]) do
+			queueDestruction(player, instance, networkId)
+		end
+	end
+
+	CollectionService:RemoveTag(instance, idStr)
+	instance.Name = ""
+	StaticPrefabEntities[rootInstance][PREFAB_REFS][instance] = nil
 end
 
 ---References the entity associated with instance for player
