@@ -213,7 +213,7 @@ end
 -- Public API
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
----References the entity associated with instance in the system with no side effects
+---Gives the entity associated with instance a networkId (or returns one, if the entity is already referenced) with no other side effects
 -- @param instance
 -- @return networkId
 
@@ -261,11 +261,9 @@ end
 
 function Server.ReferenceGlobal(instance, supressConstructionMessage)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(supressConstructionMessage and typeof(supressConstructionMessage) == "boolean" or true, "bad argument #2 (expected boolean)")
+	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean", "bad argument #2 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
-
-	CollectionService:AddTag(instance, GetStringFromNetworkId(networkId))
 
 	if not supressConstructionMessage then
 		for _, player in ipairs(Players:GetPlayers()) do
@@ -273,6 +271,7 @@ function Server.ReferenceGlobal(instance, supressConstructionMessage)
 		end
 	end
 
+	CollectionService:AddTag(instance, GetStringFromNetworkId(networkId))
 	GlobalRefs[instance] = true
 end
 
@@ -284,7 +283,7 @@ end
 
 function Server.DereferenceGlobal(instance, supressDestructionMessage)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(supressDestructionMessage and typeof(supressDestructionMessage) == "boolean" or true, "bad argument #2 (expected boolean)")
+	WSAssert(supressDestructionMessage ~= nil and typeof(supressDestructionMessage) == "boolean", "bad argument #2 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance]
 
@@ -380,7 +379,7 @@ end
 function Server.ReferenceForPlayer(player, instance, supressConstructionMessage)
 	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
-	WSAssert(supressConstructionMessage and typeof(supressConstructionMessage) == "boolean" or true, "bad argument #3 (expected boolean)")
+	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean", "bad argument #3 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
 
@@ -411,7 +410,7 @@ end
 function Server.DereferenceForPlayer(player, instance, supressDestructionMessage)
 	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
-	WSAssert(supressDestructionMessage and typeof(supressDestructionMessage) == "boolean" or true, "bad argument #3 (expected boolean)")
+	WSAssert(supressDestructionMessage ~= nil and typeof(supressDestructionMessage) == "boolean", "bad argument #3 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance]
 
@@ -728,11 +727,11 @@ function Server.Init()
 	local PrefabEntities = {}
 
 	if AUTO_SERIALIZE_GLOBAL_ENV then
-		CollectionService:AddTag(Workspace, "__WSReplicatorRootInstance")
-		CollectionService:AddTag(ReplicatedStorage, "__WSReplicatorRootInstance")
+		CollectionService:AddTag(Workspace, "__WSReplicatorRoot")
+		CollectionService:AddTag(ReplicatedStorage, "__WSReplicatorRoot")
 	end
 
-	local RootInstances = CollectionService:GetTagged("__WSReplicatorRootInstance")
+	local RootInstances = CollectionService:GetTagged("__WSReplicatorRoot")
 	local Entities = CollectionService:GetTagged("__WSEntity")
 
 	for _, rootInstance in pairs(RootInstances) do
