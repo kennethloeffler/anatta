@@ -50,8 +50,6 @@ local DeserializeNext = Shared.DeserializeNext
 local setBitAtPos = Shared.setbit
 local GetStringFromNetworkId = Shared.GetStringFromNetworkId
 local GetNetworkIdFromString = Shared.GetNetworkIdFromString
-local OnNewReference = Shared.OnNewReference
-local OnDereference = Shared.OnDereference
 local QueueUpdate = Shared.QueueUpdate
 local NetworkIdsByInstance = Shared.NetworkIdsByInstance
 local InstancesByNetworkId = Shared.InstancesByNetworkId
@@ -70,7 +68,8 @@ local function getNetworkId(instance)
 		networkId = NumNetworkIds + 1
 	end
 
-	OnNewReference(instance, networkId)
+	NetworkIdsByInstance[instance] = networkId
+	InstancesByNetworkId[networkId] = instance
 	CollectionService:AddTag(instance, "__WSReplicatorRef")
 
 	return networkId
@@ -250,7 +249,8 @@ function Server.Dereference(instance)
 		end
 	end
 
-	OnDereference(instance, networkId)
+	NetworkIdsByInstance[instance] = nil
+	InstancesByNetworkId[networkId] = nil
 end
 
 ---References the entity associated with instance for all connected systems

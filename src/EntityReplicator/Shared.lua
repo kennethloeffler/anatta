@@ -819,16 +819,6 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId)
 	msg[componentId] = paramId and setbit(field or 0, paramId - 1) or true
 end
 
-function Shared.OnNewReference(instance, networkId)
-	InstancesByNetworkId[networkId] = instance
-	NetworkIdsByInstance[instance] = networkId
-end
-
-function Shared.OnDereference(instance, networkId)
-	InstancesByNetworkId[networkId] = instance
-	NetworkIdsByInstance[instance] = networkId
-end
-
 function Shared.Init(entityManager, entityMap, componentMap)
 	EntityMap = entityMap
 	ComponentMap = componentMap
