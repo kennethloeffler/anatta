@@ -90,13 +90,27 @@ function Client.Init()
 	RemoteEvent = Players.LocalPlayer.PlayerGui:WaitForChild("RemoteEvent")
 	RemoteFunction = Players.LocalPlayer.PlayerGui:WaitForChild("RemoteFunction")
 
-	RemoteEvent.OnServerEvent:Connect(function(rootInstance, entities, ...)
+	RemoteEvent.OnServerEvent:Connect(function(rootInstance, globalEntities, globalParams, playerEntities, playerParams, prefabEntities, ...)
 		local entitiesIndex = 1
 		local paramsIndex = 1
-		local params = table.pack(...)
+		local prefabParams = table.pack(...)
 
-		for _ in next, entities do
-			entitiesIndex, paramsIndex = DeserializeNext(entities, params, entitiesIndex, paramsIndex, rootInstance)
+		for _ in next, globalEntities do
+			entitiesIndex, paramsIndex = DeserializeNext(globalEntities, globalParams, entitiesIndex, paramsIndex)
+		end
+
+		entitiesIndex = 1
+		paramsIndex = 1
+
+		for _ in next, playerEntities do
+			entitiesIndex, paramsIndex = DeserializeNext(playerEntities, playerParams, entitiesIndex, paramsIndex)
+		end
+
+		entitiesIndex = 1
+		paramsIndex = 1
+
+		for _ in next, prefabEntities do
+			entitiesIndex, paramsIndex = DeserializeNext(prefabEntites, prefabParams, entitiesIndex, paramsIndex, rootInstance)
 		end
 	end)
 

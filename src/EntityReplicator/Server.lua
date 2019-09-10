@@ -706,25 +706,26 @@ function Server.Step(dt)
 			QueuedUpdates[instance] = nil
 		end
 
+		global = next(GlobalBuffers[ENTITIES])
+
 		for _, player in ipairs(Players:GetPlayers()) do
-			playerBuffer = PlayerBuffers[player]
-			playerRefs = PlayerRefs[player]
 			playerPrefab = PrefabsByPlayer[player]
+			playerBuffer = PlayerBuffers[player]
+			prefab = PrefabBuffers[playerPrefab]
 			remoteEvent = Remotes[player][REMOTE_EVENT]
+			playerBufferNotEmpty = next(playerBuffer[ENTITIES])
+			sendPrefab = next(PrefabBuffers[ENTITIES])
 
-			if next(PlayerBuffers[ENTITIES]) then
-				remoteEvent:FireClient(player, nil, playerBuffer[ENTITIES], table.unpack(playerBuffer[PARAMS]))
-				clearBuffer(playerBuffer)
-			end
-
-			if next(GlobalBuffer[ENTIITES]) then
-				remoteEvent:FireClient(player, nil, GlobalBuffer[ENTIITES], table.unpack(GlobalBuffer[PARAMS]))
-			end
-
-			if playerPrefab then
-				prefabBuffer = PrefabBuffers[playerPrefab]
-				remoteEvent:FireClient(player, nil, prefabBuffer[ENTITIES], table.unpack(prefabBuffer[PARAMS]))
-			end
+			remoteEvent:FireClient(
+				player,
+				playerPrefab,
+				playerUnique and playerBuffer[ENTITIES],
+				playerUnique and playerBuffer[PARAMS],
+				global and GlobalBuffer[ENTITIES],
+				global and GlobalBuffer[PARAMS],
+				sendPrefab and prefab[ENTITIES],
+				sendPrefab and unpack(prefab[PARAMS])
+			)
 		end
 
 		for rootInstance, prefabBuffer in pairs(PrefabBuffers) do
