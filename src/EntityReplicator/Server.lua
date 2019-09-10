@@ -103,6 +103,7 @@ local function queueConstruction(player, instance, networkId)
 		instance, networkId,
 		buffer[ENTITIES], buffer[PARAMS]
 		buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX]
+		nil, true
 	)
 end
 
@@ -118,7 +119,7 @@ local function queueDestruction(player, instance, networkId)
 		instance, networkId,
 		buffer[ENTITIES], buffer[PARAMS]
 		buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX],
-		true
+		true, true
 	)
 end
 
@@ -140,7 +141,7 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 			instance, networkId,
 			prefabRefs, prefabRefsParams,
 			prefabRefsIndex, prefabRefsParamIndex,
-			instance:IsDescendantOf(rootInstance)
+			nil, true, instance:IsDescendantOf(rootInstance)
 		)
 	end
 
@@ -166,7 +167,7 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 
 	PrefabsByPlayer[player] = rootInstance
 	remote[CAN_RECEIVE_UPDATES] = true
-	
+
 	if isUnique then
 		rootInstance:Destroy()
 	end
@@ -180,7 +181,7 @@ end
 
 local function doSendUnique(player, instance, entities, params)
 	instance = instance:Clone()
-	
+
 	pcall(function()
 		Remotes[player][REMOTE_FUNCTION]:InvokeClient(player, instance, entities, table.unpack(params))
 	end)
@@ -550,7 +551,8 @@ function Server.NewPrefab(rootInstance, entitiesFolder)
 			static[ENTITIES_INDEX], static[PARAMS_INDEX] = SerializeEntity(
 				instance, networkId,
 				static[ENTITIES], static[PARAMS]
-				static[ENTITIES_INDEX], static[PARAMS_INDEX]
+				static[ENTITIES_INDEX], static[PARAMS_INDEX],
+				nil, nil, true
 			)
 		end
 	end
@@ -786,6 +788,7 @@ function Server.Init()
 						instance, id,
 						static[ENTITIES], static[PARAMS],
 						static[ENTITIES_INDEX], static[PARAMS_INDEX]
+						nil, nil, true
 					)
 				end
 			end
