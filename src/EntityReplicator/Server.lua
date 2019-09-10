@@ -91,7 +91,7 @@ local function clearBuffer(buffer)
 	buffer[PARAMS_INDEX] = 1
 end
 
----Queues a construction message in player's buffer for the networked entity with networkId associated with instance
+---Queues a construction message in player's buffer for the referenced entity associated with instance
 -- @param player Player
 -- @param instance Instance
 -- @param networkId number
@@ -107,7 +107,7 @@ local function queueConstruction(player, instance, networkId)
 	)
 end
 
----Queues a destruction message in player's buffer for the networked entity with networkId associated with instance
+---Queues a destruction message in player's buffer for the referenced entity associated with instance
 -- @param player Player
 -- @param instance Instance
 -- @param networkId number
