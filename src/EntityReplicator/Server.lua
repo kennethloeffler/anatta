@@ -140,7 +140,7 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 			instance, networkId,
 			prefabRefs, prefabRefsParams,
 			prefabRefsIndex, prefabRefsParamIndex,
-			true
+			instance:IsDescendantOf(rootInstance)
 		)
 	end
 
@@ -379,7 +379,7 @@ function Server.DereferenceForPrefab(rootInstance, instance, supressDestructionM
 	end
 
 	CollectionService:RemoveTag(instance, idStr)
-	instance.Name = ""
+	instance.Name = instance:IsDescendantOf(rootInstance) and "" or instance.Name
 	StaticPrefabEntities[rootInstance][PREFAB_REFS][instance] = nil
 end
 
