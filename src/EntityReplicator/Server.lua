@@ -30,14 +30,16 @@ local NumNetworkIds = 0
 local AccumulatedTime = 0
 
 local Remotes = {}
+local GlobalBuffer = {}
 local PrefabBuffers = {}
 local PlayerBuffers = {}
+local GlobalRefs = {}
 local FreedNetworkIds = {}
 local PlayerReferences = {}
 local PlayerSerializable = {}
 local PlayerCreatable = {}
 local StaticPrefabEntities = {}
-local PrefabsByPlayer
+local PrefabsByPlayer = {}
 local BlacklistedComponents = {}
 
 Server.PlayerSerializable = PlayerSerializable
@@ -708,7 +710,7 @@ function Server.Step(dt)
 			QueuedUpdates[instance] = nil
 		end
 
-		global = next(GlobalBuffers[ENTITIES])
+		global = next(GlobalBuffer[ENTITIES])
 
 		for _, player in ipairs(Players:GetPlayers()) do
 			playerPrefab = PrefabsByPlayer[player]
