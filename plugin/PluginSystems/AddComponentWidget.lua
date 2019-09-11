@@ -16,7 +16,7 @@ local function makeComponentButton(componentType, componentId)
 	button.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar)
 	button.Position = UDim2.new(0, 0, 0, 0)
 	button.LayoutOrder = componentId
-	
+
 	button.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			button.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar)
@@ -29,26 +29,29 @@ end
 function AddComponentWidget.Init(pluginWrapper)
 	local PluginManager = pluginWrapper.PluginManager
 	local GameManager = pluginWrapper.GameManager
-	
-	PluginManager.ComponentAdded("AddComponentMenuClick"):Connect(function(scrollingFrame)
-		local component = PluginManager.GetComponent(scrollingFrame, "AddComponentMenuClick")
-		scrollingFrame.Parent.AddComponentButton.Text = "-"
-		scrollingFrame:ClearAllChildren()
-		
+
+	PluginManager.ComponentAdded("AddComponentMenuClick", function(component)
+		local gui = component.Instance
 		local uiListLayout = Instance.new("UIListLayout")
-		uiListLayout.Parent = scrollingFrame
+
+		gui.AddComponentButton.Text = "-"
+		gui:ClearAllChildren()
+
+		uiListLayout.Parent = gui
 		uiListLayout.Padding = UDim.new(0, 1)
 		uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 		for componentType, def in pairs(component.Components) do
 			local button = makeComponentButton(componentType, def.ComponentId)
+
 			button.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
 					button.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar, Enum.StudioStyleGuideModifier.Pressed)
-					PluginManager.AddComponent(scrollingFrame, "DoSerializeEntity", {InstanceList = Selection:Get(), ComponentType = componentType})
+					PluginManager.AddComponent(gui, "DoSerializeEntity", {InstanceList = Selection:Get(), ComponentType = componentType})
 				end
 			end)
-			button.Parent = scrollingFrame
+
+			button.Parent = gui
 		end
 	end)
 end

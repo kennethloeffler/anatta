@@ -19,6 +19,7 @@ local function tryRequire(moduleScript)
 	local success, result = xpcall(function()
 		return env.require(moduleScript)
 	end,
+
 	function(err)
 		return err
 	end)
@@ -30,35 +31,36 @@ end
 
 -- this function is probably too big but w/e
 local function tryCollectComponent(instance)
-   
+
 	if not instance:IsA("ModuleScript") or instance.Name == "Component" then
 		return
 	end
 
 	local pattern = "Component%.Define%("
+
 	if instance.Source:match(pattern) then
 		local rawComponent = tryRequire(instance)
 		local componentType = rawComponent[1]
 		local paramMap = rawComponent[2]
-		
+
 		if GameComponentDefs[componentType] then
-			-- component definition has already been serialized; check if we have any new or removed params 
+			-- component definition has already been serialized; check if we have any new or removed params
 			local newParams = {}
 			local oldParamArray = {}
 			local indicesToFill = {}
 			local currentIndex = 0
 			local numOldParams = 0
 			local maxParamIndex = 0
-			
+
 			-- remove params that aren't in paramMap
 			for paramName in pairs(GameComponentDefs[componentType]) do
 				if not paramMap[paramName] and paramName ~= "ComponentId" then
 					GameComponentDefs[componentType][paramName] = nil
 				end
 			end
-			
+
 			for paramName, defaultValue in pairs(paramMap) do
-				
+
 				local paramId = GameComponentDefs[componentType][paramName][1]
 				if not paramId then
 					newParams[paramName] = defaultValue
@@ -68,14 +70,14 @@ local function tryCollectComponent(instance)
 					maxParamIndex = paramId > maxParamIndex and paramId or maxParamIndex
 				end
 			end
-			
+
 			-- check for holes
 			for i = 1, numOldParams do
 				if not oldParamArray[i] then
 					indicesToFill[#indicesToFill + 1] = i
 				end
 			end
-				
+
 			-- add new params and fill any holes
 			for paramName, defaultValue in pairs(newParams) do
 				currentIndex = currentIndex + 1
@@ -86,10 +88,10 @@ local function tryCollectComponent(instance)
 					GameComponentDefs[componentType][paramName] = {maxParamIndex, defaultValue}
 				end
 			end
-			
+
 			return
 		end
-		
+
 		-- this component has not been serialized before
 		local componentIdListHole
 		local componentId
@@ -102,10 +104,10 @@ local function tryCollectComponent(instance)
 				break
 			end
 		end
-		
+
 		NumUniqueComponents = NumUniqueComponents + 1
 		GameComponentDefs[componentType] = {}
-		
+
 		if not componentIdListHole then
 			componentId = NumUniqueComponents
 		else
@@ -123,7 +125,7 @@ local function tryCollectComponent(instance)
 end
 
 function tryRemoveComponent(instance)
-	
+
 	if not instance:IsA("ModuleScript") or instance.Name == "Component" then
 		return
 	end
@@ -132,13 +134,16 @@ function tryRemoveComponent(instance)
 	if instance.Source:match(pattern) then
 		local rawComponent = tryRequire(instance)
 		local componentType = rawComponent[1]
+
 		GameComponentDefs[componentType] = nil
+
 		for componentId, comtype in pairs(ComponentsArray) do
 			if comtype == componentType then
 				ComponentsArray[componentId] = nil
 				break
 			end
 		end
+
 		NumUniqueComponents = NumUniqueComponents - 1
 	end
 end
@@ -149,7 +154,7 @@ function ComponentsLoader.Init(plugin)
 
 	if GameComponentDefModule then
 		for componentType, componentDef in pairs(require(GameComponentDefModule)) do
-			GameComponentDefs[componentType] = componentDef	
+			GameComponentDefs[componentType] = componentDef
 			GameComponentDefs[componentType].ComponentId = componentDef.ComponentId
 			ComponentsArray[componentDef.ComponentId] = componentType
 			NumUniqueComponents = NumUniqueComponents + 1

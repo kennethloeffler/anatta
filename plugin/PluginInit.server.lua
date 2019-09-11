@@ -41,19 +41,19 @@ if IsCustomSource then
 end
 
 function PluginWrapper.GetToolbar(toolbarName)
-   
+
 	if Toolbars[toolbarName] then
 		return Toolbars[toolbarName]
 	end
 
 	local toolbar = plugin:CreateToolbar(toolbarName)
 	Toolbars[toolbarName] = toolbar
-	
+
 	return toolbar
 end
 
 function PluginWrapper.GetButton(toolbar, buttonName, buttonTooltip, buttonIcon)
-   
+
 	if Buttons[toolbar] then
 		local button = buttons[buttonName]
 		if button then
@@ -65,7 +65,7 @@ function PluginWrapper.GetButton(toolbar, buttonName, buttonTooltip, buttonIcon)
 
 	local button = plugin:CreateButton(buttonName, buttonTooltip, buttonIcon)
 	Buttons[toolbar][buttonName] = button
-	
+
 	return button
 end
 
@@ -85,7 +85,7 @@ function PluginWrapper.Load()
 	local success, result = pcall(require, CurrentSource.plugin.Main)
 
 	WSAssert(success, "plugin failed to load: %s", result)
-	
+
 	local loadedPlugin = result
 
 	success, result = pcall(loadedPlugin, PluginWrapper, CurrentSource, ReplicatedStorage:WaitForChild("WorldSmith", 1))
@@ -101,7 +101,6 @@ function PluginWrapper.Reload()
 end
 
 function PluginWrapper.Watch(instance)
-	
 	if WatchedInstances[instance] then
 		return
 	end
@@ -116,18 +115,18 @@ function PluginWrapper.Watch(instance)
 
 	local ChangedConnection = instance.Changed:Connect(function()
 		print("WorldSmith: plugin reloading; " .. instance:GetFullName() .. " changed")
-		PluginWrapper.Reload()	
+		PluginWrapper.Reload()
 	end)
 
 	local ChildAddedConnection = instance.ChildAdded:Connect(function(child)
-		PluginWrapper.Watch(child)	
+		PluginWrapper.Watch(child)
 	end)
 
 	WatchedInstances[instance] = {ChangedConnection, ChildAddedConnection}
 
 	for _, child in ipairs(instance:GetChildren()) do
 		PluginWrapper.Watch(child)
-	end   
+	end
 end
 
 PluginWrapper.Load()

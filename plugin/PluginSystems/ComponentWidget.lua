@@ -17,7 +17,7 @@ function ComponentWidget.Init(pluginWrapper)
 
 	local widget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
 	widget.Title = "Components"
-	
+
 	local bgFrame = Instance.new("Frame")
 	bgFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
 	bgFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -54,7 +54,7 @@ function ComponentWidget.Init(pluginWrapper)
 	AddComponentButton.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar, Enum.StudioStyleGuideModifier.Pressed)
-			
+
 			if not PluginManager.GetComponent(scrollingFrame, "AddComponentMenuClick") then
 				PluginManager.AddComponent(scrollingFrame, "AddComponentMenuClick", {Components = Serial.Deserialize(ComponentDefs.Source)})
 			else
@@ -71,21 +71,21 @@ function ComponentWidget.Init(pluginWrapper)
 			AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar)
 		end
 	end)
-	
+
 	scrollingFrame.ChildAdded:Connect(function(child)
 		if not child:IsA("GuiBase") then
 			return
 		end
-		
-		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize + UDim2.new(0, 0, 0, child.AbsoluteSize.Y) 
+
+		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize + UDim2.new(0, 0, 0, child.AbsoluteSize.Y)
 	end)
 
 	scrollingFrame.ChildRemoved:Connect(function(child)
 		if not child:IsA("GuiBase") then
 			return
 		end
-		
-		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize - UDim2.new(0, 0, 0, child.AbsoluteSize.Y) 
+
+		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize - UDim2.new(0, 0, 0, child.AbsoluteSize.Y)
 	end)
 
 	Selection.SelectionChanged:Connect(function()
@@ -96,7 +96,7 @@ function ComponentWidget.Init(pluginWrapper)
 			widget.Title = "Components"
 			return
 		end
-		
+
 		entities = {}
 
 		if #selectedInstances > 1 then

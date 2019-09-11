@@ -3,17 +3,21 @@ local Theme = settings().Studio.Theme
 
 local ComponentWidgetList = {}
 
-local function splitCommaDelinNumStr(str)	
+local function splitCommaDelinNumStr(str)
 	local list = {}
+
 	for s in string.gmatch(str, "([^,]+)") do
 		list[#list + 1] = tonumber(s)
 	end
+
 	return unpack(list)
 end
 
+-- quick n dirty... will refactor later
 local function makeParamValueField(paramValue, paramName, componentType, entityList, pluginManager)
-	local valueField
 	local paramType = typeof(paramValue)
+	local valueField
+
 	if paramType == "boolean" then
 		valueField = Instance.new("Frame")
 		valueField.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.MainBackground)
@@ -34,13 +38,13 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		check.Image = "rbxasset://textures/TerrainTools/icon_tick.png"
 		check.BackgroundTransparency = 1
 		check.BorderSizePixel = 0
-		check.ImageTransparency = paramValue and 0 or 1 
+		check.ImageTransparency = paramValue and 0 or 1
 		check.Parent = box
 		box.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				paramValue = not paramValue
 				print("my value : " .. tostring(paramValue))
-				check.ImageTransparency = paramValue and 0 or 1 
+				check.ImageTransparency = paramValue and 0 or 1
 				pluginManager.AddComponent(box, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = paramValue}})
 			end
 		end)
@@ -75,7 +79,7 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue) 
+		valueField.Text = "     " .. tostring(paramValue)
 		valueField.FocusLost:Connect(function()
 			valueField.Text = "     " .. tostring(val)
 			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = Vector2.new(splitCommaDelinNumStr(valueField.Text))}})
@@ -99,7 +103,7 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue) 
+		valueField.Text = "     " .. tostring(paramValue)
 		valueField.FocusLost:Connect(function()
 			valueField.Text = "     " .. valueField.Text
 			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = UDim.new(splitCommaDelinNumStr(valueField.Text))}})
@@ -111,7 +115,7 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue) 
+		valueField.Text = "     " .. tostring(paramValue)
 		valueField.FocusLost:Connect(function()
 			valueField.Text = "     " .. valueField.Text
 			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = UDim2.new(splitCommaDelinNumStr(valueField.Text))}})
@@ -123,22 +127,23 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue) 
+		valueField.Text = "     " .. tostring(paramValue)
 		valueField.FocusLost:Connect(function()
 			valueField.Text = "     " .. valueField.Text
 			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = Color3.new(splitCommaDelinNumStr(valueField.Text))}})
 		end)
 	else
 		error("Unexpected type: " .. paramType)
-	end	
+	end
 	return valueField
 end
 
 local function clearParamFields(componentType, numParams, scrollingFrame)
 	local componentLabelOffset = scrollingFrame:FindFirstChild(componentType).LayoutOrder
+
 	for _, field in ipairs(scrollingFrame:GetChildren()) do
 		if field:IsA("GuiBase") then
-			if field.LayoutOrder >= componentLabelOffset + 1 and field.LayoutOrder <= componentLabelOffset + numParams then 
+			if field.LayoutOrder >= componentLabelOffset + 1 and field.LayoutOrder <= componentLabelOffset + numParams then
 				field:Destroy()
 			end
 		end
@@ -150,6 +155,7 @@ local function makeParamFields(componentId, paramList, scrollingFrame, gameManag
 	local componentType = componentDesc.GetComponentTypeFromId(componentId)
 	local componentLabelOffset = scrollingFrame:FindFirstChild(componentType).LayoutOrder
 	local counter = 0
+
 	for _, paramDef in ipairs(paramList) do
 		counter = counter + 1
 		local paramName = componentDesc.GetParamNameFromId(componentId, paramDef.paramId)
@@ -170,14 +176,15 @@ local function makeParamFields(componentId, paramList, scrollingFrame, gameManag
 		paramNameLabel.Text = paramName
 		paramNameLabel.TextSize = 8
 		paramNameLabel.Parent = frame
-		
+
 		local valueField = makeParamValueField(paramDef.paramValue, paramName, componentType, entityList, pluginManager)
-		valueField.Parent = frame		
+		valueField.Parent = frame
 	end
 end
 
 local function shiftLabels(scrollingFrame, componentType, numParams, dir)
 	local componentLabelOffset = scrollingFrame:FindFirstChild(componentType).LayoutOrder
+
 	for _, inst in pairs(scrollingFrame:GetChildren()) do
 		if inst:IsA("GuiBase") and inst.LayoutOrder > componentLabelOffset then
 			inst.LayoutOrder = dir == 1 and inst.LayoutOrder + numParams or inst.LayoutOrder - numParams
@@ -191,12 +198,13 @@ local function makeComponentLabels(instance, scrollingFrame, gameManager, entity
 	if not module then
 		return
 	end
-	
+
 	local componentDesc = gameManager.GetComponentDesc()
 	local components = Serial.Deserialize(module.Source)
 	for componentType, paramList in pairs(components) do
 		local componentId = componentDesc.GetComponentIdFromType(componentType)
 		local oldLabel = scrollingFrame:FindFirstChild(componentType)
+
 		if not oldLabel then
 			local label = Instance.new("TextLabel")
 			label.Size = UDim2.new(1, -18, 0, 24)
@@ -231,15 +239,18 @@ function ComponentWidgetList.Init(pluginWrapper)
 	local pluginManager = pluginWrapper.PluginManager
 	local gameManager = pluginWrapper.GameManager
 
-	pluginManager.ComponentAdded("SelectionUpdate"):Connect(function(scrollingFrame)
-		local selectionUpdate = pluginManager.GetComponent(scrollingFrame, "SelectionUpdate")
+	pluginManager.ComponentAdded("SelectionUpdate", function(selectionUpdate)
 		local uiListLayout = Instance.new("UIListLayout")
+		local scrollingFrame = selectionUpdate.Instance
+
 		uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 		uiListLayout.Padding = UDim.new(0, 1)
 		uiListLayout.Parent = scrollingFrame
+
 		for _, inst in ipairs(selectionUpdate.EntityList) do
 			makeComponentLabels(inst, scrollingFrame, gameManager, selectionUpdate.EntityList, pluginManager)
 		end
+
 		pluginManager.KillComponent(scrollingFrame, "SelectionUpdate")
 	end)
 end
