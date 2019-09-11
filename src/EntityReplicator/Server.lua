@@ -756,7 +756,7 @@ function Server.Init()
 		local RefFolder = Instance.new("Folder")
 
 		StaticFolder.Name = "_s"
-	    RefFolder.Name = "_r"
+		RefFolder.Name = "_r"
 
 		StaticFolder.Parent = rootInstance
 		RefFolder.Parent = rootInstance
