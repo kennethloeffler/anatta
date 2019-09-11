@@ -13,6 +13,9 @@ local ComponentWidget = {}
 function ComponentWidget.Init(pluginWrapper)
 	local GameManager = pluginWrapper.GameManager
 	local PluginManager = pluginWrapper.PluginManager
+	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
+	local referenceButton = pluginWrapper.GetButton("WSReplicatorReference")
+	local prefabButton = pluginWrapper.GetButton("WSPrefabRootInstance")
 	local entities = {}
 
 	local widget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
@@ -86,6 +89,28 @@ function ComponentWidget.Init(pluginWrapper)
 		end
 
 		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize - UDim2.new(0, 0, 0, child.AbsoluteSize.Y)
+	end)
+
+	referenceButton.Click:Connect(function()
+		for _, instance in ipairs(entities) do
+			if CollectionService:HasTag(instance, "__WSEntity") then
+				if not CollectionService:HasTag(instance, "__WSReplicatorRef") then
+					CollectionService:AddTag(instance, "__WSReplicatorRef")
+				else
+					CollectionService:RemoveTag(instance, "__WSReplicatorRef")
+				end
+			end
+		end
+	end)
+
+	prefabButton.Click:Connect(function()
+		for _, instance in ipairs(entities) do
+			if not CollectionService:HasTag(instance, "__WSReplicatorRoot") then
+				CollectionService:AddTag(instance, "__WSReplicatorRoot")
+			else
+				CollectionService:RemoveTag(instance, "__WSReplicatorRoot")
+			end
+		end
 	end)
 
 	Selection.SelectionChanged:Connect(function()

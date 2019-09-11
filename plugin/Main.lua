@@ -1,4 +1,5 @@
 -- Main.lua
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
@@ -10,6 +11,9 @@ function Main(pluginWrapper, root, gameRoot)
 	local componentDefinitions = {}
 	local Systems = root.plugin.PluginSystems
 	local Components = root.plugin.PluginComponents
+	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
+	local networkRefButton = pluginWrapper.GetButton(toolbar, "WSReplicatorReference", "Tag the selected enitity as being an EntityReplicator reference")
+	local prefabButton = pluginWrapper.GetButton(toolbar, "WSPrefabRootInstance", "Tag the selected instance as being an EntityReplicator prefab root instance")
 
 	for _, componentModule in ipairs(Components:GetChildren()) do
 		local rawComponent = require(componentModule)
@@ -46,7 +50,7 @@ function Main(pluginWrapper, root, gameRoot)
 	pluginManager.LoadSystem(Systems.EntityPersistence, pluginWrapper)
 	pluginManager.LoadSystem(Systems.ComponentWidgetList, pluginWrapper)
 
-	pluginWrapper.OnUnloading = function()
+	PluginWrapper.OnUnloading = function()
 		local dockWidget = pluginWrapper.GetDockWidget("Components")
 
 		if dockWidget then
