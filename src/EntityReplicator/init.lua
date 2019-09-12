@@ -1,10 +1,8 @@
-local Constants = require(script.Constants)
+local Constants = require(script.Parent.Constants)
 
-local IS_SERVER = Constants.IS_SERVER
-
-local Server = IS_SERVER and require(script.Server)
+local Client = Constants.IS_CLIENT and require(script.Client)
+local Server = Constants.IS_SERVER and require(script.Server)
 local Shared = require(script.Shared)
-local Client = not IS_SERVER and require(script.Client)
 
 return {
 	Init = function(EntityManager, entityMap, componentMap)

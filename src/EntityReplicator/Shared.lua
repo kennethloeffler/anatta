@@ -21,7 +21,7 @@
 local CollectionService = game:GetService("CollectionService")
 
 local ComponentDesc = require(script.Parent.Parent.ComponentDesc)
-local Constants = require(script.Parent.Constants)
+local Constants = require(script.Parent.Parent.Constants)
 
 local UPDATE = Constants.UPDATE
 local PARAMS_UPDATE = Constants.PARAMS_UPDATE

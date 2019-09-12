@@ -2,14 +2,14 @@
 local CollectionService = game:GetService("CollectionService")
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
-local Constants = require(script.Parent.EntityReplicator.Constants)
+local Constants = require(script.Parent.Constants)
 local WSAssert = require(script.Parent.WSAssert)
 
 local PARAMS_UPDATE = Constants.PARAMS_UPDATE
 local ADD_COMPONENT = Constants.ADD_COMPONENT
-local IS_SERVER = Constants.IS_SERVER and (Constants.IS_RUN_MODE and not Constants.IS_STUDIO)
+local SHOULD_SEND = Constants.IS_SERVER or Constants.IS_CLIENT
 
-local Replicator = IS_SERVER and require(script.Parent.EntityReplicator.Shared)
+local Replicator = SHOULD_SEND and require(script.Parent.EntityReplicator.Shared)
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
 local GetParamIdFromName = ComponentDesc.GetParamIdFromName
@@ -30,11 +30,11 @@ local ComponentMetatable = {
 		local paramId = GetParamIdFromName(componentId, index)
 		local ty = typeof(GetParamDefault(componentId, paramId))
 
-		WSAssert(ty == typeof(value), "expected %s", ty)
+		ty = (ty == typeof(value) and true or error("expected " .. ty))
 
 		component[paramId] = value
 
-		if IS_SERVER and CollectionService:HasTag(component.Instance, "__WSReplicatorRef") and not BlackListed[componentId] then
+		if SHOULD_SEND and CollectionService:HasTag(component.Instance, "__WSReplicatorRef") and not BlackListed[componentId] then
 			QueueUpdate(component.Instance, PARAMS_UPDATE, componentId, paramId)
 		end
 	end
@@ -61,7 +61,7 @@ function Component(instance, componentType, paramMap)
 	local componentId = typeof(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
 	local newComponent = paramMap
 
-	if #newComponent == 0 then
+	if not newComponent[1] then
 		for paramName, default in pairs(GetDefaults(componentId)) do
 			local paramId = GetParamIdFromName(componentId, paramName)
 
@@ -79,7 +79,7 @@ function Component(instance, componentType, paramMap)
 
 	setmetatable(newComponent, ComponentMetatable)
 
-	if IS_SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") and not BlackListed[componentId] then
+	if SHOULD_SEND and CollectionService:HasTag(instance, "__WSReplicatorRef") and not BlackListed[componentId] then
 		QueueUpdate(instance, ADD_COMPONENT, componentId)
 	end
 

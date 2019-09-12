@@ -2,7 +2,6 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local ComponentDesc = require(script.Parent.Parent.ComponentDesc)
-local Constants = require(script.Parent.Constants)
 local PlayerGui = Player.LocalPlayer:WaitForChild("PlayerGui")
 local Shared = require(script.Parent.Shared)
 

@@ -4,7 +4,8 @@ local RunService = game:GetService("RunService")
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
 local ComponentFactory = require(script.Parent.ComponentFactory)
-local EntityReplicator = (not RunService:IsStudio() or RunService:IsRunMode()) and require(script.Parent.EntityReplicator)
+local Constants = require(script.Parent.Constants)
+local EntityReplicator = (Constants.IS_SERVER or Constants._IS_CLIENT) and require(script.Parent.EntityReplicator)
 local WSAssert = require(script.Parent.WSAssert)
 
 -- Internal
