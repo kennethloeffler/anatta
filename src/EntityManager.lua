@@ -166,8 +166,9 @@ local function doReorder(componentId, parentEntitiesMap)
 
 			keptComponentOffset = keptComponentOffset + 1
 		else
+			local removedFunc = ComponentRemovedFuncs[componentId]
 		   	-- kill
-			ComponentRemovedFuncs[componentId](component)
+			removedFunc = removedFunc and removedFunc(component)
 			componentList[componentOffset] = nil
 			entityStruct[componentId] = nil
 			parentEntitiesMap[instance] = nil
@@ -196,11 +197,13 @@ local function stepComponentLifetime()
 	end
 
 	for i, component in ipairs(AddedComponents) do
+		local addedFunc = ComponentAddedFuncs[componentId]
+
 		componentId = component._componentId
 		componentOffset = #ComponentMap[componentId] + 1
 		instance = component.Instance
 
-		ComponentAddedFuncs[componentId](component)
+		addedFunc = addedFunc and addedFunc(component)
 		EntityMap[instance][componentId] = componentOffset
 		ComponentMap[componentId][componentOffset] = component
 		AddedComponents[i] = nil
