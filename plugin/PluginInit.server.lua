@@ -55,7 +55,8 @@ end
 function PluginWrapper.GetButton(toolbar, buttonName, buttonTooltip, buttonIcon)
 
 	if Buttons[toolbar] then
-		local button = buttons[buttonName]
+		local button = Buttons[toolbar][buttonName]
+
 		if button then
 			return button
 		end
@@ -63,7 +64,7 @@ function PluginWrapper.GetButton(toolbar, buttonName, buttonTooltip, buttonIcon)
 		Buttons[toolbar] = {}
 	end
 
-	local button = plugin:CreateButton(buttonName, buttonTooltip, buttonIcon)
+	local button = toolbar:CreateButton(buttonName, buttonTooltip, buttonIcon or "")
 	Buttons[toolbar][buttonName] = button
 
 	return button

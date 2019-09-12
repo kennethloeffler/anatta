@@ -52,7 +52,7 @@ local ClientSerializable
 
 Shared.Queued = Queued
 Shared.InstancesByNetworkId = InstancesByNetworkId
-Shared.NetworkIdsByInstance  NetworkIdsByInstance
+Shared.NetworkIdsByInstance = NetworkIdsByInstance
 
 ---Returns TRUE if the bit at position pos is set, FALSE otherwise
 -- n is truncated to a 32-bit integer by bit32
@@ -417,7 +417,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 			paramsField = even and dataObj.X or dataObj.Y
 			entities[entitiesIndex] = nil
 
-			if player and invalidDataObj(dataObj)
+			if player and invalidDataObj(dataObj) then
 				return
 			end
 
@@ -656,7 +656,7 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 				)
 			elseif msg == KILL_COMPONENT then
 				entitiesIndex, flags, numDataStructs = serializeKillComponent(
-					entities, entitiesIndex
+					entities, entitiesIndex,
 					map, flags
 				)
 			end
@@ -748,7 +748,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 
 				for paramId, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
 					if default[paramId] then
-						paramsIndex = paramsIndex = 1
+						paramsIndex = paramsIndex + 1
 						params[paramsIndex] = v
 					end
 				end

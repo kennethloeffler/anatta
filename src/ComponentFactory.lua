@@ -2,20 +2,22 @@
 local CollectionService = game:GetService("CollectionService")
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
-local Constants = require(scipt.Parent.EntityReplicator.Constants)
-local Replicator = require(script.Parent.EntityReplicator.Shared)
+local Constants = require(script.Parent.EntityReplicator.Constants)
 local WSAssert = require(script.Parent.WSAssert)
 
 local PARAMS_UPDATE = Constants.PARAMS_UPDATE
-local IS_SERVER = Constants.IS_SERVER
+local ADD_COMPONENT = Constants.ADD_COMPONENT
+local IS_SERVER = Constants.IS_SERVER and (Constants.IS_RUN_MODE and not Constants.IS_STUDIO)
+
+local Replicator = IS_SERVER and require(script.Parent.EntityReplicator.Shared)
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
 local GetParamIdFromName = ComponentDesc.GetParamIdFromName
 local GetParamDefault = ComponentDesc.GetParamDefault
 local GetDefaults = ComponentDesc.GetDefaults
 
-local QueueUpdate = Replicator.QueueUpdate
-local BlackListed = Replicator.GetBlacklistedComponents()
+local QueueUpdate = Replicator and Replicator.QueueUpdate
+local BlackListed = Replicator and Replicator.GetBlacklistedComponents()
 
 local ComponentMetatable = {
 	__index = function(component, index)
@@ -32,7 +34,7 @@ local ComponentMetatable = {
 
 		component[paramId] = value
 
-		if IS_SERVER and CollectionService:HasTag(instance, "__WSReplicatorRef") and not BlackListed[componentId] then
+		if IS_SERVER and CollectionService:HasTag(component.Instance, "__WSReplicatorRef") and not BlackListed[componentId] then
 			QueueUpdate(component.Instance, PARAMS_UPDATE, componentId, paramId)
 		end
 	end

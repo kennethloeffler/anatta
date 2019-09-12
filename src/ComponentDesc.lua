@@ -39,13 +39,12 @@ local function populateDefs(definitionTable)
 	ComponentDesc.ComponentDefinitions = definitionTable
 end
 
-ComponentDesc.NumParamsByComponentId = NumParamsByComponentId
+ComponentDesc.NumParamsByComponentId = NumComponentParams
 
 if script:WaitForChild("ComponentDefinitions", 2) then
 	local componentDefinitions = require(script.ComponentDefinitions)
 
 	populateDefs(componentDefinitions)
-	print(script:GetFullName())
 
 	script.ComponentDefinitions:GetPropertyChangedSignal("Source"):Connect(function()
 		populateDefs(require(script.ComponentDefinitions:Clone()))

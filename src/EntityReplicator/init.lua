@@ -15,32 +15,32 @@ return {
 		elseif Client then
 			Client.Init()
 		end
-	end
+	end,
 
 	-- client-side functions
-	SendAddComponent = Client and Client.SendAddComponent
-	SendParameterUpdate = Client and Client.SendParameterUpdate
+	SendAddComponent = Client and Client.SendAddComponent,
+	SendParameterUpdate = Client and Client.SendParameterUpdate,
 
 	-- server-side functions
-	Reference = Server and Server.Reference
+	Reference = Server and Server.Reference,
 
-	ReferenceGlobal = Server and Server.ReferenceGlobal
-	DereferenceGlobal = Server and Server.DereferenceGlobal
+	ReferenceGlobal = Server and Server.ReferenceGlobal,
+	DereferenceGlobal = Server and Server.DereferenceGlobal,
 
-	ReferenceForPlayer = Server and Server.ReferenceForPlayer
-	DereferenceForPlayer = Server and Server.DereferenceForPlayer
+	ReferenceForPlayer = Server and Server.ReferenceForPlayer,
+	DereferenceForPlayer = Server and Server.DereferenceForPlayer,
 
-	ReferenceForPrefab = Server and Server.ReferenceForPrefab
-	DereferenceForPrefab = Server and Server.DereferenceForPrefab
+	ReferenceForPrefab = Server and Server.ReferenceForPrefab,
+	DereferenceForPrefab = Server and Server.DereferenceForPrefab,
 
-	Unique = Server and Server.Unique
-	UniqueFromPrefab = Server and Server.UniqueFromPrefab
+	Unique = Server and Server.Unique,
+	UniqueFromPrefab = Server and Server.UniqueFromPrefab,
 
-	PlayerSerializable = Server and Server.PlayerSerializable
-	PlayerCreatable = Server and Server.PlayerCreatable
+	PlayerSerializable = Server and Server.PlayerSerializable,
+	PlayerCreatable = Server and Server.PlayerCreatable,
 
 	-- shared functions
-	Step = Server and Server.Step or Client.Step
+	Step = Server and Server.Step or Client.Step,
 	Dereference = Server and Server.Dereference or Shared.OnDereference
 }
 

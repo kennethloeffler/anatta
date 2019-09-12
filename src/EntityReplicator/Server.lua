@@ -103,8 +103,8 @@ local function queueConstruction(player, instance, networkId)
 
 	buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX] = SerializeEntity(
 		instance, networkId,
-		buffer[ENTITIES], buffer[PARAMS]
-		buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX]
+		buffer[ENTITIES], buffer[PARAMS],
+		buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX],
 		nil, true
 	)
 end
@@ -119,7 +119,7 @@ local function queueDestruction(player, instance, networkId)
 
 	buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX] = SerializeEntity(
 		instance, networkId,
-		buffer[ENTITIES], buffer[PARAMS]
+		buffer[ENTITIES], buffer[PARAMS],
 		buffer[ENTITIES_INDEX], buffer[PARAMS_INDEX],
 		true, true
 	)
@@ -552,7 +552,7 @@ function Server.NewPrefab(rootInstance, entitiesFolder)
 		else
 			static[ENTITIES_INDEX], static[PARAMS_INDEX] = SerializeEntity(
 				instance, networkId,
-				static[ENTITIES], static[PARAMS]
+				static[ENTITIES], static[PARAMS],
 				static[ENTITIES_INDEX], static[PARAMS_INDEX],
 				nil, nil, true
 			)
@@ -789,7 +789,7 @@ function Server.Init()
 					static[ENTITIES_INDEX], static[PARAMS_INDEX] = serializeEntity(
 						instance, id,
 						static[ENTITIES], static[PARAMS],
-						static[ENTITIES_INDEX], static[PARAMS_INDEX]
+						static[ENTITIES_INDEX], static[PARAMS_INDEX],
 						nil, nil, true
 					)
 				end

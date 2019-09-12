@@ -19,6 +19,8 @@ local HeartbeatSystems = {}
 local FilterIdsBySystem = {}
 local HeartbeatIdsBySystem = {}
 local EntityFilters = {}
+local ComponentRemovedFuncs = {}
+local ComponentAddedFuncs = {}
 local FilteredEntityAddedFuncs = {}
 local FilteredEntityRemovedFuncs = {}
 local SystemFilteredEntities = {}
@@ -128,7 +130,7 @@ local function doUnloadSystem(system)
 		HeartbeatSystems[heartbeatId] = HeartbeatSystems[len]
 		HeartbeatSystems[len] = nil
 
-		HeatbeatIdsBySystem[system] = nil
+		HeartbeatIdsBySystem[system] = nil
 
 		for sys, id in pairs(HeartbeatIdsBySystem) do
 			if id == len then
@@ -213,11 +215,8 @@ local function initComponentDefs()
 
 	for componentType, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
 		componentId = componentDefinition.ComponentId
-
 		ComponentMap[componentId] = not ComponentMap[componentId] and {}
 		KilledComponents[componentId] = not KilledComponents[componentId] and {}
-		ComponentRemovedEvents[componentId] = not ComponentRemovedEvents[componentId] and Instance.new("BindableEvent")
-		ComponentAddedEvents[componentId] = not ComponentAddedEvents[componentId] and Instance.new("BindableEvent")
 	end
 end
 
@@ -292,7 +291,7 @@ end
 ---Hooks a function func to be called whenever just before of type componentType are added to an entity
 -- The component object is passed as a parameter to func
 -- @param componentType
--- @param func
+-- @Param func
 
 function EntityManager.ComponentAdded(componentType, func)
 	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
@@ -404,6 +403,8 @@ end
 function EntityManager.LoadSystem(module, _pluginWrapper)
 	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1 (expected ModuleScript)")
 
+	local system = require(module)
+
 	if system.OnLoaded then
 		WSAssert(typeof(system.OnLoaded) == "function", "expected function %s.OnLoaded", module.Name)
 
@@ -438,7 +439,7 @@ function EntityManager.LoadSystem(module, _pluginWrapper)
 		for i, componentType in ipairs(system.EntityFilter) do
 			local componentId = GetComponentIdFromType(componentType)
 			local offset = math.ceil(componentId * 0.03125)
-			local bitField = entityFilter[offset]
+			local bitField = filter[offset]
 
 			filter[offset] = bit32.bor(bitField, bit32.lshift(1, componentId - 1 - (32 * (offset - 1))))
 		end
