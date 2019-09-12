@@ -26,7 +26,7 @@ local function makeComponentButton(componentType, componentId)
 	return button
 end
 
-function AddComponentWidget.Init(pluginWrapper)
+function AddComponentWidget.OnLoaded(pluginWrapper)
 	local PluginManager = pluginWrapper.PluginManager
 	local GameManager = pluginWrapper.GameManager
 

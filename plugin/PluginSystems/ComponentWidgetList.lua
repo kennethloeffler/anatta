@@ -235,7 +235,7 @@ local function makeComponentLabels(instance, scrollingFrame, gameManager, entity
 	end
 end
 
-function ComponentWidgetList.Init(pluginWrapper)
+function ComponentWidgetList.OnLoaded(pluginWrapper)
 	local pluginManager = pluginWrapper.PluginManager
 	local gameManager = pluginWrapper.GameManager
 

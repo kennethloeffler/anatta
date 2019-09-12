@@ -148,7 +148,7 @@ function tryRemoveComponent(instance)
 	end
 end
 
-function ComponentsLoader.Init(plugin)
+function ComponentsLoader.OnLoaded(plugin)
 
 	local GameComponentDefModule = GameSrc.ComponentDesc:WaitForChild("ComponentDefinitions", 1)
 

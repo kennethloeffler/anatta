@@ -16,7 +16,7 @@ local function getEntityStruct(inst)
 	return struct, module
 end
 
-function EntityPersistence.Init(pluginWrapper)
+function EntityPersistence.OnLoaded(pluginWrapper)
 	local PluginManager = pluginWrapper.PluginManager
 	local GameManager = pluginWrapper.GameManager
 
