@@ -5,6 +5,7 @@ local EntityPersistence = {}
 local function getEntityStruct(inst)
 	local module = inst:FindFirstChild("__WSEntity")
 	local struct
+
 	if module then
 		struct = Serial.Deserialize(module.Source)
 	else
@@ -13,6 +14,7 @@ local function getEntityStruct(inst)
 		module.Parent = inst
 		struct = {}
 	end
+
 	return struct, module
 end
 
@@ -33,8 +35,8 @@ function EntityPersistence.OnLoaded(pluginWrapper)
 				struct[componentType] = {}
 
 				for index, value in pairs(componentToSerialize) do
-					if typeof(index) == "number" then
-						struct[componentType][#struct[componentType] + 1] = {paramId = index, paramValue = value}
+					if typeof(index) == "number" and index ~= 0 then
+						struct[componentType][index] = value
 					end
 				end
 			else
