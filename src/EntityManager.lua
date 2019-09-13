@@ -245,7 +245,7 @@ local EntityManager = {}
 function EntityManager.AddComponent(instance, componentType, paramMap)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
 	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
-	WSAssert(paramMap and typeof(paramMap) == "table", "bad argument #3 (expected table)")
+	WSAssert(paramMap ~= nil and typeof(paramMap) == "table"or true, "bad argument #3 (expected table)")
 
 	if not EntityMap[instance] then
 		addEntity(instance)
@@ -535,7 +535,7 @@ function EntityManager.Init()
 			data = require(instance.__WSEntity)
 
 			for componentType, paramsInfo in ipairs(data) do
-				local numParams
+				local numParams = #paramsInfo
 				local componentStruct = {
 					true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 					_componentId = 0, Instance = 0

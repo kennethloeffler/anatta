@@ -34,10 +34,8 @@ function EntityPersistence.OnLoaded(pluginWrapper)
 
 				struct[componentType] = {}
 
-				for index, value in pairs(componentToSerialize) do
-					if typeof(index) == "number" and index ~= 0 then
-						struct[componentType][index] = value
-					end
+				for paramId, value in ipairs(componentToSerialize) do
+					struct[componentType][paramId] = value
 				end
 			else
 				struct[componentType] = nil

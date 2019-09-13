@@ -1,3 +1,4 @@
+local Constants = require(script.Parent.Constants)
 local WSAssert = require(script.Parent.WSAssert)
 
 local ComponentIdsByType = {}
@@ -13,26 +14,26 @@ local ComponentDesc = {
 
 local function populateDefs(definitionTable)
 	for componentType, componentDefinition in pairs(definitionTable) do
-
 		WSAssert(typeof(componentType) == "string", "expected string")
 		WSAssert(typeof(componentDefinition) == "table", "expected table")
 
 		local componentId = componentDefinition.ComponentId
+
 		WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
+
 		ComponentIdsByType[componentType] = componentId
 		ComponentTypesById[componentId] = componentType
 		ComponentParamIds[componentId] = {}
 		Defaults[componentId] = {}
 		NumComponentParams[componentId] = 0
 
-		for paramName, paramDef in pairs(componentDefinition) do
-			if paramName ~= "ComponentId" then
-				WSAssert(typeof(paramName) == "string", "expected string")
-				WSAssert(typeof(paramDef) == "table", "expected table")
-				ComponentParamIds[componentId][paramName] = paramDef[1]
-				Defaults[componentId][paramName] = paramDef[2]
-				NumComponentParams[componentId] = NumComponentParams[componentId] +	1
-			end
+		for paramId, paramDef in ipairs(componentDefinition) do
+			WSAssert(typeof(paramName) == "string", "expected string")
+			WSAssert(typeof(paramDef) == "table", "expected table")
+
+			ComponentParamIds[componentId][paramName] = paramId
+			Defaults[componentId][paramName] = paramDef.defaultValue
+			NumComponentParams[componentId] = NumComponentParams[componentId] + 1
 		end
 	end
 

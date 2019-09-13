@@ -525,6 +525,7 @@ end
 
 local function deserializeEntity(networkId, flags, entities, params, entitiesIndex, paramsIndex, arg)
 	local dataObj
+	local numParams
 	local field = 0
 	local isDestruction = isbitset(flags, IS_DESTRUCTION)
 	local isReferenced = isbitset(flags, IS_REFERENCED)
@@ -564,10 +565,15 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 			pos = ffs(field)
 			field = unsetbit(field, pos)
 			componentId = pos + (32 * offsetFactor) + 1
+			numParams = NumParams[componentId]
 
 			for paramId = 1, NumParams[componentId] do
 				paramsIndex = paramsIndex + 1
 				componentStruct[paramId] = params[paramsIndex]
+			end
+
+			for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do
+				componentStruct[i] = nil
 			end
 
 			AddComponent(instance, componentId, componentStruct)
