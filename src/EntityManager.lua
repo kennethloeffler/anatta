@@ -31,6 +31,7 @@ local SystemsRunning = false
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
 local ReplicatorStep = EntityReplicator and EntityReplicator.Step
+local AddComponent
 
 local function setComponentBitForEntity(entity, componentId)
 	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
@@ -256,6 +257,8 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 
 	return component
 end
+
+AddComponent = EntityManager.AddComponent
 
 ---Gets the component of type componentType associated with instance
 -- If instance is not associated with an entity or does not have componentType, this function returns nil
@@ -522,6 +525,36 @@ function EntityManager.Destroy()
 end
 
 function EntityManager.Init()
+	local entities = CollectionService:GetTagged("__WSEntities")
+	local data
+
+	for _, instance in pairs(entities) do
+		if not instance:FindFirstChild("__WSEntity") then
+			warn(("Tagged entity %s has no associated data (missing __WSEntity module)"):format(instance:GetFullName()))
+		else
+			data = require(instance.__WSEntity)
+
+			for componentType, paramsInfo in ipairs(data) do
+				local numParams
+				local componentStruct = {
+					true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+					_componentId = 0, Instance = 0
+				}
+
+				for paramId, paramValue in ipairs(paramsInfo) do
+					componentStruct[param.paramId] = param.paramValue
+				end
+
+				for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do
+					componentStruct[i] = nil
+				end
+
+				AddComponent(instance, componentType, componentStruct)
+			end
+
+			instance.__WSEntity:Destroy()
+		end
+	end
 end
 
 return EntityManager
