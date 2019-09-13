@@ -45,8 +45,6 @@ local function tryCollectComponent(instance)
 		-- this componentType has already been serialized; diff params
 		if componentDescription then
 			local numParams
-			local removedParamId
-			local paramName
 			local paramId
 
 			warn(("WorldSmith: found existing component %s"):format(componentType))
@@ -104,7 +102,7 @@ local function tryCollectComponent(instance)
 			componentId = componentIdListHole
 		end
 
-		warn(("WorldSmith: created component definition for new component \"%s\"  at componentId %s"):format(componentType, tostring(componentId)))
+		warn(("WorldSmith: created component description for new component \"%s\"  with componentId %s"):format(componentType, tostring(componentId)))
 
 		component.ComponentId = componentId
 		ComponentsArray[componentId] = componentType
@@ -152,8 +150,9 @@ function ComponentsLoader.OnLoaded()
 
 	if GameComponentDefModule then
 		for componentType, componentDef in pairs(require(GameComponentDefModule)) do
+			WSAssert(NumUniqueComponents <= 64, "Maximum number of components (64) exceeded")
+
 			GameComponentDefs[componentType] = componentDef
-			GameComponentDefs[componentType].ComponentId = componentDef.ComponentId
 			ComponentsArray[componentDef.ComponentId] = componentType
 			NumUniqueComponents = NumUniqueComponents + 1
 		end
@@ -161,7 +160,7 @@ function ComponentsLoader.OnLoaded()
 		GameComponentDefModule = Instance.new("ModuleScript")
 	end
 
-	for _, inst in pairs(ReplicatedStorage:GetDescendants()) do
+	for _, inst in ipairs(ReplicatedStorage:GetDescendants()) do
 		tryCollectComponent(inst)
 	end
 
