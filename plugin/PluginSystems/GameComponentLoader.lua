@@ -12,10 +12,10 @@ local ComponentsArray = {}
 local GameComponentDefs = {}
 
 local ComponentsLoader = {}
-local WatchedModules = {}
 
 local function tryRequire(moduleScript)
 	local env = Sandbox.new(moduleScript)
+
 	local success, result = xpcall(function()
 		return env.require(moduleScript)
 	end,
@@ -24,89 +24,79 @@ local function tryRequire(moduleScript)
 		return err
 	end)
 
-	WSAssert(success, "tried to load component definition module: " .. moduleScript:GetFullName())
+	WSAssert(success, "Tried to load component definition module: " .. moduleScript:GetFullName())
 
 	return result
 end
 
--- this function is probably too big but w/e
 local function tryCollectComponent(instance)
-
 	if not instance:IsA("ModuleScript") or instance.Name == "Component" then
 		return
 	end
 
 	local pattern = "Component%.Define%("
+	local rawComponentDef = tryRequire(instance)
 
-	if instance.Source:match(pattern) then
-		local rawComponent = tryRequire(instance)
-		local componentType = rawComponent[1]
-		local paramMap = rawComponent[2]
+	if instance.Source:match(pattern) and rawComponentDef then
+		local componentType = rawComponentDef[1]
+		local paramMap = rawComponentDef[2]
+		local componentDescription = GameComponentDefs[componentType]
 
-		if GameComponentDefs[componentType] then
-			-- component definition has already been serialized; check if we have any new or removed params
-			local newParams = {}
-			local oldParamArray = {}
-			local indicesToFill = {}
-			local currentIndex = 0
-			local numOldParams = 0
-			local maxParamIndex = 0
+		-- this componentType has already been serialized; diff params
+		if componentDescription then
+			local numParams
+			local removedParamId
+			local paramName
+			local paramId
 
-			-- remove params that aren't in paramMap
-			for paramName in pairs(GameComponentDefs[componentType]) do
-				if not paramMap[paramName] and paramName ~= "ComponentId" then
-					GameComponentDefs[componentType][paramName] = nil
+			warn(("WorldSmith: found existing component %s"):format(componentType))
+
+			for paramId, paramDescription in ipairs(componentDescription) do
+				if not paramMap[paramName] then
+					numParams = #componentDescription
+					componentDescription[paramId] = componentDescription[numParams]
+					componentDescription[numParams] = nil
+					warn(("WorldSmith: removed parameter %s; moved parameter %s to paramId %s"):format(paramDescription.paramName, componentDescription[paramId].paramName, tostring(paramId)))
+				else
+					if not paramDescription.defaultValue == paramMap[paramName] then
+						paramDescription.defaultValue = paramMap[paramName]
+						warn(("WorldSmith: set default value of parameter %s to %s"):format(paramDescription.paramName, tostring(paramMap[paramName])))
+					end
+
+					paramMap[paramName] = nil
 				end
 			end
 
 			for paramName, defaultValue in pairs(paramMap) do
+				paramId = #componentDescription + 1
 
-				local paramId = GameComponentDefs[componentType][paramName][1]
-				if not paramId then
-					newParams[paramName] = defaultValue
-				else
-					numOldParams = numOldParams + 1
-					oldParamArray[paramId] = true
-					maxParamIndex = paramId > maxParamIndex and paramId or maxParamIndex
-				end
+				WSAssert(paramId <= 16, "Maximum number of parameters (16) exceeded")
+
+				componentDescription[paramId] = { ["paramName"] = paramName, ["defaultValue"] = defaultValue }
+				warn(("WorldSmith: added parameter %s"):format(paramName))
 			end
 
-			-- check for holes
-			for i = 1, numOldParams do
-				if not oldParamArray[i] then
-					indicesToFill[#indicesToFill + 1] = i
-				end
-			end
-
-			-- add new params and fill any holes
-			for paramName, defaultValue in pairs(newParams) do
-				currentIndex = currentIndex + 1
-				if indicesToFill[currentIndex] then
-					GameComponentDefs[componentType][paramName] = {indicesToFill[currentIndex], defaultValue}
-				else
-					maxParamIndex = maxParamIndex + 1
-					GameComponentDefs[componentType][paramName] = {maxParamIndex, defaultValue}
-				end
-			end
-
-			return
+			return true
 		end
 
-		-- this component has not been serialized before
+		-- this componentType has not been serialized before
 		local componentIdListHole
 		local componentId
 		local paramId = 0
 
 		for i = 1, NumUniqueComponents do
 			if not ComponentsArray[i] then
-				print("found hole")
 				componentIdListHole = i
 				break
 			end
 		end
 
 		NumUniqueComponents = NumUniqueComponents + 1
+
+		WSAssert(NumUniqueComponents <= 64, "Maximum number of components (64) exceeded")
+
 		GameComponentDefs[componentType] = {}
+		component = GameComponentDefs[componentType]
 
 		if not componentIdListHole then
 			componentId = NumUniqueComponents
@@ -114,18 +104,24 @@ local function tryCollectComponent(instance)
 			componentId = componentIdListHole
 		end
 
-		GameComponentDefs[componentType].ComponentId = componentId
+		warn(("WorldSmith: created component definition for new component \"%s\"  at componentId %s"):format(componentType, tostring(componentId)))
+
+		component.ComponentId = componentId
 		ComponentsArray[componentId] = componentType
 
 		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
-			GameComponentDefs[componentType][paramName] = {paramId, defaultValue}
+
+			WSAssert(paramId <= 16, "Maximum number of parameters (16) exceeded")
+
+			componentDescription[paramId] = { ["paramName"] = paramName, ["paramName"] = defaultValue }
 		end
+
+		return true
 	end
 end
 
 function tryRemoveComponent(instance)
-
 	if not instance:IsA("ModuleScript") or instance.Name == "Component" then
 		return
 	end
@@ -140,16 +136,18 @@ function tryRemoveComponent(instance)
 		for componentId, comtype in pairs(ComponentsArray) do
 			if comtype == componentType then
 				ComponentsArray[componentId] = nil
+
 				break
 			end
 		end
 
 		NumUniqueComponents = NumUniqueComponents - 1
+
+		return true
 	end
 end
 
-function ComponentsLoader.OnLoaded(plugin)
-
+function ComponentsLoader.OnLoaded()
 	local GameComponentDefModule = GameSrc.ComponentDesc:WaitForChild("ComponentDefinitions", 1)
 
 	if GameComponentDefModule then
@@ -172,13 +170,15 @@ function ComponentsLoader.OnLoaded(plugin)
 	GameComponentDefModule.Parent = GameSrc.ComponentDesc
 
 	ReplicatedStorage.DescendantAdded:Connect(function(inst)
-		tryCollectComponent(inst)
-		GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
+		if tryCollectComponent(inst) then
+			GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
+		end
 	end)
 
 	ReplicatedStorage.DescendantRemoving:Connect(function(inst)
-		tryRemoveComponent(inst)
-		GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
+		if tryRemoveComponent(inst) then
+			GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
+		end
 	end)
 end
 
