@@ -2,8 +2,10 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local ComponentDesc = require(script.Parent.Parent.ComponentDesc)
-local PlayerGui = Player.LocalPlayer:WaitForChild("PlayerGui")
+local Constants = require(script.Parent.Parent.Constants)
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
 local Shared = require(script.Parent.Shared)
+local WSAssert = require(script.Parent.Parent.WSAssert)
 
 local Client = {}
 
@@ -12,6 +14,11 @@ local SendBuffer = {}
 local Queued = Shared.Queued
 local DeserializeNext = Shared.DeserializeNext
 local SerializeUpdate = Shared.SerializeUpdate
+local QueueUpdate = Shared.QueueUpdate
+local GetParamIdFromName = Shared.GetParamIdFromName
+
+local ADD_COMPONENT = Constants.ADD_COMPONENT
+local PARAMS_UPATE = Constants.PARAMS_UPATE
 
 local RemoteEvent
 local RemoteFunction
@@ -37,7 +44,7 @@ end
 function Client.SendAddComponent(component)
 	WSAssert(typeof(component) == "table" and component._componentId, "bad argument #1 (expected component struct)")
 
-	QueueUpdate(instance, ADD_COMPONENT, component._componentId)
+	QueueUpdate(component.Instance, ADD_COMPONENT, component._componentId)
 end
 
 ---Sends a message to the server requesting to set the parameter matching paramName to this client's current value
@@ -49,7 +56,7 @@ function Client.SendParameterUpdate(component, paramName)
 	WSAssert(typeof(component) == "table" and component._componentId, "bad argument #1 (expected component struct)")
 	WSAssert(typeof(paramName) == "string", "bad argument #2 (expected string)")
 
-	QueueUpdate(instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
+	QueueUpdate(component.Instance, PARAMS_UPATE, component._componentId, GetParamIdFromName(paramName))
 end
 
 ---Steps this client's replicator
@@ -109,7 +116,7 @@ function Client.Init()
 		paramsIndex = 1
 
 		for _ in next, prefabEntities do
-			entitiesIndex, paramsIndex = DeserializeNext(prefabEntites, prefabParams, entitiesIndex, paramsIndex, rootInstance)
+			entitiesIndex, paramsIndex = DeserializeNext(prefabEntities, prefabParams, entitiesIndex, paramsIndex, rootInstance)
 		end
 	end)
 
