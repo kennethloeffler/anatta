@@ -26,6 +26,7 @@ local FilteredEntityAddedFuncs = {}
 local FilteredEntityRemovedFuncs = {}
 local SystemFilteredEntities = {}
 local SystemsToUnload = {}
+local SystemMap = {}
 
 local SystemsRunning = false
 
@@ -141,6 +142,8 @@ local function doUnloadSystem(system)
 			end
 		end
 	end
+
+	SystemMap[system] = nil
 end
 
 local function doReorder(componentId, parentEntitiesMap)
@@ -451,6 +454,8 @@ function EntityManager.LoadSystem(module, _pluginWrapper)
 			filter[offset] = bit32.bor(bitField, bit32.lshift(1, componentId - 1 - (32 * (offset - 1))))
 		end
 	end
+
+	SystemMap[system] = true
 end
 
 ---Unloads the system defined by module
@@ -520,7 +525,17 @@ function EntityManager.GetComponentDesc()
 end
 
 function EntityManager.Destroy()
-	-- maybe overkill
+	for system in pairs(SystemMap) do
+		if system.OnUnloaded then
+			system.OnUnloaded()
+		end
+	end
+
+
+	-- wait two to ensure we dont land on the same frame
+	RunService.Heartbeat:Wait()
+	RunService.Heartbeat:Wait()
+
 	SystemsRunning = false
 end
 
