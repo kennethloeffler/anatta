@@ -34,7 +34,7 @@ function AddComponentWidget.OnLoaded(pluginWrapper)
 		local gui = component.Instance
 		local uiListLayout = Instance.new("UIListLayout")
 
-		gui.AddComponentButton.Text = "-"
+		gui.Parent.AddComponentButton.Text = "-"
 		gui:ClearAllChildren()
 
 		uiListLayout.Parent = gui
@@ -42,7 +42,7 @@ function AddComponentWidget.OnLoaded(pluginWrapper)
 		uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 		for componentType, def in pairs(component.Components) do
-			local button = makeComponentButton(componentType, def.ComponentId)
+			local button = makeComponentButton(componentType, def[1])
 
 			button.InputBegan:Connect(function(input)
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then

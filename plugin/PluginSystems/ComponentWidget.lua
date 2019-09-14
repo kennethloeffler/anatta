@@ -5,7 +5,7 @@ local Theme = settings().Studio.Theme
 
 local GameRoot = ReplicatedStorage:FindFirstChild("WorldSmith")
 local GameComponentDesc = GameRoot and GameRoot.ComponentDesc
-local ComponentDefs = GameComponentDesc:FindFirstChild("ComponentDefinitions") and GameComponentDesc.ComponentDefinitions
+local ComponentDefs = GameComponentDesc:WaitForChild("ComponentDefinitions", 2)
 
 local Serial = require(script.Parent.Parent.Serial)
 
@@ -136,7 +136,7 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 		end
 
 		if not PluginManager.GetComponent(scrollingFrame, "AddComponentMenuClick") then
-			PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", {EntityList = entities})
+			PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", { EntityList = entities })
 		end
 	end)
 end

@@ -13,11 +13,13 @@ local ComponentDesc = {
 }
 
 local function populateDefs(definitionTable)
+	local componentId
+
 	for componentType, componentDefinition in pairs(definitionTable) do
 		WSAssert(typeof(componentType) == "string", "expected string")
 		WSAssert(typeof(componentDefinition) == "table", "expected table")
 
-		local componentId = componentDefinition.ComponentId
+		local componentId = componentDefinition[1]
 
 		WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
 
@@ -28,12 +30,13 @@ local function populateDefs(definitionTable)
 		NumComponentParams[componentId] = 0
 
 		for paramId, paramDef in ipairs(componentDefinition) do
-			WSAssert(typeof(paramName) == "string", "expected string")
-			WSAssert(typeof(paramDef) == "table", "expected table")
+			if paramId > 1 then
+				WSAssert(typeof(paramDef) == "table", "expected table")
 
-			ComponentParamIds[componentId][paramName] = paramId
-			Defaults[componentId][paramName] = paramDef.defaultValue
-			NumComponentParams[componentId] = NumComponentParams[componentId] + 1
+				ComponentParamIds[componentId][paramDef.paramName] = paramId - 1
+				Defaults[componentId][paramDef.paramName] = paramDef.defaultValue
+				NumComponentParams[componentId] = NumComponentParams[componentId] + 1
+			end
 		end
 	end
 
@@ -42,13 +45,14 @@ end
 
 ComponentDesc.NumParamsByComponentId = NumComponentParams
 
-if script:WaitForChild("ComponentDefinitions", 2) then
+if script:WaitForChild("ComponentDefinitions", 2) and Constants.IS_STUDIO then
 	local componentDefinitions = require(script.ComponentDefinitions)
 
 	populateDefs(componentDefinitions)
 
 	script.ComponentDefinitions:GetPropertyChangedSignal("Source"):Connect(function()
-		populateDefs(require(script.ComponentDefinitions:Clone()))
+		componentDefinitions = require(script.ComponentDefinitions:Clone())
+		populateDefs(componentDefinitions)
 
 		if ComponentDesc._defUpdateCallback then
 			ComponentDesc._defUpdateCallback()

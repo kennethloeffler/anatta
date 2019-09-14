@@ -19,19 +19,19 @@ function Main(pluginWrapper, root, gameRoot)
 		local rawComponent = require(componentModule)
 		local componentType = rawComponent[1]
 		local paramMap = rawComponent[2]
-		local paramId = 0
+		local paramId = 1
 
 		numPluginComponents = numPluginComponents + 1
 		componentDefinitions[componentType] = {}
-		componentDefinitions[componentType].ComponentId = numPluginComponents
+		componentDefinitions[componentType][1] = numPluginComponents
 
 		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
-			componentDefinitions[componentType][paramName] = {paramId, defaultValue}
+			componentDefinitions[componentType][paramId] = { ["paramName"] = paramName, ["defaultValue"] = defaultValue }
 		end
 	end
 
-	local componentDefsModule = root.src.ComponentDesc:FindFirstChild("ComponentDefinitions") or Instance.new("ModuleScript")
+	local componentDefsModule = root.src.ComponentDesc:WaitForChild("ComponentDefinitions", 2) or Instance.new("ModuleScript")
 	componentDefsModule.Name = "ComponentDefinitions"
 	componentDefsModule.Source = Serial.Serialize(componentDefinitions)
 	componentDefsModule.Parent = root.src.ComponentDesc
