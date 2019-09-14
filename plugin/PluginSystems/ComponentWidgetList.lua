@@ -170,7 +170,7 @@ local function makeParamFields(componentId, paramList, scrollingFrame, gameManag
 		local paramType = typeof(paramDefault)
 		local frame = Instance.new("Frame")
 		frame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
-		frame.Size = UDim2.new(1, 0, 0, 20)
+		frame.Size = UDim2.new(1, 0, 0, 24)
 		frame.BorderSizePixel = 0
 		frame.LayoutOrder = componentLabelOffset + counter
 		frame.Parent = scrollingFrame
