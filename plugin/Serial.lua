@@ -7,7 +7,7 @@ local Serial = {}
 
 function Serial.SerializeValue(data, depth)
 	local ty = typeof(data)
-	local indent = ("  "):rep(depth)
+	local indent = ("\t"):rep(depth)
 
 	local str
 	if ty == "number" or ty == "boolean" then
@@ -19,7 +19,7 @@ function Serial.SerializeValue(data, depth)
 		str = { "{" }
 
 		for i = 1, #data do
-			str[#str + 1] = string.format("%s  %s,", indent, Serial.SerializeValue(data[i], depth + 1))
+			str[#str + 1] = string.format("%s\t%s,", indent, Serial.SerializeValue(data[i], depth + 1))
 		end
 
 		str[#str + 1] = indent.."}"
@@ -42,7 +42,7 @@ function Serial.SerializeValue(data, depth)
 			else
 				safeKey = Serial.SerializeValue(key, depth + 1)
 			end
-			str[#str + 1] = string.format("%s  %s = %s,", indent, safeKey, Serial.SerializeValue(value, depth + 1))
+			str[#str + 1] = string.format("%s\t%s = %s,", indent, safeKey, Serial.SerializeValue(value, depth + 1))
 		end
 
 		str[#str + 1] = next(data) and indent.."}" or "}"
