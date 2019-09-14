@@ -14,6 +14,9 @@ local GameComponentDefs = {}
 
 local ComponentsLoader = {}
 
+local AddedConnection
+local RemovedConnection
+
 local function tryRequire(moduleScript)
 	local env = Sandbox.new(moduleScript)
 
@@ -172,17 +175,22 @@ function ComponentsLoader.OnLoaded()
 	GameComponentDefModule.Name = "ComponentDefinitions"
 	GameComponentDefModule.Parent = GameSrc.ComponentDesc
 
-	ReplicatedStorage.DescendantAdded:Connect(function(inst)
+	AddedConnection = ReplicatedStorage.DescendantAdded:Connect(function(inst)
 		if tryCollectComponent(inst) then
 			GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
 		end
 	end)
 
-	ReplicatedStorage.DescendantRemoving:Connect(function(inst)
+	RemovedConnection = ReplicatedStorage.DescendantRemoving:Connect(function(inst)
 		if tryRemoveComponent(inst) then
 			GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
 		end
 	end)
+end
+
+function ComponentsLoader.OnUnloaded()
+	AddedConnection:Disconnect()
+	RemovedConnection:Disconnect()
 end
 
 return ComponentsLoader
