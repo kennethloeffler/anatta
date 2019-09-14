@@ -61,7 +61,7 @@ function Component(instance, componentType, paramMap)
 	local componentId = typeof(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
 	local newComponent = paramMap
 
-	if not newComponent[1] then
+	if not newComponent or not newComponent[1] then
 		for paramName, default in pairs(GetDefaults(componentId)) do
 			local paramId = GetParamIdFromName(componentId, paramName)
 
