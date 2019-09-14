@@ -193,15 +193,15 @@ local function stepComponentLifetime()
 	local componentId = 0
 	local componentOffset = 0
 	local instance
+	local addedFunc
 
 	for compId, parentEntitiesMap in pairs(KilledComponents) do
 		doReorder(compId, parentEntitiesMap)
 	end
 
 	for i, component in ipairs(AddedComponents) do
-		local addedFunc = ComponentAddedFuncs[componentId]
-
 		componentId = component._componentId
+		addedFunc = ComponentAddedFuncs[componentId]
 		componentOffset = #ComponentMap[componentId] + 1
 		instance = component.Instance
 
@@ -219,7 +219,7 @@ local function initComponentDefs()
 	local componentId = 0
 
 	for componentType, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
-		componentId = componentDefinition.ComponentId
+		componentId = componentDefinition[1]
 		ComponentMap[componentId] = not ComponentMap[componentId] and {}
 		KilledComponents[componentId] = not KilledComponents[componentId] and {}
 	end
