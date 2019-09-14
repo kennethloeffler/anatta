@@ -54,10 +54,11 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.BorderSizePixel = 0
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
-		valueField.Text = "     " .. paramValue
+		valueField.Text = paramValue
 		valueField.FocusLost:Connect(function()
-			valueField.Text = "     " .. valueField.Text
-			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = tostring(valueField.Text)}})
+			local val = tostring(valueField.Text) or paramValue
+			valueField.Text = val
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = val}})
 		end)
 	elseif paramType == "number" then
 		valueField = Instance.new("TextBox")
@@ -66,10 +67,11 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. paramValue
+		valueField.Text = paramValue
 		valueField.FocusLost:Connect(function()
-			valueField.Text = "     " .. valueField.Text
-			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = tonumber(valueField.Text)}})
+			local val = tonumber(valueField.Text) or paramValue
+			valueField.Text = val
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = val}})
 		end)
 	elseif paramType == "Vector2" then
 		valueField = Instance.new("TextBox")
@@ -78,10 +80,11 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue)
+		valueField.Text = tostring(paramValue)
 		valueField.FocusLost:Connect(function()
-			valueField.Text = "     " .. tostring(val)
-			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = Vector2.new(splitCommaDelinNumStr(valueField.Text))}})
+			local val = Vector2.new(splitCommaDelinNumStr(valueField.Text))
+			valueField.Text = tostring(val)
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = val}})
 		end)
 	elseif paramType == "Vector3" then
 		valueField = Instance.new("TextBox")
@@ -90,10 +93,11 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue)
+		valueField.Text = tostring(paramValue)
 		valueField.FocusLost:Connect(function()
-			valueField.Text = "     " .. valueField.Text
-			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = Vector3.new(splitCommaDelinNumStr(valueField.Text))}})
+			local val = Vector3.new(splitCommaDelinNumStr(valueField.Text))
+			valueField.Text = tostring(val)
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = val}})
 		end)
 	elseif paramType == "UDim" then
 		valueField = Instance.new("TextBox")
@@ -102,10 +106,11 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue)
+		valueField.Text = tostring(paramValue)
 		valueField.FocusLost:Connect(function()
-			valueField.Text = "     " .. valueField.Text
-			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = UDim.new(splitCommaDelinNumStr(valueField.Text))}})
+			local val = UDim.new(splitCommaDelinNumStr(valueField.Text))
+			valueField.Text = tostring(val)
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = val}})
 		end)
 	elseif paramType == "UDim2" then
 		valueField = Instance.new("TextBox")
@@ -114,10 +119,11 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue)
+		valueField.Text = tostring(paramValue)
 		valueField.FocusLost:Connect(function()
-			valueField.Text = "     " .. valueField.Text
-			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = UDim2.new(splitCommaDelinNumStr(valueField.Text))}})
+			local val = UDim2.new(splitCommaDelinNumStr(valueField.TEXT))
+			valueField.Text = tostring(val)
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = val}})
 		end)
 	elseif paramType == "Color3" then
 		valueField = Instance.new("TextBox")
@@ -126,14 +132,16 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		valueField.Position = UDim2.new(0.3, 1, 0, 0)
 		valueField.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ButtonText)
 		valueField.BorderSizePixel = 0
-		valueField.Text = "     " .. tostring(paramValue)
+		valueField.Text = tostring(paramValue)
 		valueField.FocusLost:Connect(function()
-			valueField.Text = "     " .. valueField.Text
-			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = Color3.new(splitCommaDelinNumStr(valueField.Text))}})
+			local val = Color3.new(splitCommaDelinNumStr(valueField.Text))
+			valueField.Text = tostring(val)
+			pluginManager.AddComponent(valueField, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = val}})
 		end)
 	else
 		error("Unexpected type: " .. paramType)
 	end
+
 	return valueField
 end
 
