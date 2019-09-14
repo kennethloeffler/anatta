@@ -43,7 +43,6 @@ local function makeParamValueField(paramValue, paramName, componentType, entityL
 		box.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				paramValue = not paramValue
-				print("my value : " .. tostring(paramValue))
 				check.ImageTransparency = paramValue and 0 or 1
 				pluginManager.AddComponent(box, "DoSerializeEntity", {InstanceList = entityList, ComponentType = componentType, Params = {[paramName] = paramValue}})
 			end
@@ -156,9 +155,9 @@ local function makeParamFields(componentId, paramList, scrollingFrame, gameManag
 	local componentLabelOffset = scrollingFrame:FindFirstChild(componentType).LayoutOrder
 	local counter = 0
 
-	for _, paramDef in ipairs(paramList) do
+	for paramId, paramValue in ipairs(paramList) do
 		counter = counter + 1
-		local paramName = componentDesc.GetParamNameFromId(componentId, paramDef.paramId)
+		local paramName = componentDesc.GetParamNameFromId(componentId, paramId)
 		local paramDefault = componentDesc.GetParamDefault(componentId, paramName)
 		local paramType = typeof(paramDefault)
 		local frame = Instance.new("Frame")
@@ -177,7 +176,7 @@ local function makeParamFields(componentId, paramList, scrollingFrame, gameManag
 		paramNameLabel.TextSize = 8
 		paramNameLabel.Parent = frame
 
-		local valueField = makeParamValueField(paramDef.paramValue, paramName, componentType, entityList, pluginManager)
+		local valueField = makeParamValueField(paramValue, paramName, componentType, entityList, pluginManager)
 		valueField.Parent = frame
 	end
 end
