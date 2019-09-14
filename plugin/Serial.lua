@@ -45,7 +45,7 @@ function Serial.SerializeValue(data, depth)
 			str[#str + 1] = string.format("%s  %s = %s,", indent, safeKey, Serial.SerializeValue(value, depth + 1))
 		end
 
-		str[#str + 1] = indent.."}"
+		str[#str + 1] = next(data) and indent.."}" or "}"
 	elseif ty == "Vector2" then
 		str = string.format("Vector2.new(%f, %f)", data.X, data.Y)
 	elseif ty == "Vector3" then
@@ -63,7 +63,7 @@ function Serial.SerializeValue(data, depth)
 	end
 
 	if typeof(str) == "table" then
-		str = table.concat(str, "\n")
+		str = table.concat(str, next(data) and "\n" or "")
 	end
 	return str
 end
