@@ -14,8 +14,6 @@ local EntityMap = {}
 local ComponentMap = {}
 local KilledComponents = {}
 local AddedComponents = {}
-local AddedComponentLists = {}
-local KilledComponentLists = {}
 local HeartbeatSystems = {}
 local FilterIdsBySystem = {}
 local HeartbeatIdsBySystem = {}
@@ -48,14 +46,7 @@ local function unsetComponentBitForEntity(entity, componentId)
 	EntityMap[entity][0][offset] = bit32.band(bitField, bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (offset - 1)))))
 end
 
-local function isComponentBitSet(entity, componentId)
-	local offset = math.ceil((componentId * 0.03125))
-	local bitField = EntityMap[entity][0][offset]
-
-	return bit32.band(bit32.rshift(bitField, componentId - 1 - (32 * (offset - 1)))) == 1
-end
-
-function filterEntity(instance)
+local function filterEntity(instance)
 	local entityBitFields = EntityMap[instance][0]
 	local addedFunc
 	local removedFunc
@@ -70,13 +61,17 @@ function filterEntity(instance)
 			if not systemEntities[instance] then
 				systemEntities[instance] = true
 
-				addedFunc = addedFunc and addedFunc(instance)
+				if addedFunc then
+					addedFunc(instance)
+				end
 			end
 		else
 			if systemEntities[instance] then
 				systemEntities[instance] = nil
 
-				removedFunc = removedFunc and removedFunc(instance)
+				if removedFunc then
+					removedFunc(instance)
+				end
 			end
 		end
 	end
@@ -99,7 +94,7 @@ end
 local function doUnloadSystem(system)
 	local filterId = FilterIdsBySystem[system]
 	local heartbeatId = HeartbeatIdsBySystem[system]
-	local len = 0
+	local len
 
 	if system.OnUnloaded then
 		system.OnUnloaded()
@@ -153,7 +148,6 @@ local function doReorder(componentId, parentEntitiesMap)
 
 	local componentList = ComponentMap[componentId]
 	local keptComponentOffset = 1
-	local numRemovedComponents = 0
 	local instance
 	local entityStruct
 
@@ -172,8 +166,11 @@ local function doReorder(componentId, parentEntitiesMap)
 			keptComponentOffset = keptComponentOffset + 1
 		else
 			local removedFunc = ComponentRemovedFuncs[componentId]
-		   	-- kill
-			removedFunc = removedFunc and removedFunc(component)
+			-- kill
+			if removedFunc then
+				removedFunc(component)
+			end
+
 			componentList[componentOffset] = nil
 			entityStruct[componentId] = nil
 			parentEntitiesMap[instance] = nil
@@ -193,8 +190,8 @@ end
 ---Iterates through the component lifetime caches and mutates entity-component maps accordingly
 -- Called before each system step
 local function stepComponentLifetime()
-	local componentId = 0
-	local componentOffset = 0
+	local componentId
+	local componentOffset
 	local instance
 	local addedFunc
 
@@ -208,7 +205,10 @@ local function stepComponentLifetime()
 		componentOffset = #ComponentMap[componentId] + 1
 		instance = component.Instance
 
-		addedFunc = addedFunc and addedFunc(component)
+		if addedFunc then
+			addedFunc(component)
+		end
+
 		EntityMap[instance][componentId] = componentOffset
 		ComponentMap[componentId][componentOffset] = component
 		AddedComponents[i] = nil
@@ -219,9 +219,9 @@ end
 
 -- Initialization
 local function initComponentDefs()
-	local componentId = 0
+	local componentId
 
-	for componentType, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
+	for _, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
 		componentId = componentDefinition[1]
 		ComponentMap[componentId] = not ComponentMap[componentId] and {}
 		KilledComponents[componentId] = not KilledComponents[componentId] and {}
@@ -435,7 +435,6 @@ function EntityManager.LoadSystem(module, _pluginWrapper)
 
 		local filterId = #EntityFilters + 1
 		local filter = { 0, 0 }
-		local filteredEntities = {}
 
 		EntityFilters[filterId] = filter
 		SystemFilteredEntities[filterId] = {}
@@ -446,7 +445,7 @@ function EntityManager.LoadSystem(module, _pluginWrapper)
 			WSAssert(typeof(componentType) == "string" and typeof(i) == "number", "EntityFilter should be a string-valued array")
 		end
 
-		for i, componentType in ipairs(system.EntityFilter) do
+		for _, componentType in ipairs(system.EntityFilter) do
 			local componentId = GetComponentIdFromType(componentType)
 			local offset = math.ceil(componentId * 0.03125)
 			local bitField = filter[offset]
@@ -504,7 +503,7 @@ function EntityManager.StartSystems()
 		end
 
 		for _, systemStep in ipairs(HeartbeatSystems) do
-		   	stepComponentLifetime()
+			stepComponentLifetime()
 			systemStep(lastFrameTime)
 		end
 
@@ -531,7 +530,6 @@ function EntityManager.Destroy()
 		end
 	end
 
-
 	-- wait two to ensure we dont land on the same frame
 	RunService.Heartbeat:Wait()
 	RunService.Heartbeat:Wait()
@@ -557,7 +555,7 @@ function EntityManager.Init()
 				}
 
 				for paramId, paramValue in ipairs(paramsInfo) do
-					componentStruct[param.paramId] = param.paramValue
+					componentStruct[paramId] = paramValue
 				end
 
 				for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do

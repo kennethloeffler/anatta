@@ -3,7 +3,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameSrc = ReplicatedStorage:WaitForChild("WorldSmith")
 local PluginSrc = script.Parent.Parent.Parent.src
 
-local Constants = require(PluginSrc.Constants)
 local Sandbox = require(script.Parent.Parent.SandboxEnv)
 local Serial = require(script.Parent.Parent.Serial)
 local WSAssert = require(PluginSrc.WSAssert)
@@ -125,7 +124,7 @@ local function tryCollectComponent(instance)
 	end
 end
 
-function tryRemoveComponent(instance)
+local function tryRemoveComponent(instance)
 	if not instance:IsA("ModuleScript") or instance.Name == "Component" then
 		return
 	end

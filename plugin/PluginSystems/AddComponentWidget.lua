@@ -1,4 +1,3 @@
-local Serial = require(script.Parent.Parent.Serial)
 local Theme = settings().Studio.Theme
 local Selection = game:GetService("Selection")
 
@@ -28,7 +27,6 @@ end
 
 function AddComponentWidget.OnLoaded(pluginWrapper)
 	local PluginManager = pluginWrapper.PluginManager
-	local GameManager = pluginWrapper.GameManager
 
 	PluginManager.ComponentAdded("AddComponentMenuClick", function(component)
 		local gui = component.Instance

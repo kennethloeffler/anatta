@@ -1,4 +1,4 @@
-function WSAssert(condition, ...)
+return function(condition, ...)
 	if not condition then
 		local var = {...}
 
@@ -15,6 +15,4 @@ function WSAssert(condition, ...)
 		error("WorldSmith: assertion failed!", 3)
 	end
 end
-
-return WSAssert
 

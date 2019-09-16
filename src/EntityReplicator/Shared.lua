@@ -28,27 +28,31 @@ local PARAMS_UPDATE = Constants.PARAMS_UPDATE
 local ADD_COMPONENT = Constants.ADD_COMPONENT
 local KILL_COMPONENT = Constants.KILL_COMPONENT
 local IS_REFERENCED = Constants.IS_REFERENCED
-local DESTRUCTION = Constants.DESTRUCTION
-local PREFAB_ENTITY = Constants.PREFAB_ENTITY
+local IS_DESTRUCTION = Constants.IS_DESTRUCTION
+local IS_PREFAB = Constants.IS_PREFAB
+local IS_UNIQUE = Constants.IS_UNIQUE
 local IS_SERVER = Constants.IS_SERVER
+local ALL_CLIENTS = Constants.ALL_CLIENTS
 
 local Shared = {}
 
+local BlacklistedComponents = {}
 local Queued = {}
 local InstancesByNetworkId = {}
 local NetworkIdsByInstance = {}
 local NumParams = ComponentDesc.NumParamsByComponentId
+local Defaults = ComponentDesc.GetDefaults()
+local GetParamDefault = ComponentDesc.GetParamDefault
+local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
 local Server
-local BlacklistedComponents
-local ClientSerializable
-local ClientCreatable
 
 local EntityMap
 local ComponentMap
+local KillEntity
 local AddComponent
 local KillComponent
-local ClientCreatable
-local ClientSerializable
+local PlayerCreatable
+local PlayerSerializable
 
 Shared.Queued = Queued
 Shared.InstancesByNetworkId = InstancesByNetworkId
@@ -185,7 +189,7 @@ local function serializeKillComponent(entities, entitiesIndex, componentsMap, fl
 	local numDataStructs = 0
 	local firstWord = 0
 	local secondWord = 0
-	local offset = 0
+	local offset
 
 	for componentId in pairs(componentsMap) do
 		offset = math.floor(componentId * 0.01325) -- componentId / 32
@@ -248,14 +252,15 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 	local firstWord = 0
 	local secondWord = 0
 	local numDataStructs = 0
-	local componentOffset = 0
-	local componentId = 0
-	local offset = 0
+	local componentOffset
+	local componentId
+	local field
+	local offset
 	local both
 
-	for componentId in pairs(componentsMap) do
-		firstWord = componentId <= 32 and setbit(firstWord, componentId - 1) or firstWord
-		secondWord = componentId > 32 and setbit(secondWord, componentId - 33) or secondWord
+	for id in pairs(componentsMap) do
+		firstWord = id <= 32 and setbit(firstWord, id - 1) or firstWord
+		secondWord = id > 32 and setbit(secondWord, id - 33) or secondWord
 	end
 
 	-- yeah im BOTH
@@ -276,7 +281,7 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 			offset = math.floor(componentId * 0.01325)
 			flags = setbit(flags, 2 + offset)
 
-			for _, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
+			for _, v in ipairs(ComponentMap[componentId][entityStruct[componentId]]) do
 				params[paramsIndex] = v
 				paramsIndex = paramsIndex + 1
 			end
@@ -319,21 +324,23 @@ end
 -- @return flags
 -- @return numDataStructs
 
-local function serializeParameterUpdate(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
+local function serializeParamsUpdate(instance, entities, params, entitiesIndex, paramsIndex, componentsMap, flags)
+	local entityStruct = EntityMap[instance]
 	local firstWord = 0
 	local secondWord = 0
-	local offset = 0
 	local numDataStructs = 0
-	local numComponents = 0
-	local paramsField = 0
 	local lastParamsField = 0
-	local paramId = 0
+	local field
+	local numComponents
+	local paramsField
+	local offset
+	local paramId
 	local both
 	local componentId
 
-	for componentId, cParamField in pairs(componentsMap) do
-		firstWord = componentId <= 32 and setbit(firstWord, componentId - 1) or firstWord
-		secondWord = componentId > 32 and setbit(secondWord, componentId - 33) or secondWord
+	for id in pairs(componentsMap) do
+		firstWord = id <= 32 and setbit(firstWord, id - 1) or firstWord
+		secondWord = id > 32 and setbit(secondWord, id - 33) or secondWord
 	end
 
 	both = firstWord ~= 0 and secondWord ~= 0
@@ -384,21 +391,22 @@ local function serializeParameterUpdate(instance, entities, params, entitiesInde
 end
 
 local function deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags, player, instance)
-	local instance = InstancesByNetworkId[networkId]
+	instance = instance or InstancesByNetworkId[networkId]
+
 	local fieldOffset = bit32.extract(flags, 4, 2)
-	local offsetFactor = 0
-	local field = 0
-	local paramsField = 0
-	local componentId = 0
-	local pos = 0
-	local paramPos = 0
-	local even = false
+	local offsetFactor
+	local field
+	local paramsField
+	local paramId
+	local componentId
+	local pos
+	local even
 	local dataObj
 
 	for _ = 1, popcnt(fieldOffset) do
-		entitiesIndex = enititiesIndex + 1
+		entitiesIndex = entitiesIndex + 1
 		dataObj = entities[entitiesIndex]
-		entiites[entitiesIndex] = nil
+		entities[entitiesIndex] = nil
 		offsetFactor = ffs(fieldOffset)
 		fieldOffset = unsetbit(fieldOffset, offsetFactor)
 
@@ -428,7 +436,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 					return
 				end
 
-				componentMap[componentId][EntityMap[instance]][paramId] = params[paramsIndex]
+				ComponentMap[componentId][EntityMap[instance]][paramId] = params[paramsIndex]
 				paramsIndex = paramsIndex + 1
 				paramsField = unsetbit(paramsField, paramId - 1)
 			end
@@ -441,18 +449,20 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 end
 
 local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags, player, instance)
-	local instance = InstancesByNetworkId[networkId]
-	local componentId = 0
+	instance = instance or InstancesByNetworkId[networkId]
+
 	local fieldOffset = bit32.extract(flags, 2, 2)
 	-- don't want to rehash while populating this
 	local componentStruct = {
 		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 		_componentId = true, Instance = true
 	}
-	local pos = 0
-	local offsetFactor = 0
+	local pos
+	local offsetFactor
+	local componentId
 	local dataObj
 	local paramValue
+	local field
 
 	for _ = 1, popcnt(fieldOffset) do
 		entitiesIndex = entitiesIndex + 1
@@ -492,13 +502,15 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 	end
 end
 
-function deserializeKillComponent(networkId, entities, params, entitiesIndex, flags, instance)
-	local instance = InstancesByNetworkId[networkId]
-	local componentId = 0
+local function deserializeKillComponent(networkId, entities, entitiesIndex, flags, instance)
+	instance = instance or InstancesByNetworkId[networkId]
+
 	local fieldOffset = bit32.extract(flags, 0, 2)
-	local pos = 0
-	local offsetFactor = 0
+	local pos
+	local offsetFactor
+	local componentId
 	local dataObj
+	local field
 
 	if IS_SERVER then
 		return
@@ -526,7 +538,7 @@ end
 local function deserializeEntity(networkId, flags, entities, params, entitiesIndex, paramsIndex, arg)
 	local dataObj
 	local numParams
-	local field = 0
+	local field
 	local isDestruction = isbitset(flags, IS_DESTRUCTION)
 	local isReferenced = isbitset(flags, IS_REFERENCED)
 	local isPrefab = isbitset(flags, IS_PREFAB)
@@ -534,7 +546,9 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 	local idStr = GetStringFromNetworkId(networkId)
 	local instance = isPrefab and (isReferenced and arg._r[idStr] or arg._s[idStr]) or (isUnique and arg or next(CollectionService:GetTagged(idStr)))
 	local fieldOffset = bit32.extract(flags, 0, 2)
-	local offsetFactor = 0
+	local offsetFactor
+	local pos
+	local componentId
 
 	if isDestruction then
 		entitiesIndex = entitiesIndex + 1
@@ -553,7 +567,7 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
 		entities[entitiesIndex] = nil
 		offsetFactor = ffs(fieldOffset)
-		fieldOffset = unsetbit(fieldOffsets, offsetFactor)
+		fieldOffset = unsetbit(fieldOffset, offsetFactor)
 
 		for _ = 1, popcnt(field) do
 			-- dont want to rehash when filling this
@@ -668,7 +682,7 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 			end
 
 			totalNumDataStructs = totalNumDataStructs + numDataStructs
-			msg = unsetbit(msgField, msg)
+			msg = unsetbit(msg, msg)
 		end
 
 		msgMap[msg] = nil
@@ -676,7 +690,7 @@ function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesI
 
 	-- create header and increment entity table index
 	entities[entitiesIndex - totalNumDataStructs] = Vector2int16.new(networkId, flags)
-	entitesIndex = entitiesIndex + 1
+	entitiesIndex = entitiesIndex + 1
 
 	return entitiesIndex, paramsIndex
 end
@@ -721,15 +735,13 @@ end
 function Shared.SerializeEntity(instance, networkId, entities, params, entitiesIndex, paramsIndex, isDestruction, isReferenced, isPrefab, isUnique)
 	local entityStruct = EntityMap[instance]
 	local flags = 0
-	local offset = 0
 	local numDataStructs = 0
-	local setBitPos = 0
-	local componentId = 0
-	local numComponents
+	local componentId
 	local default
+	local offset
 
 	if isDestruction then
-		flags = setbit(flags, DESTRUCTION)
+		flags = setbit(flags, IS_DESTRUCTION)
 		entities[entitiesIndex] = Vector2int16.new(networkId, flags)
 		entitiesIndex = entitiesIndex + 1
 		return entitiesIndex, paramsIndex
@@ -752,7 +764,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 				default = Defaults[componentId]
 				field = unsetbit(field, offset)
 
-				for paramId, v in ipairs(componentMap[componentId][entityStruct[componentId]]) do
+				for paramId, v in ipairs(ComponentMap[componentId][entityStruct[componentId]]) do
 					if default[paramId] then
 						paramsIndex = paramsIndex + 1
 						params[paramsIndex] = v
@@ -825,9 +837,14 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId)
 	msg[componentId] = paramId and setbit(field or 0, paramId - 1) or true
 end
 
+function Shared.Blacklist(componentType)
+	BlacklistedComponents[GetComponentIdFromType(componentType)] = true
+end
+
 function Shared.Init(entityManager, entityMap, componentMap)
 	EntityMap = entityMap
 	ComponentMap = componentMap
+	KillEntity = entityManager.KillEntity
 	AddComponent = entityManager.AddComponent
 	KillComponent = entityManager.KillComponent
 

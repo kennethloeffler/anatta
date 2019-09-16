@@ -1,7 +1,6 @@
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local ComponentDesc = require(script.Parent.Parent.ComponentDesc)
@@ -34,27 +33,29 @@ local GlobalBuffer = {}
 local PrefabBuffers = {}
 local PlayerBuffers = {}
 local GlobalRefs = {}
-local FreedNetworkIds = {}
+local PrefabRefs = {}
 local PlayerReferences = {}
+local FreedNetworkIds = {}
 local PlayerSerializable = {}
 local PlayerCreatable = {}
 local StaticPrefabEntities = {}
+local RootInstanceEntitiesNum = {}
+local PlayersInPrefab = {}
 local PrefabsByPlayer = {}
-local BlacklistedComponents = {}
 
 Server.PlayerSerializable = PlayerSerializable
 Server.PlayerCreatable = PlayerCreatable
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
+local GetParamIdFromName = ComponentDesc.GetParamIdFromName
 local SerializeEntity = Shared.SerializeEntity
 local SerializeUpdate = Shared.SerializeUpdate
 local DeserializeNext = Shared.DeserializeNext
 local setBitAtPos = Shared.setbit
 local GetStringFromNetworkId = Shared.GetStringFromNetworkId
-local GetNetworkIdFromString = Shared.GetNetworkIdFromString
-local QueueUpdate = Shared.QueueUpdate
 local NetworkIdsByInstance = Shared.NetworkIdsByInstance
 local InstancesByNetworkId = Shared.InstancesByNetworkId
+local QueuedUpdates = Shared.QueuedUpdates
 
 ---Gets an available networkId
 -- @param instance Instance
@@ -81,11 +82,11 @@ local function clearBuffer(buffer)
 	local bufferEntities = buffer[ENTITIES]
 	local bufferParams = buffer[PARAMS]
 
-	for i, v in ipairs(bufferEntities) do
+	for i in ipairs(bufferEntities) do
 		bufferEntities[i] = nil
 	end
 
-	for i, v in ipairs(bufferParams) do
+	for i in ipairs(bufferParams) do
 		bufferParams[i] = nil
 	end
 
@@ -139,7 +140,7 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 	local prefabRefsParams = {}
 
 	for instance, networkId in pairs(static[PREFAB_REFS]) do
-		prefabRefIndex, prefabParamIndex = SerializeEntity(
+		prefabRefsIndex, prefabRefsParamIndex = SerializeEntity(
 			instance, networkId,
 			prefabRefs, prefabRefsParams,
 			prefabRefsIndex, prefabRefsParamIndex,
@@ -203,7 +204,7 @@ local function newPlayerReplicator(player)
 	remoteEvent.Parent = player.PlayerGui
 	remoteFunction.Parent = player.PlayerGui
 
-	remoteEvent.OnClientEvent:Connect(function(player, entities, ...)
+	remoteEvent.OnClientEvent:Connect(function(_, entities, ...)
 		local entitiesIndex = 1
 		local paramsIndex = 1
 
@@ -250,7 +251,6 @@ function Server.Dereference(instance)
 
 	FreedNetworkIds[#FreedNetworkIds + 1] = networkId
 	GlobalRefs[instance] = nil
-	PlayerRefs[instance] = nil
 	PlayerSerializable[instance] = nil
 	PlayerCreatable[instance] = nil
 
@@ -364,8 +364,7 @@ end
 function Server.DereferenceForPrefab(rootInstance, instance, supressDestructionMessage)
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #1 (expected Instance)")
 	WSAssert(CollectionService:HasTag("__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
-	WSAssert(deepCopyInstance ~= nil and typeof(deepCopyInstance) == "boolean", "bad argument #3 (expected boolean)")
-	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean", "bad argument #4 (expected boolean)")
+	WSAssert(supressDestructionMessage ~= nil and typeof(supressDestructionMessage) == "boolean" or true, "bad argument #4 (expected boolean)")
 
 	local networkId = StaticPrefabEntities[rootInstance][PREFAB_REFS][instance]
 
@@ -396,7 +395,7 @@ end
 function Server.ReferenceForPlayer(player, instance, supressConstructionMessage)
 	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
-	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean", "bad argument #3 (expected boolean)")
+	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean" or true, "bad argument #3 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
 
@@ -427,7 +426,7 @@ end
 function Server.DereferenceForPlayer(player, instance, supressDestructionMessage)
 	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
-	WSAssert(supressDestructionMessage ~= nil and typeof(supressDestructionMessage) == "boolean", "bad argument #3 (expected boolean)")
+	WSAssert(supressDestructionMessage ~= nil and typeof(supressDestructionMessage) == "boolean" or true,"bad argument #3 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance]
 
@@ -454,7 +453,7 @@ end
 
 function Server.Unique(player, instance, doReference)
 	WSAssert(player:IsA("Player"), "bad argument #1 (expected Player)")
-	WSAssert(typeof(rootInstance) == "Instance", "bad argument #2 (expected Instance)")
+	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
 
 	local entities = {}
 	local params = {}
@@ -511,7 +510,7 @@ function Server.RemovePlayerFromPrefab(player, rootInstance)
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #2 (expected Instance)")
 	WSAssert(PlayersInPrefab[rootInstance], "%s is not a prefab", rootInstance.Name)
 
-	PlayersByPrefab[player] = nil
+	PrefabsByPlayer[player] = nil
 	PlayersInPrefab[rootInstance][player] = nil
 end
 
@@ -535,9 +534,10 @@ function Server.NewPrefab(rootInstance, entitiesFolder)
 
 	local refFolder = Instance.new("Folder")
 	local static
+	local networkId = 0
 
 	StaticPrefabEntities[rootInstance] = { {}, {}, 1, 1, {} }
-	static = staticPrefabEntities[rootInstance]
+	static = StaticPrefabEntities[rootInstance]
 	PrefabBuffers[rootInstance] = { {}, {}, 1, 1 }
 	PlayersInPrefab[rootInstance] = {}
 	entitiesFolder.Name = "_s"
@@ -550,6 +550,7 @@ function Server.NewPrefab(rootInstance, entitiesFolder)
 			PrefabRefs[instance] = rootInstance
 			instance.Parent = refFolder
 		else
+			networkId = networkId + 1
 			static[ENTITIES_INDEX], static[PARAMS_INDEX] = SerializeEntity(
 				instance, networkId,
 				static[ENTITIES], static[PARAMS],
@@ -592,15 +593,10 @@ function Server.PlayerSerializable(players, instance, componentType, paramName)
 
 	local struct = PlayerSerializable[instance]
 	local componentId = GetComponentIdFromType(componentType)
-	local componentOffset = math.floor(componentId * 0.03125) -- componentId / 32
 	local paramId = paramName and GetParamIdFromName(componentId, paramName)
 	local paramsField
-	local buffer
 
 	if not struct then
-		local firstWord = componentOffset == 0 and setBitAtPos(0, componentId - 1) or 0
-		local secondWord = componentOffset == 1 and setBitAtPos(0, componentId - 33) or 0
-
 		paramsField = paramName and setBitAtPos(0, paramId - 1) or 0xFFFF
 		PlayerSerializable[instance][1] = players
 		PlayerSerializable[instance][componentId + 1] = paramsField
@@ -640,10 +636,11 @@ function Server.PlayerCreatable(players, instance, componentType)
 
 	local struct = PlayerCreatable[networkId]
 	local componentId = GetComponentIdFromType(componentType)
+	local componentOffset = math.floor(componentId * 0.03125)
 
 	if not struct then
 		local firstWord = componentOffset == 0 and setBitAtPos(0, componentId - 1) or 0
-		local secondWord = componentOffset == 0 and setBitAtPos(0, componentId - 33) or 0
+		local secondWord = componentOffset == 1 and setBitAtPos(0, componentId - 33) or 0
 
 		PlayerCreatable[instance] = { players, firstWord, secondWord }
 	else
@@ -653,22 +650,17 @@ function Server.PlayerCreatable(players, instance, componentType)
 	end
 end
 
----Blacklists componentType, preventing it from ever being serialized and sent to clients
--- @param componentType
-
-function Server.Blacklist(componentType)
-	WSAssert(typeof(componentType) == "string", "expected string")
-
-	BlacklistedComponents[GetComponentIdFromType(componentType)] = true
-end
-
 ---Steps the server's replicator
 -- default rate 30hz
 -- @param dt
 
 function Server.Step(dt)
 	local playerBuffer
+	local playerReferences
 	local buffer
+	local playerPrefab
+	local sendPrefab
+	local playerBufferNotEmpty
 	local prefab
 	local global
 
@@ -702,7 +694,7 @@ function Server.Step(dt)
 					playerBuffer[ENTITIES_INDEX], playerBuffer[PARAMS_INDEX] = SerializeUpdate(
 						playerBuffer[ENTITIES], playerBuffer[PARAMS],
 						playerBuffer[ENTITIES_INDEX], playerBuffer[PARAMS_INDEX],
-						mspMap
+						msgMap
 					)
 				end
 			end
@@ -716,15 +708,14 @@ function Server.Step(dt)
 			playerPrefab = PrefabsByPlayer[player]
 			playerBuffer = PlayerBuffers[player]
 			prefab = PrefabBuffers[playerPrefab]
-			remoteEvent = Remotes[player][REMOTE_EVENT]
 			playerBufferNotEmpty = next(playerBuffer[ENTITIES])
-			sendPrefab = next(PrefabBuffers[ENTITIES])
+			sendPrefab = next(prefab[ENTITIES])
 
-			remoteEvent:FireClient(
+			Remotes[player][REMOTE_EVENT]:FireClient(
 				player,
 				playerPrefab,
-				playerUnique and playerBuffer[ENTITIES],
-				playerUnique and playerBuffer[PARAMS],
+				playerBufferNotEmpty and playerBuffer[ENTITIES],
+				playerBufferNotEmpty and playerBuffer[PARAMS],
 				global and GlobalBuffer[ENTITIES],
 				global and GlobalBuffer[PARAMS],
 				sendPrefab and prefab[ENTITIES],
@@ -732,7 +723,7 @@ function Server.Step(dt)
 			)
 		end
 
-		for rootInstance, prefabBuffer in pairs(PrefabBuffers) do
+		for _, prefabBuffer in pairs(PrefabBuffers) do
 			clearBuffer(prefabBuffer)
 		end
 
@@ -743,8 +734,6 @@ end
 ---Serializes extant prefabs and starts listening to PlayerAdded and PlayerRemoved to create buffers for clients
 
 function Server.Init()
-	local PrefabEntities = {}
-
 	if AUTO_SERIALIZE_GLOBAL_ENV then
 		CollectionService:AddTag(Workspace, "__WSReplicatorRoot")
 		CollectionService:AddTag(ReplicatedStorage, "__WSReplicatorRoot")
@@ -771,10 +760,9 @@ function Server.Init()
 	for _, instance in pairs(Entities) do
 		for _, rootInstance in pairs(RootInstances) do
 			if instance:IsDescendantOf(rootInstance) then
-				local name
 				local static = StaticPrefabEntities[rootInstance]
 
-				if instance:HasTag("__WSReplicatorRef")
+				if instance:HasTag("__WSReplicatorRef") then
 					local networkId = getNetworkId(instance)
 
 					instance.Name = GetStringFromNetworkId(networkId)
@@ -786,8 +774,8 @@ function Server.Init()
 					instance.Name = GetStringFromNetworkId(RootInstanceEntitiesNum[rootInstance])
 					instance.Parent = rootInstance._s
 
-					static[ENTITIES_INDEX], static[PARAMS_INDEX] = serializeEntity(
-						instance, id,
+					static[ENTITIES_INDEX], static[PARAMS_INDEX] = SerializeEntity(
+						instance, RootInstanceEntitiesNum[rootInstance],
 						static[ENTITIES], static[PARAMS],
 						static[ENTITIES_INDEX], static[PARAMS_INDEX],
 						nil, nil, true
@@ -802,7 +790,7 @@ function Server.Init()
 
 	-- if we took too long, create buffers for extant players
 	for _, player in ipairs(Players:GetPlayers()) do
-		newReplicatorFor(player)
+		newPlayerReplicator(player)
 	end
 end
 

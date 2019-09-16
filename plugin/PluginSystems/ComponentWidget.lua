@@ -12,7 +12,6 @@ local Serial = require(script.Parent.Parent.Serial)
 local ComponentWidget = {}
 
 function ComponentWidget.OnLoaded(pluginWrapper)
-	local GameManager = pluginWrapper.GameManager
 	local PluginManager = pluginWrapper.PluginManager
 	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
 	local referenceButton = pluginWrapper.GetButton(toolbar, "WSReplicatorReference")

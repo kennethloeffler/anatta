@@ -3,7 +3,6 @@ local CollectionService = game:GetService("CollectionService")
 
 local ComponentDesc = require(script.Parent.ComponentDesc)
 local Constants = require(script.Parent.Constants)
-local WSAssert = require(script.Parent.WSAssert)
 
 local PARAMS_UPDATE = Constants.PARAMS_UPDATE
 local ADD_COMPONENT = Constants.ADD_COMPONENT
@@ -30,7 +29,9 @@ local ComponentMetatable = {
 		local paramId = GetParamIdFromName(componentId, index)
 		local ty = typeof(GetParamDefault(componentId, paramId))
 
-		ty = (ty == typeof(value) and true or error("expected " .. ty))
+		if not ty == typeof(value) then
+			error("expected " .. ty)
+		end
 
 		component[paramId] = value
 
@@ -57,7 +58,7 @@ local ComponentMetatable = {
 --@param paramMap table
 --@return The new component object
 
-function Component(instance, componentType, paramMap)
+return function(instance, componentType, paramMap)
 	local componentId = typeof(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
 	local newComponent = paramMap
 
@@ -85,6 +86,4 @@ function Component(instance, componentType, paramMap)
 
 	return newComponent
 end
-
-return Component
 

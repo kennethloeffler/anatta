@@ -247,15 +247,19 @@ function ComponentWidgetList.OnLoaded(pluginWrapper)
 	local gameManager = pluginWrapper.GameManager
 
 	pluginManager.ComponentAdded("SelectionUpdate", function(selectionUpdate)
-		local uiListLayout = Instance.new("UIListLayout")
 		local scrollingFrame = selectionUpdate.Instance
+		local uiListLayout = scrollingFrame:FindFirstChild("UIListLayout") or Instance.new("UIListLayout")
 
-		uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		uiListLayout.Padding = UDim.new(0, 1)
-		uiListLayout.Parent = scrollingFrame
+		if next(selectionUpdate.EntityList) then
+			uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			uiListLayout.Padding = UDim.new(0, 1)
+			uiListLayout.Parent = scrollingFrame
 
-		for _, inst in ipairs(selectionUpdate.EntityList) do
-			makeComponentLabels(inst, scrollingFrame, gameManager, selectionUpdate.EntityList, pluginManager)
+			for _, inst in ipairs(selectionUpdate.EntityList) do
+				makeComponentLabels(inst, scrollingFrame, gameManager, selectionUpdate.EntityList, pluginManager)
+			end
+		elseif uiListLayout then
+			uiListLayout:Destroy()
 		end
 
 		pluginManager.KillComponent(scrollingFrame, "SelectionUpdate")

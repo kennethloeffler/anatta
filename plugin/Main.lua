@@ -1,19 +1,16 @@
 -- Main.lua
-local CollectionService = game:GetService("CollectionService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
-
 local Serial = require(script.Parent.Serial)
 
-function Main(pluginWrapper, root, gameRoot)
+return function(pluginWrapper, root, gameRoot)
 	-- PluginComponents are not persistent
 	local numPluginComponents = 0
 	local componentDefinitions = {}
 	local Systems = root.plugin.PluginSystems
 	local Components = root.plugin.PluginComponents
 	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
-	local networkRefButton = pluginWrapper.GetButton(toolbar, "WSReplicatorReference", "Tag the selected enitity as being an EntityReplicator reference")
-	local prefabButton = pluginWrapper.GetButton(toolbar, "WSPrefabRootInstance", "Tag the selected instance as being an EntityReplicator prefab root instance")
+
+	pluginWrapper.GetButton(toolbar, "Replicator reference", "Tag the selected enitity as being an EntityReplicator reference")
+	pluginWrapper.GetButton(toolbar, "Replicator RootInstance", "Tag the selected instance as being an EntityReplicator prefab root instance")
 
 	for _, componentModule in ipairs(Components:GetChildren()) do
 		local rawComponent = require(componentModule)
@@ -50,6 +47,8 @@ function Main(pluginWrapper, root, gameRoot)
 	pluginManager.LoadSystem(Systems.EntityPersistence, pluginWrapper)
 	pluginManager.LoadSystem(Systems.ComponentWidgetList, pluginWrapper)
 
+	gameManager.Init()
+
 	pluginWrapper.OnUnloading = function()
 		local dockWidget = pluginWrapper.GetDockWidget("Components")
 
@@ -63,6 +62,4 @@ function Main(pluginWrapper, root, gameRoot)
 
 	coroutine.wrap(pluginManager.StartSystems)()
 end
-
-return Main
 

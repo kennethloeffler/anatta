@@ -19,7 +19,7 @@ local function populateDefs(definitionTable)
 		WSAssert(typeof(componentType) == "string", "expected string")
 		WSAssert(typeof(componentDefinition) == "table", "expected table")
 
-		local componentId = componentDefinition[1]
+		componentId = componentDefinition[1]
 
 		WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
 
@@ -93,3 +93,4 @@ function ComponentDesc.GetAllComponents()
 end
 
 return ComponentDesc
+
