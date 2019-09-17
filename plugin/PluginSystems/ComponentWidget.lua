@@ -14,8 +14,8 @@ local ComponentWidget = {}
 function ComponentWidget.OnLoaded(pluginWrapper)
 	local PluginManager = pluginWrapper.PluginManager
 	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
-	local referenceButton = pluginWrapper.GetButton(toolbar, "WSReplicatorReference")
-	local prefabButton = pluginWrapper.GetButton(toolbar, "WSPrefabRootInstance")
+	local referenceButton = pluginWrapper.GetButton(toolbar, "Replicator reference", "Tag the selected enitity as being an EntityReplicator reference")
+	local prefabButton = pluginWrapper.GetButton(toolbar, "Replicator RootInstance", "Tag the selected instance as being an EntityReplicator prefab root instance")
 	local entities = {}
 
 	local widget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)

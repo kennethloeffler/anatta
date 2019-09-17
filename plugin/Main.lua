@@ -9,9 +9,6 @@ return function(pluginWrapper, root, gameRoot)
 	local Components = root.plugin.PluginComponents
 	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
 
-	pluginWrapper.GetButton(toolbar, "Replicator reference", "Tag the selected enitity as being an EntityReplicator reference")
-	pluginWrapper.GetButton(toolbar, "Replicator RootInstance", "Tag the selected instance as being an EntityReplicator prefab root instance")
-
 	for _, componentModule in ipairs(Components:GetChildren()) do
 		local rawComponent = require(componentModule)
 		local componentType = rawComponent[1]
