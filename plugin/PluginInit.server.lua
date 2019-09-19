@@ -32,6 +32,7 @@ end
 if IsCustomSource then
 	-- this script seems to run before children are loaded...
 	local customSource = ServerStorage:WaitForChild("WorldSmith", 2)
+
 	if customSource then
 		WatchedSource = customSource
 		CurrentSource = WatchedSource
@@ -41,7 +42,6 @@ if IsCustomSource then
 end
 
 function PluginWrapper.GetToolbar(toolbarName)
-
 	if Toolbars[toolbarName] then
 		return Toolbars[toolbarName]
 	end
@@ -53,7 +53,6 @@ function PluginWrapper.GetToolbar(toolbarName)
 end
 
 function PluginWrapper.GetButton(toolbar, buttonName, buttonTooltip, buttonIcon)
-
 	if Buttons[toolbar] then
 		local button = Buttons[toolbar][buttonName]
 
@@ -65,18 +64,19 @@ function PluginWrapper.GetButton(toolbar, buttonName, buttonTooltip, buttonIcon)
 	end
 
 	local button = toolbar:CreateButton(buttonName, buttonTooltip, buttonIcon or "")
+
 	Buttons[toolbar][buttonName] = button
 
 	return button
 end
 
 function PluginWrapper.GetDockWidget(dockWidgetName, ...)
-
 	if DockWidgets[dockWidgetName] then
 		return DockWidgets[dockWidgetName]
 	end
 
 	local dockWidget = plugin:CreateDockWidgetPluginGui(dockWidgetName, DockWidgetPluginGuiInfo.new(...))
+
 	DockWidgets[dockWidgetName] = dockWidget
 
 	return dockWidget
