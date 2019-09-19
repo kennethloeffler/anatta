@@ -60,9 +60,9 @@ local ComponentMetatable = {
 
 return function(instance, componentType, paramMap)
 	local componentId = typeof(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
-	local newComponent = paramMap
+	local newComponent = paramMap or {}
 
-	if not newComponent or not newComponent[1] then
+	if not paramMap or not paramMap[1] then
 		for paramName, default in pairs(GetDefaults(componentId)) do
 			local paramId = GetParamIdFromName(componentId, paramName)
 
