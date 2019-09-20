@@ -195,10 +195,6 @@ local function stepComponentLifetime()
 	local instance
 	local addedFunc
 
-	for compId, parentEntitiesMap in pairs(KilledComponents) do
-		doReorder(compId, parentEntitiesMap)
-	end
-
 	for i, component in ipairs(AddedComponents) do
 		componentId = component._componentId
 		addedFunc = ComponentAddedFuncs[componentId]
@@ -209,11 +205,15 @@ local function stepComponentLifetime()
 			addedFunc(component)
 		end
 
-		EntityMap[instance][componentId] = componentOffset
+		EntityMap[instance][componentId + 1] = componentOffset
 		ComponentMap[componentId][componentOffset] = component
 		AddedComponents[i] = nil
 		setComponentBitForEntity(instance, componentId)
 		filterEntity(instance)
+	end
+
+	for compId, parentEntitiesMap in pairs(KilledComponents) do
+		doReorder(compId, parentEntitiesMap)
 	end
 end
 
