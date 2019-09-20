@@ -87,8 +87,8 @@ end
 ---Adds a component to the destruction cache
 -- @param entity
 -- @param componentId
-local function cacheComponentKilled(entity, componentId)
-	KilledComponents[componentId][entity] = true
+local function cacheComponentKilled(entity, componentId, supressKillEntity)
+	KilledComponents[componentId][entity] = supressKillEntity ~= nil and supressKillEntity or false
 end
 
 local function doUnloadSystem(system)
@@ -150,12 +150,14 @@ local function doReorder(componentId, parentEntitiesMap)
 	local keptComponentOffset = 1
 	local instance
 	local entityStruct
+	local doKill
 
 	for componentOffset, component in ipairs(componentList) do
 		instance = component.Instance
 		entityStruct = EntityMap[instance]
+		doKill = parentEntitiesMap[instance]
 
-		if not parentEntitiesMap[instance] then
+		if doKill == nil then
 			if componentOffset ~= keptComponentOffset then
 				-- swap
 				componentList[keptComponentOffset] = component
@@ -176,7 +178,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			parentEntitiesMap[instance] = nil
 			unsetComponentBitForEntity(instance, componentId)
 
-			if not next(entityStruct) then
+			if not next(entityStruct) and not doKill then
 				-- dead
 				CollectionService:RemoveTag(instance, "__WSEntity")
 				EntityMap[instance] = nil
@@ -358,7 +360,7 @@ end
 -- @param instance
 -- @param componentType
 
-function EntityManager.KillComponent(instance, componentType)
+function EntityManager.KillComponent(instance, componentType, supressKillEntity)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
 	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
 
@@ -372,7 +374,7 @@ function EntityManager.KillComponent(instance, componentType)
 	local componentIndex = entityStruct[componentId + 1]
 
 	if componentIndex then
-		cacheComponentKilled(instance, componentId)
+		cacheComponentKilled(instance, componentId, supressKillEntity)
 	end
 end
 
