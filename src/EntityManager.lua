@@ -47,7 +47,7 @@ local function unsetComponentBitForEntity(entity, componentId)
 end
 
 local function filterEntity(instance)
-	local entityBitFields = EntityMap[instance][0]
+	local entityBitFields = EntityMap[instance][1]
 	local addedFunc
 	local removedFunc
 	local systemEntities
@@ -78,7 +78,7 @@ local function filterEntity(instance)
 end
 
 local function addEntity(instance)
-	EntityMap[instance] = { [0] = { 0, 0 } } -- fields for fast intersection tests
+	EntityMap[instance] = { { 0, 0 } } -- fields for fast intersection tests
 	CollectionService:AddTag(instance, "__WSEntity")
 
 	return instance
@@ -159,7 +159,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			if componentOffset ~= keptComponentOffset then
 				-- swap
 				componentList[keptComponentOffset] = component
-				entityStruct[componentId] = keptComponentOffset
+				entityStruct[componentId + 1] = keptComponentOffset
 				componentList[componentOffset] = nil
 			end
 
@@ -172,7 +172,7 @@ local function doReorder(componentId, parentEntitiesMap)
 			end
 
 			componentList[componentOffset] = nil
-			entityStruct[componentId] = nil
+			entityStruct[componentId + 1] = nil
 			parentEntitiesMap[instance] = nil
 			unsetComponentBitForEntity(instance, componentId)
 
@@ -280,7 +280,7 @@ function EntityManager.GetComponent(instance, componentType)
 	end
 
 	local componentId = GetComponentIdFromType(componentType)
-	local componentIndex = entityStruct[componentId]
+	local componentIndex = entityStruct[componentId + 1]
 
 	if componentIndex then
 		return ComponentMap[componentId][componentIndex]
@@ -369,7 +369,7 @@ function EntityManager.KillComponent(instance, componentType)
 	end
 
 	local componentId = typeof(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
-	local componentIndex = entityStruct[componentId]
+	local componentIndex = entityStruct[componentId + 1]
 
 	if componentIndex then
 		cacheComponentKilled(instance, componentId)
@@ -394,8 +394,8 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 	end
 
 	for componentId in pairs(entityStruct) do
-		if not componentId == 0 then
-			cacheComponentKilled(instance, componentId)
+		if not componentId == 1 then
+			cacheComponentKilled(instance, componentId - 1)
 		end
 	end
 

@@ -281,7 +281,7 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 			offset = math.floor(componentId * 0.01325)
 			flags = setbit(flags, 2 + offset)
 
-			for _, v in ipairs(ComponentMap[componentId][entityStruct[componentId]]) do
+			for _, v in ipairs(ComponentMap[componentId][entityStruct[componentId + 1]]) do
 				params[paramsIndex] = v
 				paramsIndex = paramsIndex + 1
 			end
@@ -364,7 +364,7 @@ local function serializeParamsUpdate(instance, entities, params, entitiesIndex, 
 
 			for _ = 1, popcnt(paramsField) do
 				paramId = ffs(paramsField) + 1
-				params[paramsIndex] = ComponentMap[componentId][entityStruct[componentId]][paramId]
+				params[paramsIndex] = ComponentMap[componentId][entityStruct[componentId + 1]][paramId]
 				paramsIndex = paramsIndex + 1
 				paramsField = unsetbit(paramId - 1)
 			end
@@ -436,7 +436,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 					return
 				end
 
-				ComponentMap[componentId][EntityMap[instance]][paramId] = params[paramsIndex]
+				ComponentMap[componentId][EntityMap[instance][componentId + 1]][paramId] = params[paramsIndex]
 				paramsIndex = paramsIndex + 1
 				paramsField = unsetbit(paramsField, paramId - 1)
 			end
@@ -452,17 +452,13 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 	instance = instance or InstancesByNetworkId[networkId]
 
 	local fieldOffset = bit32.extract(flags, 2, 2)
-	-- don't want to rehash while populating this
-	local componentStruct = {
-		true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-		_componentId = true, Instance = true
-	}
 	local pos
 	local offsetFactor
 	local componentId
 	local dataObj
 	local paramValue
 	local field
+	local numParams
 
 	for _ = 1, popcnt(fieldOffset) do
 		entitiesIndex = entitiesIndex + 1
@@ -481,12 +477,18 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 			pos = ffs(field)
 			componentId = pos + (32 * offsetFactor) + 1
 			field = unsetbit(field, pos)
+			numParams = NumParams[componentId]
 
 			if player and not hasPermission(player, instance, componentId) then
 				return
 			end
 
-			for paramId = 1, NumParams[componentId] do
+			local componentStruct = {
+				true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+				_componentId = true, Instance = true
+			}
+
+			for paramId = 1, numParams do
 				paramsIndex = paramsIndex + 1
 				paramValue = params[paramsIndex]
 
@@ -495,6 +497,10 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 				end
 
 				componentStruct[paramId] = params[paramsIndex]
+			end
+
+			for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do
+				componentStruct[i] = nil
 			end
 
 			AddComponent(instance, componentId, componentStruct)
@@ -581,7 +587,7 @@ local function deserializeEntity(networkId, flags, entities, params, entitiesInd
 			componentId = pos + (32 * offsetFactor) + 1
 			numParams = NumParams[componentId]
 
-			for paramId = 1, NumParams[componentId] do
+			for paramId = 1, numParams do
 				paramsIndex = paramsIndex + 1
 				componentStruct[paramId] = params[paramsIndex]
 			end
@@ -764,7 +770,7 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 				default = Defaults[componentId]
 				field = unsetbit(field, offset)
 
-				for paramId, v in ipairs(ComponentMap[componentId][entityStruct[componentId]]) do
+				for paramId, v in ipairs(ComponentMap[componentId][entityStruct[componentId + 1]]) do
 					if default[paramId] then
 						paramsIndex = paramsIndex + 1
 						params[paramsIndex] = v
