@@ -36,14 +36,14 @@ local function setComponentBitForEntity(entity, componentId)
 	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
 	local bitField = EntityMap[entity][0][offset]
 
-	EntityMap[entity][0][offset] = bit32.bor(bitField, bit32.lshift(1, componentId - 1 - (32 * (offset - 1))))
+	EntityMap[entity][1][offset] = bit32.bor(bitField, bit32.lshift(1, componentId - 1 - (32 * (offset - 1))))
 end
 
 local function unsetComponentBitForEntity(entity, componentId)
 	local offset = math.ceil(componentId * 0.03125)
 	local bitField = EntityMap[entity][0][offset]
 
-	EntityMap[entity][0][offset] = bit32.band(bitField, bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (offset - 1)))))
+	EntityMap[entity][1][offset] = bit32.band(bitField, bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (offset - 1)))))
 end
 
 local function filterEntity(instance)
