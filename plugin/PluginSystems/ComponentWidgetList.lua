@@ -1,5 +1,6 @@
 local Serial = require(script.Parent.Parent.Serial)
 local Theme = settings().Studio.Theme
+local PluginES
 
 local ComponentWidgetList = {}
 
@@ -167,7 +168,6 @@ local function makeParamFields(componentId, paramList, scrollingFrame, gameManag
 		counter = counter + 1
 		local paramName = componentDesc.GetParamNameFromId(componentId, paramId)
 		local paramDefault = componentDesc.GetParamDefault(componentId, paramName)
-		local paramType = typeof(paramDefault)
 		local frame = Instance.new("Frame")
 		frame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
 		frame.Size = UDim2.new(1, 0, 0, 24)
@@ -191,7 +191,6 @@ end
 
 local function shiftLabels(scrollingFrame, componentType, numParams, dir)
 	local componentLabelOffset = scrollingFrame:FindFirstChild(componentType).LayoutOrder
-
 	for _, inst in pairs(scrollingFrame:GetChildren()) do
 		if inst:IsA("GuiBase") and inst.LayoutOrder > componentLabelOffset then
 			inst.LayoutOrder = dir == 1 and inst.LayoutOrder + numParams or inst.LayoutOrder - numParams
@@ -230,7 +229,7 @@ local function makeComponentLabels(instance, scrollingFrame, gameManager, entity
 					if not labelOpen then
 						labelOpen = true
 						shiftLabels(scrollingFrame, componentType, #paramList, 1)
-						makeParamFields(componentId, paramList, scrollingFrame, gameManager, entityList, pluginManager)
+						makeParamFields(componentId, paramList, scrollingFrame, gameManager, entityList, PluginES)
 					else
 						labelOpen = false
 						clearParamFields(componentType, #paramList, scrollingFrame)
@@ -243,26 +242,11 @@ local function makeComponentLabels(instance, scrollingFrame, gameManager, entity
 end
 
 function ComponentWidgetList.OnLoaded(pluginWrapper)
-	local pluginManager = pluginWrapper.PluginManager
-	local gameManager = pluginWrapper.GameManager
+	PluginES = pluginWrapper.PluginManager
 
-	pluginManager.ComponentAdded("SelectionUpdate", function(selectionUpdate)
+	PluginES.ComponentAdded("SelectionUpdate", function(selectionUpdate)
 		local scrollingFrame = selectionUpdate.Instance
-		local uiListLayout = scrollingFrame:FindFirstChild("UIListLayout") or Instance.new("UIListLayout")
-
-		if next(selectionUpdate.EntityList) then
-			uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-			uiListLayout.Padding = UDim.new(0, 1)
-			uiListLayout.Parent = scrollingFrame
-
-			for _, inst in ipairs(selectionUpdate.EntityList) do
-				makeComponentLabels(inst, scrollingFrame, gameManager, selectionUpdate.EntityList, pluginManager)
-			end
-		elseif uiListLayout then
-			uiListLayout:Destroy()
-		end
-
-		pluginManager.KillComponent(scrollingFrame, "SelectionUpdate")
+		
 	end)
 end
 

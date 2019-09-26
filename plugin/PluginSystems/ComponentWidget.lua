@@ -2,6 +2,7 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Selection = game:GetService("Selection")
 local Theme = settings().Studio.Theme
+local PluginES
 
 local GameRoot = ReplicatedStorage:FindFirstChild("WorldSmith")
 local GameComponentDesc = GameRoot and GameRoot.ComponentDesc
@@ -12,11 +13,12 @@ local Serial = require(script.Parent.Parent.Serial)
 local ComponentWidget = {}
 
 function ComponentWidget.OnLoaded(pluginWrapper)
-	local PluginManager = pluginWrapper.PluginManager
 	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
 	local referenceButton = pluginWrapper.GetButton(toolbar, "Replicator reference", "Tag the selected enitity as being an EntityReplicator reference")
 	local prefabButton = pluginWrapper.GetButton(toolbar, "Replicator RootInstance", "Tag the selected instance as being an EntityReplicator prefab root instance")
 	local entities = {}
+
+	PluginES = pluginWrapper.PluginManager
 
 	local widget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
 	widget.Title = "Components"
@@ -25,7 +27,7 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 	bgFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
 	bgFrame.Size = UDim2.new(1, 0, 1, 0)
 	bgFrame.BorderSizePixel = 0
-	PluginManager.AddComponent(bgFrame, "ComponentWidget", {})
+	PluginES.AddComponent(bgFrame, "ComponentWidget", {})
 	bgFrame.Parent = widget
 
 	local scrollingFrame = Instance.new("ScrollingFrame")
@@ -58,13 +60,13 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar, Enum.StudioStyleGuideModifier.Pressed)
 
-			if not PluginManager.GetComponent(scrollingFrame, "AddComponentMenuClick") then
-				PluginManager.AddComponent(scrollingFrame, "AddComponentMenuClick", {Components = Serial.Deserialize(ComponentDefs.Source)})
+			if not PluginES.GetComponent(scrollingFrame, "AddComponentMenuClick") then
+				PluginES.AddComponent(scrollingFrame, "AddComponentMenuClick", {Components = Serial.Deserialize(ComponentDefs.Source)})
 			else
 				scrollingFrame:ClearAllChildren()
 				AddComponentButton.Text = "+"
-				PluginManager.KillComponent(scrollingFrame, "AddComponentMenuClick")
-				PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", {EntityList = entities})
+				PluginES.KillComponent(scrollingFrame, "AddComponentMenuClick")
+				PluginES.AddComponent(scrollingFrame, "SelectionUpdate", {EntityList = entities})
 			end
 		end
 	end)
@@ -134,8 +136,25 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 			entities[#entities + 1] = inst
 		end
 
-		if not PluginManager.GetComponent(scrollingFrame, "AddComponentMenuClick") then
-			PluginManager.AddComponent(scrollingFrame, "SelectionUpdate", { EntityList = entities })
+		if not PluginES.GetComponent(scrollingFrame, "AddComponentMenuClick") then
+			local uiListLayout = scrollingFrame:FindFirstChild("UIListLayout") or Instance.new("UIListLayout")
+			local module
+
+			uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			uiListLayout.Parent = scrollingFrame
+
+			for _, inst in ipairs(entities) do
+				module = inst:FindFirstChild("__WSEntity")
+
+				if module then
+					for componentType, paramList in pairs(Serial.Deserialize(module.Source)) do
+						PluginES.AddComponent(scrollingFrame, "ComponentLabel", {
+							ComponentType = componentType,
+							ParamList = paramList
+						})
+					end
+				end
+			end
 		end
 	end)
 end
