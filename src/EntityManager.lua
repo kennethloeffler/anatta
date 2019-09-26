@@ -309,9 +309,7 @@ function EntityManager.ComponentAdded(componentType, func)
 	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
 	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
 
-	local componentId = GetComponentIdFromType(componentType)
-
-	ComponentAddedFuncs[componentId] = func
+	ComponentAddedFuncs[GetComponentIdFromType(componentType)] = func
 end
 
 ---Hooks a function func to be called just before components of type componentType are removed from an entity
@@ -323,9 +321,7 @@ function EntityManager.ComponentKilled(componentType, func)
 	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
 	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
 
-	local componentId = GetComponentIdFromType(componentType)
-
-	ComponentRemovedFuncs[componentId] = func
+	ComponentRemovedFuncs[GetComponentIdFromType(componentType)] = func
 end
 
 ---Hooks a function func to be called just after an entity matches the .EntityFilter table in system
