@@ -132,21 +132,13 @@ local function hasPermission(player, instance, componentId, paramId)
 		playerArg = PlayerCreatable[instance][1]
 		componentField = PlayerCreatable[instance][componentOffset + 2]
 
-		if not ((playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(componentField, bitOffset)) then
-			return
-		else
-			return true
-		end
+		return (playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(componentField, bitOffset)
 	-- checking if player is allowed to serialize to this parameter on this entity
 	elseif paramId and componentId then
 		playerArg = PlayerSerializable[instance][1]
 		paramField = PlayerSerializable[instance][componentId + 1]
 
-		if not (paramField and (playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(paramField, paramId - 1)) then
-			return
-		else
-			return true
-		end
+		return (playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(paramField, paramId - 1)
 	end
 end
 
