@@ -84,13 +84,6 @@ local function addEntity(instance)
 	return instance
 end
 
----Adds a component to the destruction cache
--- @param entity
--- @param componentId
-local function cacheComponentKilled(entity, componentId, supressKillEntity)
-	KilledComponents[componentId][entity] = supressKillEntity ~= nil and supressKillEntity or false
-end
-
 local function doUnloadSystem(system)
 	local filterId = FilterIdsBySystem[system]
 	local heartbeatId = HeartbeatIdsBySystem[system]
@@ -141,28 +134,30 @@ local function doUnloadSystem(system)
 	SystemMap[system] = nil
 end
 
-local function doReorder(componentId, parentEntitiesMap)
-	if not next(parentEntitiesMap) then
+local function doReorder(componentId, componentList)
+	if not next(componentList) then
 		return
 	end
 
-	local componentList = ComponentMap[componentId]
 	local keptComponentOffset = 1
+	local masterComponentList = ComponentMap[componentId]
 	local instance
 	local entityStruct
 	local doKill
+	local cIndex
 
-	for componentOffset, component in ipairs(componentList) do
+	for componentOffset, component in ipairs(masterComponentList) do
 		instance = component.Instance
 		entityStruct = EntityMap[instance]
-		doKill = parentEntitiesMap[instance]
+		doKill = componentList[component]
+		cIndex = entityStruct[componentId + 1]
 
 		if doKill == nil then
 			if componentOffset ~= keptComponentOffset then
 				-- swap
-				componentList[keptComponentOffset] = component
+				masterComponentList[keptComponentOffset] = component
 				entityStruct[componentId + 1] = keptComponentOffset
-				componentList[componentOffset] = nil
+				componentList[component] = nil
 			end
 
 			keptComponentOffset = keptComponentOffset + 1
@@ -173,10 +168,27 @@ local function doReorder(componentId, parentEntitiesMap)
 				removedFunc(component)
 			end
 
-			componentList[componentOffset] = nil
-			entityStruct[componentId + 1] = nil
-			parentEntitiesMap[instance] = nil
+			masterComponentList[componentOffset] = nil
+			componentList[component] = nil
 			unsetComponentBitForEntity(instance, componentId)
+
+			if typeof(cIndex) == "number" then
+				entityStruct[componentId + 1] = nil
+			else
+				local l = #cIndex
+				-- list typed
+				for i, index in ipairs(cIndex) do
+					if index == componentOffset then
+						cIndex[i] = cIndex[l]
+						cIndex[l] = nil
+						break
+					end
+				end
+
+				if not cIndex[1] then
+					entityStruct[componentId + 1] = nil
+				end
+			end
 
 			if not next(entityStruct) and not doKill then
 				-- dead
@@ -194,6 +206,7 @@ end
 local function stepComponentLifetime()
 	local componentId
 	local componentOffset
+	local offsetIndex
 	local instance
 	local addedFunc
 
@@ -201,21 +214,31 @@ local function stepComponentLifetime()
 		componentId = component._componentId
 		addedFunc = ComponentAddedFuncs[componentId]
 		componentOffset = #ComponentMap[componentId] + 1
+		offsetIndex = EntityMap[instance][componentId + 1]
 		instance = component.Instance
 
 		if addedFunc then
 			addedFunc(component)
 		end
 
-		EntityMap[instance][componentId + 1] = componentOffset
+		if not component._list then
+			EntityMap[instance][componentId + 1] = componentOffset
+		else
+			if offsetIndex then
+				offsetIndex[#offsetIndex + 1] = componentOffset
+			else
+				EntityMap[instance][componentId + 1] = { componentOffset }
+			end
+		end
+
 		ComponentMap[componentId][componentOffset] = component
 		AddedComponents[i] = nil
 		setComponentBitForEntity(instance, componentId)
 		filterEntity(instance)
 	end
 
-	for compId, parentEntitiesMap in pairs(KilledComponents) do
-		doReorder(compId, parentEntitiesMap)
+	for compId, componentList in ipairs(KilledComponents) do
+		doReorder(compId, componentList)
 	end
 end
 
@@ -250,13 +273,13 @@ local EntityManager = {}
 function EntityManager.AddComponent(instance, componentType, paramMap)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
 	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
-	WSAssert(paramMap ~= nil and typeof(paramMap) == "table"or true, "bad argument #3 (expected table)")
+	WSAssert(paramMap ~= nil and typeof(paramMap) == "table" or true, "bad argument #3 (expected table)")
+
+	local component = ComponentFactory(instance, componentType, paramMap)
 
 	if not EntityMap[instance] then
 		addEntity(instance)
 	end
-
-	local component = ComponentFactory(instance, componentType, paramMap)
 
 	AddedComponents[#AddedComponents + 1] = component
 
@@ -288,6 +311,31 @@ function EntityManager.GetComponent(instance, componentType)
 		return ComponentMap[componentId][componentIndex]
 	end
 end
+
+function EntityManager.GetListTypedComponent(instance, componentType)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
+
+	local entityStruct = EntityMap[instance]
+
+	if not entityStruct then
+		return
+	end
+
+	local componentId = GetComponentIdFromType(componentType)
+	local componentIndex = entityStruct[componentId + 1]
+
+	WSAssert(typeof(componentIndex) == "table", "%s is not a list-typed component", componentType)
+
+	local struct = {}
+
+	for _, offset in ipairs(componentIndex) do
+		struct[#struct + 1] = ComponentMap[componentId][offset]
+	end
+
+	return struct
+end
+
 
 ---Gets the list of components of type componentType
 -- If there exist no components of type componentType, this function returns an empty table
@@ -356,22 +404,12 @@ end
 -- @param instance
 -- @param componentType
 
-function EntityManager.KillComponent(instance, componentType, supressKillEntity)
-	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
+function EntityManager.KillComponent(component, supressKillEntity)
+	local componentId = component._componentId
 
-	local entityStruct = EntityMap[instance]
+	WSAssert(typeof(component) == "table" and component._componentId, "bad argument #1 (expected component)")
 
-	if not entityStruct then
-		return
-	end
-
-	local componentId = typeof(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
-	local componentIndex = entityStruct[componentId + 1]
-
-	if componentIndex then
-		cacheComponentKilled(instance, componentId, supressKillEntity)
-	end
+	KilledComponents[componentId][component] = supressKillEntity ~= nil and supressKillEntity or false
 end
 
 ---Removes the entity (and by extension, all components) associated with instance
@@ -391,9 +429,15 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 		return
 	end
 
-	for componentId in pairs(entityStruct) do
+	for componentId, offset in pairs(entityStruct) do
 		if not componentId == 1 then
-			cacheComponentKilled(instance, componentId - 1)
+			if typeof(offset) == "table" then
+				for _, index in ipairs(offset) do
+					KilledComponents[componentId][ComponentMap[componentId][index]] = false
+				end
+			else
+				KilledComponents[componentId][ComponentMap[componentId][offset]] = false
+			end
 		end
 	end
 
