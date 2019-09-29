@@ -7,11 +7,12 @@ return function(pluginWrapper, root, gameRoot)
 	local componentDefinitions = {}
 	local Systems = root.plugin.PluginSystems
 	local Components = root.plugin.PluginComponents
-	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
+
+	pluginWrapper.GetToolbar("WorldSmith")
 
 	for _, componentModule in ipairs(Components:GetChildren()) do
 		local rawComponent = require(componentModule)
-		local componentType = rawComponent[1]
+		local componentType = typeof(rawComponent[1]) == "table" and rawComponent[1][1] or rawComponent[1]
 		local paramMap = rawComponent[2]
 		local paramId = 1
 

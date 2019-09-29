@@ -41,7 +41,8 @@ local function tryCollectComponent(instance)
 	local rawComponentDef = instance.Source:match(pattern) and tryRequire(instance)
 
 	if rawComponentDef then
-		local componentType = rawComponentDef[1]
+		local listTyped = typeof(rawComponentDef[1]) == "table"
+		local componentType = listTyped and rawComponentDef[1][1] or rawComponentDef[1]
 		local paramMap = rawComponentDef[2]
 		local componentDescription = GameComponentDefs[componentType]
 
@@ -109,7 +110,7 @@ local function tryCollectComponent(instance)
 
 		warn(("WorldSmith: created component description for new component \"%s\"  with componentId %s"):format(componentType, tostring(componentId)))
 
-		componentDescription[1] = componentId
+		componentDescription[1] = { componentId, listTyped }
 		ComponentsArray[componentId] = componentType
 
 		for paramName, defaultValue in pairs(paramMap) do
@@ -159,7 +160,7 @@ function ComponentsLoader.OnLoaded()
 			WSAssert(NumUniqueComponents <= 64, "Maximum number of components (64) exceeded")
 
 			GameComponentDefs[componentType] = componentDef
-			ComponentsArray[componentDef[1]] = componentType
+			ComponentsArray[typeof(componentDef[1]) == "table" and componentDef[1][1] or componentDef[1]] = componentType
 			NumUniqueComponents = NumUniqueComponents + 1
 		end
 	else

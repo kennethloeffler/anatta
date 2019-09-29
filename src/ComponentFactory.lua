@@ -11,6 +11,7 @@ local SHOULD_SEND = Constants.IS_SERVER or Constants.IS_CLIENT
 local Replicator = SHOULD_SEND and require(script.Parent.EntityReplicator.Shared)
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
+local GetListTyped = ComponentDesc.GetListTyped
 local GetParamIdFromName = ComponentDesc.GetParamIdFromName
 local GetParamDefault = ComponentDesc.GetParamDefault
 local GetDefaults = ComponentDesc.GetDefaults
@@ -76,6 +77,7 @@ return function(instance, componentType, paramMap)
 	end
 
 	newComponent._componentId = componentId
+	newComponent._list = GetListTyped(componentId)
 	newComponent.Instance = instance
 
 	setmetatable(newComponent, ComponentMetatable)

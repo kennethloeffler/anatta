@@ -6,6 +6,7 @@ local ComponentTypesById = {}
 local ComponentParamIds = {}
 local Defaults = {}
 local NumComponentParams = {}
+local ListTyped = {}
 
 local ComponentDesc = {
 	ComponentDefinitions = {},
@@ -14,17 +15,20 @@ local ComponentDesc = {
 
 local function populateDefs(definitionTable)
 	local componentId
+	local isListType
 
 	for componentType, componentDefinition in pairs(definitionTable) do
 		WSAssert(typeof(componentType) == "string", "expected string")
 		WSAssert(typeof(componentDefinition) == "table", "expected table")
 
-		componentId = componentDefinition[1]
+		componentId = componentDefinition[1][1]
+		isListType = componentDefinition[1][2]
 
 		WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
 
 		ComponentIdsByType[componentType] = componentId
 		ComponentTypesById[componentId] = componentType
+		ListTyped[componentId] = isListType
 		ComponentParamIds[componentId] = {}
 		Defaults[componentId] = {}
 		NumComponentParams[componentId] = 0
@@ -62,6 +66,10 @@ end
 
 function ComponentDesc.GetDefaults(componentId)
 	return Defaults[componentId]
+end
+
+function ComponentDesc.GetListTyped(componentId)
+	return ListTyped[componentId]
 end
 
 function ComponentDesc.GetParamDefault(componentId, paramId)
