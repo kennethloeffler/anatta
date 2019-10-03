@@ -1,10 +1,17 @@
-local Theme = settings().Studio.Theme
+local GetColor = settings().Studio.Theme.GetColor
 local Serial = require(script.Parent.Parent.Serial)
 
 local ParamFields = {}
 local PluginES
 local GameES
 local ComponentDesc
+
+local InputFieldBorder = Enum.StudioStyleGuideColor.InputFieldBorder
+local InputFieldBackground = Enum.StudioStyleGuideColor.InputFieldBackground
+local MainText = Enum.StudioStyleGuideColor.MainText
+
+local Selected = Enum.StudioStyleGuideModifier.Selected
+local Hover = Enum.StudioStyleGuideModifier.Hover
 
 local types = {
 	Vector2 = Vector2,
@@ -44,18 +51,49 @@ function ParamFields.OnLoaded(pluginWrapper)
 
 		local frame = Instance.new("Frame")
 		local label = Instance.new("TextLabel")
-		local paramName = ComponentDesc.GetParamNameFromId(paramField.ComponentId, paramField.ParamId)
-		local valueField = getElementForValueType(typeof(paramField.ParamValue))
+		local paramId = paramField.ParamId
+		local paramValue = paramField.ParamValue
+		local paramName = ComponentDesc.GetParamNameFromId(paramField.ComponentId, paramId)
+		local valueField = getElementForValueType(typeof(paramValue))
+		local componentLabel = paramField.Instance
+
+		valueField.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement then
+				valueField.BackgroundColor3 = GetColor(InputFieldBackground, Hover)
+				valueField.BorderColor3 = GetColor(InputFieldBorder, Hover)
+				label.BackgroundColor3 = GetColor(InputFieldBackground, Hover)
+			end
+		end)
+
+		valueField.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement then
+				valueField.BackgroundColor3 = GetColor(InputFieldBackground)
+				valueField.BorderColor3 = GetColor(InputFieldBorder)
+				label.BackgroundColor3 = GetColor(InputFieldBackground)
+			end
+		end)
 
 		if valueField:IsA("TextBox") then
-			valueField.Text = tostring(paramField.ParamValue)
+			valueField.Text = tostring(paramValue)
+
+			valueField.FocusBegan:Connect(function()
+				valueField.BackgroundColor3 = GetColor(InputFieldBackground, Selected)
+				valueField.BorderColor = GetColor(InputFieldBorder, Selected)
+				label.BackgroundColor3 = GetColor(InputFieldBackground, Selected)
+			end)
 
 			valueField.FocusLost:Connect(function()
-				local ty = typeof(paramField.ParamValue)
-				local val = types[ty].new(splitCommaDelineatedString(valueField.Text))
+				local val = types[typeof(paramValue)].new(splitCommaDelineatedString(valueField.Text)) or paramValue
 
-				GameES.GetComponent(paramField.ComponentType)[paramName] = val
-				PluginES.AddComponent(paramField.ComponentLabel.ParentInstance, "DoSerializeEntity")
+				valueField.BackgroundColor3 = GetColor(InputFieldBackground)
+				valueField.BorderColor3 = GetColor(InputFieldBorder)
+				label.BackgroundColor3 = GetColor(InputFieldBackground)
+
+				paramField.ParamValue = val
+
+				PluginES.AddComponent(componentLabel, "SerializeParam", {
+					paramField
+				})
 			end)
 		else
 			-- make boolean stuff
@@ -63,47 +101,44 @@ function ParamFields.OnLoaded(pluginWrapper)
 
 		paramField.Field = valueField
 		valueField.Size = UDim2.new(1, 0, 0, 24)
-		valueField.Position = UDim2.new(0, 50, 0, 0)
+		valueField.Position = UDim2.new(0, 135, 0, 0)
+		valueField.BackgroundColor3 = GetColor(InputFieldBackground)
+		valueField.BorderColor = GetColor(InputFieldBorder)
 		valueField.Parent = frame
 
-		label.Size = UDim2.new(0, 50, 0, 24)
+		label.Size = UDim2.new(0, 135, 0, 24)
 		label.Text = "     " .. paramName
-		label.BorderColor3 = Theme:GetColor(Enum.StudioStyleGuideColor)
-		label.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor)
-		label.TextColor3 = Theme:GetColor(Enum.StudioStyleGuideColor)
-		label.LayoutOrder = paramField.ComponentId + paramField.ParamId
+		label.BorderColor3 = GetColor(Enum.StudioStyleGuideColor.Border)
+		label.BackgroundColor3 = GetColor(InputFieldBackground)
+		label.TextColor3 = GetColor(MainText)
 		label.Parent = frame
 
 		frame.Size = UDim2.new(1, 0, 0, 24)
 		frame.BackgroundTransparency = 1
-		frame.BorderSizePixel = 0
-		frame.Parent = paramField.Instance.Parent
-	end)
-
-	PluginES.ComponentAdded("ClearParamFields", function(clearParamFields)
-		for _, paramField in ipairs(PluginES.GetListTypedComponent(clearParamFields.ComponentLabel, "ParamField")) do
-			paramField.Field.Parent:Destroy()
-			PluginES.KillComponent(paramField)
-		end
+		frame.LayoutOrder = paramId
+		frame.Parent = componentLabel.ParamsContainer
 	end)
 
 	PluginES.ComponentAdded("UpdateParamFields", function(updateParamFields)
 		local ty
+		local entity = updateParamFields.Entity
+		local paramList = updateParamFields.ParamList
 
-		for _, paramField in ipairs(PluginES.GetListTypedComponent(updateParamFields.ComponentLabel, "ParamField")) do
+		for _, paramField in ipairs(PluginES.GetListTypedComponent(updateParamFields.Instance, "ParamField")) do
 			ty = typeof(paramField.ParamValue)
 
-			if updateParamFields.ParamList[paramField.ParamId] ~= paramField.ParamValue then
-				if updateParamFields.ComponentLabel.ParentInstance == paramField.ParentInstance then
-					paramField.ParamValue = updateParamFields.ParamList[paramField.ParamId]
+			if paramList[paramField.ParamId] ~= paramField.ParamValue then
+				if entity == paramField.Entity then
+					paramField.ParamValue = paramList[paramField.ParamId]
 
 					if ty == "string" or ty == "number" or types[ty] then
 						paramField.Field.Text = tostring(paramField.ParamValue)
 					elseif ty == "boolean" then
+						paramField.
 					end
 				else
 					if ty == "string" or ty == "number" or types[ty] then
-						paramField.Field.Text = "..."
+						paramField.Field.Text = ""
 					elseif ty == "boolean" then
 					end
 				end

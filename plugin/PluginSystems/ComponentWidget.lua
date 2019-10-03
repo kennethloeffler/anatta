@@ -27,7 +27,6 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 	bgFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
 	bgFrame.Size = UDim2.new(1, 0, 1, 0)
 	bgFrame.BorderSizePixel = 0
-	PluginES.AddComponent(bgFrame, "ComponentWidget", {})
 	bgFrame.Parent = widget
 
 	local scrollingFrame = Instance.new("ScrollingFrame")
@@ -56,6 +55,8 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 	AddComponentButton.Name = "AddComponentButton"
 	AddComponentButton.Parent = bgFrame
 
+	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
+
 	AddComponentButton.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar, Enum.StudioStyleGuideModifier.Pressed)
@@ -75,22 +76,6 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			AddComponentButton.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ScrollBar)
 		end
-	end)
-
-	scrollingFrame.ChildAdded:Connect(function(child)
-		if not child:IsA("GuiBase") then
-			return
-		end
-
-		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize + UDim2.new(0, 0, 0, child.AbsoluteSize.Y)
-	end)
-
-	scrollingFrame.ChildRemoved:Connect(function(child)
-		if not child:IsA("GuiBase") then
-			return
-		end
-
-		scrollingFrame.CanvasSize = scrollingFrame.CanvasSize - UDim2.new(0, 0, 0, child.AbsoluteSize.Y)
 	end)
 
 	referenceButton.Click:Connect(function()
@@ -119,7 +104,7 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 		local selectedInstances = Selection:Get()
 
 		if not next(selectedInstances) then
-			scrollingFrame:ClearAllChildren()
+			PluginES.AddComponent(scrollingFrame, "NoSelection")
 			widget.Title = "Components"
 			return
 		end
@@ -137,11 +122,7 @@ function ComponentWidget.OnLoaded(pluginWrapper)
 		end
 
 		if not PluginES.GetComponent(scrollingFrame, "AddComponentMenuClick") then
-			local uiListLayout = scrollingFrame:FindFirstChild("UIListLayout") or Instance.new("UIListLayout")
 			local module
-
-			uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-			uiListLayout.Parent = scrollingFrame
 
 			for _, inst in ipairs(entities) do
 				module = inst:FindFirstChild("__WSEntity")
