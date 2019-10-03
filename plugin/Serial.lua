@@ -8,13 +8,13 @@ local Serial = {}
 function Serial.SerializeValue(data, depth)
 	local ty = typeof(data)
 	local indent = ("\t"):rep(depth)
-
 	local str
+
 	if ty == "number" or ty == "boolean" then
 		str = tostring(data)
 	elseif ty == "string" then
 		str = string.format("%q", data)
-	elseif ty == "table" and #data > 0 then
+	elseif ty == "table" and data[1] then
 		-- array
 		str = { "{" }
 
@@ -29,19 +29,24 @@ function Serial.SerializeValue(data, depth)
 
 		local ident = "^([%a_][%w_]*)$"
 		local keys = {}
-		for key, value in pairs(data) do
+
+		for key in pairs(data) do
 			keys[#keys + 1] = key
 		end
+
 		table.sort(keys)
+
 		for i = 1, #keys do
 			local key = keys[i]
 			local value = data[key]
 			local safeKey
+
 			if typeof(key) == "string" and key:match(ident) then
 				safeKey = key
 			else
 				safeKey = Serial.SerializeValue(key, depth + 1)
 			end
+
 			str[#str + 1] = string.format("%s\t%s = %s,", indent, safeKey, Serial.SerializeValue(value, depth + 1))
 		end
 
@@ -65,6 +70,7 @@ function Serial.SerializeValue(data, depth)
 	if typeof(str) == "table" then
 		str = table.concat(str, next(data) and "\n" or "")
 	end
+
 	return str
 end
 
