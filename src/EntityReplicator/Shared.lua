@@ -361,7 +361,7 @@ local function serializeParamsUpdate(instance, entities, params, entitiesIndex, 
 				paramsField = unsetbit(paramId - 1)
 			end
 
-			if bit32.band(numComponents, 1) == 0 then
+			if numComponents % 2 == 0 then
 				entitiesIndex = entitiesIndex + 1
 				numDataStructs = numDataStructs + 1
 				entities[entitiesIndex] = Vector2int16.new(lastParamsField, componentsMap[componentId])
