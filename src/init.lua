@@ -6,6 +6,7 @@ return {
 	-- EntityManager
 	AddComponent = EntityManager.AddComponent,
 	GetComponent = EntityManager.GetComponent,
+	GetListTypedComponent = EntityManager.GetListTypedComponent,
 	GetAllComponentsOfType = EntityManager.GetAllComponentsOfType,
 
 	ComponentAdded = EntityManager.ComponentAdded,
