@@ -91,7 +91,9 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 
 	PluginES.ComponentAdded("NoSelection", function(noSelection)
 		for _, componentLabel in ipairs(PluginES.GetListTypedComponent(noSelection.Instance, "ComponentLabel")) do
-			PluginES.KillComponent(componentLabel)
+			clearParamFields(componentLabel.Instance)
+			PluginES.KillComponent(PluginES.GetComponent(componentLabel.Instance, "VerticalScalingList"))
+			PluginES.KillComponent(noSelection.Instance, "ComponentLabel")
 			noSelection.Instance[componentLabel.ComponentType]:Destroy()
 		end
 	end)
