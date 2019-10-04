@@ -43,8 +43,8 @@ local function getElementForValueType(ty)
 end
 
 function ParamFields.OnLoaded(pluginWrapper)
-	PluginES = pluginWrapper.PluginManager
-	GameES = pluginWrapper.GameManager
+	PluginES = pluginWrapper.PluginES
+	GameES = pluginWrapper.GameES
 
 	PluginES.ComponentAdded("ParamField", function(paramField)
 		ComponentDesc = GameES.GetComponentDesc()

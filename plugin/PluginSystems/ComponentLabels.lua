@@ -17,8 +17,8 @@ local function clearParamFields(label)
 end
 
 function ComponentLabels.OnLoaded(pluginWrapper)
-	PluginES = pluginWrapper.PluginManager
-	GameES = pluginWrapper.GameManager
+	PluginES = pluginWrapper.PluginES
+	GameES = pluginWrapper.GameES
 
 	PluginES.ComponentAdded("ComponentLabel", function(componentLabel)
 		local parentFrame = componentLabel.Instance

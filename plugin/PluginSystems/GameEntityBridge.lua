@@ -1,3 +1,5 @@
+-- GameEntityBridge.lua
+
 local CollectionService = game:GetService("CollectionService")
 
 local Serial = require(script.Parent.Parent.Serial)
@@ -23,20 +25,9 @@ local function getEntityStruct(inst)
 	return struct, module
 end
 
-local function splitCommaDelineatedString(str)
-	local list = {}
-
-	for s in string.gmatch(str, "([^,]+)") do
-		list[#list + 1] = tonumber(s)
-	end
-
-	return unpack(list)
-end
-
-
 function GameEntityBridge.OnLoaded(pluginWrapper)
-	PluginES = pluginWrapper.PluginManager
-	GameES = pluginWrapper.GameManager
+	PluginES = pluginWrapper.PluginES
+	GameES = pluginWrapper.GameES
 	ComponentDesc = GameES.GetComponentDesc()
 
 	PluginES.ComponentAdded("SerializeParam", function(serializeParam)
@@ -70,6 +61,9 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 
 		entityStruct[componentType] = componentStruct
 		module.Source = Serial.Serialize(entityStruct)
+	end)
+
+	PluginES.ComponentAdded("SerializeKillComponent", function(serializeKillComponent)
 	end)
 end
 

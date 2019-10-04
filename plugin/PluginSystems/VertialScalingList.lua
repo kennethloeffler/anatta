@@ -2,7 +2,7 @@ local VerticalScalingList = {}
 local PluginES
 
 function VerticalScalingList.OnLoaded(pluginWrapper)
-	PluginES = pluginWrapper.PluginManager
+	PluginES = pluginWrapper.PluginES
 
 	PluginES.ComponentAdded("VerticalScalingList", function(verticalScalingList)
 		local frame = verticalScalingList.Instance
