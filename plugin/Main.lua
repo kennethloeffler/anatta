@@ -67,12 +67,10 @@ return function(pluginWrapper, root, gameRoot)
 		local module
 
 		if numSelected == 0 then
-			PluginES.AddComponent(scrollingFrame, "NoSelection")
 			widget.Title = "Components"
-			return
-		end
 
-		if numSelected > 1 then
+			return PluginES.AddComponent(scrollingFrame, "NoSelection")
+		elseif numSelected == 1 then
 			widget.Title = ("Components - %s items"):format(numSelected)
 		else
 			widget.Title = ("Components - %s \"%s\""):format(selected[1].ClassName, selectedInstances[1].Name)
@@ -132,10 +130,10 @@ return function(pluginWrapper, root, gameRoot)
 	pluginWrapper.GameES = GameES
 	pluginWrapper.PluginES = PluginES
 
-	PluginES.LoadSystem(systems.ComponentWidget, pluginWrapper)
-	PluginES.LoadSystem(systems.AddComponentWidget, pluginWrapper)
-	PluginES.LoadSystem(systems.EntityPersistence, pluginWrapper)
-	PluginES.LoadSystem(systems.ComponentWidgetList, pluginWrapper)
+	PluginES.LoadSystem(systems.GameEntityBridge, pluginWrapper)
+	PluginES.LoadSystem(systems.VerticalScalingList, pluginWrapper)
+	PluginES.LoadSystem(systems.ComponentLabels, pluginWrapper)
+	PluginES.LoadSystem(systems.ParamFields, pluginWrapper)
 
 	GameES.Init()
 
