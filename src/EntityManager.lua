@@ -136,6 +136,7 @@ end
 
 local function doReorder(componentId, componentList)
 	local keptComponentOffset = 1
+	local numKilledComponents = 0
 	local masterComponentList = ComponentMap[componentId]
 	local instance
 	local entityStruct
@@ -164,15 +165,16 @@ local function doReorder(componentId, componentList)
 				removedFunc(component)
 			end
 
+			numKilledComponents = numKilledComponents + 1
 			masterComponentList[componentOffset] = nil
 			componentList[component] = nil
 			unsetComponentBitForEntity(instance, componentId)
 
 			if typeof(cIndex) == "number" then
 				entityStruct[componentId + 1] = nil
-			else
+			else	-- list typed
 				local l = #cIndex
-				-- list typed
+
 				for i, index in ipairs(cIndex) do
 					if index == componentOffset then
 						cIndex[i] = cIndex[l]
@@ -195,6 +197,8 @@ local function doReorder(componentId, componentList)
 			filterEntity(instance)
 		end
 	end
+
+	masterComponentList._length = masterComponentList._length - numKilledComponents
 end
 
 ---Iterates through the component destruction cache and mutates entity-component maps accordingly
@@ -213,7 +217,7 @@ local function initComponentDefs()
 
 	for _, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
 		componentId = componentDefinition[1]
-		ComponentMap[componentId] = not ComponentMap[componentId] and {}
+		ComponentMap[componentId] = not ComponentMap[componentId] and { _length = 0 }
 		KilledComponents[componentId] = not KilledComponents[componentId] and {}
 	end
 end
@@ -227,8 +231,7 @@ local EntityManager = {}
 
 ---Adds a component of type componentType to instance with parameters specified by paramMap
 -- If instance does not already have an associated entity, a new entity will be created
--- If instance already has componentType, the instance's componentType will be overwritten
--- This operation is cached - creation occurs on the RunService's heartbeat or between system steps
+-- If instance already has componentType and componentType is not list-typed, the instance's componentType will be overwritten
 -- See ~/src/ComponentFactory for performance notes
 -- @param instance
 -- @param componentType
@@ -258,6 +261,7 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 		end
 	end
 
+	componentList._length = componentOffset
 	componentList[componentOffset] = component
 	setComponentBitForEntity(instance, componentId)
 
