@@ -4,6 +4,7 @@ local Component = require(root.src.Component)
 return Component.Define("ComponentLabel", {
 	ComponentType = "none",
 	ParamList = {},
-	Open = false
+	Open = false,
+	Entity = Instance.new("Folder")
 })
 
