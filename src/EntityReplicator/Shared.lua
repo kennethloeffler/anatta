@@ -855,4 +855,3 @@ function Shared.Init(entityManager, entityMap, componentMap)
 end
 
 return Shared
-

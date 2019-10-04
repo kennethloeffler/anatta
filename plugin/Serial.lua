@@ -85,4 +85,3 @@ function Serial.Deserialize(string)
 end
 
 return Serial
-

@@ -98,4 +98,3 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 end
 
 return ComponentLabels
-

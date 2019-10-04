@@ -132,4 +132,3 @@ end
 
 PluginWrapper.Load()
 PluginWrapper.Watch(WatchedSource)
-

@@ -88,4 +88,3 @@ return function(instance, componentType, paramMap)
 
 	return newComponent
 end
-

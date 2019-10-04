@@ -4,4 +4,3 @@ local Component = require(root.src.Component)
 return Component.Define("SerializeNewComponent", {
 	Component = {}, -- variant componentType
 })
-

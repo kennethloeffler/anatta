@@ -7,4 +7,3 @@ return Component.Define("ParamField", {
 	ParamValue = false, -- variant
 	Entity = Instance.new("Folder")
 })
-

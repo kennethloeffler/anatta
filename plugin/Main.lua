@@ -150,4 +150,3 @@ return function(pluginWrapper, root, gameRoot)
 
 	coroutine.wrap(PluginES.StartSystems)()
 end
-

@@ -6,4 +6,3 @@ return Component.Define("GameComponent", {
 	ComponentType = "none",
 	DefaultParams = {},
 })
-

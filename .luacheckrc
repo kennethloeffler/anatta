@@ -39,4 +39,3 @@ ignore = {
 }
 
 std = "lua51+roblox"
-

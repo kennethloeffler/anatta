@@ -68,4 +68,3 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 end
 
 return GameEntityBridge
-

@@ -11,4 +11,3 @@ function Component.Define(componentTypeName, paramMap, isEthereal)
 end
 
 return Component
-

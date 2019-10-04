@@ -5,4 +5,3 @@ return Component.Define("UpdateParamFields", {
 	ParamList = {},
 	Entity = Instance.new("Folder")
 })
-

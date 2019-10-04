@@ -41,4 +41,3 @@ return {
 	Step = Server and Server.Step or Client.Step,
 	Dereference = Server and Server.Dereference or Shared.OnDereference
 }
-

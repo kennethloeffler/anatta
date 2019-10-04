@@ -15,4 +15,3 @@ return function(condition, ...)
 		error("WorldSmith: assertion failed!", 3)
 	end
 end
-

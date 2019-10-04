@@ -7,4 +7,3 @@ return Component.Define("ComponentLabel", {
 	Open = false,
 	Entity = Instance.new("Folder")
 })
-

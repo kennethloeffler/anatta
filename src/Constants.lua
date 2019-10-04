@@ -21,4 +21,3 @@ return {
 	IS_STUDIO = RunService:IsStudio(),
 	IS_RUN_MODE = RunService:IsRunMode()
 }
-

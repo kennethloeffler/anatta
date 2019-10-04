@@ -32,4 +32,3 @@ function VerticalScalingList.OnLoaded(pluginWrapper)
 end
 
 return VerticalScalingList
-
