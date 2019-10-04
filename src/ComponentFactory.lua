@@ -31,7 +31,7 @@ local ComponentMetatable = {
 		local ty = typeof(GetParamDefault(componentId, paramId))
 
 		if not ty == typeof(value) then
-			error("expected " .. ty)
+			error("Wrong type: expected " .. ty)
 		end
 
 		component[paramId] = value
