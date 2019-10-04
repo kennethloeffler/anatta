@@ -135,10 +135,6 @@ local function doUnloadSystem(system)
 end
 
 local function doReorder(componentId, componentList)
-	if not next(componentList) then
-		return
-	end
-
 	local keptComponentOffset = 1
 	local masterComponentList = ComponentMap[componentId]
 	local instance
@@ -201,44 +197,13 @@ local function doReorder(componentId, componentList)
 	end
 end
 
----Iterates through the component lifetime caches and mutates entity-component maps accordingly
+---Iterates through the component destruction cache and mutates entity-component maps accordingly
 -- Called before each system step
 local function stepComponentLifetime()
-	local componentId
-	local componentOffset
-	local offsetIndex
-	local instance
-	local addedFunc
-
-	for i, component in ipairs(AddedComponents) do
-		componentId = component._componentId
-		addedFunc = ComponentAddedFuncs[componentId]
-		componentOffset = #ComponentMap[componentId] + 1
-		offsetIndex = EntityMap[instance][componentId + 1]
-		instance = component.Instance
-
-		if addedFunc then
-			addedFunc(component)
-		end
-
-		if not component._list then
-			EntityMap[instance][componentId + 1] = componentOffset
-		else
-			if offsetIndex then
-				offsetIndex[#offsetIndex + 1] = componentOffset
-			else
-				EntityMap[instance][componentId + 1] = { componentOffset }
-			end
-		end
-
-		ComponentMap[componentId][componentOffset] = component
-		AddedComponents[i] = nil
-		setComponentBitForEntity(instance, componentId)
-		filterEntity(instance)
-	end
-
 	for compId, componentList in ipairs(KilledComponents) do
-		doReorder(compId, componentList)
+		if next(componentList) then
+			doReorder(compId, componentList)
+		end
 	end
 end
 
@@ -275,13 +240,32 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
 	WSAssert(paramMap ~= nil and typeof(paramMap) == "table" or true, "bad argument #3 (expected table)")
 
-	local component = ComponentFactory(instance, componentType, paramMap)
+	local entityStruct = EntityMap[instance] or addEntity(instance)
+	local componentId = GetComponentIdFromType(componentType)
+	local component = ComponentFactory(instance, componentId, paramMap)
+	local addedFunc = ComponentAddedFuncs[componentId]
+	local componentList = ComponentMap[componentId]
+	local componentOffset = componentList._length + 1
+	local offsetIndex = entityStruct[componentId + 1]
 
-	if not EntityMap[instance] then
-		addEntity(instance)
+	if not component._list then
+		entityStruct[componentId + 1] = componentOffset
+	else
+		if offsetIndex then
+			offsetIndex[#offsetIndex + 1] = componentOffset
+		else
+			entityStruct[componentId + 1] = { componentOffset }
+		end
 	end
 
-	AddedComponents[#AddedComponents + 1] = component
+	componentList[componentOffset] = component
+	setComponentBitForEntity(instance, componentId)
+
+	if addedFunc then
+		addedFunc(component)
+	end
+
+	filterEntity(instance)
 
 	return component
 end
