@@ -36,17 +36,24 @@ local function collectPluginComponents(root)
 end
 
 return function(pluginWrapper, root, gameRoot)
-	local systems = root.plugin.PluginSystems
-	local selectedInstances = {}
-	local widget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
-	local toolbar = pluginWrapper.GetToolbar("WorldSmith")
-	local scrollingFrame = Instance.new("ScrollingFrame")
-	local makeReferenceButton = pluginWrapper.GetButton(toolbar, "Make reference", "Tags the selected entities with an EntityReplicator reference")
-	local removeReferenceButton = pluginWrapper.GetButton(toolbar, "Remove reference", "Removes the EntityReplicator reference from the selected entities")
-	local makePrefabButton = pluginWrapper.GetButton(toolbar, "Make root instance", "Tags the selected instances as being an EntityReplicator prefab root instance")
-	local removePrefabButton = pluginWrapper.GetButton(toolbar, "Remove root instance", "Removes the EntityReplicator root instance tag from the selected instances")
+	local mainToolbar = pluginWrapper.GetToolbar("WorldSmith")
+	local addComponentButton = pluginWrapper.GetButton(mainToolbar, "Add component...", "Displays/hides a menu which can be used to add components to instances")
+	local listComponentButton = pluginWrapper.GetButton(mainToolbar, "List components...", "Displays/hides a menu which can be used to view components on selected instances, edit their parameters, or remove them")
 
-	widget.Title = "Components"
+	local networkToolbar = pluginWrapper.GetToolbar("WorldSmith replicator")
+	local makeReferenceButton = pluginWrapper.GetButton(networkToolbar, "Make reference", "Tags the selected entities with an EntityReplicator reference")
+	local removeReferenceButton = pluginWrapper.GetButton(networkToolbar, "Remove reference", "Removes the EntityReplicator reference from the selected entities")
+	local makePrefabButton = pluginWrapper.GetButton(networkToolbar, "Make root instance", "Tags the selected instances as being an EntityReplicator prefab root instance")
+	local removePrefabButton = pluginWrapper.GetButton(networkToolbar, "Remove root instance", "Removes the EntityReplicator root instance tag from the selected instances")
+
+	local systems = root.plugin.PluginSystems
+	local componentListWidget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
+	local addComponentWidget = pluginWrapper.GetDockWidget("AddComponents", Enum.InitialDockState.Float, true, false, 200, 300)
+	local scrollingFrame = Instance.new("ScrollingFrame")
+	local selected = Selection:Get()
+
+	componentListWidget.Title = "Components"
+	addComponentWidget.Title = "Add components"
 
 	scrollingFrame.TopImage = ""
 	scrollingFrame.BottomImage = ""
@@ -57,23 +64,26 @@ return function(pluginWrapper, root, gameRoot)
 	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
 	scrollingFrame.Position = UDim2.new(0, 0, 0, 1)
 	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
-	scrollingFrame.Parent = widget
+	scrollingFrame.Parent = componentListWidget
 
 	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
 
 	Selection.SelectionChanged:Connect(function()
-		local selected = Selection:Get()
+		selected = Selection:Get()
+
 		local numSelected = #selected
 		local module
 
 		if numSelected == 0 then
-			widget.Title = "Components"
+			componentListWidget.Title = "Components"
 
-			return PluginES.AddComponent(scrollingFrame, "NoSelection")
+			PluginES.AddComponent(scrollingFrame, "NoSelection")
+
+			return
 		elseif numSelected == 1 then
-			widget.Title = ("Components - %s items"):format(numSelected)
+			componentListWidget.Title = ("Components - %s items"):format(numSelected)
 		else
-			widget.Title = ("Components - %s \"%s\""):format(selected[1].ClassName, selectedInstances[1].Name)
+			componentListWidget.Title = ("Components - %s \"%s\""):format(selected[1].ClassName, selected[1].Name)
 		end
 
 		for _, instance in ipairs(selected) do
@@ -92,7 +102,7 @@ return function(pluginWrapper, root, gameRoot)
 	end)
 
 	makeReferenceButton.Click:Connect(function()
-		for _, instance in ipairs(selectedInstances) do
+		for _, instance in ipairs(selected) do
 			if CollectionService:HasTag(instance, "__WSEntity") then
 				CollectionService:AddTag(instance, "__WSReplicatorRef")
 			end
@@ -100,13 +110,13 @@ return function(pluginWrapper, root, gameRoot)
 	end)
 
 	makePrefabButton.Click:Connect(function()
-		for _, instance in ipairs(selectedInstances) do
+		for _, instance in ipairs(selected) do
 			CollectionService:AddTag(instance, "__WSReplicatorRoot")
 		end
 	end)
 
 	removeReferenceButton.Click:Connect(function()
-		for _, instance in ipairs(selectedInstances) do
+		for _, instance in ipairs(selected) do
 			if CollectionService:HasTag(instance, "__WSEntity") then
 				CollectionService:RemoveTag(instance, "__WSReplicatorRef")
 			end
@@ -114,9 +124,17 @@ return function(pluginWrapper, root, gameRoot)
 	end)
 
 	removePrefabButton.Click:Connect(function()
-		for _, instance in ipairs(selectedInstances) do
+		for _, instance in ipairs(selected) do
 			CollectionService:RemoveTag(instance, "__WSReplicatorRoot")
 		end
+	end)
+
+	listComponentButton.Click:Connect(function()
+		componentListWidget.Enabled = not componentListWidget.Enabled
+	end)
+
+	addComponentButton.Click:Connect(function()
+		addComponentWidget.Enabled = not addComponentWidget.Enabled
 	end)
 
 	collectPluginComponents(root)
@@ -140,12 +158,12 @@ return function(pluginWrapper, root, gameRoot)
 	pluginWrapper.OnUnloading = function()
 		local dockWidget = pluginWrapper.GetDockWidget("Components")
 
+		PluginES.Destroy()
+		GameES.Destroy()
+
 		if dockWidget then
 			dockWidget:ClearAllChildren()
 		end
-
-		PluginES.Destroy()
-		GameES.Destroy()
 	end
 
 	coroutine.wrap(PluginES.StartSystems)()
