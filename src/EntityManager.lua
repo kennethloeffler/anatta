@@ -13,7 +13,6 @@ local WSAssert = require(script.Parent.WSAssert)
 local EntityMap = {}
 local ComponentMap = {}
 local KilledComponents = {}
-local AddedComponents = {}
 local HeartbeatSystems = {}
 local FilterIdsBySystem = {}
 local HeartbeatIdsBySystem = {}
