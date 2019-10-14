@@ -19,6 +19,10 @@ local GetDefaults = ComponentDesc.GetDefaults
 local QueueUpdate = Replicator and Replicator.QueueUpdate
 local BlackListed = Replicator and Replicator.GetBlacklistedComponents()
 
+for componentId in pairs(ComponentDesc.GetEthereal()) do
+	BlackListed[componentId] = true
+end
+
 local ComponentMetatable = {
 	__index = function(component, index)
 		local paramId = GetParamIdFromName(component._componentId, index)

@@ -144,4 +144,8 @@ function ComponentDesc.GetEtherealIdFromComponentId(componentId)
 	return EtherealIdsByComponentId[componentId]
 end
 
+function ComponentDesc.GetEthereal()
+	return ComponentIdsByEtherealId
+end
+
 return ComponentDesc

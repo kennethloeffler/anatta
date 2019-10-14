@@ -32,6 +32,10 @@ local ReplicatorStep = EntityReplicator and EntityReplicator.Step
 local AddComponent
 
 local function setComponentBitForEntity(entity, componentId)
+	if componentId > 64 then
+		return
+	end
+
 	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
 	local bitField = EntityMap[entity][0][offset]
 
@@ -39,6 +43,10 @@ local function setComponentBitForEntity(entity, componentId)
 end
 
 local function unsetComponentBitForEntity(entity, componentId)
+	if componentId > 64 then
+		return
+	end
+
 	local offset = math.ceil(componentId * 0.03125)
 	local bitField = EntityMap[entity][0][offset]
 
@@ -193,7 +201,9 @@ local function doReorder(componentId, componentList)
 				EntityMap[instance] = nil
 			end
 
-			filterEntity(instance)
+			if componentId <= 64 then
+				filterEntity(instance)
+			end
 		end
 	end
 
@@ -265,7 +275,9 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 		addedFunc(component)
 	end
 
-	filterEntity(instance)
+	if componentId <= 64 then
+		filterEntity(instance)
+	end
 
 	return component
 end
