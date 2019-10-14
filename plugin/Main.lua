@@ -26,7 +26,7 @@ local function collectPluginComponents(root)
 
 		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
-			componentDefinitions[componentType][paramId] = { ["paramName"] = paramName, ["defaultValue"] = defaultValue }
+			componentDefinitions[componentType][paramId] = { ParamName = paramName, DefaultValue = defaultValue }
 		end
 	end
 
@@ -47,13 +47,33 @@ return function(pluginWrapper, root, gameRoot)
 	local removePrefabButton = pluginWrapper.GetButton(networkToolbar, "Remove root instance", "Removes the EntityReplicator root instance tag from the selected instances")
 
 	local systems = root.plugin.PluginSystems
-	local componentListWidget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
-	local addComponentWidget = pluginWrapper.GetDockWidget("AddComponents", Enum.InitialDockState.Float, true, false, 200, 300)
-	local scrollingFrame = Instance.new("ScrollingFrame")
 	local selected = Selection:Get()
+	local componentListWidget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
+	local addComponentWidget = pluginWrapper.GetDockWidget("Add components", Enum.InitialDockState.Float, true, false, 200, 300)
+	local scrollingFrame = Instance.new("ScrollingFrame")
+
+	collectPluginComponents(root)
+
+	PluginES = require(root.src.EntityManager)
+
+	PluginES.LoadSystem(systems.AddComponentButton, pluginWrapper)
+	PluginES.LoadSystem(systems.VerticalScalingList, pluginWrapper)
+	PluginES.LoadSystem(systems.ComponentLabels, pluginWrapper)
+	PluginES.LoadSystem(systems.ParamFields, pluginWrapper)
+	PluginES.LoadSystem(systems.GameEntityBridge, pluginWrapper)
+	PluginES.LoadSystem(systems.GameComponentLoader, pluginWrapper)
+
+	GameES = gameRoot and require(gameRoot.EntityManager)
+
+	GameES.Init()
+
+	pluginWrapper.GameES = GameES
+	pluginWrapper.PluginES = PluginES
 
 	componentListWidget.Title = "Components"
 	addComponentWidget.Title = "Add components"
+
+	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
 
 	scrollingFrame.TopImage = ""
 	scrollingFrame.BottomImage = ""
@@ -66,39 +86,55 @@ return function(pluginWrapper, root, gameRoot)
 	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
 	scrollingFrame.Parent = componentListWidget
 
-	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
+	coroutine.wrap(PluginES.StartSystems)()
 
 	Selection.SelectionChanged:Connect(function()
 		selected = Selection:Get()
 
 		local numSelected = #selected
+		local instancesByComponentType = {}
+		local t
 		local module
 
 		if numSelected == 0 then
 			componentListWidget.Title = "Components"
-
-			PluginES.AddComponent(scrollingFrame, "NoSelection")
-
-			return
 		elseif numSelected == 1 then
-			componentListWidget.Title = ("Components - %s items"):format(numSelected)
-		else
 			componentListWidget.Title = ("Components - %s \"%s\""):format(selected[1].ClassName, selected[1].Name)
+		else
+			componentListWidget.Title = ("Components - %s items"):format(numSelected)
 		end
 
 		for _, instance in ipairs(selected) do
 			module = instance:FindFirstChild("__WSEntity")
 
 			if module then
-				for componentType, paramList in pairs(Serial.Deserialize(module.Source)) do
-					PluginES.AddComponent(scrollingFrame, "ComponentLabel", {
-						ComponentType = componentType,
-						ParamList = paramList,
-						Entity = instance
-					})
+				for componentType in pairs(Serial.Deserialize(module.Source)) do
+					t = instancesByComponentType[componentType] or {}
+					instancesByComponentType[componentType] = t
+					t[#t + 1] = instance
 				end
 			end
 		end
+
+		for _, componentLabel in ipairs(PluginES.GetListTypedComponent(scrollingFrame, "ComponentLabel")) do
+			local componentType = componentLabel.ComponentType
+
+			if not instancesByComponentType[componentType] then
+				PluginES.KillComponent(componentLabel)
+			else
+				componentLabel.EntityList = instancesByComponentType[componentType]
+				PluginES.AddComponent(componentLabel.Instance[componentType], "UpdateParamFields", {componentLabel})
+				instancesByComponentType[componentType] = nil
+			end
+		end
+
+		for componentType, entityList in pairs(instancesByComponentType) do
+			PluginES.AddComponent(scrollingFrame, "ComponentLabel", {
+				ComponentType = componentType,
+				EntityList = entityList
+			})
+		end
+
 	end)
 
 	makeReferenceButton.Click:Connect(function()
@@ -137,34 +173,19 @@ return function(pluginWrapper, root, gameRoot)
 		addComponentWidget.Enabled = not addComponentWidget.Enabled
 	end)
 
-	collectPluginComponents(root)
-
-	PluginES = require(root.src.EntityManager)
-
-	PluginES.LoadSystem(systems.GameComponentLoader, pluginWrapper)
-
-	GameES = gameRoot and require(gameRoot.EntityManager)
-
-	pluginWrapper.GameES = GameES
-	pluginWrapper.PluginES = PluginES
-
-	PluginES.LoadSystem(systems.GameEntityBridge, pluginWrapper)
-	PluginES.LoadSystem(systems.VerticalScalingList, pluginWrapper)
-	PluginES.LoadSystem(systems.ComponentLabels, pluginWrapper)
-	PluginES.LoadSystem(systems.ParamFields, pluginWrapper)
-
-	GameES.Init()
-
 	pluginWrapper.OnUnloading = function()
-		local dockWidget = pluginWrapper.GetDockWidget("Components")
+		local listWidget = pluginWrapper.GetDockWidget("Components")
+		local addWidget = pluginWrapper.GetDockWidget("Add components")
 
 		PluginES.Destroy()
 		GameES.Destroy()
 
-		if dockWidget then
-			dockWidget:ClearAllChildren()
+		if listWidget then
+			listWidget:ClearAllChildren()
+		end
+
+		if addWidget then
+			addWidget:ClearAllChildren()
 		end
 	end
-
-	coroutine.wrap(PluginES.StartSystems)()
 end
