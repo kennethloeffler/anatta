@@ -88,8 +88,9 @@ function PluginWrapper.Load()
 	WSAssert(success, "plugin failed to load: %s", result)
 
 	local loadedPlugin = result
+	local gameRoot = ReplicatedStorage:WaitForChild("WorldSmith")
 
-	success, result = pcall(loadedPlugin, PluginWrapper, CurrentSource, ReplicatedStorage:WaitForChild("WorldSmith", 1))
+	success, result = pcall(loadedPlugin, PluginWrapper, CurrentSource, gameRoot)
 
 	WSAssert(success, "plugin failed to run: %s", result)
 	WSAssert(PluginWrapper.OnUnloading and typeof(PluginWrapper.OnUnloading) == "function", "expected function PluginWrapper.OnUnloading")
