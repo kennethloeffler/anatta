@@ -1,18 +1,22 @@
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameSrc = ReplicatedStorage:WaitForChild("WorldSmith")
 local PluginSrc = script.Parent.Parent.Parent.src
 
 local Sandbox = require(script.Parent.Parent.SandboxEnv)
-local Serial = require(script.Parent.Parent.Serial)
 local WSAssert = require(PluginSrc.WSAssert)
 
 local NumUniqueComponents = 0
 local ComponentsArray = {}
-local GameComponentDefs = {}
+local SerialComponentDefinitions = {}
 
 local ComponentsLoader = {}
 
+local GetColor = settings().Studio.Theme:GetColor()
+
+local PluginES
+local GameComponentDefsModule
 local AddedConnection
 local RemovedConnection
 
@@ -27,67 +31,20 @@ local function tryRequire(moduleScript)
 		return err
 	end)
 
-	WSAssert(success, "Tried to load component definition module: " .. moduleScript:GetFullName())
+	WSAssert(success, "Failed to load component definition module: " .. moduleScript:GetFullName())
 
 	return result
 end
 
-local function tryCollectComponent(instance)
-	if not instance:IsA("ModuleScript") or instance.Name == "Component" then
-		return
-	end
+local function newComponentDefinition(instance, componentType, paramMap, listTyped, ethereal)
+	local componentIdListHole
+	local componentIdStr
+	local paramId = 0
+	local paramList = {}
 
-	local pattern = "Component%.Define%("
-	local rawComponentDef = instance.Source:match(pattern) and tryRequire(instance)
-
-	if rawComponentDef then
-		local listTyped = typeof(rawComponentDef[1]) == "table"
-		local componentType = listTyped and rawComponentDef[1][1] or rawComponentDef[1]
-		local paramMap = rawComponentDef[2]
-		local componentDescription = GameComponentDefs[componentType]
-
-		-- this componentType has already been serialized; diff params
-		if componentDescription then
-			local numParams
-			local paramId
-
-			warn(("WorldSmith: found existing component %s"):format(componentType))
-
-			for id, paramDescription in ipairs(componentDescription) do
-				if id > 1 then
-					if not paramMap[paramDescription.paramName] then
-						numParams = #componentDescription
-						componentDescription[id] = componentDescription[numParams]
-						componentDescription[numParams] = nil
-						warn(("WorldSmith: removed parameter %s; moved parameter %s to paramId %s"):format(paramDescription.paramName, componentDescription[id].paramName, tostring(id)))
-					else
-						if not paramDescription.defaultValue == paramMap[paramDescription.paramName] then
-							paramDescription.defaultValue = paramMap[paramDescription.paramName]
-							warn(("WorldSmith: set default value of parameter %s to %s"):format(paramDescription.paramName, tostring(paramMap[paramDescription.paramName])))
-						end
-
-						paramMap[paramDescription.paramName] = nil
-					end
-				end
-			end
-
-			for paramName, defaultValue in pairs(paramMap) do
-				paramId = #componentDescription
-
-				WSAssert(paramId <= 17, "Maximum number of parameters (16) exceeded")
-
-				componentDescription[paramId + 1] = { ["paramName"] = paramName, ["defaultValue"] = defaultValue }
-				warn(("WorldSmith: added parameter %s"):format(paramName))
-			end
-
-			return true
-		end
-
-		-- this componentType has not been serialized before
-		local componentIdListHole
-		local componentId
-		local paramId = 1
-
+	if ethereal then
+		componentIdStr = HttpService:GenerateGUID(false)
+	else
 		for i = 1, NumUniqueComponents do
 			if not ComponentsArray[i] then
 				componentIdListHole = i
@@ -95,95 +52,212 @@ local function tryCollectComponent(instance)
 			end
 		end
 
-		NumUniqueComponents = NumUniqueComponents + 1
-
-		WSAssert(NumUniqueComponents <= 64, "Maximum number of components (64) exceeded")
-
-		GameComponentDefs[componentType] = {}
-		componentDescription = GameComponentDefs[componentType]
+		WSAssert(NumUniqueComponents <= 64, "Maximum number of concrete components (64) exceeded")
 
 		if not componentIdListHole then
-			componentId = NumUniqueComponents
+			componentIdStr = NumUniqueComponents
 		else
-			componentId = componentIdListHole
+			componentIdStr = componentIdListHole
 		end
 
-		warn(("WorldSmith: created component description for new component \"%s\"  with componentId %s"):format(componentType, tostring(componentId)))
-
-		componentDescription[1] = { componentId, listTyped }
-		ComponentsArray[componentId] = componentType
-
-		for paramName, defaultValue in pairs(paramMap) do
-			paramId = paramId + 1
-
-			WSAssert(paramId <= 17, "Maximum number of parameters (16) exceeded")
-
-			componentDescription[paramId] = { ["paramName"] = paramName, ["defaultValue"] = defaultValue }
-		end
-
-		return true
+		ComponentsArray[componentIdStr] = componentType
+		componentIdStr = tostring(componentIdStr)
 	end
+
+	for paramName, defaultValue in pairs(paramMap) do
+		paramId = paramId + 1
+
+		WSAssert(paramId <= 16, "Maximum number of parameters (16) on \"%s\" exceeded", componentType)
+
+		paramList[paramId] = { ParamName = paramName, DefaultValue = defaultValue }
+	end
+
+	PluginES.AddComponent(GameComponentDefsModule, "SerializeComponentDefinition", {
+		PluginES.AddComponent(instance, "ComponentDefinition", {
+			ComponentType = componentType,
+			ComponentId = componentIdStr,
+			ListTyped = listTyped,
+			ParamList = paramList
+		})
+	})
+
+	return componentType
 end
 
-local function tryRemoveComponent(instance)
-	if not instance:IsA("ModuleScript") or instance.Name == "Component" then
+local function diffComponentDefinition(componentDefinition, componentType, paramMap, listTyped)
+	local keptIdx = 1
+	local paramList = componentDefinition.ParamList
+	local paramName
+	local paramValue
+
+	for paramId, paramDefinition in ipairs(paramList) do
+		paramName = paramDefinition.ParamName
+		paramValue = paramMap[paramName]
+
+		if paramValue then
+			paramDefinition.ParamValue = paramValue
+			paramMap[paramName] = nil
+		else
+			paramList[paramId] = false
+		end
+	end
+
+	for name, value in pairs(paramMap) do
+		paramList[#paramList + 1] = { ParamName = name, ParamValue = value }
+	end
+
+	for i, paramDefinition in ipairs(paramList) do
+		if paramDefinition then
+			if i ~= keptIdx then
+				paramList[keptIdx] = paramDefinition
+				paramList[i] = nil
+			end
+
+			keptIdx = keptIdx + 1
+		else
+			paramList[i] = nil
+		end
+	end
+
+	WSAssert(#paramList <= 16, "Maximum number of parameters (16) on \"%s\" exceeded", componentType)
+
+	componentDefinition.ComponentType = componentType
+	componentDefinition.ListTyped = listTyped
+
+	PluginES.AddComponent(GameComponentDefsModule, "SerializeComponentDefinition", { componentDefinition })
+end
+
+local function tryDefineComponent(instance)
+	if not instance:IsA("ModuleScript") or (instance:IsA("ModuleScript") and instance.Name == "Component") then
 		return
 	end
 
 	local pattern = "Component%.Define%("
+	local rawComponentDefinition = instance.Source:match(pattern) and tryRequire(instance)
 
-	if instance.Source:match(pattern) then
-		local rawComponent = tryRequire(instance)
-		local componentType = rawComponent[1]
+	if not rawComponentDefinition then
+		return
+	end
 
-		GameComponentDefs[componentType] = nil
+	local listTyped = typeof(rawComponentDefinition[1]) == "table"
+	local paramMap = rawComponentDefinition[2]
+	local ethereal = rawComponentDefinition[3]
+	local componentType = listTyped and rawComponentDefinition[1][1] or rawComponentDefinition[1]
+	local serialComponentDefinition = SerialComponentDefinitions[componentType]
+	local componentDefinition = PluginES.GetComponent(instance, "ComponentDefinition")
 
-		for componentId, comtype in pairs(ComponentsArray) do
-			if comtype == componentType then
-				ComponentsArray[componentId] = nil
+	NumUniqueComponents = NumUniqueComponents + (ethereal and 0 or 1)
 
-				break
-			end
-		end
+	if serialComponentDefinition then
+		local componentIdStr = serialComponentDefinition[1]
 
-		NumUniqueComponents = NumUniqueComponents - 1
+		componentDefinition = serialComponentDefinition[2]
 
-		return true
+		table.remove(componentDefinition, 1)
+
+		PluginES.AddComponent(instance, "ComponentDefinition", {
+			ComponentType = componentType,
+			ComponentId = componentIdStr,
+			ListTyped = listTyped,
+			ParamList = serialComponentDefinition
+		})
+
+		SerialComponentDefinitions[componentType] = nil
+
+		return componentType
+	end
+
+	-- this definition has already been serialized; diff names / params
+	if componentDefinition then
+		return diffComponentDefinition(componentDefinition, componentType, paramMap, listTyped, ethereal)
+	else
+		return newComponentDefinition(instance, componentType, paramMap, listTyped, ethereal)
 	end
 end
 
-function ComponentsLoader.OnLoaded()
-	local GameComponentDefModule = GameSrc.ComponentDesc:WaitForChild("ComponentDefinitions", 2)
+local function tryDeleteComponent(instance)
+	if not instance:IsA("ModuleScript") or (instance:IsA("ModuleScript") and instance.Name == "Component") then
+		return
+	end
 
-	if GameComponentDefModule then
-		for componentType, componentDef in pairs(require(GameComponentDefModule)) do
-			WSAssert(NumUniqueComponents <= 64, "Maximum number of components (64) exceeded")
+	local componentDefinition = PluginES.GetComponent(instance, "ComponentDefinition")
+	local componentId
+	local componentType
 
-			GameComponentDefs[componentType] = componentDef
-			ComponentsArray[typeof(componentDef[1]) == "table" and componentDef[1][1] or componentDef[1]] = componentType
-			NumUniqueComponents = NumUniqueComponents + 1
+	if componentDefinition then
+		componentId = componentDefinition.ComponentId
+		componentType = componentDefinition.ComponentType
+
+		if not componentDefinition.ComponentId == 0 then
+			ComponentsArray[componentId] = nil
+			NumUniqueComponents = NumUniqueComponents - 1
+		end
+
+		PluginES.AddComponent(GameComponentDefsModule, "SerializeDeleteComponentDefinition", { componentType })
+		PluginES.KillComponent(componentDefinition)
+
+		return componentType
+	end
+end
+
+function ComponentsLoader.OnLoaded(pluginWrapper)
+	GameComponentDefsModule = GameSrc.ComponentDesc:WaitForChild("ComponentDefinitions", 2)
+
+	local addComponentWidget = pluginWrapper.GetDockWidget("Add components")
+	local scrollingFrame = Instance.new("ScrollingFrame")
+
+	PluginES = pluginWrapper.PluginES
+
+	scrollingFrame.TopImage = ""
+	scrollingFrame.BottomImage = ""
+	scrollingFrame.ScrollBarImageColor3 = GetColor(Enum.StudioStyleGuideColor.Light)
+	scrollingFrame.BackgroundColor3 = GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
+	scrollingFrame.BorderSizePixel = 0
+	scrollingFrame.ScrollBarThickness = 16
+	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollingFrame.Position = UDim2.new(0, 0, 0, 1)
+	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
+
+	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
+	scrollingFrame.Parent = addComponentWidget
+
+	if GameComponentDefsModule then
+		for componentIdStr, componentDefinition in pairs(require(GameComponentDefsModule)) do
+			SerialComponentDefinitions[componentDefinition[1].ComponentType] = { componentIdStr, componentDefinition }
 		end
 	else
-		GameComponentDefModule = Instance.new("ModuleScript")
+		GameComponentDefsModule = Instance.new("ModuleScript")
+		GameComponentDefsModule.Name = "ComponentDefinitions"
+		GameComponentDefsModule.Parent = GameSrc.ComponentDesc
 	end
 
-	for _, inst in ipairs(ReplicatedStorage:GetDescendants()) do
-		tryCollectComponent(inst)
+	for _, instance in ipairs(ReplicatedStorage:GetDescendants()) do
+		local componentType = tryDefineComponent(instance)
+
+		if componentType then
+			PluginES.AddComponent(addComponentWidget, "AddComponentButton", { componentType })
+		end
 	end
 
-	GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
-	GameComponentDefModule.Name = "ComponentDefinitions"
-	GameComponentDefModule.Parent = GameSrc.ComponentDesc
+	AddedConnection = ReplicatedStorage.DescendantAdded:Connect(function(instance)
+		local componentType = tryDefineComponent(instance)
 
-	AddedConnection = ReplicatedStorage.DescendantAdded:Connect(function(inst)
-		if tryCollectComponent(inst) then
-			GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
+		if componentType then
+			PluginES.AddComponent(scrollingFrame, "AddComponentButton", { componentType })
 		end
 	end)
 
-	RemovedConnection = ReplicatedStorage.DescendantRemoving:Connect(function(inst)
-		if tryRemoveComponent(inst) then
-			GameComponentDefModule.Source = Serial.Serialize(GameComponentDefs)
+	RemovedConnection = ReplicatedStorage.DescendantRemoving:Connect(function(instance)
+		local componentType = tryDeleteComponent(instance)
+
+		if componentType then
+			for _, addComponentButton in ipairs(PluginES.GetListTypedComponent(scrollingFrame, "AddComponentButton")) do
+				if addComponentButton.ComponentType == componentType then
+					PluginES.KillComponent(addComponentButton)
+
+					break
+				end
+			end
 		end
 	end)
 end
