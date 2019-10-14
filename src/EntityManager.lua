@@ -212,10 +212,7 @@ end
 
 -- Initialization
 local function initComponentDefs()
-	local componentId
-
-	for _, componentDefinition in pairs(ComponentDesc.ComponentDefinitions) do
-		componentId = componentDefinition[1]
+	for _, componentId in pairs(ComponentDesc.GetAllComponents()) do
 		ComponentMap[componentId] = not ComponentMap[componentId] and { _length = 0 }
 		KilledComponents[componentId] = not KilledComponents[componentId] and {}
 	end
