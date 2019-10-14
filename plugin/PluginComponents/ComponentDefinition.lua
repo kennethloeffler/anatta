@@ -3,7 +3,7 @@ local Component = require(root.src.Component)
 
 return Component.Define("ComponentDefinition", {
 	ComponentType = "none",
-	ComponentId = 0,
+	ComponentId = "0",
 	ListTyped = false,
 	ParamList = {}
 })
