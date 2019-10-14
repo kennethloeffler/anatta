@@ -56,8 +56,9 @@ local function popComponent(componentIdStr, componentDefinition, maxComponentId)
 
 		if Constants.IS_STUDIO then
 			ComponentIdsByEtherealId[componentIdStr] = componentId
-			EtherealIdsByComponentId[componentId] = componentIdStr
 		end
+
+		EtherealIdsByComponentId[componentId] = Constants.IS_STUDIO and componentIdStr or true
 
 		return componentId
 	end
@@ -73,7 +74,7 @@ local function populateDefs(definitionTable)
 	NumComponentParams = {}
 	ListTyped = {}
 	ComponentIdsByEtherealId = Constants.IS_STUDIO and {}
-	EtherealIdsByComponentId = Constants.IS_STUDIO and {}
+	EtherealIdsByComponentId = {}
 
 	for componentIdStr, componentDefinition in pairs(definitionTable) do
 		maxComponentId = popComponent(componentIdStr, componentDefinition, maxComponentId)
