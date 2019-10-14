@@ -152,8 +152,8 @@ local function doReorder(componentId, componentList)
 			if componentOffset ~= keptComponentOffset then
 				-- swap
 				masterComponentList[keptComponentOffset] = component
+				masterComponentList[componentOffset] = nil
 				entityStruct[componentId + 1] = keptComponentOffset
-				componentList[component] = nil
 			end
 
 			keptComponentOffset = keptComponentOffset + 1
