@@ -575,12 +575,12 @@ function EntityManager.Init()
 	local data
 
 	for _, instance in pairs(entities) do
-		if not instance:FindFirstChild("__WSEntity") then
+		if not instance.__WSEntity then
 			warn(("Tagged entity %s has no associated data (missing __WSEntity module)"):format(instance:GetFullName()))
 		else
 			data = require(instance.__WSEntity)
 
-			for componentType, paramsInfo in ipairs(data) do
+			for componentIdStr, paramsInfo in ipairs(data) do
 				local numParams = #paramsInfo
 				local componentStruct = {
 					true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
@@ -595,7 +595,7 @@ function EntityManager.Init()
 					componentStruct[i] = nil
 				end
 
-				AddComponent(instance, componentType, componentStruct)
+				AddComponent(instance, tonumber(componentIdStr), componentStruct)
 			end
 
 			instance.__WSEntity:Destroy()
