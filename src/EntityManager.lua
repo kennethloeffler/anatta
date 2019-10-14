@@ -416,6 +416,10 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 
 	local entityStruct = EntityMap[instance]
 
+	if not supressInstanceDestruction then
+		instance:Destroy()
+	end
+
 	if not entityStruct then
 		return
 	end
@@ -430,10 +434,6 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 				KilledComponents[componentId][ComponentMap[componentId][offset]] = false
 			end
 		end
-	end
-
-	if not supressInstanceDestruction then
-		instance:Destroy()
 	end
 end
 
