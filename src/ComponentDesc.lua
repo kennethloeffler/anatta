@@ -1,67 +1,103 @@
 local Constants = require(script.Parent.Constants)
 local WSAssert = require(script.Parent.WSAssert)
 
-local ComponentIdsByType = {}
-local ComponentTypesById = {}
-local ComponentParamIds = {}
-local Defaults = {}
-local NumComponentParams = {}
-local ListTyped = {}
+local ComponentIdsByType
+local ComponentTypesById
+local ComponentParamIds
+local ComponentIdsByEtherealId
+local EtherealIdsByComponentId
+local Defaults
+local NumComponentParams
+local ListTyped
 
 local ComponentDesc = {
-	ComponentDefinitions = {},
 	_defUpdateCallback = nil
 }
 
-local function populateDefs(definitionTable)
-	local componentId
-	local isListType
+local function popParams(componentDefinition, componentId)
+	for paramId, paramDef in ipairs(componentDefinition) do
+		if paramId > 1 then
+			WSAssert(typeof(paramDef) == "table", "expected table")
 
-	for componentType, componentDefinition in pairs(definitionTable) do
-		WSAssert(typeof(componentType) == "string", "expected string")
-		WSAssert(typeof(componentDefinition) == "table", "expected table")
-
-		componentId = componentDefinition[1][1]
-		isListType = componentDefinition[1][2]
-
-		WSAssert(componentId ~= nil and typeof(componentId) == "number" and math.floor(componentId) == componentId, "expected number")
-
-		ComponentIdsByType[componentType] = componentId
-		ComponentTypesById[componentId] = componentType
-		ListTyped[componentId] = isListType
-		ComponentParamIds[componentId] = {}
-		Defaults[componentId] = {}
-		NumComponentParams[componentId] = 0
-
-		for paramId, paramDef in ipairs(componentDefinition) do
-			if paramId > 1 then
-				WSAssert(typeof(paramDef) == "table", "expected table")
-
-				ComponentParamIds[componentId][paramDef.paramName] = paramId - 1
-				Defaults[componentId][paramDef.paramName] = paramDef.defaultValue
-				NumComponentParams[componentId] = NumComponentParams[componentId] + 1
-			end
+			ComponentParamIds[componentId][paramDef.ParamName] = paramId - 1
+			Defaults[componentId][paramDef.ParamName] = paramDef.DefaultValue
+			NumComponentParams[componentId] = NumComponentParams[componentId] + 1
 		end
 	end
-
-	ComponentDesc.ComponentDefinitions = definitionTable
 end
 
-ComponentDesc.NumParamsByComponentId = NumComponentParams
+local function initComponentPop(componentType, componentId, isListType)
+	ComponentIdsByType[componentType] = componentId
+	ComponentTypesById[componentId] = componentType
+	ListTyped[componentId] = isListType
+	ComponentParamIds[componentId] = {}
+	Defaults[componentId] = {}
+	NumComponentParams[componentId] = 0
+end
 
-if script:WaitForChild("ComponentDefinitions", 2) and Constants.IS_STUDIO then
+local function popComponent(componentIdStr, componentDefinition, maxComponentId)
+	WSAssert(typeof(componentIdStr) == "string", "expected string")
+	WSAssert(typeof(componentDefinition) == "table", "expected table")
+
+	local componentType = componentDefinition[1].ComponentType
+	local componentId = tonumber(componentIdStr)
+	local isListType = componentDefinition[1].ListType
+
+	if componentId then
+		initComponentPop(componentType, componentId, isListType)
+		popParams(componentDefinition, componentId)
+
+		return componentId > maxComponentId and componentId or maxComponentId
+	else
+		componentId = maxComponentId + 1
+
+		initComponentPop(componentType, componentId, isListType)
+		popParams(componentDefinition, componentId)
+
+		if Constants.IS_STUDIO then
+			ComponentIdsByEtherealId[componentIdStr] = componentId
+			EtherealIdsByComponentId[componentId] = componentIdStr
+		end
+
+		return componentId
+	end
+end
+
+local function populateDefs(definitionTable)
+	local maxComponentId = 0
+
+	ComponentIdsByType = {}
+	ComponentTypesById = {}
+	ComponentParamIds = {}
+	Defaults = {}
+	NumComponentParams = {}
+	ListTyped = {}
+	ComponentIdsByEtherealId = Constants.IS_STUDIO and {}
+	EtherealIdsByComponentId = Constants.IS_STUDIO and {}
+
+	for componentIdStr, componentDefinition in pairs(definitionTable) do
+		maxComponentId = popComponent(componentIdStr, componentDefinition, maxComponentId)
+	end
+
+	ComponentDesc.NumParamsByComponentId = NumComponentParams
+end
+
+
+if script:WaitForChild("ComponentDefinitions", 2) then
 	local componentDefinitions = require(script.ComponentDefinitions)
 
 	populateDefs(componentDefinitions)
 
-	script.ComponentDefinitions:GetPropertyChangedSignal("Source"):Connect(function()
-		componentDefinitions = require(script.ComponentDefinitions:Clone())
-		populateDefs(componentDefinitions)
+	if Constants.IS_STUDIO then
+		script.ComponentDefinitions:GetPropertyChangedSignal("Source"):Connect(function()
+			componentDefinitions = require(script.ComponentDefinitions:Clone())
+			populateDefs(componentDefinitions)
 
-		if ComponentDesc._defUpdateCallback then
-			ComponentDesc._defUpdateCallback()
-		end
-	end)
+			if ComponentDesc._defUpdateCallback then
+				ComponentDesc._defUpdateCallback()
+			end
+		end)
+	end
 end
 
 function ComponentDesc.GetDefaults(componentId)
@@ -72,8 +108,8 @@ function ComponentDesc.GetListTyped(componentId)
 	return ListTyped[componentId]
 end
 
-function ComponentDesc.GetParamDefault(componentId, paramId)
-	return Defaults[componentId][paramId]
+function ComponentDesc.GetParamDefault(componentId, paramName)
+	return Defaults[componentId][paramName]
 end
 
 function ComponentDesc.GetParamIdFromName(componentId, paramName)
@@ -98,6 +134,14 @@ end
 
 function ComponentDesc.GetAllComponents()
 	return ComponentIdsByType
+end
+
+function ComponentDesc.GetComponentIdFromEtherealId(etherealId)
+	return ComponentIdsByEtherealId[etherealId]
+end
+
+function ComponentDesc.GetEtherealIdFromComponentId(componentId)
+	return EtherealIdsByComponentId[componentId]
 end
 
 return ComponentDesc
