@@ -11,8 +11,17 @@ local ComponentLabels = {}
 
 local function clearParamFields(label)
 	for _, paramField in ipairs(PluginES.GetListTypedComponent(label, "ParamField")) do
+		PluginES.KillEntity(paramField.Field)
 		PluginES.KillComponent(paramField)
-		paramField.Field:Destroy()
+	end
+end
+
+local function makeParamFields(label, componentLabel, defaults)
+	for paramName in pairs(defaults) do
+		PluginES.AddComponent(label, "ParamField", {
+			ParamName = paramName,
+			ComponentLabel = componentLabel
+		})
 	end
 end
 
@@ -21,22 +30,9 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 	GameES = pluginWrapper.GameES
 
 	PluginES.ComponentAdded("ComponentLabel", function(componentLabel)
-		local parentFrame = componentLabel.Instance
-		local entity = componentLabel.Entity
-		local componentType = componentLabel.ComponentType
-		local paramList = componentLabel.ParamList
-		local oldLabel = parentFrame:FindFirstChild(tostring(componentType))
-
-		if oldLabel then
-			PluginES.AddComponent(oldLabel, "UpdateParamFields", {
-				entity,
-				paramList
-			})
-
-			return
-		end
-
 		local componentDesc = GameES.GetComponentDesc()
+		local parentFrame = componentLabel.Instance
+		local componentType = componentLabel.ComponentType
 		local componentId = componentDesc.GetComponentIdFromType(componentType)
 		local label = Instance.new("TextLabel")
 		local paramsContainer = Instance.new("Frame")
@@ -47,19 +43,10 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				if not componentLabel.Open then
 					componentLabel.Open = true
-
-					for paramId, paramValue in ipairs(paramList) do
-						PluginES.AddComponent(label, "ParamField", {
-							  ComponentId = componentId,
-							  ParamId = paramId,
-							  ParamValue = paramValue,
-							  Entity = entity
-						})
-					end
+					makeParamFields(label, componentLabel, componentDesc.GetDefaults(componentId))
 				else
-					componentLabel.Open = false
-
 					clearParamFields(label)
+					componentLabel.Open = false
 				end
 			elseif input.UserInputType == Enum.UserInputType.MouseMovement then
 				label.BackgroundColor3 = GetColor(Section, Hover)
@@ -82,7 +69,7 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 		label.Size = UDim2.new(1, 0, 0, 24)
 		label.BackgroundColor3 = GetColor(Section)
 		label.TextColor3 = GetColor(MainText)
-		label.Text = "     " .. componentType
+		label.Text = ("\t%s"):format(componentType)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Name = componentType
 		label.LayoutOrder = componentId
@@ -90,14 +77,11 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 	end)
 
 	PluginES.ComponentKilled("ComponentLabel", function(componentLabel)
-		PluginES.KillEntity(componentLabel.Instance.ParamsContainer)
-	end)
+		local label = componentLabel.Instance[componentLabel.ComponentType]
 
-	PluginES.ComponentAdded("NoSelection", function(noSelection)
-		for _, componentLabel in ipairs(PluginES.GetListTypedComponent(noSelection.Instance, "ComponentLabel")) do
-			clearParamFields(componentLabel.Instance)
-			PluginES.KillComponent(noSelection.Instance, "ComponentLabel")
-		end
+		clearParamFields(label)
+		PluginES.KillEntity(label.ParamsContainer)
+		PluginES.KillEntity(label)
 	end)
 end
 
