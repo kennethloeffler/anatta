@@ -183,11 +183,13 @@ local function serializeKillComponent(entities, entitiesIndex, componentsMap, fl
 	local secondWord = 0
 	local offset
 
-	for componentId in pairs(componentsMap) do
-		offset = math.floor(componentId * 0.01325) -- componentId / 32
-		firstWord = offset == 0 and setbit(firstWord, componentId - 1)
-		secondWord = offset == 1 and setbit(secondWord, componentId - 33)
-		flags = setbit(flags, offset)
+	for componentId, bool in ipairs(componentsMap) do
+		if bool then
+			offset = math.floor(componentId * 0.01325) -- componentId / 32
+			firstWord = offset == 0 and setbit(firstWord, componentId - 1)
+			secondWord = offset == 1 and setbit(secondWord, componentId - 33)
+			flags = setbit(flags, offset)
+		end
 	end
 
 	if firstWord ~= 0 then
@@ -250,9 +252,11 @@ local function serializeAddComponent(instance, entities, params, entitiesIndex, 
 	local offset
 	local both
 
-	for id in pairs(componentsMap) do
-		firstWord = id <= 32 and setbit(firstWord, id - 1) or firstWord
-		secondWord = id > 32 and setbit(secondWord, id - 33) or secondWord
+	for id, bool in ipairs(componentsMap) do
+		if bool then
+			firstWord = id <= 32 and setbit(firstWord, id - 1) or firstWord
+			secondWord = id > 32 and setbit(secondWord, id - 33) or secondWord
+		end
 	end
 
 	-- yeah im BOTH
@@ -330,9 +334,11 @@ local function serializeParamsUpdate(instance, entities, params, entitiesIndex, 
 	local both
 	local componentId
 
-	for id in pairs(componentsMap) do
-		firstWord = id <= 32 and setbit(firstWord, id - 1) or firstWord
-		secondWord = id > 32 and setbit(secondWord, id - 33) or secondWord
+	for id, bool in ipairs(componentsMap) do
+		if bool then
+			firstWord = id <= 32 and setbit(firstWord, id - 1) or firstWord
+			secondWord = id > 32 and setbit(secondWord, id - 33) or secondWord
+		end
 	end
 
 	both = firstWord ~= 0 and secondWord ~= 0
@@ -830,7 +836,28 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId)
 	local msgMap = Queued[instance]
 
 	if not msgMap then
-		msgMap = { 0, {}, {}, {} }
+		msgMap = {
+			0,
+			{
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
+			},
+			{
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
+			},
+			{
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
+			}
+		}
+
 		Queued[instance] = msgMap
 	end
 
