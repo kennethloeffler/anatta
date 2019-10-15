@@ -613,14 +613,6 @@ end
 -- @return number paramsIndex
 
 local function deserializeUpdate(networkId, flags, entities, params, entitiesIndex, paramsIndex, instance, player)
-	if isbitset(flags, PARAMS_UPDATE) then
-		entitiesIndex, paramsIndex = deserializeParamsUpdate(
-			networkId, entities, params,
-			entitiesIndex, paramsIndex,
-			flags, player, instance
-		)
-	end
-
 	if isbitset(flags, ADD_COMPONENT) then
 		entitiesIndex, paramsIndex = deserializeAddComponent(
 			networkId, entities, params,
@@ -633,6 +625,14 @@ local function deserializeUpdate(networkId, flags, entities, params, entitiesInd
 		entitiesIndex = deserializeKillComponent(
 			networkId, entities, params,
 			entitiesIndex, flags, player, instance
+		)
+	end
+
+	if isbitset(flags, PARAMS_UPDATE) then
+		entitiesIndex, paramsIndex = deserializeParamsUpdate(
+			networkId, entities, params,
+			entitiesIndex, paramsIndex,
+			flags, player, instance
 		)
 	end
 
@@ -652,39 +652,50 @@ end
 
 function Shared.SerializeUpdate(instance, networkId, entities, params, entitiesIndex, paramsIndex, msgMap)
 	local flags = 0
-	local numDataStructs = 0
+	local numDataStructs
+	local msgs = msgMap[1]
+	local componentMsgMap
 	local totalNumDataStructs = 0
 
-	for msg, map in pairs(msgMap) do
-		for _ = 1, popcnt(msg) do
-			msg = ffs(msg)
-			flags = setbit(flags, msg)
+	if isbitset(msgs, KILL_COMPONENT) then
+		componentMsgMap = msgMap[KILL_COMPONENT - 10]
+		flags = setbit(flags, KILL_COMPONENT)
 
-			if msg == PARAMS_UPDATE then
-				entitiesIndex, paramsIndex, flags, numDataStructs = serializeParamsUpdate(
-					instance, entities, params,
-					entitiesIndex, paramsIndex,
-					map, flags
-				)
-			elseif msg == ADD_COMPONENT then
-				entitiesIndex, paramsIndex, flags, numDataStructs = serializeAddComponent(
-					instance, entities, params,
-					entitiesIndex, paramsIndex,
-					map, flags
-				)
-			elseif msg == KILL_COMPONENT then
-				entitiesIndex, flags, numDataStructs = serializeKillComponent(
-					entities, entitiesIndex,
-					map, flags
-				)
-			end
+		entitiesIndex, flags, numDataStructs = serializeKillComponent(
+			entities, entitiesIndex,
+			componentMsgMap, flags
+		)
 
-			totalNumDataStructs = totalNumDataStructs + numDataStructs
-			msg = unsetbit(msg, msg)
-		end
-
-		msgMap[msg] = nil
+		totalNumDataStructs = totalNumDataStructs + numDataStructs
 	end
+
+	if isbitset(msgs, ADD_COMPONENT) then
+		componentMsgMap = msgMap[ADD_COMPONENT - 10]
+		flags = setbit(flags, ADD_COMPONENT)
+
+		entitiesIndex, paramsIndex, flags, numDataStructs = serializeAddComponent(
+			instance, entities, params,
+			entitiesIndex, paramsIndex,
+			componentMsgMap, flags
+		)
+
+		totalNumDataStructs = totalNumDataStructs + numDataStructs
+	end
+
+	if isbitset(msgs, PARAMS_UPDATE) then
+		componentMsgMap = msgMap[PARAMS_UPDATE - 10]
+		flags = setbit(flags, PARAMS_UPDATE)
+
+		entitiesIndex, paramsIndex, flags, numDataStructs = serializeParamsUpdate(
+			instance, entities, params,
+			entitiesIndex, paramsIndex,
+			componentMsgMap, flags
+		)
+
+		totalNumDataStructs = totalNumDataStructs + numDataStructs
+	end
+
+	msgMap[1] = 0
 
 	-- create header and increment entity table index
 	entities[entitiesIndex - totalNumDataStructs] = Vector2int16.new(networkId, flags)
@@ -816,23 +827,18 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId)
 		return
 	end
 
-	local messages = Queued[instance]
+	local msgMap = Queued[instance]
 
-	if not messages then
-		messages = {}
-		Queued[instance] = messages
+	if not msgMap then
+		msgMap = { 0, {}, {}, {} }
+		Queued[instance] = msgMap
 	end
 
-	local msg = messages[msgType]
+	local componentMsgs = msgMap[msgType - 10]
+	local field = componentMsgs[componentId]
 
-	if not msg then
-		msg = {}
-		messages[msgType] = msg
-	end
-
-	local field = msg[componentId]
-
-	msg[componentId] = paramId and setbit(field or 0, paramId - 1) or true
+	msgMap[1] = setbit(msgMap[1], msgType)
+	msgMap[componentId] = msgType == PARAMS_UPDATE and setbit(field or 0, paramId - 1) or true
 end
 
 function Shared.Blacklist(componentType)
