@@ -116,10 +116,6 @@ local function ffs(n)
 	return popcnt(bit32.band(bit32.bnot(n), n - 1))
 end
 
-local function invalidDataObj(dataObj)
-	return not typeof(dataObj) == "Vector2int16"
-end
-
 local function hasPermission(player, instance, componentId, paramId)
 	local componentOffset = math.floor(componentId * 0.03125)
 	local bitOffset = componentOffset - 1 - (componentOffset * 32)
@@ -408,7 +404,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 		offsetFactor = ffs(fieldOffset)
 		fieldOffset = unsetbit(fieldOffset, offsetFactor)
 
-		if player and invalidDataObj(dataObj) then
+		if player and typeof(dataObj) ~= "Vector2int16" then
 			return
 		end
 
@@ -423,7 +419,7 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 			paramsField = even and dataObj.X or dataObj.Y
 			entities[entitiesIndex] = nil
 
-			if player and invalidDataObj(dataObj) then
+			if player and typeof(dataObj) ~= "Vector2int16" then
 				return
 			end
 
@@ -462,7 +458,7 @@ local function deserializeAddComponent(networkId, entities, params, entitiesInde
 		entitiesIndex = entitiesIndex + 1
 		dataObj = entities[entitiesIndex]
 
-		if player and invalidDataObj(dataObj) then
+		if player and typeof(dataObj) ~= "Vector2int16" then
 			return
 		end
 
@@ -806,7 +802,7 @@ end
 function Shared.DeserializeNext(entities, params, entitiesIndex, paramsIndex, arg)
 	local header = entities[entitiesIndex]
 
-	if invalidDataObj(header) then
+	if typeof(header) ~= "Vector2int16" then
 		return
 	end
 
