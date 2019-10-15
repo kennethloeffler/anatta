@@ -591,6 +591,7 @@ function EntityManager.Init()
 
 			for componentIdStr, paramsInfo in ipairs(data) do
 				local numParams = #paramsInfo
+				local componentId = ComponentDesc.GetComponentIdFromEtherealId(componentIdStr) or tonumber(componentIdStr)
 				local componentStruct = {
 					true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 					_componentId = 0, Instance = 0
@@ -604,7 +605,7 @@ function EntityManager.Init()
 					componentStruct[i] = nil
 				end
 
-				AddComponent(instance, tonumber(componentIdStr), componentStruct)
+				AddComponent(instance, componentId, componentStruct)
 			end
 
 			instance.__WSEntity:Destroy()
