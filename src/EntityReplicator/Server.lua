@@ -253,6 +253,7 @@ function Server.Dereference(instance)
 	GlobalRefs[instance] = nil
 	PlayerSerializable[instance] = nil
 	PlayerCreatable[instance] = nil
+	QueuedUpdates[instance] = nil
 
 	if PrefabRefs[instance] then
 		local rootInstance = PrefabRefs[instance]
