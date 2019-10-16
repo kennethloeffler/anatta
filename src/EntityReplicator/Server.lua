@@ -51,7 +51,7 @@ local GetParamIdFromName = ComponentDesc.GetParamIdFromName
 local SerializeEntity = Shared.SerializeEntity
 local SerializeUpdate = Shared.SerializeUpdate
 local DeserializeNext = Shared.DeserializeNext
-local setBitAtPos = Shared.setbit
+local setbit = Shared.setbit
 local GetStringFromNetworkId = Shared.GetStringFromNetworkId
 local NetworkIdsByInstance = Shared.NetworkIdsByInstance
 local InstancesByNetworkId = Shared.InstancesByNetworkId
@@ -598,11 +598,11 @@ function Server.PlayerSerializable(players, instance, componentType, paramName)
 	local paramsField
 
 	if not struct then
-		paramsField = paramName and setBitAtPos(0, paramId - 1) or 0xFFFF
+		paramsField = paramName and setbit(0, paramId - 1) or 0xFFFF
 		PlayerSerializable[instance][1] = players
 		PlayerSerializable[instance][componentId + 1] = paramsField
 	else
-		paramsField = paramName and setBitAtPos(struct[componentId + 1] or 0, paramId - 1) or 0xFFFF
+		paramsField = paramName and setbit(struct[componentId + 1] or 0, paramId - 1) or 0xFFFF
 		struct[1] = players
 		struct[componentId + 1] = paramsField
 	end
@@ -640,14 +640,14 @@ function Server.PlayerCreatable(players, instance, componentType)
 	local componentOffset = math.floor(componentId * 0.03125)
 
 	if not struct then
-		local firstWord = componentOffset == 0 and setBitAtPos(0, componentId - 1) or 0
-		local secondWord = componentOffset == 1 and setBitAtPos(0, componentId - 33) or 0
+		local firstWord = componentOffset == 0 and setbit(0, componentId - 1) or 0
+		local secondWord = componentOffset == 1 and setbit(0, componentId - 33) or 0
 
 		PlayerCreatable[instance] = { players, firstWord, secondWord }
 	else
 		struct[1] = players
-		struct[2] = componentOffset == 0 and setBitAtPos(struct[2], componentId - 1) or struct[2]
-		struct[3] = componentOffset == 1 and setBitAtPos(struct[3], componentId - 33) or struct[3]
+		struct[2] = componentOffset == 0 and setbit(struct[2], componentId - 1) or struct[2]
+		struct[3] = componentOffset == 1 and setbit(struct[3], componentId - 33) or struct[3]
 	end
 end
 
