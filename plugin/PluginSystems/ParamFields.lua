@@ -40,6 +40,8 @@ local function getElementForValueType(ty)
 		local textBox = Instance.new("TextBox")
 
 		textBox.Size = UDim2.new(0, 0.95, 0, 0.95)
+		textBox.AnchorPoint = Vector2.new(0, 0.5)
+		textBox.Position = UDim2.new(0, 24, 0, 0)
 		textBox.BackgroundColor3 = GetColor(InputFieldBackground)
 		textBox.BorderColor3 = GetColor(InputFieldBackground)
 		textBox.BorderSizePixel = 1
@@ -56,6 +58,8 @@ local function getElementForValueType(ty)
 
 		imageLabel.Name = "CheckMarkImg"
 		imageLabel.Size = UDim2.new(1, 0, 1, 0)
+		imageLabel.AnchorPoint = Vector2.new(0, 0.5)
+		imageLabel.Position = UDim2.new(0, 24, 0, 0)
 		imageLabel.Active = false
 		imageLabel.BackgroundTransparency = 1
 		imageLabel.BorderSizePixel = 0
