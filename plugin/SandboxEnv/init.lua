@@ -38,6 +38,7 @@ function SandboxEnv.new(script, baseEnv)
 	env.tonumber = tonumber
 	env.tostring = tostring
 	env.type = type
+	env.typeof = typeof
 	env.unpack = unpack
 	env.xpcall = xpcall
 	env.setmetatable = setmetatable
