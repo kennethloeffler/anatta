@@ -88,7 +88,7 @@ local function addEntity(instance)
 	EntityMap[instance] = { { 0, 0 } } -- fields for fast intersection tests
 	CollectionService:AddTag(instance, "__WSEntity")
 
-	return instance
+	return EntityMap[instance]
 end
 
 local function doUnloadSystem(system)
