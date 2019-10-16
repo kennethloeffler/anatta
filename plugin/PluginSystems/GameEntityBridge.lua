@@ -115,17 +115,17 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 	PluginES.ComponentAdded("SerializeComponentDefinition", function(serializeComponentDefinition)
 		local module = serializeComponentDefinition.Instance
 		local changedTypes = {}
-		local componentDefinition = serializeComponentDefinition.Definition
+		local componentDefinition = serializeComponentDefinition.ComponentDefinition
 		local componentType = componentDefinition.ComponentType
 		local componentIdStr = componentDefinition.ComponentId
 		local componentId = tonumber(componentIdStr) or ComponentDesc.GetComponentIdFromEtherealId(componentIdStr)
 		local listTyped = componentDefinition.ListTyped
-		local gameComponentDefinitions = Serial.Deserialize(module)
+		local gameComponentDefinitions = Serial.Deserialize(module.Source)
 		local serialComponentDefinition = gameComponentDefinitions[componentIdStr]
 		local entityStruct, entityModule
 
 		if not serialComponentDefinition then
-			serialComponentDefinition = {{ componentType = componentType, ListTyped = listTyped }}
+			serialComponentDefinition = {{ ComponentType = componentType, ListTyped = listTyped }}
 			gameComponentDefinitions[componentIdStr] = serialComponentDefinition
 		else
 			serialComponentDefinition[1].ListTyped = listTyped
