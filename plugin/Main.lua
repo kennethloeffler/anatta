@@ -3,7 +3,7 @@ local CollectionService = game:GetService("CollectionService")
 local Selection = game:GetService("Selection")
 
 local Serial = require(script.Parent.Serial)
-local GetColor = settings().Studio.Theme.GetColor
+local Theme = settings().Studio.Theme
 local GameES
 local PluginES
 
@@ -77,8 +77,8 @@ return function(pluginWrapper, root, gameRoot)
 
 	scrollingFrame.TopImage = ""
 	scrollingFrame.BottomImage = ""
-	scrollingFrame.ScrollBarImageColor3 = GetColor(Enum.StudioStyleGuideColor.Light)
-	scrollingFrame.BackgroundColor3 = GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
+	scrollingFrame.ScrollBarImageColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Light)
+	scrollingFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
 	scrollingFrame.BorderSizePixel = 0
 	scrollingFrame.ScrollBarThickness = 16
 	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
