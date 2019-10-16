@@ -1,8 +1,8 @@
-local GetColor = settings().Studio.Theme.GetColor
+local Theme = settings().Studio.Theme
 local GameES
 local PluginES
 
-local Section = Enum.StudioStyleGuideColor.Section
+local Section = Enum.StudioStyleGuideColor.TableItem
 local MainText = Enum.StudioStyleGuideColor.MainText
 
 local Hover = Enum.StudioStyleGuideModifier.Hover
@@ -49,13 +49,13 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 					componentLabel.Open = false
 				end
 			elseif input.UserInputType == Enum.UserInputType.MouseMovement then
-				label.BackgroundColor3 = GetColor(Section, Hover)
+				label.BackgroundColor3 = Theme:GetColor(Section, Hover)
 			end
 		end)
 
 		label.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				label.BackgroundColor3 = GetColor(Section)
+				label.BackgroundColor3 = Theme:GetColor(Section)
 			end
 		end)
 
@@ -67,8 +67,8 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 		paramsContainer.Parent = label
 
 		label.Size = UDim2.new(1, 0, 0, 24)
-		label.BackgroundColor3 = GetColor(Section)
-		label.TextColor3 = GetColor(MainText)
+		label.BackgroundColor3 = Theme:GetColor(Section)
+		label.TextColor3 = Theme:GetColor(MainText)
 		label.Text = ("\t%s"):format(componentType)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Name = componentType

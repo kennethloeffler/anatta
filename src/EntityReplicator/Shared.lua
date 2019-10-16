@@ -73,9 +73,11 @@ end
 -- @param pos number
 -- @return n
 
-local function setbit(n, pos)
+function Shared.setbit(n, pos)
 	return bit32.bor(n, bit32.lshift(1, pos))
 end
+
+local setbit = Shared.setbit
 
 ---Unsets the bit at position pos in the binary representation of n
 -- n is truncated to an unsigned 32-bit integer by bit32
@@ -137,8 +139,6 @@ local function hasPermission(player, instance, componentId, paramId)
 		return (playerArg == ALL_CLIENTS or playerArg[player] or playerArg == player) and isbitset(paramField, paramId - 1)
 	end
 end
-
-Shared.setbit = setbit
 
 ---Converts a networkId to a string
 -- @param networkId number
@@ -384,263 +384,6 @@ local function serializeParamsUpdate(instance, entities, params, entitiesIndex, 
 	return entitiesIndex, paramsIndex, flags, numDataStructs
 end
 
-local function deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags, player, instance)
-	instance = instance or InstancesByNetworkId[networkId]
-
-	local fieldOffset = bit32.extract(flags, 4, 2)
-	local offsetFactor
-	local field
-	local paramsField
-	local paramId
-	local componentId
-	local pos
-	local even
-	local dataObj
-
-	for _ = 1, popcnt(fieldOffset) do
-		entitiesIndex = entitiesIndex + 1
-		dataObj = entities[entitiesIndex]
-		entities[entitiesIndex] = nil
-		offsetFactor = ffs(fieldOffset)
-		fieldOffset = unsetbit(fieldOffset, offsetFactor)
-
-		if player and typeof(dataObj) ~= "Vector2int16" then
-			return
-		end
-
-		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
-
-		for i = 1, popcnt(field) do
-			pos = ffs(field)
-			even = bit32.band(i, 0) == 0
-			componentId = pos + (32 * offsetFactor) + 1
-			entitiesIndex = entitiesIndex + (even and 1 or 0)
-			dataObj = entities[entitiesIndex]
-			paramsField = even and dataObj.X or dataObj.Y
-			entities[entitiesIndex] = nil
-
-			if player and typeof(dataObj) ~= "Vector2int16" then
-				return
-			end
-
-			for _ = 1, popcnt(paramsField) do
-				paramId = ffs(paramsField) + 1
-
-				if player and not hasPermission(player, instance, componentId, paramId) then
-					return
-				end
-
-				ComponentMap[componentId][EntityMap[instance][componentId + 1]][paramId] = params[paramsIndex]
-				paramsIndex = paramsIndex + 1
-				paramsField = unsetbit(paramsField, paramId - 1)
-			end
-
-			field = unsetbit(field, pos)
-		end
-	end
-
-	return entitiesIndex, paramsIndex
-end
-
-local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags, player, instance)
-	instance = instance or InstancesByNetworkId[networkId]
-
-	local fieldOffset = bit32.extract(flags, 2, 2)
-	local pos
-	local offsetFactor
-	local componentId
-	local dataObj
-	local paramValue
-	local field
-	local numParams
-
-	for _ = 1, popcnt(fieldOffset) do
-		entitiesIndex = entitiesIndex + 1
-		dataObj = entities[entitiesIndex]
-
-		if player and typeof(dataObj) ~= "Vector2int16" then
-			return
-		end
-
-		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
-		entities[entitiesIndex] = nil
-		offsetFactor = ffs(fieldOffset)
-		fieldOffset = unsetbit(fieldOffset, offsetFactor)
-
-		for _ = 1, popcnt(field) do
-			pos = ffs(field)
-			componentId = pos + (32 * offsetFactor) + 1
-			field = unsetbit(field, pos)
-			numParams = NumParams[componentId]
-
-			if player and not hasPermission(player, instance, componentId) then
-				return
-			end
-
-			local componentStruct = {
-				true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-				_componentId = true, Instance = true
-			}
-
-			for paramId = 1, numParams do
-				paramsIndex = paramsIndex + 1
-				paramValue = params[paramsIndex]
-
-				if player and not typeof(paramValue) == typeof(GetParamDefault(componentId, paramId)) then
-					return
-				end
-
-				componentStruct[paramId] = params[paramsIndex]
-			end
-
-			for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do
-				componentStruct[i] = nil
-			end
-
-			AddComponent(instance, componentId, componentStruct)
-		end
-	end
-end
-
-local function deserializeKillComponent(networkId, entities, entitiesIndex, flags, instance)
-	instance = instance or InstancesByNetworkId[networkId]
-
-	local fieldOffset = bit32.extract(flags, 0, 2)
-	local pos
-	local offsetFactor
-	local componentId
-	local dataObj
-	local field
-
-	if IS_SERVER then
-		return
-	end
-
-	for _ = 1, popcnt(fieldOffset) do
-		entitiesIndex = entitiesIndex + 1
-		dataObj = entities[entitiesIndex]
-		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
-		entities[entitiesIndex] = nil
-		offsetFactor = ffs(fieldOffset)
-		fieldOffset = unsetbit(fieldOffset, offsetFactor)
-
-		for _ = 1, popcnt(field) do
-			pos = ffs(field)
-			componentId = pos + (32 * offsetFactor) + 1
-			field = unsetbit(field, pos)
-			KillComponent(instance, componentId)
-		end
-	end
-
-	return entitiesIndex
-end
-
-local function deserializeEntity(networkId, flags, entities, params, entitiesIndex, paramsIndex, arg)
-	local dataObj
-	local numParams
-	local field
-	local isDestruction = isbitset(flags, IS_DESTRUCTION)
-	local isReferenced = isbitset(flags, IS_REFERENCED)
-	local isPrefab = isbitset(flags, IS_PREFAB)
-	local isUnique = isbitset(flags, IS_UNIQUE)
-	local idStr = GetStringFromNetworkId(networkId)
-	local instance = isPrefab and (isReferenced and arg._r[idStr] or arg._s[idStr]) or (isUnique and arg or next(CollectionService:GetTagged(idStr)))
-	local fieldOffset = bit32.extract(flags, 0, 2)
-	local offsetFactor
-	local pos
-	local componentId
-
-	if isDestruction then
-		entitiesIndex = entitiesIndex + 1
-		InstancesByNetworkId[networkId] = nil
-		NetworkIdsByInstance[instance] = nil
-
-		CollectionService:RemoveTag(instance, idStr)
-		KillEntity(instance)
-
-		return entitiesIndex, paramsIndex
-	end
-
-	for _ = 1, popcnt(fieldOffset) do
-		entitiesIndex = entitiesIndex + 1
-		dataObj = entities[entitiesIndex]
-		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
-		entities[entitiesIndex] = nil
-		offsetFactor = ffs(fieldOffset)
-		fieldOffset = unsetbit(fieldOffset, offsetFactor)
-
-		for _ = 1, popcnt(field) do
-			-- dont want to rehash when filling this
-			local componentStruct = {
-				true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-				_componentId = true, Instance = true
-			}
-
-			pos = ffs(field)
-			field = unsetbit(field, pos)
-			componentId = pos + (32 * offsetFactor) + 1
-			numParams = NumParams[componentId]
-
-			for paramId = 1, numParams do
-				paramsIndex = paramsIndex + 1
-				componentStruct[paramId] = params[paramsIndex]
-			end
-
-			for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do
-				componentStruct[i] = nil
-			end
-
-			AddComponent(instance, componentId, componentStruct)
-		end
-	end
-
-	if isReferenced then
-		NetworkIdsByInstance[instance] = networkId
-		InstancesByNetworkId[networkId] = instance
-	end
-
-	return entitiesIndex, paramsIndex
-end
-
----Deserializes the update message in entities at position entitiesIndex
--- @param networkId
--- @param flags
--- @param entities table
--- @param params table
--- @param entitiesIndex number
--- @param paramsIndex number
--- @param instance
--- @param player
--- @return number entitiesIndex
--- @return number paramsIndex
-
-local function deserializeUpdate(networkId, flags, entities, params, entitiesIndex, paramsIndex, instance, player)
-	if isbitset(flags, ADD_COMPONENT) then
-		entitiesIndex, paramsIndex = deserializeAddComponent(
-			networkId, entities, params,
-			entitiesIndex, paramsIndex,
-			flags, player, instance
-		)
-	end
-
-	if isbitset(flags, KILL_COMPONENT) then
-		entitiesIndex = deserializeKillComponent(
-			networkId, entities, params,
-			entitiesIndex, flags, player, instance
-		)
-	end
-
-	if isbitset(flags, PARAMS_UPDATE) then
-		entitiesIndex, paramsIndex = deserializeParamsUpdate(
-			networkId, entities, params,
-			entitiesIndex, paramsIndex,
-			flags, player, instance
-		)
-	end
-
-	return entitiesIndex, paramsIndex
-end
-
 ---Serializes an entity update network message
 -- @param instance Instance to which this entity is attached
 -- @param networkId number the networkId for this entity
@@ -787,6 +530,263 @@ function Shared.SerializeEntity(instance, networkId, entities, params, entitiesI
 
 	entities[entitiesIndex - numDataStructs] = Vector2int16.new(networkId, flags)
 	entitiesIndex = entitiesIndex + 1
+
+	return entitiesIndex, paramsIndex
+end
+
+local function deserializeKillComponent(networkId, entities, entitiesIndex, flags, instance)
+	instance = instance or InstancesByNetworkId[networkId]
+
+	local fieldOffset = bit32.extract(flags, 0, 2)
+	local pos
+	local offsetFactor
+	local componentId
+	local dataObj
+	local field
+
+	if IS_SERVER then
+		return
+	end
+
+	for _ = 1, popcnt(fieldOffset) do
+		entitiesIndex = entitiesIndex + 1
+		dataObj = entities[entitiesIndex]
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		entities[entitiesIndex] = nil
+		offsetFactor = ffs(fieldOffset)
+		fieldOffset = unsetbit(fieldOffset, offsetFactor)
+
+		for _ = 1, popcnt(field) do
+			pos = ffs(field)
+			componentId = pos + (32 * offsetFactor) + 1
+			field = unsetbit(field, pos)
+			KillComponent(instance, componentId)
+		end
+	end
+
+	return entitiesIndex
+end
+
+local function deserializeAddComponent(networkId, entities, params, entitiesIndex, paramsIndex, flags, player, instance)
+	instance = instance or InstancesByNetworkId[networkId]
+
+	local fieldOffset = bit32.extract(flags, 2, 2)
+	local pos
+	local offsetFactor
+	local componentId
+	local dataObj
+	local paramValue
+	local field
+	local numParams
+
+	for _ = 1, popcnt(fieldOffset) do
+		entitiesIndex = entitiesIndex + 1
+		dataObj = entities[entitiesIndex]
+
+		if player and typeof(dataObj) ~= "Vector2int16" then
+			return
+		end
+
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		entities[entitiesIndex] = nil
+		offsetFactor = ffs(fieldOffset)
+		fieldOffset = unsetbit(fieldOffset, offsetFactor)
+
+		for _ = 1, popcnt(field) do
+			pos = ffs(field)
+			componentId = pos + (32 * offsetFactor) + 1
+			field = unsetbit(field, pos)
+			numParams = NumParams[componentId]
+
+			if player and not hasPermission(player, instance, componentId) then
+				return
+			end
+
+			local componentStruct = {
+				true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+				_componentId = true, Instance = true
+			}
+
+			for paramId = 1, numParams do
+				paramsIndex = paramsIndex + 1
+				paramValue = params[paramsIndex]
+
+				if player and not typeof(paramValue) == typeof(GetParamDefault(componentId, paramId)) then
+					return
+				end
+
+				componentStruct[paramId] = params[paramsIndex]
+			end
+
+			for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do
+				componentStruct[i] = nil
+			end
+
+			AddComponent(instance, componentId, componentStruct)
+		end
+	end
+end
+
+local function deserializeParamsUpdate(networkId, entities, params, entitiesIndex, paramsIndex, flags, player, instance)
+	instance = instance or InstancesByNetworkId[networkId]
+
+	local fieldOffset = bit32.extract(flags, 4, 2)
+	local offsetFactor
+	local field
+	local paramsField
+	local paramId
+	local componentId
+	local pos
+	local even
+	local dataObj
+
+	for _ = 1, popcnt(fieldOffset) do
+		entitiesIndex = entitiesIndex + 1
+		dataObj = entities[entitiesIndex]
+		entities[entitiesIndex] = nil
+		offsetFactor = ffs(fieldOffset)
+		fieldOffset = unsetbit(fieldOffset, offsetFactor)
+
+		if player and typeof(dataObj) ~= "Vector2int16" then
+			return
+		end
+
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+
+		for i = 1, popcnt(field) do
+			pos = ffs(field)
+			even = bit32.band(i, 0) == 0
+			componentId = pos + (32 * offsetFactor) + 1
+			entitiesIndex = entitiesIndex + (even and 1 or 0)
+			dataObj = entities[entitiesIndex]
+			paramsField = even and dataObj.X or dataObj.Y
+			entities[entitiesIndex] = nil
+
+			if player and typeof(dataObj) ~= "Vector2int16" then
+				return
+			end
+
+			for _ = 1, popcnt(paramsField) do
+				paramId = ffs(paramsField) + 1
+
+				if player and not hasPermission(player, instance, componentId, paramId) then
+					return
+				end
+
+				ComponentMap[componentId][EntityMap[instance][componentId + 1]][paramId] = params[paramsIndex]
+				paramsIndex = paramsIndex + 1
+				paramsField = unsetbit(paramsField, paramId - 1)
+			end
+
+			field = unsetbit(field, pos)
+		end
+	end
+
+	return entitiesIndex, paramsIndex
+end
+
+---Deserializes the update message in entities at position entitiesIndex
+-- @param networkId
+-- @param flags
+-- @param entities table
+-- @param params table
+-- @param entitiesIndex number
+-- @param paramsIndex number
+-- @param instance
+-- @param player
+-- @return number entitiesIndex
+-- @return number paramsIndex
+
+local function deserializeUpdate(networkId, flags, entities, params, entitiesIndex, paramsIndex, instance, player)
+	if isbitset(flags, ADD_COMPONENT) then
+		entitiesIndex, paramsIndex = deserializeAddComponent(
+			networkId, entities, params,
+			entitiesIndex, paramsIndex,
+			flags, player, instance
+		)
+	end
+
+	if isbitset(flags, KILL_COMPONENT) then
+		entitiesIndex = deserializeKillComponent(
+			networkId, entities, params,
+			entitiesIndex, flags, player, instance
+		)
+	end
+
+	if isbitset(flags, PARAMS_UPDATE) then
+		entitiesIndex, paramsIndex = deserializeParamsUpdate(
+			networkId, entities, params,
+			entitiesIndex, paramsIndex,
+			flags, player, instance
+		)
+	end
+
+	return entitiesIndex, paramsIndex
+end
+
+local function deserializeEntity(networkId, flags, entities, params, entitiesIndex, paramsIndex, arg)
+	local dataObj
+	local numParams
+	local field
+	local isDestruction = isbitset(flags, IS_DESTRUCTION)
+	local isReferenced = isbitset(flags, IS_REFERENCED)
+	local isPrefab = isbitset(flags, IS_PREFAB)
+	local isUnique = isbitset(flags, IS_UNIQUE)
+	local idStr = GetStringFromNetworkId(networkId)
+	local instance = isPrefab and (isReferenced and arg._r[idStr] or arg._s[idStr]) or (isUnique and arg or next(CollectionService:GetTagged(idStr)))
+	local fieldOffset = bit32.extract(flags, 0, 2)
+	local offsetFactor
+	local pos
+	local componentId
+
+	if isDestruction then
+		entitiesIndex = entitiesIndex + 1
+		InstancesByNetworkId[networkId] = nil
+		NetworkIdsByInstance[instance] = nil
+
+		CollectionService:RemoveTag(instance, idStr)
+		KillEntity(instance)
+
+		return entitiesIndex, paramsIndex
+	end
+
+	for _ = 1, popcnt(fieldOffset) do
+		entitiesIndex = entitiesIndex + 1
+		dataObj = entities[entitiesIndex]
+		field = bit32.replace(dataObj.X, dataObj.Y, 16, 16)
+		entities[entitiesIndex] = nil
+		offsetFactor = ffs(fieldOffset)
+		fieldOffset = unsetbit(fieldOffset, offsetFactor)
+
+		for _ = 1, popcnt(field) do
+			-- dont want to rehash when filling this
+			local componentStruct = {
+				true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
+				_componentId = true, Instance = true
+			}
+
+			pos = ffs(field)
+			field = unsetbit(field, pos)
+			componentId = pos + (32 * offsetFactor) + 1
+			numParams = NumParams[componentId]
+
+			for paramId = 1, numParams do
+				paramsIndex = paramsIndex + 1
+				componentStruct[paramId] = params[paramsIndex]
+			end
+
+			for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do
+				componentStruct[i] = nil
+			end
+
+			AddComponent(instance, componentId, componentStruct)
+		end
+	end
+
+	if isReferenced then
+		NetworkIdsByInstance[instance] = networkId
+		InstancesByNetworkId[networkId] = instance
+	end
 
 	return entitiesIndex, paramsIndex
 end

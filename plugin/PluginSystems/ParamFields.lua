@@ -2,7 +2,7 @@ local PluginES
 local GameES
 local ComponentDesc
 
-local GetColor = settings().Studio.Theme.GetColor
+local Theme = settings().Studio.Theme
 
 local InputFieldBorder = Enum.StudioStyleGuideColor.InputFieldBorder
 local InputFieldBackground = Enum.StudioStyleGuideColor.InputFieldBackground
@@ -42,10 +42,10 @@ local function getElementForValueType(ty)
 		textBox.Size = UDim2.new(0, 0.95, 0, 0.95)
 		textBox.AnchorPoint = Vector2.new(0, 0.5)
 		textBox.Position = UDim2.new(0, 24, 0, 0)
-		textBox.BackgroundColor3 = GetColor(InputFieldBackground)
-		textBox.BorderColor3 = GetColor(InputFieldBackground)
+		textBox.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
+		textBox.BorderColor3 = Theme:GetColor(InputFieldBackground)
 		textBox.BorderSizePixel = 1
-		textBox.TextColor3 = GetColor(MainText)
+		textBox.TextColor3 = Theme:GetColor(MainText)
 
 		return textBox
 	elseif ty == "boolean" then
@@ -96,17 +96,17 @@ function ParamFields.OnLoaded(pluginWrapper)
 
 		valueField.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				fieldContainer.BackgroundColor3 = GetColor(InputFieldBackground, Hover)
-				fieldContainer.BorderColor3 = GetColor(InputFieldBorder, Hover)
-				label.BackgroundColor3 = GetColor(InputFieldBackground, Hover)
+				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Hover)
+				fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder, Hover)
+				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Hover)
 			end
 		end)
 
 		valueField.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				fieldContainer.BackgroundColor3 = GetColor(InputFieldBackground)
-				fieldContainer.BorderColor3 = GetColor(InputFieldBorder)
-				label.BackgroundColor3 = GetColor(InputFieldBackground)
+				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
+				fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder)
+				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 			end
 		end)
 
@@ -114,20 +114,20 @@ function ParamFields.OnLoaded(pluginWrapper)
 			valueField.Text = value and tostring(value) or ""
 
 			valueField.FocusBegan:Connect(function()
-				valueField.BorderColor = GetColor(InputFieldBorder, Selected)
-				fieldContainer.BackgroundColor3 = GetColor(InputFieldBackground, Selected)
-				fieldContainer.BorderColor = GetColor(InputFieldBorder, Selected)
-				label.BackgroundColor3 = GetColor(InputFieldBackground, Selected)
+				valueField.BorderColor = Theme:GetColor(InputFieldBorder, Selected)
+				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Selected)
+				fieldContainer.BorderColor = Theme:GetColor(InputFieldBorder, Selected)
+				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Selected)
 			end)
 
 			valueField.FocusLost:Connect(function()
 				local val = types[ty] and types[ty].new(splitCommaDelineatedString(valueField.Text)) or valueField.Text
 
-				valueField.BackgroundColor3 = GetColor(InputFieldBackground)
-				valueField.BorderColor3 = GetColor(InputFieldBorder)
-				fieldContainer.BackgroundColor3 = GetColor(InputFieldBackground)
-				fieldContainer.BorderColor3 = GetColor(InputFieldBorder)
-				label.BackgroundColor3 = GetColor(InputFieldBackground)
+				valueField.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
+				valueField.BorderColor3 = Theme:GetColor(InputFieldBorder)
+				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
+				fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder)
+				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 
 				value = #entityList == 1 and GameES.GetComponent(entityList[1], componentType)[paramName]
 
@@ -159,17 +159,17 @@ function ParamFields.OnLoaded(pluginWrapper)
 
 		fieldContainer.Size = UDim2.new(1, 0, 0, 24)
 		fieldContainer.Position = UDim2.new(0, 135, 0, 0)
-		fieldContainer.BackgroundColor3 = GetColor(InputFieldBackground)
-		fieldContainer.BorderColor = GetColor(InputFieldBorder)
+		fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
+		fieldContainer.BorderColor = Theme:GetColor(InputFieldBorder)
 		paramField.Field = valueField
 		valueField.Parent = fieldContainer
 		fieldContainer.Parent = frame
 
 		label.Size = UDim2.new(0, 135, 0, 24)
 		label.Text = "     " .. paramName
-		label.BorderColor3 = GetColor(Enum.StudioStyleGuideColor.Border)
-		label.BackgroundColor3 = GetColor(InputFieldBackground)
-		label.TextColor3 = GetColor(MainText)
+		label.BorderColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Border)
+		label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
+		label.TextColor3 = Theme:GetColor(MainText)
 		label.Parent = frame
 
 		frame.Size = UDim2.new(1, 0, 0, 24)

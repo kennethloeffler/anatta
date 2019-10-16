@@ -13,7 +13,7 @@ local SerialComponentDefinitions = {}
 
 local ComponentsLoader = {}
 
-local GetColor = settings().Studio.Theme:GetColor()
+local Theme = settings().Studio.Theme
 
 local PluginES
 local GameComponentDefsModule
@@ -31,7 +31,7 @@ local function tryRequire(moduleScript)
 		return err
 	end)
 
-	WSAssert(success, "Failed to load component definition module: " .. moduleScript:GetFullName())
+	WSAssert(success, "Failed to load component definition module")
 
 	return result
 end
@@ -210,8 +210,8 @@ function ComponentsLoader.OnLoaded(pluginWrapper)
 
 	scrollingFrame.TopImage = ""
 	scrollingFrame.BottomImage = ""
-	scrollingFrame.ScrollBarImageColor3 = GetColor(Enum.StudioStyleGuideColor.Light)
-	scrollingFrame.BackgroundColor3 = GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
+	scrollingFrame.ScrollBarImageColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Light)
+	scrollingFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
 	scrollingFrame.BorderSizePixel = 0
 	scrollingFrame.ScrollBarThickness = 16
 	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -227,6 +227,7 @@ function ComponentsLoader.OnLoaded(pluginWrapper)
 		end
 	else
 		GameComponentDefsModule = Instance.new("ModuleScript")
+		GameComponentDefsModule.Source = "return {}"
 		GameComponentDefsModule.Name = "ComponentDefinitions"
 		GameComponentDefsModule.Parent = GameSrc.ComponentDesc
 	end

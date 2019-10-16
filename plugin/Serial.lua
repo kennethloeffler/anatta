@@ -43,6 +43,8 @@ function Serial.SerializeValue(data, depth)
 
 			if typeof(key) == "string" and key:match(ident) then
 				safeKey = key
+			elseif typeof(key) == "string" and tonumber(key) then
+				safeKey = string.format("[\"%s\"]", key)
 			else
 				safeKey = Serial.SerializeValue(key, depth + 1)
 			end
@@ -63,6 +65,8 @@ function Serial.SerializeValue(data, depth)
 		str = string.format("Color3.new(%f, %f, %f)", data.R, data.G, data.B)
 	elseif ty == "Vector2int16" then
 		str = string.format("Vector2int16.new(%d, %d)", data.X, data.Y)
+	elseif ty == "Instance" then
+		str = string.format("Instance.new(\"%s\")", data.ClassName)
 	else
 		error("Unexpected type: "..ty)
 	end
