@@ -15,18 +15,21 @@ local function collectPluginComponents(root)
 	local componentDefsModule = root.src.ComponentDesc:WaitForChild("ComponentDefinitions", 2) or Instance.new("ModuleScript")
 
 	for _, componentModule in ipairs(components:GetChildren()) do
+		numPluginComponents = numPluginComponents + 1
+
 		local rawComponent = require(componentModule)
-		local componentType = typeof(rawComponent[1]) == "table" and rawComponent[1][1] or rawComponent[1]
+		local listTyped = typeof(rawComponent[1]) == "table"
+		local componentType = listTyped and rawComponent[1][1] or rawComponent[1]
+		local componentIdStr = tostring(numPluginComponents)
 		local paramMap = rawComponent[2]
 		local paramId = 1
 
-		numPluginComponents = numPluginComponents + 1
-		componentDefinitions[componentType] = {}
-		componentDefinitions[componentType][1] = numPluginComponents
+		componentDefinitions[componentIdStr] = {}
+		componentDefinitions[componentIdStr][1] = { ComponentType = componentType, ListType = listTyped }
 
 		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
-			componentDefinitions[componentType][paramId] = { ParamName = paramName, DefaultValue = defaultValue }
+			componentDefinitions[componentIdStr][paramId] = { ParamName = paramName, DefaultValue = defaultValue }
 		end
 	end
 
@@ -55,20 +58,21 @@ return function(pluginWrapper, root, gameRoot)
 	collectPluginComponents(root)
 
 	PluginES = require(root.src.EntityManager)
+	pluginWrapper.PluginES = PluginES
 
+	PluginES.LoadSystem(systems.GameComponentLoader, pluginWrapper)
+
+	GameES = gameRoot and require(gameRoot.EntityManager)
+	pluginWrapper.GameES = GameES
+
+	PluginES.LoadSystem(systems.GameEntityBridge, pluginWrapper)
 	PluginES.LoadSystem(systems.AddComponentButton, pluginWrapper)
 	PluginES.LoadSystem(systems.VerticalScalingList, pluginWrapper)
 	PluginES.LoadSystem(systems.ComponentLabels, pluginWrapper)
 	PluginES.LoadSystem(systems.ParamFields, pluginWrapper)
-	PluginES.LoadSystem(systems.GameEntityBridge, pluginWrapper)
-	PluginES.LoadSystem(systems.GameComponentLoader, pluginWrapper)
-
-	GameES = gameRoot and require(gameRoot.EntityManager)
 
 	GameES.Init()
 
-	pluginWrapper.GameES = GameES
-	pluginWrapper.PluginES = PluginES
 
 	componentListWidget.Title = "Components"
 	addComponentWidget.Title = "Add components"
