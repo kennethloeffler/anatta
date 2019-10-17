@@ -111,7 +111,7 @@ return function(pluginWrapper, root, gameRoot)
 		selected = Selection:Get()
 
 		local numSelected = #selected
-		local instancesByComponentType = {}
+		local instancesByComponentId = {}
 		local t
 		local module
 
@@ -127,29 +127,29 @@ return function(pluginWrapper, root, gameRoot)
 			module = instance:FindFirstChild("__WSEntity")
 
 			if module then
-				for componentType in pairs(Serial.Deserialize(module.Source)) do
-					t = instancesByComponentType[componentType] or {}
-					instancesByComponentType[componentType] = t
+				for _, component in pairs(GameES.GetComponents(instance)) do
+					t = instancesByComponentId[component._componentId] or {}
+					instancesByComponentId[component._componentId] = t
 					t[#t + 1] = instance
 				end
 			end
 		end
 
 		for _, componentLabel in ipairs(PluginES.GetListTypedComponent(scrollingFrame, "ComponentLabel")) do
-			local componentType = componentLabel.ComponentType
+			local componentId = componentLabel.ComponentId
 
-			if not instancesByComponentType[componentType] then
+			if not instancesByComponentId[componentId] then
 				PluginES.KillComponent(componentLabel)
 			else
-				componentLabel.EntityList = instancesByComponentType[componentType]
-				PluginES.AddComponent(componentLabel.Instance[componentType], "UpdateParamFields", {componentLabel})
-				instancesByComponentType[componentType] = nil
+				componentLabel.EntityList = instancesByComponentId[componentId]
+				PluginES.AddComponent(componentLabel.Instance[componentId], "UpdateParamFields", {componentLabel})
+				instancesByComponentId[componentId] = nil
 			end
 		end
 
-		for componentType, entityList in pairs(instancesByComponentType) do
+		for componentId, entityList in pairs(instancesByComponentId) do
 			PluginES.AddComponent(scrollingFrame, "ComponentLabel", {
-				ComponentType = componentType,
+				ComponentId = componentId,
 				EntityList = entityList
 			})
 		end
