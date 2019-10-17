@@ -42,6 +42,7 @@ function AddComponentButton.OnLoaded(pluginWrapper)
 		button.AutoButtonColor = false
 		button.BorderColor3 = Theme:GetColor(Border)
 		button.Name = componentType
+		button.Text = componentType
 		button.Parent = addComponentButton.Instance
 
 		button.InputBegan:Connect(function(input)
@@ -50,7 +51,7 @@ function AddComponentButton.OnLoaded(pluginWrapper)
 				button.BorderColor3 = Theme:GetColor(Border, Selected)
 				button.TextColor3 = Theme:GetColor(MainText, Selected)
 
-				PluginES.AddComponent(button, "SerializeNewComponent", {
+				PluginES.AddComponent(button, "SerializeAddComponent", {
 					EntityList = Selection:Get(),
 					ComponentType = componentType
 				})
