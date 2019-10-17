@@ -1,4 +1,4 @@
--- VerticalScalingList.lua
+ -- VerticalScalingList.lua
 
 -- Copyright 2019 Kenneth Loeffler
 
@@ -27,19 +27,19 @@ function VerticalScalingList.OnLoaded(pluginWrapper)
 
 		for _, instance in ipairs(frame:GetDescendants()) do
 			if instance:IsA("GuiObject") and PluginES.GetComponent(instance.Parent, "VerticalScalingList") then
-				frame[prop] = frame[prop] + UDim2.new(0, 0, 0, instance.AbsoluteSize.Y.Offset)
+				frame[prop] = frame[prop] + UDim2.new(0, 0, 0, instance.AbsoluteSize.Y)
 			end
 		end
 
 		frame.DescendantAdded:Connect(function(instance)
 			if instance:IsA("GuiObject") and PluginES.GetComponent(instance.Parent, "VerticalScalingList") then
-				frame[prop] = frame[prop] + UDim2.new(0, 0, 0, instance.AbsoluteSize.Y.Offset)
+				frame[prop] = frame[prop] + UDim2.new(0, 0, 0, instance.AbsoluteSize.Y)
 			end
 		end)
 
 		frame.DescendantRemoving:Connect(function(instance)
 			if instance:IsA("GuiObject") and PluginES.GetComponent(instance.Parent, "VerticalScalingList") then
-				frame[prop] = frame[prop] - UDim2.new(0, 0, 0, instance.AbsoluteSize.Y.Offset)
+				frame[prop] = frame[prop] - UDim2.new(0, 0, 0, instance.AbsoluteSize)
 			end
 		end)
 
