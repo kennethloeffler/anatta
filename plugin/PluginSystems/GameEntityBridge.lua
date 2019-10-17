@@ -149,6 +149,7 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 			for paramId, paramDefinition in ipairs(componentDefinition.ParamList) do
 				if typeof(paramDefinition.ParamValue) ~= typeof(serialComponentDefinition[paramId + 1].ParamValue) then
 					changedTypes[paramId] = paramDefinition.ParamValue
+					componentDefinition.ParamList[paramId] = nil
 				end
 			end
 
@@ -162,6 +163,10 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 
 				entityModule.Source = Serial.Serialize(entityStruct)
 			end
+		end
+
+		for paramId, paramDefinition in pairs(componentDefinition.ParamList) do
+			serialComponentDefinition[paramId + 1] = paramDefinition
 		end
 
 		module.Source = Serial.Serialize(gameComponentDefinitions)
