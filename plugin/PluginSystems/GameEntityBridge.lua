@@ -57,8 +57,8 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 			gameComponent = GameES.GetComponent(instance, componentType)
 
 			if gameComponent then
-				module, entityStruct = getEntityStruct(instance)
-				entityStruct[componentIdStr][paramId + 1] = serializeParam.Value
+				entityStruct, module = getEntityStruct(instance)
+				entityStruct[componentIdStr][paramId] = serializeParam.Value
 
 				gameComponent[paramName] = serializeParam.Value
 
@@ -84,13 +84,14 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 			if not gameComponent then
 				gameComponent = GameES.AddComponent(instance, componentType)
 
-				module, entityStruct = getEntityStruct(instance)
+				entityStruct, module = getEntityStruct(instance)
 				serialComponentStruct = {}
-				entityStruct[componentIdStr] = serialComponentStruct
 
 				for i, v in ipairs(gameComponent) do
 					serialComponentStruct[i] = v
 				end
+
+				entityStruct[componentIdStr] = serialComponentStruct
 
 				module.Source = Serial.Serialize(entityStruct)
 			end
@@ -111,7 +112,7 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 			gameComponent = GameES.GetComponent(instance, componentType)
 
 			if gameComponent then
-				module, entityStruct = getEntityStruct(instance)
+				entityStruct, module  = getEntityStruct(instance)
 				entityStruct[componentIdStr] = nil
 
 				GameES.KillComponent(gameComponent)
@@ -183,7 +184,7 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 		local entityStruct
 
 		for _, gameComponent in ipairs(GameES.GetAllComponentsOfType(componentType)) do
-			module, entityStruct = getEntityStruct(gameComponent.Instance)
+			entityStruct, module = getEntityStruct(gameComponent.Instance)
 			entityStruct[componentIdStr] = nil
 
 			GameES.KillComponent(gameComponent)
