@@ -351,6 +351,31 @@ function EntityManager.GetListTypedComponent(instance, componentType)
 	return struct
 end
 
+function EntityManager.GetComponents(instance)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+
+	local entityStruct = EntityMap[instance]
+
+	if not entityStruct then
+		return
+	end
+
+	local struct = {}
+
+	for componentId, cOffset in pairs(entityStruct) do
+		if componentId > 1 then
+			if typeof(cOffset) == "number" then
+				struct[#struct + 1] = ComponentMap[componentId - 1][cOffset]
+			elseif typeof(cOffset) == "table" then
+				for _, offset in ipairs(cOffset) do
+					struct[#struct + 1] = ComponentMap[componentId - 1][offset]
+				end
+			end
+		end
+	end
+
+	return struct
+end
 
 ---Gets the list of components of type componentType
 -- If there exist no components of type componentType, this function returns an empty table
