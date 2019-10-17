@@ -96,7 +96,7 @@ return function(instance, componentType, paramMap)
 	end
 
 	newComponent._componentId = componentId
-	newComponent._list = GetListTyped(componentId)
+	newComponent._list = GetListTyped(componentId) or false
 	newComponent.Instance = instance
 
 	setmetatable(newComponent, ComponentMetatable)
