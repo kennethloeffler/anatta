@@ -204,7 +204,7 @@ local function tryDeleteComponent(instance)
 		componentId = componentDefinition.ComponentId
 		componentType = componentDefinition.ComponentType
 
-		if not componentDefinition.ComponentId == 0 then
+		if tonumber(componentDefinition.ComponentId) then
 			ComponentsArray[componentId] = nil
 			NumUniqueComponents = NumUniqueComponents - 1
 		end
