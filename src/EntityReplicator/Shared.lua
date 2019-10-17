@@ -1,17 +1,31 @@
 ---Shared.lua
 
+-- Copyright 2019 Kenneth Loeffler
+
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+
+--     http://www.apache.org/licenses/LICENSE-2.0
+
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+
 -- Because the usage of Vector2int16 in this module may be confusing, a summary of why this data type was chosen is given below:
---
+
 -- The bit32 functions truncate their arguments (64-bit double precision floats) to unsigned 32 bit integers. However, these
 -- functions still return a normal Lua number. What this means practically is that *half* of the data will be "junk" and waste
 -- valuable bandwidth when sent across the network. Because one of the design goals of EntityReplicator is to minimize the
 -- amount of data that is sent among peers, this is an obvious non-starter.
---
+
 -- Nevertheless, there does exist a way to efficiently pack integers to send across the network. A Vector2int16 contains two
 -- signed 16 bit integers: one in its 'X' field, and one in its 'Y' field. It is thus possible to split an unsigned 32-bit
 -- integer into two 16-bit fields, which are placed in the Vector2int16, then send the Vector2int16 across the network where
 -- it is deserialized by the receiving system.
---
+
 -- If any one of these two 16-bit fields represents an integer that is greater than (2^15) - 1, it  will result in the same
 -- unsigned value when it is used again as an argument in a bit32 function. This is because the signed 16-bit integers dealt with
 -- here are in two's complement form, so inputting a positive integer n outside of the range they can represent will result in a

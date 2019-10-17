@@ -1,9 +1,25 @@
+-- AddComponentButton.lua
+
+-- Copyright 2019 Kenneth Loeffler
+
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+
+--     http://www.apache.org/licenses/LICENSE-2.0
+
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+
 local Selection = game:GetService("Selection")
 
 local Theme = settings().Studio.Theme
 
 local MainText = Enum.StudioStyleGuideColor.MainText
-local MainButton = Enum.StudioStyleGuideColor.MainButton
+local Button = Enum.StudioStyleGuideColor.Button
 local Border = Enum.StudioStyleGuideColor.Border
 
 local Hover = Enum.StudioStyleGuideModifier.Hover
@@ -20,16 +36,17 @@ function AddComponentButton.OnLoaded(pluginWrapper)
 		local componentType = addComponentButton.ComponentType
 		local button = Instance.new("TextButton")
 
-		button.Size = UDim2.new(1, 0, 20, 0)
+		button.Size = UDim2.new(1, 0, 0, 20)
 		button.TextColor3 = Theme:GetColor(MainText)
-		button.BackgroundColor3 = Theme:GetColor(MainButton)
+		button.BackgroundColor3 = Theme:GetColor(Button)
+		button.AutoButtonColor = false
 		button.BorderColor3 = Theme:GetColor(Border)
 		button.Name = componentType
 		button.Parent = addComponentButton.Instance
 
 		button.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				button.BackgroundColor3 = Theme:GetColor(MainButton, Selected)
+				button.BackgroundColor3 = Theme:GetColor(Button, Selected)
 				button.BorderColor3 = Theme:GetColor(Border, Selected)
 				button.TextColor3 = Theme:GetColor(MainText, Selected)
 
@@ -38,7 +55,7 @@ function AddComponentButton.OnLoaded(pluginWrapper)
 					ComponentType = componentType
 				})
 			elseif input.UserInputType == Enum.UserInputType.MouseMovement then
-				button.BackgroundColor3 = Theme:GetColor(MainButton, Hover)
+				button.BackgroundColor3 = Theme:GetColor(Button, Hover)
 				button.BorderColor3 = Theme:GetColor(Border, Hover)
 				button.TextColor3 = Theme:GetColor(MainText, Hover)
 			end
@@ -47,11 +64,11 @@ function AddComponentButton.OnLoaded(pluginWrapper)
 		button.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				button.TextColor3 = Theme:GetColor(MainText)
-				button.BackgroundColor3 = Theme:GetColor(MainButton)
+				button.BackgroundColor3 = Theme:GetColor(Button)
 				button.BorderColor3 = Theme:GetColor(Border)
 			elseif input.UserInputType == Enum.UserInputType.MouseMovement then
 				button.TextColor3 = Theme:GetColor(MainText)
-				button.BackgroundColor3 = Theme:GetColor(MainButton)
+				button.BackgroundColor3 = Theme:GetColor(Button)
 				button.BorderColor3 = Theme:GetColor(Border)
 			end
 		end)
