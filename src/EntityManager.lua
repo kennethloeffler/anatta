@@ -461,7 +461,7 @@ end
 
 function EntityManager.KillEntity(instance, supressInstanceDestruction)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(supressInstanceDestruction and typeof(supressInstanceDestruction) == "boolean", "bad argument #2 (expected boolean)")
+	WSAssert(supressInstanceDestruction ~= nil and typeof(supressInstanceDestruction) == "boolean" or true, "bad argument #2 (expected boolean)")
 
 	local entityStruct = EntityMap[instance]
 
