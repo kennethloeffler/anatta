@@ -262,7 +262,7 @@ local EntityManager = {}
 function EntityManager.AddComponent(instance, componentType, paramMap)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
 	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
-	WSAssert(paramMap ~= nil and typeof(paramMap) == "table" or true, "bad argument #3 (expected table)")
+	WSAssert(paramMap == nil or typeof(paramMap) == "table", "bad argument #3 (expected table)")
 
 	local entityStruct = EntityMap[instance] or addEntity(instance)
 	local componentId = GetComponentIdFromType(componentType)
@@ -461,7 +461,7 @@ end
 
 function EntityManager.KillEntity(instance, supressInstanceDestruction)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(supressInstanceDestruction ~= nil and typeof(supressInstanceDestruction) == "boolean" or true, "bad argument #2 (expected boolean)")
+	WSAssert(supressInstanceDestruction == nil or typeof(supressInstanceDestruction) == "boolean", "bad argument #2 (expected boolean)")
 
 	local entityStruct = EntityMap[instance]
 

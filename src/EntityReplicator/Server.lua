@@ -295,7 +295,7 @@ end
 
 function Server.ReferenceGlobal(instance, supressConstructionMessage)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean", "bad argument #2 (expected boolean)")
+	WSAssert(supressConstructionMessage == nil or typeof(supressConstructionMessage) == "boolean", "bad argument #2 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
 
@@ -317,7 +317,7 @@ end
 
 function Server.DereferenceGlobal(instance, supressDestructionMessage)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(supressDestructionMessage ~= nil and typeof(supressDestructionMessage) == "boolean", "bad argument #2 (expected boolean)")
+	WSAssert(supressDestructionMessage == nil or typeof(supressDestructionMessage) == "boolean", "bad argument #2 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance]
 
@@ -347,8 +347,8 @@ end
 function Server.ReferenceForPrefab(rootInstance, instance, deepCopyInstance, supressConstructionMessage)
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #1 (expected Instance)")
 	WSAssert(CollectionService:HasTag("__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
-	WSAssert(deepCopyInstance ~= nil and typeof(deepCopyInstance) == "boolean", "bad argument #3 (expected boolean)")
-	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean", "bad argument #4 (expected boolean)")
+	WSAssert(deepCopyInstance == nil or typeof(deepCopyInstance) == "boolean", "bad argument #3 (expected boolean)")
+	WSAssert(supressConstructionMessage == nil or typeof(supressConstructionMessage) == "boolean", "bad argument #4 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
 	local idStr = GetStringFromNetworkId(networkId)
@@ -381,7 +381,7 @@ end
 function Server.DereferenceForPrefab(rootInstance, instance, supressDestructionMessage)
 	WSAssert(typeof(rootInstance) == "Instance", "bad argument #1 (expected Instance)")
 	WSAssert(CollectionService:HasTag("__WSReplicatorRoot"), "%s is not a prefab", rootInstance.Name)
-	WSAssert(supressDestructionMessage ~= nil and typeof(supressDestructionMessage) == "boolean" or true, "bad argument #4 (expected boolean)")
+	WSAssert(supressDestructionMessage == nil or typeof(supressDestructionMessage) == "boolean", "bad argument #4 (expected boolean)")
 
 	local networkId = StaticPrefabEntities[rootInstance][PREFAB_REFS][instance]
 
@@ -412,7 +412,7 @@ end
 function Server.ReferenceForPlayer(player, instance, supressConstructionMessage)
 	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
-	WSAssert(supressConstructionMessage ~= nil and typeof(supressConstructionMessage) == "boolean" or true, "bad argument #3 (expected boolean)")
+	WSAssert(supressConstructionMessage == nil or typeof(supressConstructionMessage) == "boolean", "bad argument #3 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance] or getNetworkId(instance)
 
@@ -443,7 +443,7 @@ end
 function Server.DereferenceForPlayer(player, instance, supressDestructionMessage)
 	WSAssert(typeof(player) == "Instance" and player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
-	WSAssert(supressDestructionMessage ~= nil and typeof(supressDestructionMessage) == "boolean" or true,"bad argument #3 (expected boolean)")
+	WSAssert(supressDestructionMessage == nil and typeof(supressDestructionMessage) == "boolean","bad argument #3 (expected boolean)")
 
 	local networkId = NetworkIdsByInstance[instance]
 
@@ -471,6 +471,7 @@ end
 function Server.Unique(player, instance, doReference)
 	WSAssert(player:IsA("Player"), "bad argument #1 (expected Player)")
 	WSAssert(typeof(instance) == "Instance", "bad argument #2 (expected Instance)")
+	WSAssert(doReference == nil or typeof(doReference) == "boolean", "bad argument #3 (expected boolean)")
 
 	local entities = {}
 	local params = {}
