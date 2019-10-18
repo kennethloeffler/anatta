@@ -175,7 +175,7 @@ local function tryDefineComponent(instance)
 			ComponentType = componentType,
 			ComponentId = componentIdStr,
 			ListTyped = listTyped,
-			ParamList = serialComponentDefinition
+			ParamList = componentDefinition
 		})
 
 		SerialComponentDefinitions[componentType] = nil
@@ -231,7 +231,6 @@ function ComponentsLoader.OnLoaded(pluginWrapper)
 	scrollingFrame.BorderSizePixel = 0
 	scrollingFrame.ScrollBarThickness = 16
 	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
-	scrollingFrame.Position = UDim2.new(0, 0, 0, 1)
 	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
 
 	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")

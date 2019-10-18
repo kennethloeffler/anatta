@@ -101,7 +101,6 @@ return function(pluginWrapper, root, gameRoot)
 	scrollingFrame.BorderSizePixel = 0
 	scrollingFrame.ScrollBarThickness = 16
 	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
-	scrollingFrame.Position = UDim2.new(0, 0, 0, 1)
 	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
 	scrollingFrame.Parent = componentListWidget
 
