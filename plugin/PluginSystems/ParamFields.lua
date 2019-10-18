@@ -55,12 +55,13 @@ local function getElementForValueType(ty)
 	if ty == "string" or ty == "number" or types[ty] then
 		local textBox = Instance.new("TextBox")
 
-		textBox.Size = UDim2.new(0, 0.95, 0, 0.95)
-		textBox.AnchorPoint = Vector2.new(0, 0.5)
-		textBox.Position = UDim2.new(0, 24, 0, 0)
+		textBox.Size = UDim2.new(1, 0, 1, 0)
+		textBox.Position = UDim2.new(0, 5, 0, 0)
+		textBox.TextXAlignment = Enum.TextXAlignment.Left
 		textBox.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 		textBox.BorderColor3 = Theme:GetColor(InputFieldBackground)
-		textBox.BorderSizePixel = 1
+		textBox.BorderSizePixel = 0
+		textBox.BackgroundTransparency = 1
 		textBox.TextColor3 = Theme:GetColor(MainText)
 
 		return textBox
@@ -68,7 +69,7 @@ local function getElementForValueType(ty)
 		local imageButton = Instance.new("ImageButton")
 		local imageLabel = Instance.new("ImageLabel")
 
-		imageButton.Size = UDim2.new(24, 0, 24, 0)
+		imageButton.Size = UDim2.new(0, 24, 0, 24)
 		imageButton.BorderSizePixel = 0
 		imageButton.Image = CheckBoxBackgroundImg
 
@@ -101,11 +102,11 @@ function ParamFields.OnLoaded(pluginWrapper)
 		local fieldContainer = Instance.new("Frame")
 		local componentLabel = paramField.ComponentLabel
 		local paramName = paramField.ParamName
-		local componentType = componentLabel.ComponentType
+		local componentId = componentLabel.ComponentId
 		local entityList = componentLabel.EntityList
-		local componentId = ComponentDesc.GetComponentIdFromType(componentType)
+		local componentType = ComponentDesc.GetComponentTypeFromId(componentId)
 		local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
-		local ty = typeof(ComponentDesc.GetParamDefault(paramName, componentId))
+		local ty = typeof(ComponentDesc.GetParamDefault(componentId, paramName))
 		local valueField = getElementForValueType(ty)
 		local cLabel = paramField.Instance
 		local value = #entityList == 1 and GameES.GetComponent(entityList[1], componentType)[paramName]
@@ -113,7 +114,6 @@ function ParamFields.OnLoaded(pluginWrapper)
 		valueField.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
 				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Hover)
-				fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder, Hover)
 				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Hover)
 			end
 		end)
@@ -121,7 +121,6 @@ function ParamFields.OnLoaded(pluginWrapper)
 		valueField.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
 				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
-				fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder)
 				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 			end
 		end)
@@ -129,15 +128,16 @@ function ParamFields.OnLoaded(pluginWrapper)
 		if valueField:IsA("TextBox") then
 			valueField.Text = value and tostring(value) or ""
 
-			valueField.FocusBegan:Connect(function()
-				valueField.BorderColor = Theme:GetColor(InputFieldBorder, Selected)
+			valueField.Focused:Connect(function()
+				valueField.BorderColor3 = Theme:GetColor(InputFieldBorder, Selected)
 				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Selected)
-				fieldContainer.BorderColor = Theme:GetColor(InputFieldBorder, Selected)
+				fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder, Selected)
 				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Selected)
 			end)
 
 			valueField.FocusLost:Connect(function()
-				local val = types[ty] and types[ty].new(splitCommaDelineatedString(valueField.Text)) or valueField.Text
+				local val = types[ty] and types[ty].new(splitCommaDelineatedString(valueField.Text))
+					or ((ty == "number") and (tonumber(valueField.Text) or value) or valueField.Text)
 
 				valueField.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 				valueField.BorderColor3 = Theme:GetColor(InputFieldBorder)
@@ -147,7 +147,7 @@ function ParamFields.OnLoaded(pluginWrapper)
 
 				value = #entityList == 1 and GameES.GetComponent(entityList[1], componentType)[paramName]
 
-				PluginES.AddComponent(cLabel.Instance, "SerializeParam", {
+				PluginES.AddComponent(cLabel, "SerializeParam", {
 					Value = val,
 					ParamName = paramName,
 					ComponentType = componentType,
@@ -164,7 +164,7 @@ function ParamFields.OnLoaded(pluginWrapper)
 
 				valueField.Image = value == nil and CheckBoxTrueImg or (not value and CheckBoxTrueImg or "")
 
-				PluginES.AddComponent(cLabel.Instance, "SerializeParam", {
+				PluginES.AddComponent(cLabel, "SerializeParam", {
 					Value = value == nil and true or (not value),
 					ParamName = paramName,
 					ComponentType = componentType,
@@ -176,20 +176,21 @@ function ParamFields.OnLoaded(pluginWrapper)
 		fieldContainer.Size = UDim2.new(1, 0, 0, 24)
 		fieldContainer.Position = UDim2.new(0, 135, 0, 0)
 		fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
-		fieldContainer.BorderColor = Theme:GetColor(InputFieldBorder)
+		fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder)
 		paramField.Field = valueField
 		valueField.Parent = fieldContainer
 		fieldContainer.Parent = frame
 
 		label.Size = UDim2.new(0, 135, 0, 24)
 		label.Text = "     " .. paramName
-		label.BorderColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Border)
+		label.BorderColor3 = Theme:GetColor(InputFieldBorder)
 		label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 		label.TextColor3 = Theme:GetColor(MainText)
 		label.Parent = frame
 
 		frame.Size = UDim2.new(1, 0, 0, 24)
 		frame.BackgroundTransparency = 1
+		frame.Name = paramName
 		frame.LayoutOrder = paramId
 		frame.Parent = cLabel.ParamsContainer
 	end)
@@ -197,7 +198,7 @@ function ParamFields.OnLoaded(pluginWrapper)
 	PluginES.ComponentAdded("UpdateParamFields", function(updateParamFields)
 		for _, paramField in ipairs(PluginES.GetListTypedComponent(updateParamFields.Instance, "ParamField")) do
 			local entityList = paramField.ComponentLabel.EntityList
-			local value = #entityList == 1 and GameES.GetComponent(entityList[1], paramField.ComponentLabel.ComponentType)[paramField.ParamName]
+			local value = #entityList == 1 and GameES.GetComponent(entityList[1], paramField.ComponentLabel.ComponentId)[paramField.ParamName]
 
 		    if paramField.Field:IsA("TextBox") then
 			    paramField.Field.Text = value and tostring(value) or ""

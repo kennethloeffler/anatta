@@ -28,6 +28,7 @@ local ComponentLabels = {}
 local function clearParamFields(label)
 	for _, paramField in ipairs(PluginES.GetListTypedComponent(label, "ParamField")) do
 		PluginES.KillEntity(paramField.Field)
+		PluginES.KillEntity(label.ParamsContainer[paramField.ParamName])
 		PluginES.KillComponent(paramField)
 	end
 end
@@ -48,8 +49,8 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 	PluginES.ComponentAdded("ComponentLabel", function(componentLabel)
 		local componentDesc = GameES.GetComponentDesc()
 		local parentFrame = componentLabel.Instance
-		local componentType = componentLabel.ComponentType
-		local componentId = componentDesc.GetComponentIdFromType(componentType)
+		local componentId = componentLabel.ComponentId
+		local componentType = componentDesc.GetComponentTypeFromId(componentId)
 		local label = Instance.new("TextLabel")
 		local paramsContainer = Instance.new("Frame")
 
@@ -87,13 +88,13 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 		label.TextColor3 = Theme:GetColor(MainText)
 		label.Text = ("\t%s"):format(componentType)
 		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.Name = componentType
+		label.Name = componentId
 		label.LayoutOrder = componentId
 		label.Parent = parentFrame
 	end)
 
 	PluginES.ComponentKilled("ComponentLabel", function(componentLabel)
-		local label = componentLabel.Instance[componentLabel.ComponentType]
+		local label = componentLabel.Instance[componentLabel.ComponentId]
 
 		clearParamFields(label)
 		PluginES.KillEntity(label.ParamsContainer)
