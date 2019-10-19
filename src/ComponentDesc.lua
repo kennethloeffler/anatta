@@ -17,6 +17,7 @@
 local Constants = require(script.Parent.Constants)
 local WSAssert = require(script.Parent.WSAssert)
 
+local ComponentDefsModule = script:WaitForChild("ComponentDefinitions", 0.1)
 local ComponentIdsByType
 local ComponentTypesById
 local ComponentParamIds
@@ -100,21 +101,22 @@ local function populateDefs(definitionTable)
 end
 
 
-if script:WaitForChild("ComponentDefinitions", 2) then
-	local componentDefinitions = require(script.ComponentDefinitions)
+if ComponentDefsModule then
+	populateDefs(require(ComponentDefsModule))
+end
 
-	populateDefs(componentDefinitions)
+if Constants.IS_STUDIO then
+	coroutine.wrap(function()
+		script:WaitForChild("ComponentDefinitions"):GetPropertyChangedSignal("Source"):Connect(function()
+			local componentDefinitions = require(script.ComponentDefinitions:Clone())
 
-	if Constants.IS_STUDIO then
-		script.ComponentDefinitions:GetPropertyChangedSignal("Source"):Connect(function()
-			componentDefinitions = require(script.ComponentDefinitions:Clone())
 			populateDefs(componentDefinitions)
 
 			if ComponentDesc._defUpdateCallback then
 				ComponentDesc._defUpdateCallback()
 			end
 		end)
-	end
+	end)()
 end
 
 function ComponentDesc.GetDefaults(componentId)
