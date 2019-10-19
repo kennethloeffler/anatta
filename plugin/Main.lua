@@ -75,19 +75,18 @@ return function(pluginWrapper, root, gameRoot)
 	PluginES = require(root.src.EntityManager)
 	pluginWrapper.PluginES = PluginES
 
+	PluginES.LoadSystem(systems.VerticalScalingList, pluginWrapper)
+	PluginES.LoadSystem(systems.AddComponentButton, pluginWrapper)
 	PluginES.LoadSystem(systems.GameComponentLoader, pluginWrapper)
 
 	GameES = gameRoot and require(gameRoot.EntityManager)
 	pluginWrapper.GameES = GameES
 
-	PluginES.LoadSystem(systems.GameEntityBridge, pluginWrapper)
-	PluginES.LoadSystem(systems.AddComponentButton, pluginWrapper)
-	PluginES.LoadSystem(systems.VerticalScalingList, pluginWrapper)
-	PluginES.LoadSystem(systems.ComponentLabels, pluginWrapper)
-	PluginES.LoadSystem(systems.ParamFields, pluginWrapper)
-
 	GameES.Init()
 
+	PluginES.LoadSystem(systems.GameEntityBridge, pluginWrapper)
+	PluginES.LoadSystem(systems.ComponentLabels, pluginWrapper)
+	PluginES.LoadSystem(systems.ParamFields, pluginWrapper)
 
 	componentListWidget.Title = "Components"
 	addComponentWidget.Title = "Add components"
@@ -112,7 +111,6 @@ return function(pluginWrapper, root, gameRoot)
 		local numSelected = #selected
 		local instancesByComponentId = {}
 		local t
-		local module
 
 		if numSelected == 0 then
 			componentListWidget.Title = "Components"
@@ -123,9 +121,7 @@ return function(pluginWrapper, root, gameRoot)
 		end
 
 		for _, instance in ipairs(selected) do
-			module = instance:FindFirstChild("__WSEntity")
-
-			if module then
+			if CollectionService:HasTag(instance, "__WSEntity") then
 				for _, component in pairs(GameES.GetComponents(instance)) do
 					t = instancesByComponentId[component._componentId] or {}
 					instancesByComponentId[component._componentId] = t
