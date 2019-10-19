@@ -41,6 +41,7 @@ local SystemsToUnload = {}
 local SystemMap = {}
 
 local SystemsRunning = false
+local tagName = script:IsDescendantOf(game:GetService("ReplicatedStorage")) and "__WSEntity" or "__WSPluginEntity"
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
 local ReplicatorStep = EntityReplicator and EntityReplicator.Step
@@ -101,7 +102,7 @@ end
 
 local function addEntity(instance)
 	EntityMap[instance] = { { 0, 0 } } -- fields for fast intersection tests
-	CollectionService:AddTag(instance, "__WSEntity")
+	CollectionService:AddTag(instance, tagName)
 
 	return EntityMap[instance]
 end
@@ -212,7 +213,7 @@ local function doReorder(componentId, componentList)
 
 			if not next(entityStruct) and not doKill then
 				-- dead
-				CollectionService:RemoveTag(instance, "__WSEntity")
+				CollectionService:RemoveTag(instance, tagName)
 				EntityMap[instance] = nil
 			end
 
@@ -238,8 +239,8 @@ end
 -- Initialization
 local function initComponentDefs()
 	for _, componentId in pairs(ComponentDesc.GetAllComponents()) do
-		ComponentMap[componentId] = not ComponentMap[componentId] and { _length = 0 }
-		KilledComponents[componentId] = not KilledComponents[componentId] and {}
+		ComponentMap[componentId] = { _length = 0 }
+		KilledComponents[componentId] = {}
 	end
 end
 
@@ -620,18 +621,19 @@ function EntityManager.Destroy()
 end
 
 function EntityManager.Init()
-	local entities = CollectionService:GetTagged("__WSEntities")
+	local entities = CollectionService:GetTagged(tagName)
 	local data
 
 	for _, instance in pairs(entities) do
-		if not instance.__WSEntity then
+		if not instance:FindFirstChild("__WSEntity") then
 			warn(("Tagged entity %s has no associated data (missing __WSEntity module)"):format(instance:GetFullName()))
 		else
 			data = require(instance.__WSEntity)
 
-			for componentIdStr, paramsInfo in ipairs(data) do
+			for componentIdStr, paramsInfo in pairs(data) do
 				local numParams = #paramsInfo
 				local componentId = ComponentDesc.GetComponentIdFromEtherealId(componentIdStr) or tonumber(componentIdStr)
+				local componentType = ComponentDesc.GetComponentTypeFromId(componentId)
 				local componentStruct = {
 					true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 					_componentId = 0, Instance = 0
@@ -645,10 +647,13 @@ function EntityManager.Init()
 					componentStruct[i] = nil
 				end
 
-				AddComponent(instance, componentId, componentStruct)
+				AddComponent(instance, componentType, componentStruct)
+				print("added")
 			end
 
-			instance.__WSEntity:Destroy()
+			if not Constants.IS_STUDIO then
+				instance.__WSEntity:Destroy()
+			end
 		end
 	end
 end
