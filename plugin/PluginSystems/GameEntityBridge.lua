@@ -184,10 +184,10 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 		local entityStruct
 
 		for _, gameComponent in ipairs(GameES.GetAllComponentsOfType(componentType)) do
+			GameES.KillComponent(gameComponent)
+
 			entityStruct, module = getEntityStruct(gameComponent.Instance)
 			entityStruct[componentIdStr] = nil
-
-			GameES.KillComponent(gameComponent)
 
 			if not next(entityStruct) then
 				module:Destroy()
