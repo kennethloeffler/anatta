@@ -96,7 +96,10 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 	PluginES.ComponentKilled("ComponentLabel", function(componentLabel)
 		local label = componentLabel.Instance[componentLabel.ComponentId]
 
-		clearParamFields(label)
+		if componentLabel.Open then
+			clearParamFields(label)
+		end
+
 		PluginES.KillEntity(label.ParamsContainer)
 		PluginES.KillEntity(label)
 	end)
