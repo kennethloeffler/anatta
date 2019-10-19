@@ -626,6 +626,8 @@ function EntityManager.Init()
 
 	for _, instance in pairs(entities) do
 		if not instance:FindFirstChild("__WSEntity") then
+			CollectionService:RemoveTag(instance, tagName)
+
 			warn(("Tagged entity %s has no associated data (missing __WSEntity module)"):format(instance:GetFullName()))
 		else
 			data = require(instance.__WSEntity)
@@ -648,7 +650,6 @@ function EntityManager.Init()
 				end
 
 				AddComponent(instance, componentType, componentStruct)
-				print("added")
 			end
 
 			if not Constants.IS_STUDIO then
