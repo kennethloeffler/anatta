@@ -177,6 +177,7 @@ function ParamFields.OnLoaded(pluginWrapper)
 		fieldContainer.Position = UDim2.new(0, 135, 0, 0)
 		fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 		fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder)
+		fieldContainer.ZIndex = 1
 		paramField.Field = valueField
 		valueField.Parent = fieldContainer
 		fieldContainer.Parent = frame
@@ -196,9 +197,11 @@ function ParamFields.OnLoaded(pluginWrapper)
 	end)
 
 	PluginES.ComponentAdded("UpdateParamFields", function(updateParamFields)
+		local componentLabel = updateParamFields.ComponentLabel
+
 		for _, paramField in ipairs(PluginES.GetListTypedComponent(updateParamFields.Instance, "ParamField")) do
-			local entityList = paramField.ComponentLabel.EntityList
-			local value = #entityList == 1 and GameES.GetComponent(entityList[1], paramField.ComponentLabel.ComponentId)[paramField.ParamName]
+			local entityList = componentLabel.EntityList
+			local value = #entityList == 1 and GameES.GetComponent(entityList[1], ComponentDesc.GetComponentTypeFromId(componentLabel.ComponentId))[paramField.ParamName]
 
 		    if paramField.Field:IsA("TextBox") then
 			    paramField.Field.Text = value and tostring(value) or ""
