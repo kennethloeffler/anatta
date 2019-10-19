@@ -166,16 +166,19 @@ local function tryDefineComponent(instance)
 
 	if serialComponentDefinition then
 		local componentIdStr = serialComponentDefinition[1]
+		local paramList = {}
 
-		componentDefinition = serialComponentDefinition[2]
-
-		table.remove(componentDefinition, 1)
+		for id, def in pairs(serialComponentDefinition[2]) do
+			if id > 1 then
+				paramList[id - 1] = def
+			end
+		end
 
 		PluginES.AddComponent(instance, "ComponentDefinition", {
 			ComponentType = componentType,
 			ComponentId = componentIdStr,
 			ListTyped = listTyped,
-			ParamList = componentDefinition
+			ParamList = paramList
 		})
 
 		SerialComponentDefinitions[componentType] = nil
