@@ -18,7 +18,6 @@ local CollectionService = game:GetService("CollectionService")
 local Selection = game:GetService("Selection")
 
 local Serial = require(script.Parent.Serial)
-local Theme = settings().Studio.Theme
 local GameES
 local PluginES
 
@@ -54,9 +53,6 @@ local function collectPluginComponents(root)
 end
 
 return function(pluginWrapper, root, gameRoot)
-	local mainToolbar = pluginWrapper.GetToolbar("WorldSmith")
-	local listComponentButton = pluginWrapper.GetButton(mainToolbar, "List components...", "Displays/hides a menu which can be used to view components on selected instances, edit their parameters, or remove them")
-
 	local networkToolbar = pluginWrapper.GetToolbar("WorldSmith replicator")
 	local makeReferenceButton = pluginWrapper.GetButton(networkToolbar, "Make reference", "Tags the selected entities with an EntityReplicator reference")
 	local removeReferenceButton = pluginWrapper.GetButton(networkToolbar, "Remove reference", "Removes the EntityReplicator reference from the selected entities")
@@ -64,9 +60,6 @@ return function(pluginWrapper, root, gameRoot)
 	local removePrefabButton = pluginWrapper.GetButton(networkToolbar, "Remove root instance", "Removes the EntityReplicator root instance tag from the selected instances")
 
 	local systems = root.plugin.PluginSystems
-	local selected = Selection:Get()
-	local componentListWidget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
-	local scrollingFrame = Instance.new("ScrollingFrame")
 
 	collectPluginComponents(root)
 
@@ -85,71 +78,12 @@ return function(pluginWrapper, root, gameRoot)
 	PluginES.LoadSystem(systems.GameEntityBridge, pluginWrapper)
 	PluginES.LoadSystem(systems.ComponentLabels, pluginWrapper)
 	PluginES.LoadSystem(systems.ParamFields, pluginWrapper)
-
-	componentListWidget.Title = "Components"
-
-	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
-
-	scrollingFrame.TopImage = ""
-	scrollingFrame.BottomImage = ""
-	scrollingFrame.ScrollBarImageColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Light)
-	scrollingFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
-	scrollingFrame.BorderSizePixel = 0
-	scrollingFrame.ScrollBarThickness = 16
-	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
-	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
-	scrollingFrame.Parent = componentListWidget
+	PluginES.LoadSystem(systems.ComponentListWidget, pluginWrapper)
 
 	coroutine.wrap(PluginES.StartSystems)()
 
-	Selection.SelectionChanged:Connect(function()
-		selected = Selection:Get()
-
-		local numSelected = #selected
-		local instancesByComponentId = {}
-		local t
-
-		if numSelected == 0 then
-			componentListWidget.Title = "Components"
-		elseif numSelected == 1 then
-			componentListWidget.Title = ("Components - %s \"%s\""):format(selected[1].ClassName, selected[1].Name)
-		else
-			componentListWidget.Title = ("Components - %s items"):format(numSelected)
-		end
-
-		for _, instance in ipairs(selected) do
-			if CollectionService:HasTag(instance, "__WSEntity") then
-				for _, component in pairs(GameES.GetComponents(instance)) do
-					t = instancesByComponentId[component._componentId] or {}
-					instancesByComponentId[component._componentId] = t
-					t[#t + 1] = instance
-				end
-			end
-		end
-
-		for _, componentLabel in ipairs(PluginES.GetListTypedComponent(scrollingFrame, "ComponentLabel")) do
-			local componentId = componentLabel.ComponentId
-
-			if not instancesByComponentId[componentId] then
-				PluginES.KillComponent(componentLabel)
-			else
-				componentLabel.EntityList = instancesByComponentId[componentId]
-				PluginES.AddComponent(componentLabel.Instance[componentId], "UpdateParamFields", {componentLabel})
-				instancesByComponentId[componentId] = nil
-			end
-		end
-
-		for componentId, entityList in pairs(instancesByComponentId) do
-			PluginES.AddComponent(scrollingFrame, "ComponentLabel", {
-				ComponentId = componentId,
-				EntityList = entityList
-			})
-		end
-
-	end)
-
 	makeReferenceButton.Click:Connect(function()
-		for _, instance in ipairs(selected) do
+		for _, instance in ipairs(Selection:Get()) do
 			if CollectionService:HasTag(instance, "__WSEntity") then
 				CollectionService:AddTag(instance, "__WSReplicatorRef")
 			end
@@ -157,13 +91,13 @@ return function(pluginWrapper, root, gameRoot)
 	end)
 
 	makePrefabButton.Click:Connect(function()
-		for _, instance in ipairs(selected) do
+		for _, instance in ipairs(Selection:Get()) do
 			CollectionService:AddTag(instance, "__WSReplicatorRoot")
 		end
 	end)
 
 	removeReferenceButton.Click:Connect(function()
-		for _, instance in ipairs(selected) do
+		for _, instance in ipairs(Selection:Get()) do
 			if CollectionService:HasTag(instance, "__WSEntity") then
 				CollectionService:RemoveTag(instance, "__WSReplicatorRef")
 			end
@@ -171,13 +105,9 @@ return function(pluginWrapper, root, gameRoot)
 	end)
 
 	removePrefabButton.Click:Connect(function()
-		for _, instance in ipairs(selected) do
+		for _, instance in ipairs(Selection:Get()) do
 			CollectionService:RemoveTag(instance, "__WSReplicatorRoot")
 		end
-	end)
-
-	listComponentButton.Click:Connect(function()
-		componentListWidget.Enabled = not componentListWidget.Enabled
 	end)
 
 	pluginWrapper.OnUnloading = function()
