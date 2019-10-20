@@ -55,7 +55,6 @@ end
 
 return function(pluginWrapper, root, gameRoot)
 	local mainToolbar = pluginWrapper.GetToolbar("WorldSmith")
-	local addComponentButton = pluginWrapper.GetButton(mainToolbar, "Add component...", "Displays/hides a menu which can be used to add components to instances")
 	local listComponentButton = pluginWrapper.GetButton(mainToolbar, "List components...", "Displays/hides a menu which can be used to view components on selected instances, edit their parameters, or remove them")
 
 	local networkToolbar = pluginWrapper.GetToolbar("WorldSmith replicator")
@@ -76,8 +75,8 @@ return function(pluginWrapper, root, gameRoot)
 	pluginWrapper.PluginES = PluginES
 
 	PluginES.LoadSystem(systems.VerticalScalingList, pluginWrapper)
-	PluginES.LoadSystem(systems.AddComponentButton, pluginWrapper)
 	PluginES.LoadSystem(systems.GameComponentLoader, pluginWrapper)
+	PluginES.LoadSystem(systems.AddComponentButton, pluginWrapper)
 
 	GameES = gameRoot and require(gameRoot.EntityManager)
 	pluginWrapper.GameES = GameES
@@ -181,10 +180,6 @@ return function(pluginWrapper, root, gameRoot)
 
 	listComponentButton.Click:Connect(function()
 		componentListWidget.Enabled = not componentListWidget.Enabled
-	end)
-
-	addComponentButton.Click:Connect(function()
-		addComponentWidget.Enabled = not addComponentWidget.Enabled
 	end)
 
 	pluginWrapper.OnUnloading = function()

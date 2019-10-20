@@ -27,10 +27,31 @@ local Selected = Enum.StudioStyleGuideModifier.Selected
 
 local PluginES
 
-local AddComponentButton = {}
+local AddComponentWidget = {}
 
-function AddComponentButton.OnLoaded(pluginWrapper)
+function AddComponentWidget.OnLoaded(pluginWrapper)
 	PluginES = pluginWrapper.PluginES
+
+	local mainToolbar = pluginWrapper.GetToolbar("WorldSmith")
+	local addComponentWidgetButton = pluginWrapper.GetButton(mainToolbar, "Add component...", "Displays/hides a menu which can be used to add components to instances")
+	local addComponentWidget = pluginWrapper.GetDockWidget("Add components", Enum.InitialDockState.Float, true, false, 200, 300)
+	local scrollingFrame = Instance.new("ScrollingFrame")
+
+	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
+
+	scrollingFrame.TopImage = ""
+	scrollingFrame.BottomImage = ""
+	scrollingFrame.ScrollBarImageColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Light)
+	scrollingFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
+	scrollingFrame.BorderSizePixel = 0
+	scrollingFrame.ScrollBarThickness = 16
+	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
+	scrollingFrame.Parent = addComponentWidget
+
+	addComponentWidgetButton.Click:Connect(function()
+		addComponentWidget.Enabled = not addComponentWidget.Enabled
+	end)
 
 	PluginES.ComponentAdded("AddComponentButton", function(addComponentButton)
 		local componentType = addComponentButton.ComponentType
@@ -80,6 +101,28 @@ function AddComponentButton.OnLoaded(pluginWrapper)
 
 		button:Destroy()
 	end)
+
+	PluginES.ComponentAdded("ComponentDefinition", function(componentDefinition)
+		PluginES.AddComponent(scrollingFrame, "AddComponentButton", {
+			ComponentType = componentDefinition.ComponentType
+		})
+	end)
+
+	PluginES.ComponentKilled("ComponentDefinition", function(componentDefinition)
+		for _, addComponentButton in ipairs(PluginES.GetListLypedComponent(scrollingFrame, "AddComponentButton")) do
+			if addComponentButton.ComponentType == componentDefinition.ComponentType then
+				PluginES.KillComponent(addComponentButton)
+
+				break
+			end
+		end
+	end)
+
+	for _, componentDefinition in ipairs(PluginES.GetAllComponentsOfType("ComponentDefinition")) do
+		PluginES.AddComponent(scrollingFrame, "AddComponentButton", {
+			ComponentType = componentDefinition.ComponentType
+		})
+	end
 end
 
-return AddComponentButton
+return AddComponentWidget

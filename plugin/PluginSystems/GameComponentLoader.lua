@@ -29,8 +29,6 @@ local SerialComponentDefinitions = {}
 
 local ComponentsLoader = {}
 
-local Theme = settings().Studio.Theme
-
 local PluginES
 local GameComponentDefsModule
 local AddedConnection
@@ -221,23 +219,7 @@ end
 
 function ComponentsLoader.OnLoaded(pluginWrapper)
 	GameComponentDefsModule = GameSrc.ComponentDesc:WaitForChild("ComponentDefinitions", 2)
-
-	local addComponentWidget = pluginWrapper.GetDockWidget("Add components")
-	local scrollingFrame = Instance.new("ScrollingFrame")
-
 	PluginES = pluginWrapper.PluginES
-
-	scrollingFrame.TopImage = ""
-	scrollingFrame.BottomImage = ""
-	scrollingFrame.ScrollBarImageColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.Light)
-	scrollingFrame.BackgroundColor3 = Theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
-	scrollingFrame.BorderSizePixel = 0
-	scrollingFrame.ScrollBarThickness = 16
-	scrollingFrame.Size = UDim2.new(1, 0, 1, 0)
-	scrollingFrame.CanvasSize = UDim2.new(1, 0, 0, 0)
-
-	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
-	scrollingFrame.Parent = addComponentWidget
 
 	if GameComponentDefsModule then
 		for componentIdStr, componentDefinition in pairs(require(GameComponentDefsModule)) do
@@ -251,33 +233,15 @@ function ComponentsLoader.OnLoaded(pluginWrapper)
 	end
 
 	for _, instance in ipairs(ReplicatedStorage:GetDescendants()) do
-		local componentType = tryDefineComponent(instance)
-
-		if componentType then
-			PluginES.AddComponent(addComponentWidget, "AddComponentButton", { componentType })
-		end
+		tryDefineComponent(instance)
 	end
 
 	AddedConnection = ReplicatedStorage.DescendantAdded:Connect(function(instance)
-		local componentType = tryDefineComponent(instance)
-
-		if componentType then
-			PluginES.AddComponent(scrollingFrame, "AddComponentButton", { componentType })
-		end
+		tryDefineComponent(instance)
 	end)
 
 	RemovedConnection = ReplicatedStorage.DescendantRemoving:Connect(function(instance)
-		local componentType = tryDeleteComponent(instance)
-
-		if componentType then
-			for _, addComponentButton in ipairs(PluginES.GetListTypedComponent(scrollingFrame, "AddComponentButton")) do
-				if addComponentButton.ComponentType == componentType then
-					PluginES.KillComponent(addComponentButton)
-
-					break
-				end
-			end
-		end
+		tryDeleteComponent(instance)
 	end)
 end
 
