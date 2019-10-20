@@ -77,6 +77,8 @@ function AddComponentWidget.OnLoaded(pluginWrapper)
 					EntityList = Selection:Get(),
 					ComponentType = componentType
 				})
+
+				PluginES.AddComponent(addComponentWidget, "SelectionUpdate")
 			elseif input.UserInputType == Enum.UserInputType.MouseMovement then
 				button.BackgroundColor3 = Theme:GetColor(Button, Hover)
 				button.BorderColor3 = Theme:GetColor(Border, Hover)
