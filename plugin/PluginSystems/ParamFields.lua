@@ -61,6 +61,7 @@ local function getElementForValueType(ty)
 		textBox.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 		textBox.BorderColor3 = Theme:GetColor(InputFieldBackground)
 		textBox.BorderSizePixel = 0
+		textBox.ZIndex = 500
 		textBox.BackgroundTransparency = 1
 		textBox.TextColor3 = Theme:GetColor(MainText)
 
@@ -111,14 +112,36 @@ function ParamFields.OnLoaded(pluginWrapper)
 		local cLabel = paramField.Instance
 		local value = #entityList == 1 and GameES.GetComponent(entityList[1], componentType)[paramName]
 
-		valueField.InputBegan:Connect(function(input)
+		fieldContainer.Size = UDim2.new(1, 0, 0, 32)
+		fieldContainer.Position = UDim2.new(0, 135, 0, 0)
+		fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
+		fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder)
+		fieldContainer.ZIndex = 200
+		paramField.Field = valueField
+		valueField.Parent = fieldContainer
+		fieldContainer.Parent = frame
+
+		label.Size = UDim2.new(0, 135, 0, 32)
+		label.Text = ("	%s"):format(paramName)
+		label.BorderColor3 = Theme:GetColor(InputFieldBorder)
+		label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
+		label.TextColor3 = Theme:GetColor(MainText)
+		label.Parent = frame
+
+		frame.Size = UDim2.new(1, 0, 0, 32)
+		frame.BackgroundTransparency = 1
+		frame.Name = paramName
+		frame.LayoutOrder = paramId
+		frame.Parent = cLabel.ParamsContainer
+
+		frame.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
 				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Hover)
 				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground, Hover)
 			end
 		end)
 
-		valueField.InputEnded:Connect(function(input)
+		frame.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
 				fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 				label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
@@ -172,28 +195,6 @@ function ParamFields.OnLoaded(pluginWrapper)
 				})
 			end)
 		end
-
-		fieldContainer.Size = UDim2.new(1, 0, 0, 24)
-		fieldContainer.Position = UDim2.new(0, 135, 0, 0)
-		fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
-		fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder)
-		fieldContainer.ZIndex = 1
-		paramField.Field = valueField
-		valueField.Parent = fieldContainer
-		fieldContainer.Parent = frame
-
-		label.Size = UDim2.new(0, 135, 0, 24)
-		label.Text = "     " .. paramName
-		label.BorderColor3 = Theme:GetColor(InputFieldBorder)
-		label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
-		label.TextColor3 = Theme:GetColor(MainText)
-		label.Parent = frame
-
-		frame.Size = UDim2.new(1, 0, 0, 24)
-		frame.BackgroundTransparency = 1
-		frame.Name = paramName
-		frame.LayoutOrder = paramId
-		frame.Parent = cLabel.ParamsContainer
 	end)
 
 	PluginES.ComponentAdded("UpdateParamFields", function(updateParamFields)

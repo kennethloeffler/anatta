@@ -77,16 +77,16 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 		end)
 
 		paramsContainer.Size = UDim2.new(1, 0, 0, 0)
-		paramsContainer.Position = UDim2.new(0, 0, 0, 24)
+		paramsContainer.Position = UDim2.new(0, 0, 0, 32)
 		paramsContainer.BackgroundTransparency = 1
 		paramsContainer.BorderSizePixel = 0
 		paramsContainer.Name = "ParamsContainer"
 		paramsContainer.Parent = label
 
-		label.Size = UDim2.new(1, 0, 0, 24)
+		label.Size = UDim2.new(1, 0, 0, 32)
 		label.BackgroundColor3 = Theme:GetColor(Section)
 		label.TextColor3 = Theme:GetColor(MainText)
-		label.Text = ("\t%s"):format(componentType)
+		label.Text = ("	%s"):format(componentType)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Name = componentId
 		label.LayoutOrder = componentId
