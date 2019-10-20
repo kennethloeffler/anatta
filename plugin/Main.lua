@@ -66,7 +66,6 @@ return function(pluginWrapper, root, gameRoot)
 	local systems = root.plugin.PluginSystems
 	local selected = Selection:Get()
 	local componentListWidget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
-	local addComponentWidget = pluginWrapper.GetDockWidget("Add components", Enum.InitialDockState.Float, true, false, 200, 300)
 	local scrollingFrame = Instance.new("ScrollingFrame")
 
 	collectPluginComponents(root)
@@ -88,7 +87,6 @@ return function(pluginWrapper, root, gameRoot)
 	PluginES.LoadSystem(systems.ParamFields, pluginWrapper)
 
 	componentListWidget.Title = "Components"
-	addComponentWidget.Title = "Add components"
 
 	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
 
