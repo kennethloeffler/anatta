@@ -39,7 +39,7 @@ function VerticalScalingList.OnLoaded(pluginWrapper)
 
 		frame.DescendantRemoving:Connect(function(instance)
 			if instance:IsA("GuiObject") and PluginES.GetComponent(instance.Parent, "VerticalScalingList") then
-				frame[prop] = frame[prop] - UDim2.new(0, 0, 0, instance.AbsoluteSize)
+				frame[prop] = frame[prop] - UDim2.new(0, 0, 0, instance.AbsoluteSize.Y)
 			end
 		end)
 
