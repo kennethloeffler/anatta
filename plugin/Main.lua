@@ -76,7 +76,7 @@ return function(pluginWrapper, root, gameRoot)
 
 	PluginES.LoadSystem(systems.VerticalScalingList, pluginWrapper)
 	PluginES.LoadSystem(systems.GameComponentLoader, pluginWrapper)
-	PluginES.LoadSystem(systems.AddComponentButton, pluginWrapper)
+	PluginES.LoadSystem(systems.AddComponentWidget, pluginWrapper)
 
 	GameES = gameRoot and require(gameRoot.EntityManager)
 	pluginWrapper.GameES = GameES
