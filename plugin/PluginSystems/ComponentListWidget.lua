@@ -34,7 +34,7 @@ function ComponentListWidget.OnLoaded(pluginWrapper)
 		componentListWidget.Enabled = not componentListWidget.Enabled
 	end)
 
-	Selection.SelectionChanged:Connect(function()
+	PluginES.ComponentAdded("SelectionUpdate", function()
 		local selected = Selection:Get()
 
 		local numSelected = #selected
@@ -78,6 +78,10 @@ function ComponentListWidget.OnLoaded(pluginWrapper)
 			})
 		end
 
+	end)
+
+	Selection.SelectionChanged:Connect(function()
+		PluginES.AddComponent(componentListWidget, "SelectionUpdate")
 	end)
 end
 
