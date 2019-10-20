@@ -4,6 +4,7 @@ local CollectionService = game:GetService("CollectionService")
 local Theme = settings().Studio.Theme
 local PluginES
 local GameES
+local SelectionConnection
 
 local ComponentListWidget = {}
 
@@ -80,9 +81,13 @@ function ComponentListWidget.OnLoaded(pluginWrapper)
 
 	end)
 
-	Selection.SelectionChanged:Connect(function()
+	SelectionConnection = Selection.SelectionChanged:Connect(function()
 		PluginES.AddComponent(componentListWidget, "SelectionUpdate")
 	end)
+end
+
+function ComponentListWidget.OnUnloaded()
+	SelectionConnection:Disconnect()
 end
 
 return ComponentListWidget
