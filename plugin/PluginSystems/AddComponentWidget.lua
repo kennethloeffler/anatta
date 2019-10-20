@@ -37,6 +37,7 @@ function AddComponentWidget.OnLoaded(pluginWrapper)
 	local addComponentWidget = pluginWrapper.GetDockWidget("Add components", Enum.InitialDockState.Float, true, false, 200, 300)
 	local scrollingFrame = Instance.new("ScrollingFrame")
 
+	addComponentWidget.Title = "Add components"
 	PluginES.AddComponent(scrollingFrame, "VerticalScalingList")
 
 	scrollingFrame.TopImage = ""
