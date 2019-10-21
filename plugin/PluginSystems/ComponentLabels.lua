@@ -18,6 +18,9 @@ local Theme = settings().Studio.Theme
 local GameES
 local PluginES
 
+local ArrowClosedImg = ""
+local ArrowOpenImg = ""
+
 local Section = Enum.StudioStyleGuideColor.TableItem
 local MainText = Enum.StudioStyleGuideColor.MainText
 
@@ -52,17 +55,45 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 		local componentId = componentLabel.ComponentId
 		local componentType = componentDesc.GetComponentTypeFromId(componentId)
 		local label = Instance.new("TextLabel")
+		local arrowImg = Instance.new("ImageLabel")
 		local paramsContainer = Instance.new("Frame")
 
 		PluginES.AddComponent(paramsContainer, "VerticalScalingList")
+
+		paramsContainer.Size = UDim2.new(1, 0, 0, 0)
+		paramsContainer.Position = UDim2.new(0, 0, 0, 32)
+		paramsContainer.BackgroundTransparency = 1
+		paramsContainer.BorderSizePixel = 0
+		paramsContainer.Name = "ParamsContainer"
+		paramsContainer.Parent = label
+
+		arrowImg.Image = ArrowClosedImg
+		arrowImg.Size = UDim2.new(0, 20, 0, 20)
+		arrowImg.BackgroundTransparency = 1
+		arrowImg.BorderSizePixel = 0
+		arrowImg.AnchorPoint = Vector2.new(0, -0.5)
+		arrowImg.Parent = label
+
+		label.Size = UDim2.new(1, 0, 0, 32)
+		label.BackgroundColor3 = Theme:GetColor(Section)
+		label.TextColor3 = Theme:GetColor(MainText)
+		label.Text = ("      %s"):format(componentType)
+		label.TextSize = 16
+		label.Font = Enum.Font.ArialBold
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Name = componentId
+		label.LayoutOrder = componentId
+		label.Parent = parentFrame
 
 		label.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
 				if not componentLabel.Open then
 					componentLabel.Open = true
+					arrowImg.Image = ArrowOpenImg
 					makeParamFields(label, componentLabel, componentDesc.GetDefaults(componentId))
 				else
 					clearParamFields(label)
+					arrowImg.Image = ArrowClosedImg
 					componentLabel.Open = false
 				end
 			elseif input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -75,22 +106,6 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 				label.BackgroundColor3 = Theme:GetColor(Section)
 			end
 		end)
-
-		paramsContainer.Size = UDim2.new(1, 0, 0, 0)
-		paramsContainer.Position = UDim2.new(0, 0, 0, 32)
-		paramsContainer.BackgroundTransparency = 1
-		paramsContainer.BorderSizePixel = 0
-		paramsContainer.Name = "ParamsContainer"
-		paramsContainer.Parent = label
-
-		label.Size = UDim2.new(1, 0, 0, 32)
-		label.BackgroundColor3 = Theme:GetColor(Section)
-		label.TextColor3 = Theme:GetColor(MainText)
-		label.Text = ("	%s"):format(componentType)
-		label.TextXAlignment = Enum.TextXAlignment.Left
-		label.Name = componentId
-		label.LayoutOrder = componentId
-		label.Parent = parentFrame
 	end)
 
 	PluginES.ComponentKilled("ComponentLabel", function(componentLabel)
