@@ -59,6 +59,8 @@ local function newComponentDefinition(instance, componentType, paramMap, listTyp
 	if ethereal then
 		componentIdStr = HttpService:GenerateGUID(false)
 	else
+		local componentId
+
 		for i = 1, NumUniqueComponents do
 			if not ComponentsArray[i] then
 				componentIdListHole = i
@@ -69,13 +71,13 @@ local function newComponentDefinition(instance, componentType, paramMap, listTyp
 		WSAssert(NumUniqueComponents <= 64, "Maximum number of concrete components (64) exceeded")
 
 		if not componentIdListHole then
-			componentIdStr = NumUniqueComponents
+			componentId = NumUniqueComponents
 		else
-			componentIdStr = componentIdListHole
+			componentId = componentIdListHole
 		end
 
-		ComponentsArray[componentIdStr] = componentType
-		componentIdStr = tostring(componentIdStr)
+		ComponentsArray[componentId] = componentType
+		componentIdStr = tostring(componentId)
 	end
 
 	for paramName, defaultValue in pairs(paramMap) do
@@ -163,6 +165,8 @@ local function tryDefineComponent(instance)
 	NumUniqueComponents = NumUniqueComponents + (ethereal and 0 or 1)
 
 	if serialComponentDefinition then
+		print("found serial")
+
 		local componentIdStr = serialComponentDefinition[1]
 		local paramList = {}
 
@@ -198,14 +202,16 @@ local function tryDeleteComponent(instance)
 	end
 
 	local componentDefinition = PluginES.GetComponent(instance, "ComponentDefinition")
+	local componentIdStr
 	local componentId
 	local componentType
 
 	if componentDefinition then
-		componentId = componentDefinition.ComponentId
+		componentIdStr = componentDefinition.ComponentId
+		componentId = tonumber(componentIdStr)
 		componentType = componentDefinition.ComponentType
 
-		if tonumber(componentDefinition.ComponentId) then
+		if componentId then
 			ComponentsArray[componentId] = nil
 			NumUniqueComponents = NumUniqueComponents - 1
 		end
