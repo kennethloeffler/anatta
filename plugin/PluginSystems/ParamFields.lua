@@ -58,6 +58,8 @@ local function getElementForValueType(ty)
 		textBox.Size = UDim2.new(1, 0, 1, 0)
 		textBox.Position = UDim2.new(0, 5, 0, 0)
 		textBox.TextXAlignment = Enum.TextXAlignment.Left
+		textBox.TextSize = 16
+		textBox.Font = Enum.Font.Arial
 		textBox.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 		textBox.BorderColor3 = Theme:GetColor(InputFieldBackground)
 		textBox.BorderSizePixel = 0
@@ -123,6 +125,8 @@ function ParamFields.OnLoaded(pluginWrapper)
 
 		label.Size = UDim2.new(0, 135, 0, 32)
 		label.Text = ("	%s"):format(paramName)
+		label.Font = Enum.Font.Arial
+		label.TextSize = 16
 		label.BorderColor3 = Theme:GetColor(InputFieldBorder)
 		label.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 		label.TextColor3 = Theme:GetColor(MainText)
