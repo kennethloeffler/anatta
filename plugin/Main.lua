@@ -81,6 +81,7 @@ return function(pluginWrapper, root, gameRoot)
 	PluginES.LoadSystem(systems.ComponentListWidget, pluginWrapper)
 
 	coroutine.wrap(PluginES.StartSystems)()
+	coroutine.wrap(GameES.StartSystems)()
 
 	makeReferenceButton.Click:Connect(function()
 		for _, instance in ipairs(Selection:Get()) do
