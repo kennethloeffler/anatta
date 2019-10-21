@@ -356,12 +356,11 @@ function EntityManager.GetComponents(instance)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
 
 	local entityStruct = EntityMap[instance]
+	local struct = {}
 
 	if not entityStruct then
-		return
+		return struct
 	end
-
-	local struct = {}
 
 	for componentId, cOffset in pairs(entityStruct) do
 		if componentId > 1 then
