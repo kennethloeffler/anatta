@@ -112,7 +112,7 @@ function AddComponentWidget.OnLoaded(pluginWrapper)
 	end)
 
 	PluginES.ComponentKilled("ComponentDefinition", function(componentDefinition)
-		for _, addComponentButton in ipairs(PluginES.GetListLypedComponent(scrollingFrame, "AddComponentButton")) do
+		for _, addComponentButton in ipairs(PluginES.GetListTypedComponent(scrollingFrame, "AddComponentButton")) do
 			if addComponentButton.ComponentType == componentDefinition.ComponentType then
 				PluginES.KillComponent(addComponentButton)
 
