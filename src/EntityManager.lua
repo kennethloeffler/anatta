@@ -465,8 +465,18 @@ end
 
 function EntityManager.KillComponent(component, supressKillEntity)
 	local componentId = component._componentId
+	local removedFunc = ComponentRemovedFuncs[componentId]
 
 	WSAssert(typeof(component) == "table" and componentId, "bad argument #1 (expected component)")
+
+	if removedFunc then
+		removedFunc(component)
+	end
+
+
+	if componentId <= 64 then
+		filterEntity(component.Instance)
+	end
 
 	KilledComponents[componentId][component] = supressKillEntity ~= nil and supressKillEntity or false
 end
