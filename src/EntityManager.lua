@@ -171,7 +171,7 @@ local function doReorder(componentId, componentList)
 		instance = component.Instance
 		entityStruct = EntityMap[instance]
 		doKill = componentList[component]
-		cIndex = entityStruct[componentId + 1]
+		cIndex = entityStruct and entityStruct[componentId + 1]
 
 		if doKill == nil then
 			if componentOffset ~= keptComponentOffset then
@@ -198,40 +198,44 @@ local function doReorder(componentId, componentList)
 			numKilledComponents = numKilledComponents + 1
 			masterComponentList[componentOffset] = nil
 			componentList[component] = nil
-			unsetComponentBitForEntity(instance, componentId)
 
-			if not component._list then
-				entityStruct[componentId + 1] = nil
-			else	-- list typed
-				local kept = 1
 
-				for i, index in ipairs(cIndex) do
-					if index ~= componentOffset then
-						if i ~= kept then
-							cIndex[kept] = index
+			if entityStruct then
+				unsetComponentBitForEntity(instance, componentId)
+
+				if not component._list then
+					entityStruct[componentId + 1] = nil
+				else
+					local kept = 1
+
+					for i, index in ipairs(cIndex) do
+						if index ~= componentOffset then
+							if i ~= kept then
+								cIndex[kept] = index
+								cIndex[i] = nil
+							end
+
+							kept = kept + 1
+						else
 							cIndex[i] = nil
 						end
+					end
 
-						kept = kept + 1
-					else
-						cIndex[i] = nil
+					if not cIndex[1] then
+						entityStruct[componentId + 1] = nil
 					end
 				end
 
-				if not cIndex[1] then
-					entityStruct[componentId + 1] = nil
+				tempFieldHolder = entityStruct[1]
+				entityStruct[1] = nil
+
+				if not doKill and not next(entityStruct) then
+					-- dead
+					CollectionService:RemoveTag(instance, tagName)
+					EntityMap[instance] = nil
+				else
+					entityStruct[1] = tempFieldHolder
 				end
-			end
-
-			tempFieldHolder = entityStruct[1]
-			entityStruct[1] = nil
-
-			if not doKill and not next(entityStruct) and not next(componentList) then
-				-- dead
-				CollectionService:RemoveTag(instance, tagName)
-				EntityMap[instance] = nil
-			else
-				entityStruct[1] = tempFieldHolder
 			end
 		end
 	end
