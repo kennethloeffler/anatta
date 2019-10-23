@@ -347,24 +347,19 @@ function EntityManager.GetListTypedComponent(instance, componentType)
 	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
 
 	local entityStruct = EntityMap[instance]
-
-	if not entityStruct then
-		return
-	end
-
+	local struct = {}
 	local componentId = GetComponentIdFromType(componentType)
+	local componentMap = ComponentMap[componentId]
 	local componentIndex = entityStruct[componentId + 1]
 
-	local struct = {}
-
-	if not componentIndex then
+	if not entityStruct or not componentIndex then
 		return struct
 	end
 
 	WSAssert(typeof(componentIndex) == "table", "%s is not a list-typed component", componentType)
 
-	for _, offset in ipairs(componentIndex) do
-		struct[#struct + 1] = ComponentMap[componentId][offset]
+	for i, offset in ipairs(componentIndex) do
+		struct[i] = componentMap[offset]
 	end
 
 	return struct
