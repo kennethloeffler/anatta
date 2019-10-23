@@ -166,6 +166,7 @@ local function doReorder(componentId, componentList)
 	local entityStruct
 	local doKill
 	local cIndex
+	local tempFieldHolder
 
 	for componentOffset, component in ipairs(masterComponentList) do
 		instance = component.Instance
@@ -223,11 +224,16 @@ local function doReorder(componentId, componentList)
 				end
 			end
 
+			tempFieldHolder = entityStruct[1]
+			entityStruct[1] = nil
+
 			if not next(entityStruct) and not doKill then
 				-- dead
 				CollectionService:RemoveTag(instance, tagName)
 				EntityMap[instance] = nil
 			end
+
+			entityStruct[1] = tempFieldHolder
 
 			if removedFunc then
 				removedFunc(component)
