@@ -255,8 +255,10 @@ end
 -- Initialization
 local function initComponentDefs()
 	for _, componentId in pairs(ComponentDesc.GetAllComponents()) do
-		ComponentMap[componentId] = { _length = 0 }
-		KilledComponents[componentId] = {}
+		if not ComponentMap[componentId] then
+			ComponentMap[componentId] = { _length = 0 }
+			KilledComponents[componentId] = {}
+		end
 	end
 end
 
