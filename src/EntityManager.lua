@@ -478,12 +478,15 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 
 	local entityStruct = EntityMap[instance]
 
-	if not supressInstanceDestruction then
-		instance:Destroy()
-	end
 
 	if not entityStruct then
 		return
+	end
+
+	CollectionService:RemoveTag(instance, tagName)
+
+	if not supressInstanceDestruction and instance.Parent then
+		instance:Destroy()
 	end
 
 	for componentId, offset in pairs(entityStruct) do
