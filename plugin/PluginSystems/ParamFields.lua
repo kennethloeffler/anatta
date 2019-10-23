@@ -119,7 +119,6 @@ function ParamFields.OnLoaded(pluginWrapper)
 		fieldContainer.BackgroundColor3 = Theme:GetColor(InputFieldBackground)
 		fieldContainer.BorderColor3 = Theme:GetColor(InputFieldBorder)
 		fieldContainer.ZIndex = 200
-		paramField.Field = valueField
 		valueField.Parent = fieldContainer
 		fieldContainer.Parent = frame
 
@@ -137,6 +136,7 @@ function ParamFields.OnLoaded(pluginWrapper)
 		frame.Name = paramName
 		frame.LayoutOrder = paramId
 		frame.Parent = cLabel.ParamsContainer
+		paramField.Field = frame
 
 		frame.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -199,6 +199,10 @@ function ParamFields.OnLoaded(pluginWrapper)
 				})
 			end)
 		end
+	end)
+
+	PluginES.ComponentKilled("ParamField", function(paramField)
+		paramField.Field:Destroy()
 	end)
 
 	PluginES.ComponentAdded("UpdateParamFields", function(updateParamFields)

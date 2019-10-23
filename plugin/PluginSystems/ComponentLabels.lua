@@ -30,8 +30,6 @@ local ComponentLabels = {}
 
 local function clearParamFields(label)
 	for _, paramField in ipairs(PluginES.GetListTypedComponent(label, "ParamField")) do
-		PluginES.KillEntity(paramField.Field)
-		PluginES.KillEntity(label.ParamsContainer[paramField.ParamName])
 		PluginES.KillComponent(paramField)
 	end
 end
@@ -92,9 +90,9 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 					arrowImg.Image = ArrowOpenImg
 					makeParamFields(label, componentLabel, componentDesc.GetDefaults(componentId))
 				else
-					clearParamFields(label)
-					arrowImg.Image = ArrowClosedImg
 					componentLabel.Open = false
+					arrowImg.Image = ArrowClosedImg
+					clearParamFields(label)
 				end
 			elseif input.UserInputType == Enum.UserInputType.MouseMovement then
 				label.BackgroundColor3 = Theme:GetColor(Section, Hover)
@@ -116,7 +114,7 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 		end
 
 		PluginES.KillEntity(label.ParamsContainer)
-		PluginES.KillEntity(label)
+		label:Destroy()
 	end)
 end
 
