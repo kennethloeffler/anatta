@@ -161,7 +161,6 @@ local function doReorder(componentId, componentList)
 	local keptComponentOffset = 1
 	local numKilledComponents = 0
 	local masterComponentList = ComponentMap[componentId]
-	local removedFunc = ComponentRemovedFuncs[componentId]
 	local instance
 	local entityStruct
 	local doKill
@@ -227,20 +226,12 @@ local function doReorder(componentId, componentList)
 			tempFieldHolder = entityStruct[1]
 			entityStruct[1] = nil
 
-			if not next(entityStruct) and not doKill then
+			if not doKill and not next(entityStruct) and not next(componentList) then
 				-- dead
 				CollectionService:RemoveTag(instance, tagName)
 				EntityMap[instance] = nil
-			end
-
-			entityStruct[1] = tempFieldHolder
-
-			if removedFunc then
-				removedFunc(component)
-			end
-
-			if componentId <= 64 then
-				filterEntity(instance)
+			else
+				entityStruct[1] = tempFieldHolder
 			end
 		end
 	end
