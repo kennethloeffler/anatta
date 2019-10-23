@@ -616,6 +616,10 @@ function EntityManager.StartSystems()
 end
 
 function EntityManager.StopSystems()
+	-- wait two to ensure we dont land on the same frame
+	RunService.Heartbeat:Wait()
+	RunService.Heartbeat:Wait()
+
 	SystemsRunning = false
 end
 
