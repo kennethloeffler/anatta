@@ -460,7 +460,7 @@ end
 function EntityManager.KillComponent(component, supressKillEntity)
 	local componentId = component._componentId
 
-	WSAssert(typeof(component) == "table" and component._componentId, "bad argument #1 (expected component)")
+	WSAssert(typeof(component) == "table" and componentId, "bad argument #1 (expected component)")
 
 	KilledComponents[componentId][component] = supressKillEntity ~= nil and supressKillEntity or false
 end
