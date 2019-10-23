@@ -502,6 +502,8 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 	end
 end
 
+CollectionService:GetInstanceRemovedSignal(tagName):Connect(EntityManager.KillEntity)
+
 ---Loads the system defined by module
 -- If the system has a .OnLoaded() member, then it is called by this function
 -- If the system has a .Heartbeat() member, then it is loaded to be ran when EntityManager.StartSystems() is called
