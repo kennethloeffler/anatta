@@ -161,6 +161,7 @@ local function doReorder(componentId, componentList)
 	local keptComponentOffset = 1
 	local numKilledComponents = 0
 	local masterComponentList = ComponentMap[componentId]
+	local removedFunc = ComponentRemovedFuncs[componentId]
 	local instance
 	local entityStruct
 	local doKill
@@ -177,32 +178,43 @@ local function doReorder(componentId, componentList)
 				-- swap
 				masterComponentList[keptComponentOffset] = component
 				masterComponentList[componentOffset] = nil
-				entityStruct[componentId + 1] = keptComponentOffset
+
+				if not component._list then
+					entityStruct[componentId + 1] = keptComponentOffset
+				else
+					for i, offset in ipairs(cIndex) do
+						if offset == componentOffset then
+							cIndex[i] = keptComponentOffset
+
+							break
+						end
+					end
+				end
 			end
 
 			keptComponentOffset = keptComponentOffset + 1
 		else
-			local removedFunc = ComponentRemovedFuncs[componentId]
 			-- kill
-			if removedFunc then
-				removedFunc(component)
-			end
-
 			numKilledComponents = numKilledComponents + 1
 			masterComponentList[componentOffset] = nil
 			componentList[component] = nil
 			unsetComponentBitForEntity(instance, componentId)
 
-			if typeof(cIndex) == "number" then
+			if not component._list then
 				entityStruct[componentId + 1] = nil
 			else	-- list typed
-				local l = #cIndex
+				local kept = 1
 
 				for i, index in ipairs(cIndex) do
-					if index == componentOffset then
-						cIndex[i] = cIndex[l]
-						cIndex[l] = nil
-						break
+					if index ~= componentOffset then
+						if i ~= kept then
+							cIndex[kept] = index
+							cIndex[i] = nil
+						end
+
+						kept = kept + 1
+					else
+						cIndex[i] = nil
 					end
 				end
 
@@ -215,6 +227,10 @@ local function doReorder(componentId, componentList)
 				-- dead
 				CollectionService:RemoveTag(instance, tagName)
 				EntityMap[instance] = nil
+			end
+
+			if removedFunc then
+				removedFunc(component)
 			end
 
 			if componentId <= 64 then
