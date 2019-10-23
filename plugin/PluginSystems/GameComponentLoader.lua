@@ -165,8 +165,6 @@ local function tryDefineComponent(instance)
 	NumUniqueComponents = NumUniqueComponents + (ethereal and 0 or 1)
 
 	if serialComponentDefinition then
-		print("found serial")
-
 		local componentIdStr = serialComponentDefinition[1]
 		local paramList = {}
 
