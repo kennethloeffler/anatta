@@ -40,18 +40,18 @@ local SystemFilteredEntities = {}
 local SystemsToUnload = {}
 local SystemMap = {}
 
+local IS_STUDIO = Constants.IS_STUDIO
+
 local SystemsRunning = false
 local tagName = script:IsDescendantOf(game:GetService("ReplicatedStorage")) and "__WSEntity" or "__WSPluginEntity"
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
+local GetComponentTypeFromId = ComponentDesc.GetComponentTypeFromId
+local GetComponentIdFromEtherealId = ComponentDesc.GetComponentIdFromEtherealId
 local ReplicatorStep = EntityReplicator and EntityReplicator.Step
 local AddComponent
 
 local function setComponentBitForEntity(entity, componentId)
-	if componentId > 64 then
-		return
-	end
-
 	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
 	local bitField = EntityMap[entity][1][offset]
 
@@ -59,10 +59,6 @@ local function setComponentBitForEntity(entity, componentId)
 end
 
 local function unsetComponentBitForEntity(entity, componentId)
-	if componentId > 64 then
-		return
-	end
-
 	local offset = math.ceil(componentId * 0.03125)
 	local bitField = EntityMap[entity][1][offset]
 
