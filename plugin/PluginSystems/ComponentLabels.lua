@@ -54,16 +54,6 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 		local componentType = componentDesc.GetComponentTypeFromId(componentId)
 		local label = Instance.new("TextLabel")
 		local arrowImg = Instance.new("ImageLabel")
-		local paramsContainer = Instance.new("Frame")
-
-		PluginES.AddComponent(paramsContainer, "VerticalScalingList")
-
-		paramsContainer.Size = UDim2.new(1, 0, 0, 0)
-		paramsContainer.Position = UDim2.new(0, 0, 0, 32)
-		paramsContainer.BackgroundTransparency = 1
-		paramsContainer.BorderSizePixel = 0
-		paramsContainer.Name = "ParamsContainer"
-		paramsContainer.Parent = label
 
 		arrowImg.Image = ArrowClosedImg
 		arrowImg.Size = UDim2.new(0, 20, 0, 20)
@@ -80,7 +70,7 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 		label.Font = Enum.Font.ArialBold
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Name = componentId
-		label.LayoutOrder = componentId
+		label.LayoutOrder = componentId + ((componentId - 1) * 16)
 		label.Parent = parentFrame
 
 		label.InputBegan:Connect(function(input)
@@ -113,7 +103,6 @@ function ComponentLabels.OnLoaded(pluginWrapper)
 			clearParamFields(label)
 		end
 
-		PluginES.KillEntity(label.ParamsContainer)
 		label:Destroy()
 	end)
 end

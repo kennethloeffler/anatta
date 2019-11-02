@@ -134,8 +134,8 @@ function ParamFields.OnLoaded(pluginWrapper)
 		frame.Size = UDim2.new(1, 0, 0, 32)
 		frame.BackgroundTransparency = 1
 		frame.Name = paramName
-		frame.LayoutOrder = paramId
-		frame.Parent = cLabel.ParamsContainer
+		frame.LayoutOrder = cLabel.LayoutOrder + paramId
+		frame.Parent = cLabel.Parent
 		paramField.Field = frame
 
 		frame.InputBegan:Connect(function(input)

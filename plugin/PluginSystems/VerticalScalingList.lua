@@ -25,6 +25,8 @@ function VerticalScalingList.OnLoaded(pluginWrapper)
 		local uiListLayout = Instance.new("UIListLayout")
 		local prop = (frame:IsA("Frame") and "Size") or (frame:IsA("ScrollingFrame") and "CanvasSize")
 
+		uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
 		for _, instance in ipairs(frame:GetDescendants()) do
 			if instance:IsA("GuiObject") and PluginES.GetComponent(instance.Parent, "VerticalScalingList") then
 				frame[prop] = frame[prop] + UDim2.new(0, 0, 0, instance.AbsoluteSize.Y)
@@ -34,12 +36,14 @@ function VerticalScalingList.OnLoaded(pluginWrapper)
 		frame.DescendantAdded:Connect(function(instance)
 			if instance:IsA("GuiObject") and PluginES.GetComponent(instance.Parent, "VerticalScalingList") then
 				frame[prop] = frame[prop] + UDim2.new(0, 0, 0, instance.AbsoluteSize.Y)
+				uiListLayout:ApplyLayout()
 			end
 		end)
 
 		frame.DescendantRemoving:Connect(function(instance)
 			if instance:IsA("GuiObject") and PluginES.GetComponent(instance.Parent, "VerticalScalingList") then
 				frame[prop] = frame[prop] - UDim2.new(0, 0, 0, instance.AbsoluteSize.Y)
+				uiListLayout:ApplyLayout()
 			end
 		end)
 
