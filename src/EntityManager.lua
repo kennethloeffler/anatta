@@ -268,7 +268,11 @@ local function initComponentDefs()
 end
 
 initComponentDefs()
-ComponentDesc._defUpdateCallback = initComponentDefs
+
+if IS_STUDIO then
+	ComponentDesc._defUpdateCallback = initComponentDefs
+end
+
 
 -- Public API
 --------------------------------------------------------------------------------------------------------------------------------------------------
