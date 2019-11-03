@@ -13,6 +13,7 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Constants = require(script.Parent.Constants)
 local WSAssert = require(script.Parent.WSAssert)
@@ -26,6 +27,8 @@ local EtherealIdsByComponentId
 local Defaults
 local NumComponentParams
 local ListTyped
+
+local NOT_PLUGIN = script:IsDescendantOf(ReplicatedStorage)
 
 local ComponentDesc = {
 	_defUpdateCallback = nil
@@ -75,7 +78,7 @@ local function popComponent(componentIdStr, componentDefinition, maxComponentId)
 			ComponentIdsByEtherealId[componentIdStr] = componentId
 		end
 
-		EtherealIdsByComponentId[componentId] = Constants.IS_STUDIO and componentIdStr or true
+		EtherealIdsByComponentId[componentId] = Constants.IS_STUDIO and componentIdStr
 
 		return componentId
 	end
@@ -105,7 +108,7 @@ if ComponentDefsModule then
 	populateDefs(require(ComponentDefsModule))
 end
 
-if Constants.IS_STUDIO then
+if Constants.IS_STUDIO and not NOT_PLUGIN then
 	coroutine.wrap(function()
 		script:WaitForChild("ComponentDefinitions"):GetPropertyChangedSignal("Source"):Connect(function()
 			local componentDefinitions = require(script.ComponentDefinitions:Clone())
