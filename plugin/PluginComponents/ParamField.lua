@@ -21,5 +21,6 @@ return Component.Define({"ParamField"}, {
 	ParamName = "none",
 	EntityList = {},
 	ComponentLabel = {},
-	Field = Instance.new("Folder")
+	Field = Instance.new("Folder"),
+	FieldContainer = Instance.new("Folder")
 })

@@ -136,7 +136,8 @@ function ParamFields.OnLoaded(pluginWrapper)
 		frame.Name = paramName
 		frame.LayoutOrder = cLabel.LayoutOrder + paramId
 		frame.Parent = cLabel.Parent
-		paramField.Field = frame
+		paramField.Field = valueField
+		paramField.FieldContainer = frame
 
 		frame.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
@@ -202,7 +203,7 @@ function ParamFields.OnLoaded(pluginWrapper)
 	end)
 
 	PluginES.ComponentKilled("ParamField", function(paramField)
-		paramField.Field:Destroy()
+		paramField.FieldContainer:Destroy()
 	end)
 
 	PluginES.ComponentAdded("UpdateParamFields", function(updateParamFields)
