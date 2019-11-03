@@ -658,8 +658,8 @@ function EntityManager.Init()
 
 			for componentIdStr, paramsInfo in pairs(data) do
 				local numParams = #paramsInfo
-				local componentId = ComponentDesc.GetComponentIdFromEtherealId(componentIdStr) or tonumber(componentIdStr)
-				local componentType = ComponentDesc.GetComponentTypeFromId(componentId)
+				local componentId = GetComponentIdFromEtherealId(componentIdStr) or tonumber(componentIdStr)
+				local componentType = GetComponentTypeFromId(componentId)
 				local componentStruct = {
 					true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
 					_componentId = 0, Instance = 0
@@ -676,7 +676,7 @@ function EntityManager.Init()
 				AddComponent(instance, componentType, componentStruct)
 			end
 
-			if not Constants.IS_STUDIO then
+			if not IS_STUDIO then
 				instance.__WSEntity:Destroy()
 			end
 		end
