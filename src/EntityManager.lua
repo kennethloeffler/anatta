@@ -483,7 +483,6 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 
 	local entityStruct = EntityMap[instance]
 
-
 	if not entityStruct then
 		return
 	end
@@ -494,14 +493,14 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 		instance:Destroy()
 	end
 
-	for componentId, offset in pairs(entityStruct) do
+	for componentId, cOffset in pairs(entityStruct) do
 		if not componentId == 1 then
-			if typeof(offset) == "table" then
-				for _, index in ipairs(offset) do
+			if typeof(cOffset) == "table" then
+				for _, index in ipairs(cOffset) do
 					KilledComponents[componentId][ComponentMap[componentId][index]] = false
 				end
 			else
-				KilledComponents[componentId][ComponentMap[componentId][offset]] = false
+				KilledComponents[componentId][ComponentMap[componentId][cOffset]] = false
 			end
 		end
 	end
