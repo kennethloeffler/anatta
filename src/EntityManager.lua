@@ -157,6 +157,7 @@ local function doReorder(componentId, componentList)
 	local keptComponentOffset = 1
 	local numKilledComponents = 0
 	local masterComponentList = ComponentMap[componentId]
+	local removedFunc = ComponentRemovedFuncs[componentId]
 	local instance
 	local entityStruct
 	local doKill
@@ -195,9 +196,16 @@ local function doReorder(componentId, componentList)
 			masterComponentList[componentOffset] = nil
 			componentList[component] = nil
 
+			if removedFunc then
+				removedFunc(component)
+			end
 
 			if entityStruct then
 				unsetComponentBitForEntity(instance, componentId)
+
+				if componentId <= 64 then
+					filterEntity(component.Instance)
+				end
 
 				if not component._list then
 					entityStruct[componentId + 1] = nil
@@ -456,18 +464,8 @@ end
 
 function EntityManager.KillComponent(component, supressKillEntity)
 	local componentId = component._componentId
-	local removedFunc = ComponentRemovedFuncs[componentId]
 
 	WSAssert(typeof(component) == "table" and componentId, "bad argument #1 (expected component)")
-
-	if removedFunc then
-		removedFunc(component)
-	end
-
-
-	if componentId <= 64 then
-		filterEntity(component.Instance)
-	end
 
 	KilledComponents[componentId][component] = supressKillEntity ~= nil and supressKillEntity or false
 end
