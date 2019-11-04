@@ -28,7 +28,7 @@ function Serial.SerializeValue(data, depth)
 		str = tostring(data)
 	elseif ty == "string" then
 		str = string.format("%q", data)
-	elseif ty == "table" and data[1] then
+	elseif ty == "table" and data[1] ~= nil then
 		-- array
 		str = { "{" }
 
@@ -66,7 +66,7 @@ function Serial.SerializeValue(data, depth)
 			str[#str + 1] = string.format("%s\t%s = %s,", indent, safeKey, Serial.SerializeValue(value, depth + 1))
 		end
 
-		str[#str + 1] = next(data) and indent.."}" or "}"
+		str[#str + 1] = next(data) ~= nil and indent.."}" or "}"
 	elseif ty == "Vector2" then
 		str = string.format("Vector2.new(%f, %f)", data.X, data.Y)
 	elseif ty == "Vector3" then
