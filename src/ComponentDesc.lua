@@ -61,7 +61,7 @@ local function popComponent(componentIdStr, componentDefinition, maxComponentId)
 
 	local componentType = componentDefinition[1].ComponentType
 	local componentId = tonumber(componentIdStr)
-	local isListType = componentDefinition[1].ListType
+	local isListType = componentDefinition[1].ListType or false
 
 	if componentId then
 		initComponentPop(componentType, componentId, isListType)
@@ -75,7 +75,7 @@ local function popComponent(componentIdStr, componentDefinition, maxComponentId)
 		popParams(componentDefinition, componentId)
 
 		if Constants.IS_STUDIO then
-			ComponentIdsByEtherealId[componentIdStr] = componentId
+			ComponentIdsByEtherealId[componentIdStr] = true
 		end
 
 		EtherealIdsByComponentId[componentId] = Constants.IS_STUDIO and componentIdStr
@@ -108,7 +108,7 @@ if ComponentDefsModule then
 	populateDefs(require(ComponentDefsModule))
 end
 
-if Constants.IS_STUDIO and not NOT_PLUGIN then
+if Constants.IS_STUDIO and NOT_PLUGIN then
 	coroutine.wrap(function()
 		script:WaitForChild("ComponentDefinitions"):GetPropertyChangedSignal("Source"):Connect(function()
 			local componentDefinitions = require(script.ComponentDefinitions:Clone())
