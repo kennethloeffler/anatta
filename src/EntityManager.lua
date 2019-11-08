@@ -509,6 +509,30 @@ function EntityManager.KillEntity(instance)
 	end
 end
 
+function EntityManager.KillEntityNoDestroy(instance)
+	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
+
+	local entityStruct = EntityMap[instance]
+
+	if not entityStruct then
+		return
+	end
+
+	CollectionService:RemoveTag(instance, tagName)
+
+	for componentId, cOffset in pairs(entityStruct) do
+		if not componentId == 1 then
+			if typeof(cOffset) == "table" then
+				for _, index in ipairs(cOffset) do
+					KilledComponents[componentId][ComponentMap[componentId][index]] = false
+				end
+			else
+				KilledComponents[componentId][ComponentMap[componentId][cOffset]] = false
+			end
+		end
+	end
+end
+
 ---Loads the system defined by module
 -- If the system has a .OnLoaded() member, then it is called by this function
 -- If the system has a .Heartbeat() member, then it is loaded to be ran when EntityManager.StartSystems() is called
