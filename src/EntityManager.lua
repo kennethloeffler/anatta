@@ -481,9 +481,8 @@ end
 -- @param instance
 -- @param supressInstanceDestruction
 
-function EntityManager.KillEntity(instance, supressInstanceDestruction)
+function EntityManager.KillEntity(instance)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(supressInstanceDestruction == nil or typeof(supressInstanceDestruction) == "boolean", "bad argument #2 (expected boolean)")
 
 	local entityStruct = EntityMap[instance]
 
@@ -493,7 +492,7 @@ function EntityManager.KillEntity(instance, supressInstanceDestruction)
 
 	CollectionService:RemoveTag(instance, tagName)
 
-	if not supressInstanceDestruction and instance.Parent then
+	if instance.Parent then
 		instance:Destroy()
 	end
 
