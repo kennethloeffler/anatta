@@ -150,6 +150,7 @@ end
 local function serializePrefabFor(player, rootInstance, isUnique)
 	local static = StaticPrefabEntities[rootInstance]
 	local remote = Remotes[player]
+	local remoteFunction = remote[REMOTE_FUNCTION]
 	local prefabRefsIndex = 1
 	local prefabRefsParamIndex = 1
 	local prefabRefs = {}
@@ -170,9 +171,7 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 	rootInstance = isUnique and rootInstance:Clone() or rootInstance
 	rootInstance.Parent = isUnique and player.PlayerGui or rootInstance.Parent
 
-	local success = pcall(function()
-		remote[REMOTE_FUNCTION]:InvokeClient(player, rootInstance, static[ENTITIES], table.unpack(static[PARAMS]))
-	end)
+	local success = pcall(remoteFunction.InvokeClient, remoteFunction, player, rootInstance, static[ENTITIES], table.unpack(static[PARAMS]))
 
 	if not success then
 		if isUnique then
@@ -199,17 +198,16 @@ end
 -- @param params table
 
 local function doSendUnique(player, instance, entities, params)
+	local remoteFunction = Remotes[player][REMOTE_FUNCTION]
+
 	instance = instance:Clone()
 
-	pcall(function()
-		Remotes[player][REMOTE_FUNCTION]:InvokeClient(player, instance, entities, table.unpack(params))
-	end)
+	pcall(remoteFunction.InvokeClient, remoteFunction, player, instance, entities, table.unpack(params))
 
 	instance:Destroy()
 end
 
 local function newPlayerReplicator(player)
-	-- probably unnecessary for each client to have its own private remote pair... but why not?
 	local remoteEvent = Instance.new("RemoteEvent")
 	local remoteFunction = Instance.new("RemoteFunction")
 
