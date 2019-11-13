@@ -18,15 +18,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Constants = require(script.Parent.Constants)
 local WSAssert = require(script.Parent.WSAssert)
 
-local ComponentDefsModule = script:WaitForChild("ComponentDefinitions", 0.1)
-local ComponentIdsByType
-local ComponentTypesById
-local ComponentParamIds
-local ComponentIdsByEtherealId
-local EtherealIdsByComponentId
-local Defaults
-local NumComponentParams
-local ListTyped
+local ComponentDefinitions = script:GetAttribute("__WSComponentDefinitions")
+
+local ComponentIdsByType = {}
+local ComponentTypesById = {}
+local ComponentParamIds = {}
+local ComponentIdsByEtherealId = {}
+local EtherealIdsByComponentId = {}
+local Defaults = {}
+local NumComponentParams = {}
+local ListTyped = {}
 
 local NOT_PLUGIN = script:IsDescendantOf(ReplicatedStorage)
 
@@ -38,6 +39,10 @@ local function popParams(componentDefinition, componentId)
 	for paramId, paramDef in ipairs(componentDefinition) do
 		if paramId > 1 then
 			WSAssert(typeof(paramDef) == "table", "expected table")
+
+			if paramDef.DefaultValue == "__InstanceReferent" then
+				paramDef.DefaultValue = Instance.new("Folder")
+			end
 
 			ComponentParamIds[componentId][paramDef.ParamName] = paramId - 1
 			Defaults[componentId][paramDef.ParamName] = paramDef.DefaultValue
@@ -87,31 +92,15 @@ end
 local function populateDefs(definitionTable)
 	local maxComponentId = 0
 
-	ComponentIdsByType = {}
-	ComponentTypesById = {}
-	ComponentParamIds = {}
-	Defaults = {}
-	NumComponentParams = {}
-	ListTyped = {}
-	ComponentIdsByEtherealId = Constants.IS_STUDIO and {}
-	EtherealIdsByComponentId = {}
-
 	for componentIdStr, componentDefinition in pairs(definitionTable) do
 		maxComponentId = popComponent(componentIdStr, componentDefinition, maxComponentId)
 	end
-
-	ComponentDesc.NumParamsByComponentId = NumComponentParams
-end
-
-
-if ComponentDefsModule then
-	populateDefs(require(ComponentDefsModule))
 end
 
 if Constants.IS_STUDIO and NOT_PLUGIN then
 	coroutine.wrap(function()
-		script:WaitForChild("ComponentDefinitions"):GetPropertyChangedSignal("Source"):Connect(function()
-			local componentDefinitions = require(script.ComponentDefinitions:Clone())
+		script:GetAttributeChangedSignal("__WSComponentDefinitions"):Connect(function()
+			local componentDefinitions = script:GetAttribute("__WSComponentDefinitions") or {}
 
 			populateDefs(componentDefinitions)
 
@@ -120,6 +109,18 @@ if Constants.IS_STUDIO and NOT_PLUGIN then
 			end
 		end)
 	end)()
+end
+
+if ComponentDefinitions then
+	populateDefs(ComponentDefinitions)
+end
+
+function ComponentDesc.GetNumParams(componentId)
+	return NumComponentParams[componentId]
+end
+
+function ComponentDesc.GetNumParamsAll()
+	return NumComponentParams
 end
 
 function ComponentDesc.GetDefaults(componentId)

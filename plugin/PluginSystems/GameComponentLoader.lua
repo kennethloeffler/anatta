@@ -20,7 +20,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameSrc = ReplicatedStorage:WaitForChild("WorldSmith")
 local PluginSrc = script.Parent.Parent.Parent.src
 
-local Sandbox = require(script.Parent.Parent.SandboxEnv)
+local GameComponentDesc = GameSrc.ComponentDesc
+local Sandbox = require(PluginSrc.Parent.plugin.SandboxEnv)
 local WSAssert = require(PluginSrc.WSAssert)
 
 local NumUniqueComponents = 0
@@ -30,7 +31,6 @@ local SerialComponentDefinitions = {}
 local ComponentsLoader = {}
 
 local PluginES
-local GameComponentDefsModule
 local AddedConnection
 local RemovedConnection
 
@@ -88,7 +88,7 @@ local function newComponentDefinition(instance, componentType, paramMap, listTyp
 		paramList[paramId] = { ParamName = paramName, DefaultValue = defaultValue }
 	end
 
-	PluginES.AddComponent(GameComponentDefsModule, "SerializeComponentDefinition", {
+	PluginES.AddComponent(GameComponentDesc, "SerializeComponentDefinition", {
 		PluginES.AddComponent(instance, "ComponentDefinition", {
 			ComponentType = componentType,
 			ComponentId = componentIdStr,
@@ -140,7 +140,7 @@ local function diffComponentDefinition(componentDefinition, componentType, param
 	componentDefinition.ComponentType = componentType
 	componentDefinition.ListTyped = listTyped
 
-	PluginES.AddComponent(GameComponentDefsModule, "SerializeComponentDefinition", { componentDefinition })
+	PluginES.AddComponent(GameComponentDesc, "SerializeComponentDefinition", { componentDefinition })
 end
 
 local function tryDefineComponent(instance)
@@ -214,7 +214,7 @@ local function tryDeleteComponent(instance)
 			NumUniqueComponents = NumUniqueComponents - 1
 		end
 
-		PluginES.AddComponent(GameComponentDefsModule, "SerializeDeleteComponentDefinition", { componentType })
+		PluginES.AddComponent(GameComponentDesc, "SerializeDeleteComponentDefinition", { componentType })
 		PluginES.KillComponent(componentDefinition)
 
 		return componentType
@@ -222,18 +222,14 @@ local function tryDeleteComponent(instance)
 end
 
 function ComponentsLoader.OnLoaded(pluginWrapper)
-	GameComponentDefsModule = GameSrc.ComponentDesc:WaitForChild("ComponentDefinitions", 2)
+	local componentDefinitions = GameComponentDesc:GetAttribute("__WSComponentDefinitions")
+
 	PluginES = pluginWrapper.PluginES
 
-	if GameComponentDefsModule then
-		for componentIdStr, componentDefinition in pairs(require(GameComponentDefsModule)) do
+	if componentDefinitions then
+		for componentIdStr, componentDefinition in pairs(componentDefinitions) do
 			SerialComponentDefinitions[componentDefinition[1].ComponentType] = { componentIdStr, componentDefinition }
 		end
-	else
-		GameComponentDefsModule = Instance.new("ModuleScript")
-		GameComponentDefsModule.Source = "return {}"
-		GameComponentDefsModule.Name = "ComponentDefinitions"
-		GameComponentDefsModule.Parent = GameSrc.ComponentDesc
 	end
 
 	for _, instance in ipairs(ReplicatedStorage:GetDescendants()) do

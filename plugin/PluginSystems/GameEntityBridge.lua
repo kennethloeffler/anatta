@@ -49,6 +49,8 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 		local componentId = ComponentDesc.GetComponentIdFromType(componentType)
 		local componentIdStr = ComponentDesc.GetEtherealIdFromComponentId(componentId) or tostring(componentId)
 		local paramId = ComponentDesc.GetParamIdFromName(componentId, paramName)
+		local paramValue = serializeParam.Value
+		local components
 		local gameComponent
 		local module
 		local entityStruct
@@ -57,12 +59,11 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 			gameComponent = GameES.GetComponent(instance, componentType)
 
 			if gameComponent then
-				entityStruct, module = getEntityStruct(instance)
-				entityStruct[componentIdStr][paramId] = serializeParam.Value
+				components = instance:GetAttribute("__WSEntity")
 
-				gameComponent[paramName] = serializeParam.Value
-
-				module.Source = Serial.Serialize(entityStruct)
+				components[componentIdStr][paramId] = paramValue
+				gameComponent[paramName] = paramValue
+				instance:SetAttribute("__WSEntity", components)
 			end
 		end
 
@@ -77,23 +78,22 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 		local module
 		local entityStruct
 		local serialComponentStruct
+		local components
 
 		for _, instance in ipairs(serializeAddComponent.EntityList) do
 			gameComponent = GameES.GetComponent(instance, componentType)
 
 			if not gameComponent then
+				components = instance:GetAttribute("__WSEntity") or {}
 				gameComponent = GameES.AddComponent(instance, componentType)
 
-				entityStruct, module = getEntityStruct(instance)
-				serialComponentStruct = {}
+				components[componentIdStr] = {}
 
-				for i, v in ipairs(gameComponent) do
-					serialComponentStruct[i] = v
+				for paramId, paramValue in ipairs(gameComponent) do
+					components[componentIdStr][paramId] = paramValue
 				end
 
-				entityStruct[componentIdStr] = serialComponentStruct
-
-				module.Source = Serial.Serialize(entityStruct)
+				instance:SetAttribute("__WSEntity", components)
 			end
 		end
 
@@ -107,21 +107,19 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 		local gameComponent
 		local module
 		local entityStruct
+		local components
 
 		for _, instance in ipairs(serializeKillComponent.EntityList) do
 			gameComponent = GameES.GetComponent(instance, componentType)
+			
 
 			if gameComponent then
-				entityStruct, module  = getEntityStruct(instance)
-				entityStruct[componentIdStr] = nil
-
+				components = instance:GetAttribute("__WSEntity")
+				
+				components[componentType] = nil
+				instance:SetAttribute("__WSEntity", next(components) ~= nil and components or nil)
+				
 				GameES.KillComponent(gameComponent)
-
-				if not next(entityStruct) then
-					module:Destroy()
-				else
-					module.Source = Serial.Serialize(entityStruct)
-				end
 			end
 		end
 
@@ -136,41 +134,46 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 		local componentIdStr = componentDefinition.ComponentId
 		local componentId = tonumber(componentIdStr) or ComponentDesc.GetComponentIdFromEtherealId(componentIdStr)
 		local listTyped = componentDefinition.ListTyped
-		local gameComponentDefinitions = Serial.Deserialize(module.Source)
+		local gameComponentDefinitions = module:GetAttribute("__WSComponentDefinitions") or {}
 		local serialComponentDefinition = gameComponentDefinitions[componentIdStr]
-		local entityStruct, entityModule
+		local components
 
 		if not serialComponentDefinition then
-			serialComponentDefinition = {{ ComponentType = componentType, ListTyped = listTyped }}
+			serialComponentDefinition = { { ComponentType = componentType, ListTyped = listTyped } }
 			gameComponentDefinitions[componentIdStr] = serialComponentDefinition
 		else
 			serialComponentDefinition[1].ListTyped = listTyped
 			serialComponentDefinition[1].ComponentType = componentType
 
 			for paramId, paramDefinition in ipairs(componentDefinition.ParamList) do
-				if typeof(paramDefinition.ParamValue) ~= typeof(serialComponentDefinition[paramId + 1].ParamValue) then
+				if typeof(paramDefinition.ParamValue) ~= (serialComponentDefinition[paramId + 1].ParamValue == "__InstanceReferent" and "Instance"
+				or typeof(serialComponentDefinition[paramId + 1].ParamValue)) then
 					changedTypes[paramId] = paramDefinition.ParamValue
 					componentDefinition.ParamList[paramId] = nil
 				end
 			end
 
-			for _, component in ipairs(GameES.GetAllComponentsOfType(ComponentDesc.GetComponentTypeFromId(componentId))) do
-				entityStruct, entityModule = getEntityStruct(component.Instance)
+			for _, gameComponent in ipairs(GameES.GetAllComponentsOfType(ComponentDesc.GetComponentTypeFromId(componentId))) do
+				components = gameComponent.Instance:GetAttribute("__WSEntity")
 
-				for paramId, paramValue in ipairs(changedTypes) do
-					entityStruct[componentIdStr][paramId] = paramValue
+				for paramId, paramValue in pairs(changedTypes) do
+					components[componentIdStr][paramId] = typeof(paramValue) == "Instance" and "__InstanceReferent" or paramValue
 					component[paramId] = paramValue
 				end
 
-				entityModule.Source = Serial.Serialize(entityStruct)
+				gameComponent.Instance:SetAttribute("__WSEntity", components)
 			end
 		end
 
 		for paramId, paramDefinition in pairs(componentDefinition.ParamList) do
+			if typeof(paramDefinition.DefaultValue) == "Instance" then
+				paramDefinition.DefaultValue = "__InstanceReferent"
+			end
+
 			serialComponentDefinition[paramId + 1] = paramDefinition
 		end
 
-		module.Source = Serial.Serialize(gameComponentDefinitions)
+		module:SetAttribute("__WSComponentDefinitions", gameComponentDefinitions)
 
 		PluginES.KillComponent(serializeComponentDefinition)
 	end)
@@ -179,27 +182,18 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 		local componentType = serializeDeleteComponentDefinition.ComponentType
 		local componentId = ComponentDesc.GetComponentIdFromType(componentType)
 		local componentIdStr = ComponentDesc.GetEtherealIdFromComponentId(componentId) or tostring(componentId)
-		local componentDefinitions
+		local componentDefinitions = serializeDeleteComponentDefinition.Instance:GetAttribute("__WSComponentDefinitions")
 		local module
 		local entityStruct
+		local components
 
 		for _, gameComponent in ipairs(GameES.GetAllComponentsOfType(componentType)) do
 			GameES.KillComponent(gameComponent)
 
-			entityStruct, module = getEntityStruct(gameComponent.Instance)
-			entityStruct[componentIdStr] = nil
-
-			if not next(entityStruct) then
-				module:Destroy()
-			else
-				module.Source = Serial.Serialize(entityStruct)
-			end
+			gameComponent.Instance:SetAttribute("__WSEntity", nil)
 		end
 
-		module = serializeDeleteComponentDefinition.Instance
-		componentDefinitions = Serial.Deserialize(module.Source)
 		componentDefinitions[componentIdStr] = nil
-		module.Source = Serial.Serialize(componentDefinitions)
 
 		PluginES.KillComponent(serializeDeleteComponentDefinition)
 	end)

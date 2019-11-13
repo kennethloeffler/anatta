@@ -17,7 +17,6 @@
 local CollectionService = game:GetService("CollectionService")
 local Selection = game:GetService("Selection")
 
-local Serial = require(script.Parent.Serial)
 local GameES
 local PluginES
 
@@ -26,7 +25,6 @@ local function collectPluginComponents(root)
 	local numPluginComponents = 0
 	local componentDefinitions = {}
 	local components = root.plugin.PluginComponents
-	local componentDefsModule = root.src.ComponentDesc:WaitForChild("ComponentDefinitions", 2) or Instance.new("ModuleScript")
 
 	for _, componentModule in ipairs(components:GetChildren()) do
 		numPluginComponents = numPluginComponents + 1
@@ -36,20 +34,18 @@ local function collectPluginComponents(root)
 		local componentType = listTyped and rawComponent[1][1] or rawComponent[1]
 		local componentIdStr = tostring(numPluginComponents)
 		local paramMap = rawComponent[2]
+		local componentDefinition = { { ComponentType = componentType, ListType = listTyped } }
 		local paramId = 1
-
-		componentDefinitions[componentIdStr] = {}
-		componentDefinitions[componentIdStr][1] = { ComponentType = componentType, ListType = listTyped }
 
 		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
-			componentDefinitions[componentIdStr][paramId] = { ParamName = paramName, DefaultValue = defaultValue }
+			componentDefinition[paramId] = { ParamName = paramName, DefaultValue = typeof(defaultValue) == "Instance" and "__InstanceReferent" or defaultValue }
 		end
+		
+		componentDefinitions[componentIdStr] = componentDefinition
 	end
 
-	componentDefsModule.Name = "ComponentDefinitions"
-	componentDefsModule.Source = Serial.Serialize(componentDefinitions)
-	componentDefsModule.Parent = root.src.ComponentDesc
+	root.src.ComponentDesc:SetAttribute("__WSComponentDefinitions", componentDefinitions)
 end
 
 return function(pluginWrapper, root, gameRoot)

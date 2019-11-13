@@ -672,38 +672,17 @@ end
 
 function EntityManager.Init()
 	local entities = CollectionService:GetTagged(tagName)
-	local data
+	local componentId
+	local components
 
 	for _, instance in pairs(entities) do
-		if not instance:FindFirstChild("__WSEntity") then
-			CollectionService:RemoveTag(instance, tagName)
+		components = instance:GetAttribute("__WSEntity")
 
-			warn(("Tagged entity %s has no associated data (missing __WSEntity module)"):format(instance:GetFullName()))
-		else
-			data = require(instance.__WSEntity)
+		if components then
+			for componentIdStr, paramList in pairs(components) do
+				componentId = tonumber(componentIdStr) or GetComponentIdFromEtherealId(componentIdStr)
 
-			for componentIdStr, paramsInfo in pairs(data) do
-				local numParams = #paramsInfo
-				local componentId = GetComponentIdFromEtherealId(componentIdStr) or tonumber(componentIdStr)
-				local componentType = GetComponentTypeFromId(componentId)
-				local componentStruct = {
-					true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true,
-					_componentId = 0, Instance = 0
-				}
-
-				for paramId, paramValue in ipairs(paramsInfo) do
-					componentStruct[paramId] = paramValue
-				end
-
-				for i = 16, numParams < 16 and numParams + 1 or numParams, -1 do
-					componentStruct[i] = nil
-				end
-
-				AddComponent(instance, componentType, componentStruct)
-			end
-
-			if not IS_STUDIO then
-				instance.__WSEntity:Destroy()
+				AddComponent(instance, GetComponentTypeFromId(componentId), paramList)
 			end
 		end
 	end
