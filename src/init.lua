@@ -33,6 +33,7 @@ return {
 
 	KillComponent = EntityManager.KillComponent,
 	KillEntity = EntityManager.KillEntity,
+	KillEntityNoDestroy = EntityManager.KillEntityNoDestroy,
 
 	LoadSystem = EntityManager.LoadSystem,
 	UnloadSystem = EntityManager.UnloadSystem,
