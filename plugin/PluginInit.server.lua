@@ -45,7 +45,7 @@ if not plugin then
 end
 
 if IsCustomSource then
-	-- this script seems to run before children are loaded...
+	-- this script seems to run before children exist ...
 	local customSource = ServerStorage:WaitForChild("WorldSmith", 2)
 
 	if customSource then

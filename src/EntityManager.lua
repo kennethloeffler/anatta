@@ -408,7 +408,7 @@ function EntityManager.GetAllComponentsOfType(componentType)
 	return ComponentMap[GetComponentIdFromType(componentType)]
 end
 
----Hooks a function func to be called whenever just before of type componentType are added to an entity
+---Hooks a function func to be called just before a component of type componentType is added to an entity
 -- The component object is passed as a parameter to func
 -- @param componentType
 -- @Param func
@@ -420,7 +420,7 @@ function EntityManager.ComponentAdded(componentType, func)
 	ComponentAddedFuncs[GetComponentIdFromType(componentType)] = func
 end
 
----Hooks a function func to be called just before components of type componentType are removed from an entity
+---Hooks a function func to be called just before a component of type componentType is removed from an entity
 -- The component object is passed as a parameter to func
 -- @param componentType
 -- @param func
@@ -460,7 +460,7 @@ end
 
 ---Removes component of type componentType from the entity associated with instance
 -- If instance is not associated with an entity or instance does not have componentType, this function returns without doing anything
--- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
+-- This operation is asynchronus - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
 -- @param componentType
 
@@ -475,7 +475,7 @@ end
 ---Removes the entity (and by extension, all components) associated with instance
 -- If instance is not associated with an entity, this function returns without doing anything
 -- supressInstanceDestruction is a boolean which determines whether to destroy the instance, along with its associated entity
--- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
+-- This operation is asynchronus - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
 -- @param supressInstanceDestruction
 
@@ -507,6 +507,7 @@ function EntityManager.KillEntity(instance)
 	end
 end
 
+---Same as EntityManager.KillEntity, except instance:Destroy() is not called
 function EntityManager.KillEntityNoDestroy(instance)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
 
@@ -586,7 +587,7 @@ end
 
 ---Unloads the system defined by module
 -- If the system has a .OnUnloaded member, then it is called by this function
--- System is unloaded by EntityManager.StartSystem()'s loop on the next RunServive.Heartbeat step
+-- This operation is asynchronus - the system is unloaded by EntityManager.StartSystem()'s loop on the next RunServive.Heartbeat step
 -- @param module
 
 function EntityManager.UnloadSystem(module)
