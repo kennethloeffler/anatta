@@ -848,24 +848,9 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId)
 	if not msgMap then
 		msgMap = {
 			0,
-			{
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
-			},
-			{
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
-			},
-			{
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-				false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
-			}
+			table.create(64, false),
+			table.create(64, false),
+			table.create(64, false)
 		}
 
 		Queued[instance] = msgMap
