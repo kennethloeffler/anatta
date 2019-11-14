@@ -19,7 +19,7 @@ local EntityManager = require(script.EntityManager)
 local EntityReplicator = Constants.IS_SERVER or Constants.IS_CLIENT and require(script.EntityReplicator)
 
 return {
-	-- EntityManager
+	-- functions from EntityManager.lua
 	AddComponent = EntityManager.AddComponent,
 	GetComponent = EntityManager.GetComponent,
 	GetListTypedComponent = EntityManager.GetListTypedComponent,
@@ -43,7 +43,7 @@ return {
 	Init = EntityManager.Init,
 	Destroy = EntityManager.Destroy,
 
-	-- EntityReplicator
+	-- functions from EntityReplicator.lua
 	SendAddComponent = EntityReplicator and EntityReplicator.SendAddComponent,
 	SendParameterUpdate = EntityReplicator and EntityReplicator.SendParameterUpdate,
 
@@ -60,5 +60,5 @@ return {
 	DereferenceForPlayer = EntityReplicator and EntityReplicator.DereferenceForPlayer,
 
 	Unique = EntityReplicator and EntityReplicator.Unique,
-	UniqueFromPrefab = EntityReplicator and EntityReplicator.UniqueFromPrefab,
+	UniqueFromPrefab = EntityReplicator and EntityReplicator.UniqueFromPrefab
 }
