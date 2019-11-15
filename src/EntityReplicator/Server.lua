@@ -41,6 +41,7 @@ local AUTO_SERIALIZE_GLOBAL_ENV = false
 
 local Server = {}
 
+local OnPlayerAdded
 local NumNetworkIds = 0
 local AccumulatedTime = 0
 
@@ -232,6 +233,10 @@ local function newPlayerReplicator(player)
 			end
 		end
 	end)
+
+	if OnPlayerAdded then
+		OnPlayerAdded(player)
+	end
 end
 
 local function destroyPlayerReplicator(player)
@@ -666,11 +671,17 @@ function Server.PlayerCreatable(players, instance, componentType)
 	end
 end
 
+function Server.OnPlayerAdded(func)
+	WSAssert(typeof(func) == "function", "bad argument #1 (expected function)")
+
+	OnPlayerAdded = func
+end
+
 ---Steps the server's replicator
 -- default rate 30hz
 -- @param dt
 
-function Server.Step(dt)
+function Server.Step(deltaT)
 	local playerBuffer
 	local playerReferences
 	local buffer
