@@ -812,13 +812,13 @@ function Server.Init()
 		end
 	end
 
-	Players.PlayerAdded:Connect(newPlayerReplicator)
-	Players.PlayerRemoving:Connect(destroyPlayerReplicator)
-
 	-- if we took too long, create buffers for extant players
 	for _, player in ipairs(Players:GetPlayers()) do
 		newPlayerReplicator(player)
 	end
+
+	Players.PlayerAdded:Connect(newPlayerReplicator)
+	Players.PlayerRemoving:Connect(destroyPlayerReplicator)
 end
 
 return Server
