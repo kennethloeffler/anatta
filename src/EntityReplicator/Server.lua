@@ -440,7 +440,7 @@ end
 -- If entity is not referenced, this function returns without doing anything
 -- supressConstructionMessage is a boolean which determines if a destruction message is sent
 -- @param player
--- @param isntance
+-- @param instance
 -- @param supressDestructionMessage
 
 function Server.DereferenceForPlayer(player, instance, supressDestructionMessage)
@@ -691,7 +691,7 @@ function Server.Step(deltaT)
 	local prefab
 	local global
 
-	AccumulatedTime = AccumulatedTime + dt
+	AccumulatedTime = AccumulatedTime + deltaT
 
 	while AccumulatedTime >= TICK_RATE do
 		AccumulatedTime = AccumulatedTime - TICK_RATE
