@@ -67,6 +67,7 @@ local AddComponent
 local KillComponent
 local PlayerCreatable
 local PlayerSerializable
+local QueueUpdate
 
 Shared.Queued = Queued
 Shared.InstancesByNetworkId = InstancesByNetworkId
@@ -690,6 +691,10 @@ local function deserializeParamsUpdate(networkId, entities, params, entitiesInde
 				ComponentMap[componentId][EntityMap[instance][componentId + 1]][paramId] = params[paramsIndex]
 				paramsIndex = paramsIndex + 1
 				paramsField = unsetbit(paramsField, paramId - 1)
+
+				if player then
+					QueueUpdate(instance, PARAMS_UPDATE, componentId, paramId)
+				end
 			end
 
 			field = unsetbit(field, pos)
@@ -862,6 +867,8 @@ function Shared.QueueUpdate(instance, msgType, componentId, paramId)
 	msgMap[1] = setbit(msgMap[1], msgType)
 	msgMap[componentId] = msgType == PARAMS_UPDATE and setbit(field or 0, paramId - 1) or true
 end
+
+QueueUpdate = Shared.QueueUpdate
 
 function Shared.Blacklist(componentType)
 	BlacklistedComponents[GetComponentIdFromType(componentType)] = true
