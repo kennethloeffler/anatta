@@ -41,6 +41,7 @@ local SystemsToUnload = {}
 local SystemMap = {}
 
 local IS_STUDIO = Constants.IS_STUDIO
+local LIST_ALLOC_SIZE = 32
 
 local SystemsRunning = false
 local tagName = script:IsDescendantOf(game:GetService("ReplicatedStorage")) and "__WSEntity" or "__WSPluginEntity"
@@ -354,7 +355,7 @@ function EntityManager.GetListTypedComponent(instance, componentType)
 	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
 
 	local entityStruct = EntityMap[instance]
-	local struct = {}
+	local struct = table.create(LIST_ALLOC_SIZE, nil)
 	local componentId = GetComponentIdFromType(componentType)
 	local componentMap = ComponentMap[componentId]
 	local componentIndex = entityStruct[componentId + 1]
@@ -376,7 +377,8 @@ function EntityManager.GetComponents(instance)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
 
 	local entityStruct = EntityMap[instance]
-	local struct = {}
+	local struct = table.create(LIST_ALLOC_SIZE, nil)
+	local n = 0
 
 	if not entityStruct then
 		return struct
@@ -384,11 +386,13 @@ function EntityManager.GetComponents(instance)
 
 	for componentId, cOffset in pairs(entityStruct) do
 		if componentId > 1 then
+			n = n + 1
+
 			if typeof(cOffset) == "number" then
-				struct[#struct + 1] = ComponentMap[componentId - 1][cOffset]
+				struct[n] = ComponentMap[componentId - 1][cOffset]
 			elseif typeof(cOffset) == "table" then
 				for _, offset in ipairs(cOffset) do
-					struct[#struct + 1] = ComponentMap[componentId - 1][offset]
+					struct[n] = ComponentMap[componentId - 1][offset]
 				end
 			end
 		end
