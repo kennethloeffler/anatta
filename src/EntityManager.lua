@@ -309,8 +309,6 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 		end
 	end
 
-	componentList._length = componentOffset
-	componentList[componentOffset] = component
 	setComponentBitForEntity(instance, componentId)
 
 	if addedFunc then
@@ -320,6 +318,9 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 	if componentId <= 64 then
 		filterEntity(instance)
 	end
+
+	componentList._length = componentOffset
+	componentList[componentOffset] = component
 
 	return component
 end
