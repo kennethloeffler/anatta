@@ -16,8 +16,11 @@
 
 local WSAssert = require(script.Parent.WSAssert)
 
--- Component.lua
 local Component = {}
+
+function Component.InstanceReference()
+	return "__InstanceReferent"
+end
 
 function Component.Define(componentTypeName, paramMap, isEthereal)
 	WSAssert(typeof(componentTypeName) == "string" or (typeof(componentTypeName) == "table" and typeof(componentTypeName[1]) == "string"), "bad argument #1 (expected string)")
