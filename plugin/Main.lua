@@ -39,9 +39,9 @@ local function collectPluginComponents(root)
 
 		for paramName, defaultValue in pairs(paramMap) do
 			paramId = paramId + 1
-			componentDefinition[paramId] = { ParamName = paramName, DefaultValue = typeof(defaultValue) == "Instance" and "__InstanceReferent" or defaultValue }
+			componentDefinition[paramId] = { ParamName = paramName, DefaultValue = defaultValue }
 		end
-		
+
 		componentDefinitions[componentIdStr] = componentDefinition
 	end
 
