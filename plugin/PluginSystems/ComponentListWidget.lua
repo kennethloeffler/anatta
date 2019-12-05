@@ -13,7 +13,10 @@ function ComponentListWidget.OnLoaded(pluginWrapper)
 	GameES = pluginWrapper.GameES
 
 	local mainToolbar = pluginWrapper.GetToolbar("WorldSmith")
-	local listComponentButton = pluginWrapper.GetButton(mainToolbar, "List components...", "Displays/hides a menu which can be used to view components on selected instances, edit their parameters, or remove them")
+
+	local listComponentButton = pluginWrapper.GetButton(mainToolbar, "List components...",
+	"Displays/hides a menu which can be used to view components on selected instances, edit their parameters, or remove them")
+
 	local componentListWidget = pluginWrapper.GetDockWidget("Components", Enum.InitialDockState.Float, true, false,  200, 300)
 	local scrollingFrame = Instance.new("ScrollingFrame")
 

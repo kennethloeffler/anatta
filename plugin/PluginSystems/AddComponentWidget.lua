@@ -33,7 +33,10 @@ function AddComponentWidget.OnLoaded(pluginWrapper)
 	PluginES = pluginWrapper.PluginES
 
 	local mainToolbar = pluginWrapper.GetToolbar("WorldSmith")
-	local addComponentWidgetButton = pluginWrapper.GetButton(mainToolbar, "Add component...", "Displays/hides a menu which can be used to add components to instances")
+
+	local addComponentWidgetButton = pluginWrapper.GetButton(mainToolbar, "Add component...",
+	"Displays/hides a menu which can be used to add components to instances")
+
 	local addComponentWidget = pluginWrapper.GetDockWidget("Add components", Enum.InitialDockState.Float, true, false, 200, 300)
 	local scrollingFrame = Instance.new("ScrollingFrame")
 
