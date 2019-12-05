@@ -79,8 +79,6 @@ function Serial.SerializeValue(data, depth)
 		str = string.format("Color3.new(%f, %f, %f)", data.R, data.G, data.B)
 	elseif ty == "Vector2int16" then
 		str = string.format("Vector2int16.new(%d, %d)", data.X, data.Y)
-	elseif ty == "Instance" then
-		str = string.format("Instance.new(\"%s\")", data.ClassName)
 	else
 		error("Unexpected type: "..ty)
 	end
