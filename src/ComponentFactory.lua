@@ -47,9 +47,9 @@ local ComponentMetatable = {
 	__newindex = function(component, index, value)
 		local componentId = component._componentId
 		local paramId = GetParamIdFromName(componentId, index)
-		local ty = typeof(GetParamDefault(componentId, paramId))
+		local ty = type(GetParamDefault(componentId, paramId))
 
-		if not ty == typeof(value) then
+		if not ty == type(value) then
 			error("Wrong type: expected " .. ty)
 		end
 
@@ -68,7 +68,7 @@ local ComponentMetatable = {
 -- inserted.
 
 -- To also avoid the two rehashes when assigning to ._componentId and .Instance, one may assign values to these same indices
--- (the values don't particularly matter; the number 0 would suffice) when supplying paramMap to EntityManager.AddComponent().
+-- (the values do not matter) when supplying paramMap to EntityManager.AddComponent().
 
 -- As with any optimization, only do this when absolutely necessary; it will heavily reduce readability. It may be helpful to
 -- include a comment in the system which indicates which parameter names go with which paramIds.
@@ -79,7 +79,7 @@ local ComponentMetatable = {
 --@return The new component object
 
 return function(instance, componentType, paramMap)
-	local componentId = typeof(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
+	local componentId = type(componentType) == "number" and componentType or GetComponentIdFromType(componentType)
 	local newComponent = paramMap or {}
 
 	if not paramMap or not paramMap[1] then
