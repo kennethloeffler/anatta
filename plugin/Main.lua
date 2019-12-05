@@ -14,13 +14,10 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-local CollectionService = game:GetService("CollectionService")
-local Selection = game:GetService("Selection")
-
 local GameES
 local PluginES
 
-local function collectPluginComponents(root)
+local function popPluginComponents(root)
 	-- PluginComponents are not persistent
 	local numPluginComponents = 0
 	local componentDefinitions = {}
