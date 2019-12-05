@@ -46,15 +46,9 @@ local function popPluginComponents(root)
 end
 
 return function(pluginWrapper, root, gameRoot)
-	local networkToolbar = pluginWrapper.GetToolbar("WorldSmith replicator")
-	local makeReferenceButton = pluginWrapper.GetButton(networkToolbar, "Make reference", "Tags the selected entities with an EntityReplicator reference")
-	local removeReferenceButton = pluginWrapper.GetButton(networkToolbar, "Remove reference", "Removes the EntityReplicator reference from the selected entities")
-	local makePrefabButton = pluginWrapper.GetButton(networkToolbar, "Make root instance", "Tags the selected instances as being an EntityReplicator prefab root instance")
-	local removePrefabButton = pluginWrapper.GetButton(networkToolbar, "Remove root instance", "Removes the EntityReplicator root instance tag from the selected instances")
-
 	local systems = root.plugin.PluginSystems
 
-	collectPluginComponents(root)
+	popPluginComponents(root)
 
 	PluginES = require(root.src.EntityManager)
 	pluginWrapper.PluginES = PluginES
@@ -75,34 +69,6 @@ return function(pluginWrapper, root, gameRoot)
 
 	coroutine.wrap(PluginES.StartSystems)()
 	coroutine.wrap(GameES.StartSystems)()
-
-	makeReferenceButton.Click:Connect(function()
-		for _, instance in ipairs(Selection:Get()) do
-			if CollectionService:HasTag(instance, "__WSEntity") then
-				CollectionService:AddTag(instance, "__WSReplicatorRef")
-			end
-		end
-	end)
-
-	makePrefabButton.Click:Connect(function()
-		for _, instance in ipairs(Selection:Get()) do
-			CollectionService:AddTag(instance, "__WSReplicatorRoot")
-		end
-	end)
-
-	removeReferenceButton.Click:Connect(function()
-		for _, instance in ipairs(Selection:Get()) do
-			if CollectionService:HasTag(instance, "__WSEntity") then
-				CollectionService:RemoveTag(instance, "__WSReplicatorRef")
-			end
-		end
-	end)
-
-	removePrefabButton.Click:Connect(function()
-		for _, instance in ipairs(Selection:Get()) do
-			CollectionService:RemoveTag(instance, "__WSReplicatorRoot")
-		end
-	end)
 
 	pluginWrapper.OnUnloading = function()
 		local listWidget = pluginWrapper.GetDockWidget("Components")
