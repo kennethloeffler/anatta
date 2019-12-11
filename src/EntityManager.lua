@@ -508,6 +508,12 @@ function EntityManager.KillEntityNoDestroy(instance)
 	end
 end
 
+KillEntityNoDestroy = EntityManager.KillEntityNoDestroy
+
+CollectionService:GetInstanceRemovedSignal(EntityTagName):Connect(function(instance)
+	KillEntityNoDestroy(instance)
+end)
+
 ---Loads the system defined by module
 -- If the system has a .OnLoaded() member, then it is called by this function
 -- If the system has a .Heartbeat() member, then it is loaded to be ran when EntityManager.StartSystems() is called
