@@ -27,11 +27,11 @@ local WSAssert = require(script.Parent.WSAssert)
 --------------------------------------------------------------------------------------------------------------------------------------------------
 local EntityMap = {}
 local ComponentMap = {}
-local HeartbeatSystems = {}
-local FilterIdsBySystem = {}
-local HeartbeatIdsBySystem = {}
 local KilledComponentMap = {}
+local HeartbeatFunctions = {}
+local RenderSteppedFunctions = {}
 local EntityFilters = {}
+local FilterIdsBySystem = {}
 local ComponentRemovedFuncs = {}
 local ComponentAddedFuncs = {}
 local FilteredEntityAddedFuncs = {}
