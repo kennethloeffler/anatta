@@ -237,8 +237,8 @@ local EntityManager = {}
 
 function EntityManager.AddComponent(instance, componentType, paramMap)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
-	WSAssert(paramMap == nil or typeof(paramMap) == "table", "bad argument #3 (expected table)")
+	WSAssert(type(componentType) == "string", "bad argument #2 (expected string)")
+	WSAssert(paramMap == nil or type(paramMap) == "table", "bad argument #3 (expected table)")
 
 	local entityStruct = EntityMap[instance] or addEntity(instance)
 	local componentId = GetComponentIdFromType(componentType)
@@ -284,7 +284,7 @@ AddComponent = EntityManager.AddComponent
 
 function EntityManager.GetComponent(instance, componentType)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
+	WSAssert(type(componentType) == "string", "bad argument #2 (expected string)")
 
 	local entityStruct = EntityMap[instance]
 
@@ -295,14 +295,14 @@ function EntityManager.GetComponent(instance, componentType)
 	local componentId = GetComponentIdFromType(componentType)
 	local componentIndex = entityStruct[componentId + 1]
 
-	if componentIndex then
-		return ComponentMap[componentId][componentIndex]
-	end
+	WSAssert(type(componentIndex) == "number", "%s is list-typed", componentType)
+
+	return ComponentMap[componentId][componentIndex]
 end
 
 function EntityManager.GetListTypedComponent(instance, componentType)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
-	WSAssert(typeof(componentType) == "string", "bad argument #2 (expected string)")
+	WSAssert(type(componentType) == "string", "bad argument #2 (expected string)")
 
 	local entityStruct = EntityMap[instance]
 	local struct = table.create(LIST_ALLOC_SIZE, nil)
@@ -314,7 +314,7 @@ function EntityManager.GetListTypedComponent(instance, componentType)
 		return struct
 	end
 
-	WSAssert(typeof(componentIndex) == "table", "%s is not a list-typed component", componentType)
+	WSAssert(type(componentIndex) == "table", "%s is not list-typed", componentType)
 
 	for i, offset in ipairs(componentIndex) do
 		struct[i] = componentMap[offset]
@@ -357,7 +357,7 @@ end
 -- @return The list of component objects
 
 function EntityManager.GetAllComponentsOfType(componentType)
-	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
+	WSAssert(type(componentType) == "string", "bad argument #1 (expected string)")
 
 	return ComponentMap[GetComponentIdFromType(componentType)]
 end
@@ -368,8 +368,8 @@ end
 -- @Param func
 
 function EntityManager.ComponentAdded(componentType, func)
-	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
-	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
+	WSAssert(type(componentType) == "string", "bad argument #1 (expected string)")
+	WSAssert(type(func) == "function", "bad argument #2 (expected function)")
 
 	ComponentAddedFuncs[GetComponentIdFromType(componentType)] = func
 end
@@ -380,8 +380,8 @@ end
 -- @param func
 
 function EntityManager.ComponentKilled(componentType, func)
-	WSAssert(typeof(componentType) == "string", "bad argument #1 (expected string)")
-	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
+	WSAssert(type(componentType) == "string", "bad argument #1 (expected string)")
+	WSAssert(type(func) == "function", "bad argument #2 (expected function)")
 
 	ComponentRemovedFuncs[GetComponentIdFromType(componentType)] = func
 end
@@ -394,7 +394,7 @@ end
 
 function EntityManager.FilteredEntityAdded(system, func)
 	WSAssert(system.EntityFilter, "expected table .EntityFilter")
-	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
+	WSAssert(type(func) == "function", "bad argument #2 (expected function)")
 
 	FilteredEntityAddedFuncs[FilterIdsBySystem[system]] = func
 end
@@ -407,23 +407,27 @@ end
 
 function EntityManager.FilteredEntityRemoved(system, func)
 	WSAssert(system.EntityFilter, "expected table .EntityFilter")
-	WSAssert(typeof(func) == "function", "bad argument #2 (expected function)")
+	WSAssert(type(func) == "function", "bad argument #2 (expected function)")
 
 	FilteredEntityRemovedFuncs[FilterIdsBySystem[system]] = func
 end
 
 ---Removes component of type componentType from the entity associated with instance
--- If instance is not associated with an entity or instance does not have componentType, this function returns without doing anything
+-- If instance is not associated with an entity, instance does not have componentType, or component is nil, this function returns without doing anything
 -- This operation is cached - destruction occurs on the RunService's heartbeat or between system steps
 -- @param instance
 -- @param componentType
 
 function EntityManager.KillComponent(component, supressKillEntity)
+	if component == nil then
+		return
+	end
+
 	local componentId = component._componentId
 
-	WSAssert(typeof(component) == "table" and componentId, "bad argument #1 (expected component)")
+	WSAssert(type(component) == "table" and componentId, "bad argument #1 (expected component)")
 
-	KilledComponents[componentId][component] = supressKillEntity ~= nil and supressKillEntity or false
+	KilledComponentMap[componentId][component] = supressKillEntity ~= nil and supressKillEntity or false
 end
 
 ---Removes the entity (and by extension, all components) associated with instance
@@ -497,22 +501,29 @@ function EntityManager.LoadSystem(module, _pluginWrapper)
 	local system = require(module)
 
 	if system.OnLoaded then
-		WSAssert(typeof(system.OnLoaded) == "function", "expected function %s.OnLoaded", module.Name)
+		WSAssert(type(system.OnLoaded) == "function", "expected function %s.OnLoaded", module.Name)
 
 		system.OnLoaded(_pluginWrapper)
 	end
 
 	if system.Heartbeat then
-		WSAssert(typeof(system.Heartbeat) == "function", "expected function %s.Heartbeat", module.Name)
+		WSAssert(type(system.Heartbeat) == "function", "expected function %s.Heartbeat", module.Name)
 
-		local heartbeatId = #HeartbeatSystems + 1
+		local heartbeatId = #HeartbeatFunctions + 1
 
-		HeartbeatSystems[heartbeatId] = system.Heartbeat
-		HeartbeatIdsBySystem[system] = heartbeatId
+		HeartbeatFunctions[heartbeatId] = system.Heartbeat
+	end
+
+	if system.RenderStepped then
+		WSAssert(type(system.RenderStepped) == "function", "expected function %s.RenderStepped", module.Name)
+
+		local renderSteppedId = #RenderSteppedFunctions + 1
+
+		RenderSteppedFunctions[renderSteppedId] = system.RenderStepped
 	end
 
 	if system.EntityFilter then
-		WSAssert(typeof(system.EntityFilter) == "table" and #system.EntityFilter > 0, "expected array %s.EntityFilter", module.Name)
+		WSAssert(type(system.EntityFilter) == "table" and #system.EntityFilter > 0, "expected array %s.EntityFilter", module.Name)
 
 		local filterId = #EntityFilters + 1
 		local filter = { 0, 0 }
@@ -523,7 +534,7 @@ function EntityManager.LoadSystem(module, _pluginWrapper)
 		FilterIdsBySystem[system] = filterId
 
 		for i, componentType in pairs(system.EntityFilter) do
-			WSAssert(typeof(componentType) == "string" and typeof(i) == "number", "EntityFilter should be a string-valued array")
+			WSAssert(type(componentType) == "string" and type(i) == "number", "EntityFilter should be a string-valued array")
 		end
 
 		for _, componentType in ipairs(system.EntityFilter) do
