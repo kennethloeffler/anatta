@@ -182,7 +182,7 @@ local function serializePrefabFor(player, rootInstance, isUnique)
 		return
 	end
 
-	remote[REMOTE_EVENT]:FireClient(player, rootInstance, prefabRefs, table.unpack(prefabRefsParams))
+	remote[REMOTE_EVENT]:FireClient(player, rootInstance, nil, nil, nil, nil, prefabRefs, table.unpack(prefabRefsParams))
 
 	PrefabsByPlayer[player] = rootInstance
 	remote[CAN_RECEIVE_UPDATES] = true
