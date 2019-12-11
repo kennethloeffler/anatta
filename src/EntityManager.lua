@@ -52,6 +52,7 @@ local GetComponentTypeFromId = ComponentDesc.GetComponentTypeFromId
 local GetComponentIdFromEtherealId = ComponentDesc.GetComponentIdFromEtherealId
 local ReplicatorStep = EntityReplicator and EntityReplicator.Step
 local AddComponent
+local KillEntityNoDestroy
 
 ---Sets the (componentId-1)th bit representing the component with id componentId on the entity associated with instance
 -- @param instance
@@ -633,9 +634,7 @@ function EntityManager.Destroy()
 		end
 	end
 
-	-- wait two to ensure we dont land on the same frame
-	RunService.Heartbeat:Wait()
-	RunService.Heartbeat:Wait()
+	Heartbeat:Wait()
 
 	SystemsRunning = false
 end
