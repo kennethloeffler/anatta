@@ -43,6 +43,8 @@ local IS_STUDIO = Constants.IS_STUDIO
 local LIST_ALLOC_SIZE = 32
 
 local SystemsRunning = false
+local Heartbeat = RunService.Heartbeat
+
 local EntityTagName = script:IsDescendantOf(game:GetService("ReplicatedStorage")) and "__WSEntity" or "__WSPluginEntity"
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
