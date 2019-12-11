@@ -27,10 +27,10 @@ local WSAssert = require(script.Parent.WSAssert)
 --------------------------------------------------------------------------------------------------------------------------------------------------
 local EntityMap = {}
 local ComponentMap = {}
-local KilledComponents = {}
 local HeartbeatSystems = {}
 local FilterIdsBySystem = {}
 local HeartbeatIdsBySystem = {}
+local KilledComponentMap = {}
 local EntityFilters = {}
 local ComponentRemovedFuncs = {}
 local ComponentAddedFuncs = {}
@@ -215,7 +215,7 @@ local function initComponentDefs()
 	for _, componentId in pairs(ComponentDesc.GetAllComponents()) do
 		if not ComponentMap[componentId] then
 			ComponentMap[componentId] = { _length = 0 }
-			KilledComponents[componentId] = {}
+			KilledComponentMap[componentId] = {}
 		end
 	end
 end
@@ -459,12 +459,12 @@ function EntityManager.KillEntity(instance)
 
 	for componentId, cOffset in pairs(entityStruct) do
 		if not componentId == 1 then
-			if typeof(cOffset) == "table" then
+			if type(cOffset) == "table" then
 				for _, index in ipairs(cOffset) do
-					KilledComponents[componentId][ComponentMap[componentId][index]] = false
+					KilledComponentMap[componentId][ComponentMap[componentId][index]] = false
 				end
 			else
-				KilledComponents[componentId][ComponentMap[componentId][cOffset]] = false
+				KilledComponentMap[componentId][ComponentMap[componentId][cOffset]] = false
 			end
 		end
 	end
@@ -483,16 +483,22 @@ function EntityManager.KillEntityNoDestroy(instance)
 
 	for componentId, cOffset in pairs(entityStruct) do
 		if not componentId == 1 then
-			if typeof(cOffset) == "table" then
+			if type(cOffset) == "table" then
 				for _, index in ipairs(cOffset) do
-					KilledComponents[componentId][ComponentMap[componentId][index]] = false
+					KilledComponentMap[componentId][ComponentMap[componentId][index]] = false
 				end
 			else
-				KilledComponents[componentId][ComponentMap[componentId][cOffset]] = false
+				KilledComponentMap[componentId][ComponentMap[componentId][cOffset]] = false
 			end
 		end
 	end
 end
+
+KillEntityNoDestroy = EntityManager.KillEntityNoDestroy
+
+CollectionService:GetInstanceRemovedSignal(EntityTagName):Connect(function(instance)
+	KillEntityNoDestroy(instance)
+end)
 
 ---Loads the system defined by module
 -- If the system has a .OnLoaded() member, then it is called by this function
