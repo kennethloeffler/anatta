@@ -268,6 +268,10 @@ function Server.Dereference(instance)
 
 	local networkId = NetworkIdsByInstance[instance]
 
+	if not networkId then
+		return
+	end
+
 	FreedNetworkIds[#FreedNetworkIds + 1] = networkId
 	GlobalRefs[instance] = nil
 	PlayerSerializable[instance] = nil
