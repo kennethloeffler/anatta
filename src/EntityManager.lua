@@ -467,6 +467,10 @@ function EntityManager.KillEntity(instance)
 
 	CollectionService:RemoveTag(instance, EntityTagName)
 
+	if EntityReplicator and EntityReplicator.Dereference then
+		EntityReplicator.Dereference(instance)
+	end
+
 	if instance.Parent then
 		instance:Destroy()
 	end
@@ -494,6 +498,10 @@ function EntityManager.KillEntityNoDestroy(instance)
 	end
 
 	CollectionService:RemoveTag(instance, EntityTagName)
+
+	if EntityReplicator and EntityReplicator.Dereference then
+		EntityReplicator.Dereference(instance)
+	end
 
 	for componentId, cOffset in pairs(entityStruct) do
 		if not componentId == 1 then
