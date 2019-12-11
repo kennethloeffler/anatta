@@ -118,106 +118,107 @@ local function addEntity(instance)
 	return EntityMap[instance]
 end
 
-local function doReorder(componentId, componentList)
-	local keptComponentOffset = 1
-	local numKilledComponents = 0
-	local masterComponentList = ComponentMap[componentId]
-	local removedFunc = ComponentRemovedFuncs[componentId]
+---Iterates through the component destruction cache and mutates entity-component maps accordingly
+-- Called before each system step
+local function stepComponentLifetime()
+	local keptComponentOffset
+	local numKilledComponents
+	local masterComponentList
+	local removedFunc
 	local instance
 	local entityStruct
 	local doKill
 	local cIndex
 	local tempFieldHolder
 
-	for componentOffset, component in ipairs(masterComponentList) do
-		instance = component.Instance
-		entityStruct = EntityMap[instance]
-		doKill = componentList[component]
-		cIndex = entityStruct and entityStruct[componentId + 1]
+	for componentId, componentList in ipairs(KilledComponentMap) do
+		if next(componentList) then
+			keptComponentOffset = 1
+			numKilledComponents = 0
+			masterComponentList = ComponentMap[componentId]
+			removedFunc = ComponentRemovedFuncs[componentId]
 
-		if doKill == nil then
-			if componentOffset ~= keptComponentOffset then
-				-- swap
-				masterComponentList[keptComponentOffset] = component
-				masterComponentList[componentOffset] = nil
+			for componentOffset, component in ipairs(masterComponentList) do
+				instance = component.Instance
+				entityStruct = EntityMap[instance]
+				doKill = componentList[component]
+				cIndex = entityStruct and entityStruct[componentId + 1]
 
-				if not component._list then
-					entityStruct[componentId + 1] = keptComponentOffset
-				else
-					for i, offset in ipairs(cIndex) do
-						if offset == componentOffset then
-							cIndex[i] = keptComponentOffset
+				if doKill == nil then
+					if componentOffset ~= keptComponentOffset then
+						-- swap
+						masterComponentList[keptComponentOffset] = component
+						masterComponentList[componentOffset] = nil
 
-							break
+						if not component._list then
+							entityStruct[componentId + 1] = keptComponentOffset
+						else
+							for i, offset in ipairs(cIndex) do
+								if offset == componentOffset then
+									cIndex[i] = keptComponentOffset
+
+									break
+								end
+							end
 						end
 					end
-				end
-			end
 
-			keptComponentOffset = keptComponentOffset + 1
-		else
-			-- kill
-			numKilledComponents = numKilledComponents + 1
-			masterComponentList[componentOffset] = nil
-			componentList[component] = nil
-
-			if removedFunc then
-				removedFunc(component)
-			end
-
-			if entityStruct then
-				unsetComponentBitForEntity(instance, componentId)
-
-				if componentId <= 64 then
-					filterEntity(component.Instance)
-				end
-
-				if not component._list then
-					entityStruct[componentId + 1] = nil
+					keptComponentOffset = keptComponentOffset + 1
 				else
-					local kept = 1
+					-- kill
+					numKilledComponents = numKilledComponents + 1
+					masterComponentList[componentOffset] = nil
+					componentList[component] = nil
 
-					for i, index in ipairs(cIndex) do
-						if index ~= componentOffset then
-							if i ~= kept then
-								cIndex[kept] = index
-								cIndex[i] = nil
+					if removedFunc then
+						removedFunc(component)
+					end
+
+					if entityStruct then
+						unsetComponentBitOnEntity(instance, componentId)
+
+						if componentId <= 64 then
+							filterEntity(component.Instance)
+						end
+
+						if not component._list then
+							entityStruct[componentId + 1] = nil
+						else
+							local kept = 1
+
+							for i, index in ipairs(cIndex) do
+								if index ~= componentOffset then
+									if i ~= kept then
+										cIndex[kept] = index
+										cIndex[i] = nil
+									end
+
+									kept = kept + 1
+								else
+									cIndex[i] = nil
+								end
 							end
 
-							kept = kept + 1
+							if not cIndex[1] then
+								entityStruct[componentId + 1] = nil
+							end
+						end
+
+						tempFieldHolder = entityStruct[1]
+						entityStruct[1] = nil
+
+						if not doKill and not next(entityStruct) then
+							-- dead
+							CollectionService:RemoveTag(instance, EntityTagName)
+							EntityMap[instance] = nil
 						else
-							cIndex[i] = nil
+							entityStruct[1] = tempFieldHolder
 						end
 					end
-
-					if not cIndex[1] then
-						entityStruct[componentId + 1] = nil
-					end
-				end
-
-				tempFieldHolder = entityStruct[1]
-				entityStruct[1] = nil
-
-				if not doKill and not next(entityStruct) then
-					-- dead
-					CollectionService:RemoveTag(instance, tagName)
-					EntityMap[instance] = nil
-				else
-					entityStruct[1] = tempFieldHolder
 				end
 			end
-		end
-	end
 
-	masterComponentList._length = masterComponentList._length - numKilledComponents
-end
-
----Iterates through the component destruction cache and mutates entity-component maps accordingly
--- Called before each system step
-local function stepComponentLifetime()
-	for compId, componentList in ipairs(KilledComponents) do
-		if next(componentList) then
-			doReorder(compId, componentList)
+			masterComponentList._length = masterComponentList._length - numKilledComponents
 		end
 	end
 end
