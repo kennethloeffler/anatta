@@ -131,6 +131,7 @@ local function stepComponentLifetime()
 	local doKill
 	local cIndex
 	local tempFieldHolder
+	local bitOffset
 
 	for componentId, componentList in ipairs(KilledComponentMap) do
 		if next(componentList) then
@@ -138,6 +139,7 @@ local function stepComponentLifetime()
 			numKilledComponents = 0
 			masterComponentList = ComponentMap[componentId]
 			removedFunc = ComponentRemovedFuncs[componentId]
+			bitOffset = math.ceil(componentId * 0.03125)
 
 			for componentOffset, component in ipairs(masterComponentList) do
 				instance = component.Instance
@@ -176,14 +178,9 @@ local function stepComponentLifetime()
 					end
 
 					if entityStruct then
-						unsetComponentBitOnEntity(instance, componentId)
-
-						if componentId <= 64 then
-							filterEntity(component.Instance)
-						end
-
 						if not component._list then
 							entityStruct[componentId + 1] = nil
+							EntityMap[instance][1][bitOffset] = bit32.band(EntityMap[instance][1][bitOffset], bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (bitOffset - 1)))))
 						else
 							local kept = 1
 
@@ -202,11 +199,16 @@ local function stepComponentLifetime()
 
 							if not cIndex[1] then
 								entityStruct[componentId + 1] = nil
+								EntityMap[instance][1][bitOffset] = bit32.band(EntityMap[instance][1][bitOffset], bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (bitOffset - 1)))))
 							end
 						end
 
 						tempFieldHolder = entityStruct[1]
 						entityStruct[1] = nil
+
+						if componentId <= 64 then
+							filterEntity(component.Instance)
+						end
 
 						if not doKill and not next(entityStruct) then
 							-- dead
@@ -265,6 +267,7 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 	local addedFunc = ComponentAddedFuncs[componentId]
 	local componentList = ComponentMap[componentId]
 	local componentOffset = componentList._length + 1
+	local bitOffset = math.ceil(componentId * 0.03125)
 	local offsetIndex = entityStruct[componentId + 1]
 
 	if not component._list then
@@ -277,7 +280,7 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 		end
 	end
 
-	setComponentBitOnEntity(instance, componentId)
+	EntityMap[instance][1][bitOffset] = bit32.bor(EntityMap[instance][1][bitOffset], bit32.lshift(1, componentId - 1 - (32 * (bitOffset - 1))))
 
 	if addedFunc then
 		addedFunc(component)
