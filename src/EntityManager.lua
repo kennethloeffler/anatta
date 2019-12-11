@@ -586,16 +586,20 @@ function EntityManager.StartSystems()
 
 	SystemsRunning = true
 
-	local hasHeartbeat = #HeartbeatSystems > 0 and true or nil
-	local lastFrameTime = RunService.Heartbeat:Wait()
+	local hasRenderStepped = #RenderSteppedFunctions > 0
+
+	if hasRenderStepped then
+		RunService:BindToRenderStep("__WSRenderStep", 0, function(deltaT)
+			for _, systemStep in ipairs(RenderSteppedFunctions) do
+				systemStep(deltaT)
+			end
+		end)
+	end
+
+	local lastFrameTime = Heartbeat:Wait()
 
 	while SystemsRunning do
-
-		if not hasHeartbeat then
-			stepComponentLifetime()
-		end
-
-		for _, systemStep in ipairs(HeartbeatSystems) do
+		for _, systemStep in ipairs(HeartbeatFunctions) do
 			stepComponentLifetime()
 			systemStep(lastFrameTime)
 		end
@@ -609,9 +613,11 @@ function EntityManager.StartSystems()
 end
 
 function EntityManager.StopSystems()
-	-- wait two to ensure we dont land on the same frame
-	RunService.Heartbeat:Wait()
-	RunService.Heartbeat:Wait()
+	Heartbeat:Wait()
+
+	pcall(function()
+		RunService:UnbindFromRenderStep("__WSRenderStep")
+	end)
 
 	SystemsRunning = false
 end
