@@ -619,7 +619,7 @@ function EntityManager.Init()
 	local components
 
 	for _, instance in pairs(entities) do
-		components = instance:GetAttribute("__WSEntity")
+		components = instance:GetAttribute(EntityTagName)
 
 		if components then
 			for componentIdStr, paramList in pairs(components) do
