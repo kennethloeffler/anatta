@@ -356,9 +356,9 @@ function EntityManager.GetComponents(instance)
 		if componentId > 1 then
 			n = n + 1
 
-			if typeof(cOffset) == "number" then
+			if type(cOffset) == "number" then
 				struct[n] = ComponentMap[componentId - 1][cOffset]
-			elseif typeof(cOffset) == "table" then
+			elseif type(cOffset) == "table" then
 				for _, offset in ipairs(cOffset) do
 					struct[n] = ComponentMap[componentId - 1][offset]
 				end
