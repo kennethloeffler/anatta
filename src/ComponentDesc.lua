@@ -42,7 +42,7 @@ local function popParams(componentDefinition, componentId)
 			WSAssert(typeof(paramDef) == "table", "expected table")
 
 			if paramDef.DefaultValue == "__InstanceReferent" then
-				paramDef.DefaultValue = Instance.new("Folder")
+				paramDef.DefaultValue = newproxy(false)
 			end
 
 			ComponentParamIds[componentId][paramDef.ParamName] = paramId - 1
