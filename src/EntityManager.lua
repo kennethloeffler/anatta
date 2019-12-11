@@ -43,7 +43,7 @@ local IS_STUDIO = Constants.IS_STUDIO
 local LIST_ALLOC_SIZE = 32
 
 local SystemsRunning = false
-local tagName = script:IsDescendantOf(game:GetService("ReplicatedStorage")) and "__WSEntity" or "__WSPluginEntity"
+local EntityTagName = script:IsDescendantOf(game:GetService("ReplicatedStorage")) and "__WSEntity" or "__WSPluginEntity"
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
 local GetComponentTypeFromId = ComponentDesc.GetComponentTypeFromId
@@ -94,9 +94,12 @@ local function filterEntity(instance)
 	end
 end
 
+---Initializes an entity attached to instance
+-- @param instance
+
 local function addEntity(instance)
 	EntityMap[instance] = { { 0, 0 } } -- fields for fast intersection tests
-	CollectionService:AddTag(instance, tagName)
+	CollectionService:AddTag(instance, EntityTagName)
 
 	return EntityMap[instance]
 end
@@ -446,7 +449,7 @@ function EntityManager.KillEntity(instance)
 		return
 	end
 
-	CollectionService:RemoveTag(instance, tagName)
+	CollectionService:RemoveTag(instance, EntityTagName)
 
 	if instance.Parent then
 		instance:Destroy()
@@ -474,7 +477,7 @@ function EntityManager.KillEntityNoDestroy(instance)
 		return
 	end
 
-	CollectionService:RemoveTag(instance, tagName)
+	CollectionService:RemoveTag(instance, EntityTagName)
 
 	for componentId, cOffset in pairs(entityStruct) do
 		if not componentId == 1 then
@@ -611,7 +614,7 @@ function EntityManager.Destroy()
 end
 
 function EntityManager.Init()
-	local entities = CollectionService:GetTagged(tagName)
+	local entities = CollectionService:GetTagged(EntityTagName)
 	local componentId
 	local components
 
