@@ -37,7 +37,6 @@ local ComponentAddedFuncs = {}
 local FilteredEntityAddedFuncs = {}
 local FilteredEntityRemovedFuncs = {}
 local SystemFilteredEntities = {}
-local SystemsToUnload = {}
 local SystemMap = {}
 
 local IS_STUDIO = Constants.IS_STUDIO
@@ -100,56 +99,6 @@ local function addEntity(instance)
 	CollectionService:AddTag(instance, tagName)
 
 	return EntityMap[instance]
-end
-
-local function doUnloadSystem(system)
-	local filterId = FilterIdsBySystem[system]
-	local heartbeatId = HeartbeatIdsBySystem[system]
-	local len
-
-	if system.OnUnloaded then
-		system.OnUnloaded()
-	end
-
-	if filterId then
-		len = #EntityFilters
-
-		EntityFilters[filterId] = EntityFilters[len]
-		EntityFilters[len] = nil
-
-		SystemFilteredEntities[filterId] = SystemFilteredEntities[len]
-		SystemFilteredEntities[len] = nil
-
-		FilteredEntityAddedFuncs[filterId] = nil
-		FilteredEntityRemovedFuncs[filterId] = nil
-
-		FilterIdsBySystem[system] = nil
-
-		for sys, id in pairs(FilterIdsBySystem) do
-			if id == len then
-				FilterIdsBySystem[sys] = filterId
-				break
-			end
-		end
-	end
-
-	if heartbeatId then
-		len = #HeartbeatSystems
-
-		HeartbeatSystems[heartbeatId] = HeartbeatSystems[len]
-		HeartbeatSystems[len] = nil
-
-		HeartbeatIdsBySystem[system] = nil
-
-		for sys, id in pairs(HeartbeatIdsBySystem) do
-			if id == len then
-				HeartbeatIdsBySystem[sys] = heartbeatId
-				break
-			end
-		end
-	end
-
-	SystemMap[system] = nil
 end
 
 local function doReorder(componentId, componentList)
@@ -589,25 +538,6 @@ function EntityManager.LoadSystem(module, _pluginWrapper)
 	SystemMap[system] = true
 end
 
----Unloads the system defined by module
--- If the system has a .OnUnloaded member, then it is called by this function
--- System is unloaded by EntityManager.StartSystem()'s loop on the next RunServive.Heartbeat step
--- @param module
-
-function EntityManager.UnloadSystem(module)
-	WSAssert(typeof(module) == "Instance" and module:IsA("ModuleScript"), "bad argument #1 (expected ModuleScript)")
-
-	local system = require(module)
-
-	WSAssert(not system.Locked, "System is locked")
-
-	if system.OnUnloaded then
-		WSAssert(typeof(system.OnUnloaded) == "function", "expected function %s.OnUnloaded", module.Name)
-	end
-
-	SystemsToUnload[#SystemsToUnload + 1] = system
-end
-
 ---Starts execution of continuously run systems and the component lifetime loop
 -- If no system has a .Step() member, then only the component lifetime loop will be executed
 -- This function blocks execution in the calling thread
@@ -625,10 +555,6 @@ function EntityManager.StartSystems()
 	local lastFrameTime = RunService.Heartbeat:Wait()
 
 	while SystemsRunning do
-		for i, system in ipairs(SystemsToUnload) do
-			doUnloadSystem(system)
-			SystemsToUnload[i] = nil
-		end
 
 		if not hasHeartbeat then
 			stepComponentLifetime()
