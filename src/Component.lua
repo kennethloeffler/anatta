@@ -22,11 +22,18 @@ function Component.InstanceReference()
 	return "__InstanceReferent"
 end
 
-function Component.Define(componentTypeName, paramMap, isEthereal)
+function Component.DefineEthereal(componentTypeName, paramMap)
 	WSAssert(typeof(componentTypeName) == "string" or (typeof(componentTypeName) == "table" and typeof(componentTypeName[1]) == "string"), "bad argument #1 (expected string)")
 	WSAssert(typeof(paramMap) == "table", "bad argument #2 (expected table)")
 
-	return { componentTypeName, paramMap, isEthereal }
+	return { componentTypeName, paramMap, true }
+end
+
+function Component.Define(componentTypeName, paramMap)
+	WSAssert(typeof(componentTypeName) == "string" or (typeof(componentTypeName) == "table" and typeof(componentTypeName[1]) == "string"), "bad argument #1 (expected string)")
+	WSAssert(typeof(paramMap) == "table", "bad argument #2 (expected table)")
+
+	return { componentTypeName, paramMap }
 end
 
 return Component
