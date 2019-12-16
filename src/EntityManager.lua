@@ -192,8 +192,8 @@ local function stepComponentLifetime()
 
 						if not doKill and not next(entityStruct) then
 							-- dead
-							CollectionService:RemoveTag(instance, EntityTagName)
 							EntityMap[instance] = nil
+							CollectionService:RemoveTag(instance, EntityTagName)
 						else
 							entityStruct[1] = tempFieldHolder
 						end
