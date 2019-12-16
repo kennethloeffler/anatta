@@ -54,26 +54,6 @@ local ReplicatorStep = EntityReplicator and EntityReplicator.Step
 local AddComponent
 local KillEntityNoDestroy
 
----Sets the (componentId-1)th bit representing the component with id componentId on the entity associated with instance
--- @param instance
--- @param componentId
-
-local function setComponentBitOnEntity(instance, componentId)
-	local offset = math.ceil(componentId * 0.03125) -- componentId / 32
-
-	EntityMap[instance][1][offset] = bit32.bor(EntityMap[instance][1][offset], bit32.lshift(1, componentId - 1 - (32 * (offset - 1))))
-end
-
----Unsets the (componentId-1)th bit representing the component with id componentId on the entity associated with instance
--- @param instance
--- @param componentId
-
-local function unsetComponentBitOnEntity(instance, componentId)
-	local offset = math.ceil(componentId * 0.03125)
-
-	EntityMap[instance][1][offset] = bit32.band(EntityMap[instance][1][offset], bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (offset - 1)))))
-end
-
 ---"Filters" the entity attached to instance into each system's filtered entity table (if applicable)
 -- Entity is placed in the table only if it has all components defined by the system filter; niled otherwise
 -- @param instance
