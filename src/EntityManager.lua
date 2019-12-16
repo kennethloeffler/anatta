@@ -579,6 +579,7 @@ function EntityManager.StartSystems()
 	SystemsRunning = true
 
 	local hasRenderStepped = #RenderSteppedFunctions > 0
+	local hasHeartbeat = #HeartbeatFunctions > 0
 
 	if hasRenderStepped then
 		RunService:BindToRenderStep("__WSRenderStep", 0, function(deltaT)
@@ -591,6 +592,10 @@ function EntityManager.StartSystems()
 	local lastFrameTime = Heartbeat:Wait()
 
 	while SystemsRunning do
+		if not hasHeartbeat then
+			stepComponentLifetime()
+		end
+
 		for _, systemStep in ipairs(HeartbeatFunctions) do
 			stepComponentLifetime()
 			systemStep(lastFrameTime)
