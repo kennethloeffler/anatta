@@ -40,7 +40,8 @@ local SystemFilteredEntities = {}
 local SystemMap = {}
 
 local IS_STUDIO = Constants.IS_STUDIO
-local LIST_ALLOC_SIZE = 32
+local LIST_TYPE_ALLOC_SIZE = 128
+local COMPONENT_ALLOC_SIZE = 256
 
 local SystemsRunning = false
 local Heartbeat = RunService.Heartbeat
