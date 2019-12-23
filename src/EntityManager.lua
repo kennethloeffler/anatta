@@ -310,7 +310,7 @@ function EntityManager.GetListTypedComponent(instance, componentType)
 	WSAssert(type(componentType) == "string", "bad argument #2 (expected string)")
 
 	local entityStruct = EntityMap[instance]
-	local struct = table.create(LIST_ALLOC_SIZE, nil)
+	local struct = table.create(LIST_TYPE_ALLOC_SIZE)
 	local componentId = GetComponentIdFromType(componentType)
 	local componentMap = ComponentMap[componentId]
 	local componentIndex = entityStruct[componentId + 1]
