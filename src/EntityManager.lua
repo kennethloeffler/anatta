@@ -211,7 +211,9 @@ end
 local function initComponentDefs()
 	for _, componentId in pairs(ComponentDesc.GetAllComponents()) do
 		if not ComponentMap[componentId] then
-			ComponentMap[componentId] = { _length = 0 }
+			ComponentMap[componentId] = table.create(COMPONENT_ALLOC_SIZE)
+			ComponentMap[componentId]._length = 0
+
 			KilledComponentMap[componentId] = {}
 		end
 	end
