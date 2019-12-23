@@ -332,7 +332,7 @@ function EntityManager.GetComponents(instance)
 	WSAssert(typeof(instance) == "Instance", "bad argument #1 (expected Instance)")
 
 	local entityStruct = EntityMap[instance]
-	local struct = table.create(LIST_ALLOC_SIZE, nil)
+	local struct = table.create(64)
 	local n = 0
 
 	if not entityStruct then
