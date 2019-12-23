@@ -364,7 +364,11 @@ end
 function EntityManager.GetAllComponentsOfType(componentType)
 	WSAssert(type(componentType) == "string", "bad argument #1 (expected string)")
 
-	return ComponentMap[GetComponentIdFromType(componentType)]
+	local componentList = ComponentMap[GetComponentIdFromType(componentType)]
+	local length = componentList._length
+	local t = table.create(length)
+
+	return table.move(componentList, 1, length, 1, t)
 end
 
 ---Hooks a function func to be called whenever just before of type componentType are added to an entity
