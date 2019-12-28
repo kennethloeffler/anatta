@@ -30,6 +30,7 @@ local ComponentMap = {}
 local KilledComponentMap = {}
 local HeartbeatFunctions = {}
 local RenderSteppedFunctions = {}
+local EntityFilterComponentMapping = {}
 local EntityFilters = {}
 local FilterIdsBySystem = {}
 local ComponentRemovedFuncs = {}
@@ -44,6 +45,7 @@ local LIST_TYPE_ALLOC_SIZE = 128
 local COMPONENT_ALLOC_SIZE = 256
 
 local SystemsRunning = false
+local NumFilteredComponents = 0
 local Heartbeat = RunService.Heartbeat
 
 local EntityTagName = script:IsDescendantOf(game:GetService("ReplicatedStorage")) and "__WSEntity" or "__WSPluginEntity"
@@ -106,6 +108,7 @@ local function stepComponentLifetime()
 	local keptComponentOffset
 	local numKilledComponents
 	local masterComponentList
+	local filteredComponentId
 	local removedFunc
 	local instance
 	local entityStruct
@@ -120,7 +123,8 @@ local function stepComponentLifetime()
 			numKilledComponents = 0
 			masterComponentList = ComponentMap[componentId]
 			removedFunc = ComponentRemovedFuncs[componentId]
-			bitOffset = math.ceil(componentId * 0.03125)
+			filteredComponentId = EntityFilterComponentMapping[componentId]
+			bitOffset = filteredComponentId and math.ceil(filteredComponentId * 0.03125)
 
 			for componentOffset, component in ipairs(masterComponentList) do
 				instance = component.Instance
@@ -161,7 +165,6 @@ local function stepComponentLifetime()
 					if entityStruct then
 						if not component._list then
 							entityStruct[componentId + 1] = nil
-							EntityMap[instance][1][bitOffset] = bit32.band(EntityMap[instance][1][bitOffset], bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (bitOffset - 1)))))
 						else
 							local kept = 1
 
@@ -180,14 +183,14 @@ local function stepComponentLifetime()
 
 							if not cIndex[1] then
 								entityStruct[componentId + 1] = nil
-								EntityMap[instance][1][bitOffset] = bit32.band(EntityMap[instance][1][bitOffset], bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (bitOffset - 1)))))
 							end
 						end
 
 						tempFieldHolder = entityStruct[1]
 						entityStruct[1] = nil
 
-						if componentId <= 64 then
+						if filteredComponentId then
+							EntityMap[instance][1][bitOffset] = bit32.band(EntityMap[instance][1][bitOffset], bit32.bnot(bit32.lshift(1, filteredComponentId - 1 - (32 * (bitOffset - 1)))))
 							filterEntity(component.Instance)
 						end
 
@@ -246,11 +249,12 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 
 	local entityStruct = EntityMap[instance] or addEntity(instance)
 	local componentId = GetComponentIdFromType(componentType)
+	local filteredComponentId = EntityFilterComponentMapping[componentId]
 	local component = ComponentFactory(instance, componentId, paramMap)
 	local addedFunc = ComponentAddedFuncs[componentId]
 	local componentList = ComponentMap[componentId]
 	local componentOffset = componentList._length + 1
-	local bitOffset = math.ceil(componentId * 0.03125)
+	local bitOffset = filteredComponentId and math.ceil(componentId * 0.03125)
 	local offsetIndex = entityStruct[componentId + 1]
 
 	if not component._list then
@@ -263,13 +267,12 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 		end
 	end
 
-	EntityMap[instance][1][bitOffset] = bit32.bor(EntityMap[instance][1][bitOffset], bit32.lshift(1, componentId - 1 - (32 * (bitOffset - 1))))
-
 	if addedFunc then
 		addedFunc(component)
 	end
 
-	if componentId <= 64 then
+	if filteredComponentId then
+		EntityMap[instance][1][bitOffset] = bit32.bor(EntityMap[instance][1][bitOffset], bit32.lshift(1, filteredComponentId - 1 - (32 * (bitOffset - 1))))
 		filterEntity(instance)
 	end
 
@@ -562,10 +565,14 @@ function EntityManager.LoadSystem(module, _pluginWrapper)
 
 		for _, componentType in ipairs(system.EntityFilter) do
 			local componentId = GetComponentIdFromType(componentType)
-			local offset = math.ceil(componentId * 0.03125)
+			local filteredComponentId = EntityFilterComponentMapping[componentId] or NumFilteredComponents + 1
+			local offset = math.ceil(filteredComponentId * 0.03125)
 			local bitField = filter[offset]
 
-			filter[offset] = bit32.bor(bitField, bit32.lshift(1, componentId - 1 - (32 * (offset - 1))))
+			WSAssert(filteredComponentId <= 64, "maximum number (64) of filtered components reached")
+
+			EntityFilterComponentMapping[componentId] = filteredComponentId
+			filter[offset] = bit32.bor(bitField, bit32.lshift(1, filteredComponentId - 1 - (32 * (offset - 1))))
 		end
 	end
 
