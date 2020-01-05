@@ -45,7 +45,7 @@ local function tryRequire(moduleScript)
 		return err
 	end)
 
-	WSAssert(success, "Failed to load component definition module")
+	WSAssert(success, "Failed to load component definition module: %s", result)
 
 	return result
 end
