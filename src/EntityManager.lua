@@ -224,7 +224,6 @@ local function initComponentDefs()
 		if not ComponentMap[componentId] then
 			ComponentMap[componentId] = table.create(COMPONENT_ALLOC_SIZE)
 			ComponentMap[componentId]._length = 0
-
 			KilledComponentMap[componentId] = {}
 		end
 	end
@@ -235,7 +234,6 @@ initComponentDefs()
 if IS_STUDIO then
 	ComponentDesc._defUpdateCallback = initComponentDefs
 end
-
 
 -- Public API
 --------------------------------------------------------------------------------------------------------------------------------------------------
