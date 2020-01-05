@@ -17,7 +17,7 @@
 local root = script.Parent.Parent.Parent
 local Component = require(root.src.Component)
 
-return Component.Define({"ComponentLabel"}, {
+return Component.DefineLocal({"ComponentLabel"}, {
 	ComponentId = 0,
 	Open = false,
 	EntityList = {}

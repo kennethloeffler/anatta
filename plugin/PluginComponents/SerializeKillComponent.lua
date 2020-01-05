@@ -17,6 +17,6 @@
 local root = script.Parent.Parent.Parent
 local Component = require(root.src.Component)
 
-return Component.Define("SerializeKillComponent", {
+return Component.DefineLocal("SerializeKillComponent", {
 	ComponentType = "none"
 })

@@ -17,7 +17,7 @@
 local root = script.Parent.Parent.Parent
 local Component = require(root.src.Component)
 
-return Component.Define("SerializeParam", {
+return Component.DefineLocal("SerializeParam", {
 	Value = true,
 	ParamName = "none",
 	EntityList = {}
