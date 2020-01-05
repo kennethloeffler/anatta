@@ -72,7 +72,7 @@ local function filterEntity(instance)
 		removedFunc = FilteredEntityRemovedFuncs[filterId]
 		systemEntities = SystemFilteredEntities[filterId]
 
-		if bit32.band(bitFields[1], entityBitFields[1]) == bitFields[1] and bit32.band(bitFields[2], entityBitFields[2]) == bitFields[2] then
+		if bit32.band(bitFields[1], entityBitFields[3]) == bitFields[1] and bit32.band(bitFields[2], entityBitFields[4]) == bitFields[2] then
 			if not systemEntities[instance] then
 				systemEntities[instance] = true
 
@@ -96,7 +96,7 @@ end
 -- @param instance
 
 local function addEntity(instance)
-	EntityMap[instance] = { { 0, 0 } } -- fields for fast intersection tests
+	EntityMap[instance] = { { 0, 0, 0, 0 } }
 	CollectionService:AddTag(instance, EntityTagName)
 
 	return EntityMap[instance]
@@ -115,7 +115,8 @@ local function stepComponentLifetime()
 	local doKill
 	local cIndex
 	local tempFieldHolder
-	local bitOffset
+	local filterOffset
+	local networkOffset
 
 	for componentId, componentList in ipairs(KilledComponentMap) do
 		if next(componentList) then
@@ -124,7 +125,8 @@ local function stepComponentLifetime()
 			masterComponentList = ComponentMap[componentId]
 			removedFunc = ComponentRemovedFuncs[componentId]
 			filteredComponentId = EntityFilterComponentMapping[componentId]
-			bitOffset = filteredComponentId and math.ceil(filteredComponentId * 0.03125)
+			filterOffset = filteredComponentId and 2 + math.ceil(filteredComponentId * 0.03125)
+			networkOffset = math.ceil(componentId * 0.03125)
 
 			for componentOffset, component in ipairs(masterComponentList) do
 				instance = component.Instance
@@ -189,9 +191,15 @@ local function stepComponentLifetime()
 						tempFieldHolder = entityStruct[1]
 						entityStruct[1] = nil
 
-						if filteredComponentId then
-							EntityMap[instance][1][bitOffset] = bit32.band(EntityMap[instance][1][bitOffset], bit32.bnot(bit32.lshift(1, filteredComponentId - 1 - (32 * (bitOffset - 1)))))
-							filterEntity(component.Instance)
+						if not entityStruct[componentId + 1] then
+							if filteredComponentId then
+								tempFieldHolder[filterOffset] = bit32.band(tempFieldHolder[filterOffset], bit32.bnot(bit32.lshift(1, filteredComponentId - 1 - (32 * (filterOffset - 1)))))
+								filterEntity(component.Instance)
+							end
+
+							if component._isNetworked then
+								tempFieldHolder[networkOffset] = bit32.band(tempFieldHolder[networkOffset], bit32.bnot(bit32.lshift(1, componentId - 1 - (32 * (networkOffset - 1)))))
+							end
 						end
 
 						if not doKill and not next(entityStruct) then
@@ -254,7 +262,8 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 	local addedFunc = ComponentAddedFuncs[componentId]
 	local componentList = ComponentMap[componentId]
 	local componentOffset = componentList._length + 1
-	local bitOffset = filteredComponentId and math.ceil(componentId * 0.03125)
+	local networkOffset = math.ceil(componentId * 0.03125)
+	local filterOffset = filteredComponentId and math.ceil(filteredComponentId * 0.03125) + 2
 	local offsetIndex = entityStruct[componentId + 1]
 
 	if not component._list then
@@ -267,12 +276,16 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 		end
 	end
 
+	if component._isNetworked then
+		EntityMap[instance][1][networkOffset] = bit32.bor(EntityMap[instance][1][networkOffset], bit32.lshift(1, componentId - 1 - (32 * (networkOffset - 1))))
+	end
+
 	if addedFunc then
 		addedFunc(component)
 	end
 
 	if filteredComponentId then
-		EntityMap[instance][1][bitOffset] = bit32.bor(EntityMap[instance][1][bitOffset], bit32.lshift(1, filteredComponentId - 1 - (32 * (bitOffset - 1))))
+		EntityMap[instance][1][filterOffset] = bit32.bor(EntityMap[instance][1][filterOffset], bit32.lshift(1, filteredComponentId - 1 - (32 * (filterOffset - 1))))
 		filterEntity(instance)
 	end
 

@@ -27,6 +27,7 @@ local Replicator = SHOULD_SEND and require(script.Parent.EntityReplicator.Shared
 
 local GetComponentIdFromType = ComponentDesc.GetComponentIdFromType
 local GetListTyped = ComponentDesc.GetListTyped
+local GetNetworked = ComponentDesc.GetNetworked
 local GetParamIdFromName = ComponentDesc.GetParamIdFromName
 local GetParamDefault = ComponentDesc.GetParamDefault
 local GetDefaults = ComponentDesc.GetDefaults
@@ -97,6 +98,7 @@ return function(instance, componentType, paramMap)
 
 	newComponent._componentId = componentId
 	newComponent._list = GetListTyped(componentId)
+	newComponent._isNetworked = GetNetworked(componentId)
 	newComponent.Instance = instance
 
 	setmetatable(newComponent, ComponentMetatable)

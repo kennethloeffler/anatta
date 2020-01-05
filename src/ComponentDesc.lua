@@ -29,6 +29,7 @@ local EtherealIdsByComponentId = {}
 local Defaults = {}
 local NumComponentParams = {}
 local ListTyped = {}
+local Networked = {}
 
 local NOT_PLUGIN = script:IsDescendantOf(ReplicatedStorage)
 
@@ -72,6 +73,9 @@ local function popComponent(componentIdStr, componentDefinition, maxComponentId)
 	if componentId then
 		initComponentPop(componentType, componentId, isListType)
 		popParams(componentDefinition, componentId)
+
+		-- assume that this component is networked if it has an assigned componentId
+		Networked[componentId] = true
 
 		return componentId > maxComponentId and componentId or maxComponentId
 	else
@@ -130,6 +134,10 @@ end
 
 function ComponentDesc.GetListTyped(componentId)
 	return ListTyped[componentId]
+end
+
+function ComponentDesc.GetNetworked(componentId)
+	return Networked[componentId]
 end
 
 function ComponentDesc.GetParamDefault(componentId, paramName)
