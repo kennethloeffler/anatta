@@ -111,14 +111,11 @@ function GameEntityBridge.OnLoaded(pluginWrapper)
 
 		for _, instance in ipairs(serializeKillComponent.EntityList) do
 			gameComponent = GameES.GetComponent(instance, componentType)
-			
 
 			if gameComponent then
 				components = instance:GetAttribute("__WSEntity")
-				
 				components[componentType] = nil
 				instance:SetAttribute("__WSEntity", next(components) ~= nil and components or nil)
-				
 				GameES.KillComponent(gameComponent)
 			end
 		end
