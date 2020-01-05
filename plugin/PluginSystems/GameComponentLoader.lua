@@ -148,7 +148,7 @@ local function tryDefineComponent(instance)
 		return
 	end
 
-	local pattern = "Component%.Define%("
+	local pattern = "Component%.Define%a"
 	local rawComponentDefinition = instance.Source:match(pattern) and tryRequire(instance)
 
 	if not rawComponentDefinition then
