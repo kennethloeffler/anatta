@@ -56,7 +56,7 @@ local ComponentMetatable = {
 
 		component[paramId] = value
 
-		if SHOULD_SEND and CollectionService:HasTag(component.Instance, "__WSReplicatorRef") and not BlackListed[componentId] then
+		if SHOULD_SEND and component._isNetworked and CollectionService:HasTag(component.Instance, "__WSReplicatorRef") then
 			QueueUpdate(component.Instance, PARAMS_UPDATE, componentId, paramId)
 		end
 	end
@@ -68,7 +68,7 @@ local ComponentMetatable = {
 -- a paramId). This not only removes loop overhead, but also avoids the cost of rehashing paramMap when the numeric keys are
 -- inserted.
 
--- To also avoid the two rehashes when assigning to ._componentId and .Instance, one may assign values to these same indices
+-- To also avoid the rehash when assigning to ._componentId, ._ and .Instance, one may assign values to these same indices
 -- (the values do not matter) when supplying paramMap to EntityManager.AddComponent().
 
 -- As with any optimization, only do this when absolutely necessary; it will heavily reduce readability. It may be helpful to
