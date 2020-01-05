@@ -140,7 +140,7 @@ local function stepComponentLifetime()
 						masterComponentList[keptComponentOffset] = component
 						masterComponentList[componentOffset] = nil
 
-						if not component._list then
+						if not component._isListTyped then
 							entityStruct[componentId + 1] = keptComponentOffset
 						else
 							for i, offset in ipairs(cIndex) do
@@ -165,7 +165,7 @@ local function stepComponentLifetime()
 					end
 
 					if entityStruct then
-						if not component._list then
+						if not component._isListTyped then
 							entityStruct[componentId + 1] = nil
 						else
 							local kept = 1
@@ -264,7 +264,7 @@ function EntityManager.AddComponent(instance, componentType, paramMap)
 	local filterOffset = filteredComponentId and math.ceil(filteredComponentId * 0.03125) + 2
 	local offsetIndex = entityStruct[componentId + 1]
 
-	if not component._list then
+	if not component._isListTyped then
 		entityStruct[componentId + 1] = componentOffset
 	else
 		if offsetIndex then
