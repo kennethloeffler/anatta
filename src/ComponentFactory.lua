@@ -97,7 +97,7 @@ return function(instance, componentType, paramMap)
 	end
 
 	newComponent._componentId = componentId
-	newComponent._list = GetListTyped(componentId)
+	newComponent._isListTyped = GetListTyped(componentId)
 	newComponent._isNetworked = GetNetworked(componentId)
 	newComponent.Instance = instance
 
