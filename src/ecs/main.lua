@@ -3,21 +3,21 @@
  ecs.lua
 
  TODO: integrate with luau type system, which wil obviate the need to
- pass identifiers around to specifiy components
+ pass identifiers around to specifiy components (if the generics are
+ good enough, anyway)
 
  TODO: groups?
 
 ]]
 
 local Pool = require(script.Pool)
-local Ident = require(script.Parent.core.Ident)
+local Identify = require(script.Parent.core.Identify)
 local View = require(script.View)
 
 local DEBUG = true
 local ENTITYID_WIDTH = 16
 local ENTITYID_MASK = bit32.rshift(0xFFFFFFFF, ENTITYID_WIDTH)
 local NULL_ENTITYID = 0
-local VERSION_MASK = bit32.lshift(0xFFFFFFFF, 32 - ENTITYID_WIDTH)
 
 local ErrAlreadyHas = "entity %X already has this component"
 local ErrBadComponentId = "invalid component identifier"
@@ -30,7 +30,7 @@ local assign = Pool.Assign
 local destroy = Pool.Destroy
 local get = Pool.Get
 local has = Pool.Has
-local generateId = Ident.GenerateRuntime
+local identifyRuntime = Identify.Runtime
 
 local Ecs = {}
 
@@ -47,12 +47,12 @@ function Ecs.new()
 end
 
 
-function Ecs:ComponentDef(name, dataType)
+function Ecs:DefineComponent(name, dataType)
 	if self.Component[name] then
 		return
 	end
 
-	local componentId = generateId(name)
+	local componentId = identifyRuntime(name)
 
 	self.Component[name] = componentId
 	self.Pools[componentId] = Pool.new(dataType)
@@ -82,7 +82,7 @@ function Ecs:Create()
 	end
 
 	local identifier = entities[entityId]
-	local version = bit32.band(identifier, VERSION_MASK)
+	local version = bit32.rshift(identifier, ENTITYID_WIDTH)
 	local recycled = bit32.bor(entityId, version)
 
 	-- pop the next id off the stack
@@ -122,7 +122,7 @@ end
 
 --[[
 
- If the entity is alive, return true; otherwise, return false
+ If the entity is alive, return true; otherwise return false
 
 ]]
 function Ecs:Valid(entity)
@@ -133,11 +133,11 @@ end
 
 --[[
 
- If the entity has no assigned components, return true; otherwise,
+ If the entity has no assigned components, return true; otherwise
  return false
 
 ]]
-function Ecs:(entity)
+function Ecs:Orphan(entity)
   	for _, pool in ipairs(self.Pools) do
 		if has(pool, entity) then
 			return false
@@ -149,7 +149,7 @@ end
 
 --[[
 
- If the entity has the component, return true; otherwise, return false
+ If the entity has the component, return true; otherwise return false
 
 ]]
 function Ecs:Has(entity, componentId)
@@ -204,7 +204,7 @@ end
 
 --[[
 
- If the entity already has the component, return it; otherwise, assign
+ If the entity already has the component, return it; otherwise assign
  and return it
 
 ]]
@@ -222,7 +222,7 @@ function Ecs:GetOrAssign(entity, componentId, component)
 	local obj = get(pool, entity)
 
 	-- boolean operators won't work here, as obj can be nil if the
-	-- component is empty
+	-- component is empty (i.e. it's a "flag" component)
 	if exists then
 		return obj
 	else
@@ -332,11 +332,11 @@ end
 
 --[[
 
- Constructs and returns a new view into the data set
+ Constructs and returns a new view into this entity system instance
 
- The view iterates entities which have both all of the components
- specified by `include` and none of the components specified by the
- variadic argument.
+ The view iterates entities which have all of the components specified
+ by `include` but none of the components specified by the variadic
+ argument.
 
 ]]
 function Ecs:View(included, ...)
