@@ -134,3 +134,5 @@ function Identify.Runtime(object)
 
 	error(ErrDNE:format(tostring(object)))
 end
+
+return Identify
