@@ -20,24 +20,33 @@ local persistentMax = 1
 
 local ErrDNE = "No identifier exists for %s"
 
+local function loadFromIntValue()
+	for _, obj in ipairs(script:GetChildren()) do
+		if typeof(obj) == "IntValue" then
+			lookup[obj.Name] = obj.Value
+			persistentMax = obj.Value > persistentMax and obj.Value or persistentMax
+
+			obj:Destroy()
+		end
+	end
+end
+
 if ATTRIBUTES_ENABLED then
+	-- might have old intvalues from before attributes were enabled
+	if next(script:GetChildren()) then
+		loadFromIntValue()
+	end
+
 	for name, id in pairs(script:GetAttributes()) do
 		if type(id) == "number" then
 			lookup[name] = id
-			persistentMax = persistentMax + 1
+			persistentMax = id > persistentMax and id or persistentMax
 
 			script:SetAttribute(name, nil)
 		end
 	end
 else
-	for _, obj in ipairs(script:GetChildren()) do
-		if typeof(obj) == "IntValue" then
-			lookup[obj.Name] = obj.Value
-			persistentMax = persistentMax + 1
-
-			obj:Destroy()
-		end
-	end
+	loadFromIntValue()
 end
 
 --[[
@@ -68,7 +77,7 @@ function Identify.GeneratePersistent(name)
 		persistentMax = persistentMax + 1
 	end
 
-	return lookup[name]
+	return bit32.band(lookup[name], PERSISTENT_MASK)
 end
 
 --[[
@@ -94,6 +103,9 @@ end
 --[[
 
  Change the name of an identifier that has already been named
+
+ Primarily useful for names associated with persistent identifiers,
+ when one wants to change the name but keep the same identifier
 
 ]]
 function Identify.Rename(oldName, newName)
