@@ -28,7 +28,7 @@ local function new(included, excluded)
 	return setmetatable({
 		Included = numIncluded > 1 and included or included[1],
 		Excluded = excluded,
-		ComponentPack = table.create(numIncluded)
+		ComponentPack = {} -- table.create(numIncluded)
 	}, viewKind)
 end
 
@@ -39,7 +39,7 @@ function Multi:ForEach(func)
 
 	for index, entity in ipairs(shortestPool.Internal) do
 		if hasIncludedThenPack(entity, included, shortestPool, pack, index) then
-			func(entity, table.unpack(pack))
+			func(entity, unpack(pack))
 		end
 	end
 end
@@ -103,7 +103,7 @@ function MultiWithExcluded:ForEach(func)
 	for index, entity in ipairs(shortestPool.Internal) do
 		if hasIncludedThenPack(entity, included, shortestPool, pack, index)
 		and doesntHaveExcluded(entity, excluded, shortestPool) then
-			func(entity, table.unpack(pack))
+			func(entity, unpack(pack))
 		end
 	end
 end
@@ -193,12 +193,10 @@ end
 
 hasIncluded = function(entity, included, shortestPool)
 	for _, includedPool in ipairs(included) do
-		if includedPool == shortestPool then
-			continue
-		end
-
-		if not has(includedPool, entity) then
-			return false
+		if not includedPool == shortestPool then
+			if not has(includedPool, entity) then
+				return false
+			end
 		end
 	end
 
@@ -209,18 +207,17 @@ hasIncludedThenPack = function(entity, included, shortestPool, pack, entityIndex
 	local index
 
 	for i, includedPool in ipairs(included) do
-		if includedPool == shortestPool then
+		if not includedPool == shortestPool then
+			index = has(includedPool, entity)
+
+			if not index then
+				return false
+			end
+
+			pack[i] = includedPool.Objects[index]
+		else
 			pack[i] = shortestPool.Objects[entityIndex]
-			continue
 		end
-
-		index = has(includedPool, entity)
-
-		if not index then
-			return false
-		end
-
-		pack[i] = includedPool.Objects[index]
 	end
 
 	return true
