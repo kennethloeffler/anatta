@@ -1,4 +1,4 @@
-local Signal = require(script.Parent.core.Signal)
+local Signal = require(script.Parent.Parent.core.Signal)
 local SparseSet = require(script.Parent.SparseSet)
 
 local remove = SparseSet.Remove
@@ -13,7 +13,7 @@ function Pool.new(dataType, capacity)
 	local pool = SparseSet.new(capacity)
 
 	if dataType then
-		pool.Objects = table.create(capacity or 0)
+		pool.Objects = {} -- table.create(capacity or 0)
 		pool.Type = dataType
 	end
 
@@ -34,7 +34,7 @@ function Pool.Get(pool, entity)
 end
 
 function Pool.Assign(pool, entity, object)
-	insert(entity)
+	insert(pool, entity)
 
 	if pool.Objects then
 		table.insert(pool.Objects, object)
