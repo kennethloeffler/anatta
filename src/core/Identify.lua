@@ -97,11 +97,11 @@ function Identify.GenerateRuntime(name)
 			  bit32.rshift(lookup[name], 16) == 0,
 		  "This name is already associated with a runtime identifier")
 
+	runtimeMax = runtimeMax + 1
+
 	lookup[name] = lookup[name]
 		and bit32.bor(bit32.lshift(runtimeMax, 16), lookup[name])
 		or bit32.lshift(runtimeMax, 16)
-
-	runtimeMax = runtimeMax + 1
 
 	return runtimeMax
 end
