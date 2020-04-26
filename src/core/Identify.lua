@@ -15,8 +15,8 @@ local PERSISTENT_MASK = 0xFFFF
 local Identify = {}
 local lookup = {}
 
-local runtimeMax = 1
-local persistentMax = 1
+local runtimeMax = 0
+local persistentMax = 0
 
 local ErrDNE = "No identifier exists for %s"
 
