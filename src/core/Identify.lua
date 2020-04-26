@@ -121,24 +121,24 @@ function Identify.Rename(oldName, newName)
 	lookup[oldName] = nil
 end
 
-function Identify.Persistent(object)
-	local identifier = lookup[tostring(object)]
+function Identify.Persistent(name)
+	local identifier = lookup[name]
 
 	if identifier then
 		return bit32.band(identifier, PERSISTENT_MASK)
 	end
 
-	error(ErrDNE:format(tostring(object)))
+	error(ErrDNE:format(name))
 end
 
-function Identify.Runtime(object)
-	local identifier = lookup[tostring(object)]
+function Identify.Runtime(name)
+	local identifier = lookup[name]
 
 	if identifier then
 		return bit32.rshift(identifier, 16)
 	end
 
-	error(ErrDNE:format(tostring(object)))
+	error(ErrDNE:format(name))
 end
 
 return Identify
