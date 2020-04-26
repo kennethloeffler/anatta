@@ -1,11 +1,15 @@
+local Constants = require(script.Parent.Parent.Constants)
+
+local DEBUG = Constants.DEBUG
+
 -- set can contain values on the range [1, VALUE_MASK]
-local VALUE_MASK = 0xFFFF
+local VALUE_MASK = require(script.Parent.Parent.Constants).ENTITYID_MASK
 
--- local ErrOutOfRange = "out of range"
--- local ErrDoesntExist = "set does not contain this value"
--- local ErrAlreadyExists = "set already contains this value"
+local ErrOutOfRange = "out of range"
+local ErrDoesntExist = "set does not contain this value"
+local ErrAlreadyExists = "set already contains this value"
 
--- local has
+local has
 
 local SparseSet = {}
 
@@ -25,7 +29,9 @@ end
 
 ]]
 function SparseSet.Has(set, value)
-	-- assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
+	if DEBUG then
+		assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
+	end
 
 	local externalIndex = bit32.band(value, VALUE_MASK)
 	local internalIndex = set.External[externalIndex]
@@ -35,7 +41,7 @@ function SparseSet.Has(set, value)
 	end
 end
 
--- has = SparseSet.Has
+has = SparseSet.Has
 
 --[[
 
@@ -44,8 +50,10 @@ end
 
 ]]
 function SparseSet.Insert(set, value)
-	-- assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
-	-- assert(not has(set, value), ErrAlreadyExists)
+	if DEBUG then
+		assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
+		assert(not has(set, value), ErrAlreadyExists)
+	end
 
 	local size = set.Size + 1
 	local externalIndex = bit32.band(value, VALUE_MASK)
@@ -63,8 +71,10 @@ end
 
 ]]
 function SparseSet.Remove(set, value)
-	-- assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
-	-- assert(has(set, value), ErrDoesntExist)
+	if DEBUG then
+		assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
+		assert(has(set, value), ErrDoesntExist)
+	end
 
 	local internal = set.Internal
 	local external = set.External
