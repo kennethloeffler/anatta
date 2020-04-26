@@ -1,23 +1,22 @@
 --[[
 
- ecs.lua
+ Manifest.lua
 
- TODO: integrate with luau type system, which wil obviate the need to
- pass identifiers around to specifiy components (if the generics are
- good enough, anyway)
+ TODO: luau types
 
  TODO: groups?
 
 ]]
 
-local Pool = require(script.Pool)
-local Identify = require(script.Parent.core.Identify)
-local View = require(script.View)
+local Constants = require(script.Parent.Parent.Constants)
+local Pool = require(script.Parent.Pool)
+local Identify = require(script.Parent.Parent.core.Identify)
+local View = require(script.Parent.View)
 
-local DEBUG = true
-local ENTITYID_WIDTH = 16
-local ENTITYID_MASK = bit32.rshift(0xFFFFFFFF, ENTITYID_WIDTH)
-local NULL_ENTITYID = 0
+local DEBUG = Constants.DEBUG
+local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
+local ENTITYID_MASK = Constants.ENTITYID_MASK
+local NULL_ENTITYID = Constants.NULL_ENTITYID
 
 local ErrAlreadyHas = "entity %X already has this component"
 local ErrBadComponentId = "invalid component identifier"
@@ -30,29 +29,29 @@ local assign = Pool.Assign
 local destroy = Pool.Destroy
 local get = Pool.Get
 local has = Pool.Has
-local identifyRuntime = Identify.Runtime
+local generateIdentifier = Identify.GenerateRuntime
 
-local Ecs = {}
+local Manifest = {}
 
-Ecs.__index = Ecs
+Manifest.__index = Manifest
 
-function Ecs.new()
+function Manifest.new()
 	return setmetatable({
 		Size = 0,
 		Head = NULL_ENTITYID,
 		Entities = {},
 		Pools = {},
 		Component = {}
-	}, Ecs)
+	}, Manifest)
 end
 
 
-function Ecs:DefineComponent(name, dataType)
+function Manifest:DefineComponent(name, dataType)
 	if self.Component[name] then
 		return
 	end
 
-	local componentId = identifyRuntime(name)
+	local componentId = generateIdentifier(name)
 
 	self.Component[name] = componentId
 	self.Pools[componentId] = Pool.new(dataType)
@@ -68,7 +67,7 @@ end
  available id.
 
 ]]
-function Ecs:Create()
+function Manifest:Create()
 	local entities = self.Entities
 	local entityId = self.Head
 
@@ -97,7 +96,7 @@ end
  Destroy the entity, and by extension, all its components
 
 ]]
-function Ecs:Destroy(entity)
+function Manifest:Destroy(entity)
 	if DEBUG then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 	end
@@ -125,7 +124,7 @@ end
  If the entity is alive, return true; otherwise return false
 
 ]]
-function Ecs:Valid(entity)
+function Manifest:Valid(entity)
 	local id = bit32.band(entity, ENTITYID_MASK)
 
 	return id <= self.Size and self.Entities[id] == entity
@@ -137,7 +136,7 @@ end
  return false
 
 ]]
-function Ecs:Orphan(entity)
+function Manifest:Orphan(entity)
   	for _, pool in ipairs(self.Pools) do
 		if has(pool, entity) then
 			return false
@@ -152,7 +151,7 @@ end
  If the entity has the component, return true; otherwise return false
 
 ]]
-function Ecs:Has(entity, componentId)
+function Manifest:Has(entity, componentId)
 	if DEBUG then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 	end
@@ -165,7 +164,7 @@ end
  If the entity has the component, return it; otherwise return nil
 
 ]]
-function Ecs:Get(entity, componentId)
+function Manifest:Get(entity, componentId)
 	local pool = getPool(self, componentId)
 
 	if DEBUG then
@@ -182,7 +181,7 @@ end
  Assigning to an entity that already has the component is undefined.
 
 ]]
-function Ecs:Assign(entity, componentId, component)
+function Manifest:Assign(entity, componentId, component)
 	local pool = getPool(self, componentId)
 
 	if DEBUG then
@@ -191,8 +190,8 @@ function Ecs:Assign(entity, componentId, component)
 		assert(not has(pool, entity), ErrAlreadyHas:format(entity))
 
 		-- just basic type checking for now
-		assert(pool.Type == typeof(component),
-			  ErrBadType:format(pool.Type, typeof(component)))
+		assert(pool.Type == nil or pool.Type == typeof(component),
+			  ErrBadType:format(pool.Type or "", typeof(component)))
 	end
 
 	local obj = assign(pool, entity, component)
@@ -208,20 +207,20 @@ end
  and return it
 
 ]]
-function Ecs:GetOrAssign(entity, componentId, component)
+function Manifest:GetOrAssign(entity, componentId, component)
 	local pool = getPool(self, componentId)
 
 	if DEBUG then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
-		assert(pool.Type == typeof(component),
-			  ErrBadType:format(pool.Type, typeof(component)))
+		assert(pool.Type == nil or pool.Type == typeof(component),
+			  ErrBadType:format(pool.Type or "", typeof(component)))
 	end
 
 	local exists = has(pool, entity)
 	local obj = get(pool, entity)
 
-	-- boolean operators won't work here, as obj can be nil if the
+	-- boolean operators won't work here, b/c obj can be nil if the
 	-- component is empty (i.e. it's a "flag" component)
 	if exists then
 		return obj
@@ -242,21 +241,21 @@ end
  undefined.
 
 ]]
-function Ecs:Replace(entity, componentId, component)
+function Manifest:Replace(entity, componentId, component)
 	local pool = getPool(self, componentId)
 	local index = has(pool, entity)
 
 	if DEBUG then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
-		assert(pool.Type == typeof(component),
-			  ErrBadType:format(pool.Type, typeof(component)))
+		assert(pool.Type == nil or pool.Type == typeof(component),
+			  ErrBadType:format(pool.Type or "", typeof(component)))
 
 		assert(index, ErrMissing:format(entity))
 	end
 
 	if pool.Objects then
-		pool[index] = component
+		pool.Objects[index] = component
 	end
 
 	pool.OnUpdate:Dispatch(self, entity)
@@ -270,19 +269,21 @@ end
  assign and return it
 
 ]]
-function Ecs:ReplaceOrAssign(entity, componentId, component)
+function Manifest:ReplaceOrAssign(entity, componentId, component)
 	local pool = getPool(self, componentId)
 	local index = has(pool, entity)
 
 	if DEBUG then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
-		assert(pool.Type == typeof(component),
-			  ErrBadType:format(pool.Type, typeof(component)))
+		assert(pool.Type == nil or pool.Type == typeof(component),
+			  ErrBadType:format(pool.Type or "", typeof(component)))
 	end
 
 	if index then
-		pool[index] = component
+		if pool.Objects then
+			pool.Objects[index] = component
+		end
 
 		pool.OnUpdate:Dispatch(self, entity)
 
@@ -304,7 +305,7 @@ end
  undefined.
 
 ]]
-function Ecs:Remove(entity, componentId)
+function Manifest:Remove(entity, componentId)
 	local pool = getPool(self, componentId)
 
 	if DEBUG then
@@ -318,15 +319,15 @@ function Ecs:Remove(entity, componentId)
 	pool.OnRemove:Dispatch(self, entity)
 end
 
-function Ecs:OnAssign(componentId)
+function Manifest:GetAssignedSignal(componentId)
 	return getPool(self, componentId).OnAssign
 end
 
-function Ecs:OnRemove(componentId)
+function Manifest:GetRemovedSignal(componentId)
 	return getPool(self, componentId).OnRemove
 end
 
-function Ecs:OnUpdate(componentId)
+function Manifest:GetUpdatedSignal(componentId)
 	return getPool(self, componentId).OnUpdate
 end
 
@@ -339,7 +340,7 @@ end
  argument.
 
 ]]
-function Ecs:View(included, ...)
+function Manifest:View(included, ...)
 	local excluded = table.pack(...)
 
 	for i, componentId in ipairs(included) do
@@ -353,12 +354,17 @@ function Ecs:View(included, ...)
 	return View(included, excluded)
 end
 
-getPool = function(ecs, componentId)
+getPool = function(manifest, componentId)
 	if DEBUG then
-		assert(ecs.Pools[componentId], ErrBadComponentId)
+		assert(manifest.Pools[componentId], ErrBadComponentId)
 	end
 
-	return ecs.Pools[componentId]
+	return manifest.Pools[componentId]
 end
 
-return Ecs
+if DEBUG then
+	-- for testing
+	Manifest._getPool = getPool
+end
+
+return Manifest
