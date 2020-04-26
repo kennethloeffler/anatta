@@ -49,6 +49,12 @@ else
 	loadFromIntValue()
 end
 
+function Identify.Purge()
+	lookup = {}
+	runtimeMax = 0
+	persistentMax = 0
+end
+
 --[[
 
  Generate an identifier guaranteed to be the same for this run and all
