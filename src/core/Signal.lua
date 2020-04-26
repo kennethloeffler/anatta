@@ -14,9 +14,8 @@ end
 function Signal:Dispatch(...)
 	local listeners = self.Listeners
 
-	for i, callback in ipairs(listeners) do
+	for _, callback in ipairs(listeners) do
 		callback(...)
-		listeners[i] = nil
 	end
 end
 
