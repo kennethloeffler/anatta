@@ -1,7 +1,8 @@
-return function()
-	local Pool = require(script.Parent.Pool)
-	local obj = Vector3.new()
+local Pool = require(script.Parent.Pool)
+local obj = Vector3.new()
+local Manifest = require(script.Parent.Manifest)
 
+return function()
 	describe("new", function()
 		local ty = typeof(obj)
 		local pool = Pool.new(ty)
@@ -33,8 +34,8 @@ return function()
 	end)
 
 	describe("Assign", function()
-		local Ecs = require(script.Parent).new()
-		local entity = Ecs:Create()
+		local manifest = Manifest.new()
+		local entity = manifest:Create()
 		local pool = Pool.new(typeof(obj))
 
 		it("should correctly assign a component to an entity", function()
@@ -53,14 +54,14 @@ return function()
 
 	describe("Get", function()
 		local pool = Pool.new(typeof(obj))
-		local Ecs = require(script.Parent).new()
-		local entity = Ecs:Create()
+		local manifest = Manifest.new()
+		local entity = manifest:Create()
 
 		Pool.Assign(pool, entity, obj)
 
 		it("should correctly determine if an entity has a component", function()
 			expect(Pool.Get(pool, entity)).to.be.ok()
-			expect(Pool.Get(pool, Ecs:Create())).to.never.be.ok()
+			expect(Pool.Get(pool, manifest:Create())).to.never.be.ok()
 		end)
 
 		it("should return the correct object", function()
@@ -70,8 +71,8 @@ return function()
 
 	describe("Destroy", function()
 		local pool = Pool.new(typeof(obj))
-		local Ecs = require(script.Parent).new()
-		local entity = Ecs:Create()
+		local manifest = Manifest.new()
+		local entity = manifest:Create()
 
 		it("should correctly remove the component from the pool", function()
 			Pool.Assign(pool, entity, obj)

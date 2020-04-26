@@ -1,7 +1,7 @@
-return function()
-	local View = require(script.Parent.View)
+local View = require(script.Parent.View)
 
+return function()
 	describe("new", function()
-		
+
 	end)
 end
