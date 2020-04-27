@@ -41,8 +41,8 @@ function Multi:ForEach(func)
 	local included = self.Included
 	local shortestPool = selectShortestPool(included)
 
-	for index, entity in ipairs(shortestPool.Internal) do
-		if hasIncludedThenPack(entity, included, shortestPool, pack, index) then
+	for _, entity in ipairs(shortestPool.Internal) do
+		if hasIncludedThenPack(entity, included, pack) then
 			func(entity, unpack(pack))
 		end
 	end
@@ -104,9 +104,9 @@ function MultiWithExcluded:ForEach(func)
 	local excluded = self.Excluded
 	local shortestPool = selectShortestPool(included)
 
-	for index, entity in ipairs(shortestPool.Internal) do
-		if hasIncludedThenPack(entity, included, shortestPool, pack, index)
-		and doesntHaveExcluded(entity, excluded, shortestPool) then
+	for _, entity in ipairs(shortestPool.Internal) do
+		if hasIncludedThenPack(entity, included, pack)
+		and doesntHaveExcluded(entity, excluded) then
 			func(entity, unpack(pack))
 		end
 	end
@@ -173,8 +173,14 @@ function SingleWithExcluded:ForEachComponent(func)
 	end
 end
 
+function SingleWithExcluded:Has(entity)
+	local excluded = self.Excluded
+
+	return has(self.Included, entity) and doesntHaveExcluded(entity, excluded)
+end
+
 selectShortestPool = function(pools)
-	local candidate = next(pools)
+	local _, candidate = next(pools)
 
 	for _, pool in ipairs(pools) do
 		if pool.Size < candidate.Size then
@@ -195,36 +201,42 @@ doesntHaveExcluded = function(entity, excluded)
 	return true
 end
 
-hasIncluded = function(entity, included, shortestPool)
+hasIncluded = function(entity, included)
 	for _, includedPool in ipairs(included) do
-		if not includedPool == shortestPool then
-			if not has(includedPool, entity) then
-				return false
-			end
+		if not has(includedPool, entity) then
+			return false
 		end
 	end
 
 	return true
 end
 
-hasIncludedThenPack = function(entity, included, shortestPool, pack, entityIndex)
-	local index
+hasIncludedThenPack = function(entity, included, pack)
+	local obj
 
 	for i, includedPool in ipairs(included) do
-		if not includedPool == shortestPool then
-			index = has(includedPool, entity)
+		obj = get(includedPool, entity)
 
-			if not index then
-				return false
-			end
-
-			pack[i] = includedPool.Objects[index]
-		else
-			pack[i] = shortestPool.Objects[entityIndex]
+		if not obj then
+			return false
 		end
+
+		pack[i] = obj
 	end
 
 	return true
 end
 
-return new
+if Constants.DEBUG then
+	View._singleMt = Single
+	View._singleWithExclMt = SingleWithExcluded
+	View._multiMt = Multi
+	View._multiWithExclMt = MultiWithExcluded
+
+	View._selectShortestPool = selectShortestPool
+	View._doesntHaveExcluded = doesntHaveExcluded
+	View._hasIncluded = hasIncluded
+	View._hasIncludedThenPack = hasIncludedThenPack
+end
+
+return View
