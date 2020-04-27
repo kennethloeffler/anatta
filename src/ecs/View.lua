@@ -1,4 +1,7 @@
+local Constants = require(script.Parent.Parent.Constants)
 local Pool = require(script.Parent.Pool)
+
+local View = {}
 
 local Multi = {}
 Multi.__index = Multi
@@ -18,8 +21,9 @@ local doesntHaveExcluded
 local hasIncludedThenPack
 
 local has = Pool.Has
+local get = Pool.Get
 
-local function new(included, excluded)
+function View.new(included, excluded)
 	local numIncluded = #included
 	local viewKind = numIncluded == 1
 		and (excluded and SingleWithExcluded or Single)
