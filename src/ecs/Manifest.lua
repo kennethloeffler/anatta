@@ -29,7 +29,7 @@ local assign = Pool.Assign
 local destroy = Pool.Destroy
 local get = Pool.Get
 local has = Pool.Has
-local generateIdentifier = Identify.GenerateRuntime
+local generateComponentId = Identify.GenerateRuntime
 
 local Manifest = {}
 
