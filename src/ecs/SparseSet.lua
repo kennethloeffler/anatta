@@ -30,7 +30,7 @@ end
 ]]
 function SparseSet.Has(set, value)
 	if DEBUG then
-		assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
+		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 	end
 
 	local externalIndex = bit32.band(value, VALUE_MASK)
@@ -51,7 +51,7 @@ has = SparseSet.Has
 ]]
 function SparseSet.Insert(set, value)
 	if DEBUG then
-		assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
+		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 		assert(not has(set, value), ErrAlreadyExists)
 	end
 
@@ -72,7 +72,7 @@ end
 ]]
 function SparseSet.Remove(set, value)
 	if DEBUG then
-		assert(math.clamp(value, 1, VALUE_MASK) == value, ErrOutOfRange)
+		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 		assert(has(set, value), ErrDoesntExist)
 	end
 
