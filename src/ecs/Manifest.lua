@@ -51,10 +51,12 @@ function Manifest:DefineComponent(name, dataType)
 		return
 	end
 
-	local componentId = generateIdentifier(name)
+	local componentId = generateComponentId(name)
 
 	self.Component[name] = componentId
 	self.Pools[componentId] = Pool.new(dataType)
+
+	return componentId
 end
 
 --[[
