@@ -343,17 +343,19 @@ end
 
 ]]
 function Manifest:View(included, ...)
-	local excluded = table.pack(...)
+	local excluded = select("#", ...) > 0 and { ... } or nil
 
 	for i, componentId in ipairs(included) do
 		included[i] = getPool(self, componentId)
 	end
 
-	for i, componentId in ipairs(excluded) do
-		excluded[i] = getPool(self, componentId)
+	if excluded then
+		for i, componentId in ipairs(excluded) do
+			excluded[i] = getPool(self, componentId)
+		end
 	end
 
-	return View(included, excluded)
+	return View.new(included, excluded)
 end
 
 getPool = function(manifest, componentId)
