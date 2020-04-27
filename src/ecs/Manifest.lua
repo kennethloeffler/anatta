@@ -83,7 +83,7 @@ function Manifest:Create()
 	end
 
 	local identifier = entities[entityId]
-	local version = bit32.rshift(identifier, ENTITYID_WIDTH)
+	local version = bit32.lshift(bit32.rshift(identifier, ENTITYID_WIDTH), ENTITYID_WIDTH)
 	local recycled = bit32.bor(entityId, version)
 
 	-- pop the next id off the stack
