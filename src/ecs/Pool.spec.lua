@@ -78,7 +78,7 @@ return function()
 			Pool.Assign(pool, entity, obj)
 			Pool.Destroy(pool, entity)
 
-			expect(Pool.Get(pool, entity)).to.never.be.ok()
+			expect(pool.Objects[pool.External[entity]]).to.never.be.ok()
 		end)
 
 		it("should throw when the pool does not contain the component", function()

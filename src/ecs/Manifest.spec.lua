@@ -1,11 +1,12 @@
 local Identify = require(script.Parent.Parent.core.Identify)
 local Constants = require(script.Parent.Parent.Constants)
 local Manifest = require(script.Parent.Manifest)
+local Pool = require(script.Parent.Pool)
 local TestComponentType = "table"
 
 local function defineTestComponent(manifest)
 	Identify.Purge()
-	manifest:DefineComponent("Test", TestComponentType)
+	return manifest:DefineComponent("Test", TestComponentType)
 end
 
 return function()
@@ -23,8 +24,7 @@ return function()
 
 	describe("DefineComponent", function()
 		local manifest = Manifest.new()
-
-		defineTestComponent(manifest)
+		local id = defineTestComponent(manifest)
 
 		it("should generate a runtime identifier", function()
 			expect(manifest.Component.Test).to.be.ok()
@@ -34,22 +34,31 @@ return function()
 		it("should create a valid component pool", function()
 			expect(manifest.Pools[manifest.Component.Test]).to.be.ok()
 		end)
+
+		it("should return the component id", function()
+			expect(id).to.be.ok()
+			expect(id).to.be.a("number")
+		end)
 	end)
 
 	describe("Create", function()
-		local manifest = Manifest.new()
-		local entity = manifest:Create()
-		local originalIdentifier = entity
-
 		it("should return a valid entity identifier", function()
+			local manifest = Manifest.new()
+			local entity = manifest:Create()
+
 			expect(manifest:Valid(entity)).to.equal(true)
 		end)
 
 		it("should recycle destroyed entity ids", function()
-			manifest:Destroy(entity)
+			local manifest = Manifest.new()
+			local entity = manifest:Create()
+			local originalIdentifier = entity
 
+			manifest:Destroy(entity)
 			entity = manifest:Create()
-			expect(bit32.band(entity, Constants.ENTITYID_MASK)).to.equal(originalIdentifier)
+
+			expect(bit32.band(entity, Constants.ENTITYID_MASK)).to.equal(bit32.band(originalIdentifier, Constants.ENTITYID_MASK))
+			expect(bit32.rshift(entity, Constants.ENTITYID_WIDTH)).to.equal(bit32.rshift(originalIdentifier, Constants.ENTITYID_WIDTH) + 1)
 
 			manifest:Destroy(entity)
 		end)
@@ -62,6 +71,8 @@ return function()
 		local originalVersion = bit32.rshift(entity, Constants.ENTITYID_WIDTH)
 		local originalHead = manifest.Head
 
+		defineTestComponent(manifest)
+		manifest:Assign(entity, manifest.Component.Test, {})
 		manifest:Destroy(entity)
 
 		local newVersion = bit32.rshift(manifest.Entities[entityId], Constants.ENTITYID_WIDTH)
@@ -74,6 +85,10 @@ return function()
 
 		it("should increment the entity identifier's version", function()
 			expect(originalVersion).to.equal(newVersion - 1)
+		end)
+
+		it("should remove all components that were on the entity", function()
+			expect(Pool.Has(manifest.Pools[manifest.Component.Test], entity)).to.never.be.ok()
 		end)
 	end)
 
@@ -143,7 +158,6 @@ return function()
 	describe("Assign", function()
 		local manifest = Manifest.new()
 		local entity = manifest:Create()
-		local obj = {}
 		local ranCallback = false
 
 		defineTestComponent(manifest)
@@ -152,12 +166,21 @@ return function()
 			ranCallback = true
 		end)
 
-		it("should return a new component instance and assign it to the entity", function()
-			expect(manifest:Assign(entity, manifest.Component.Test, obj)).to.equal(obj)
+		it("should assign a new component instance to the entity and return it", function()
+			local obj = manifest:Assign(entity, manifest.Component.Test, {})
+
+			expect(manifest:Get(entity, manifest.Component.Test)).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function()
 			expect(ranCallback).to.equal(true)
+		end)
+
+		it("should return the correct component instance when a recycled entity is used", function()
+			manifest:Destroy(entity)
+			entity = manifest:Create()
+
+			expect(manifest:Assign(entity, manifest.Component.Test, {})).to.equal(manifest:Get(entity, manifest.Component.Test))
 		end)
 	end)
 
@@ -302,6 +325,13 @@ return function()
 	end)
 
 	describe("View", function()
+		local manifest = Manifest.new()
+		local view = manifest:View({ defineTestComponent(manifest) })
+
+		it("should return a new view instance", function()
+			expect(view).to.be.ok()
+			expect(view.ComponentPack).to.be.ok()
+		end)
 	end)
 
 	describe("getPool", function()
