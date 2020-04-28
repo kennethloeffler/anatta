@@ -406,18 +406,22 @@ end
 function Manifest:Snapshot()
 	local head = self.Head
 	local entities = self.Entities
-	local curr = entities[head]
 
 	return Snapshot.new(
 		self,
 		head == NULL_ENTITYID and head
-			or bit32.bor(head,
-			             bit32.lshift(bit32.rshift(curr,
-			                                       ENTITYID_WIDTH),
-			                          ENTITYID_WIDTH)),
-		function(manifest, entity)
-			
-		end)
+			or bit32.bor(head, bit32.lshift(bit32.rshift(entities[head],
+			                                             ENTITYID_WIDTH),
+			                                ENTITYID_WIDTH)),
+		function(entity)
+			local curr = bit32.band(entities[bit32.band(entity,
+			                                            ENTITYID_MASK)],
+			                        ENTITYID_MASK)
+			return bit32.bor(curr, bit32.lshift(bit32.rshift(entities[curr],
+			                                                 ENTITYID_WIDTH),
+			                                    ENTITYID_WIDTH))
+		end
+	)
 end
 
 getPool = function(manifest, componentId)
