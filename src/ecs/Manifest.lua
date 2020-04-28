@@ -376,6 +376,33 @@ function Manifest:View(included, ...)
 	return View.new(included, excluded)
 end
 
+function Manifest:NumEntities()
+	local entities = self.Entities
+	local curr = self.Head
+	local size = self.Size
+
+	while curr ~= NULL_ENTITYID do
+		size = size - 1
+		curr = bit32.band(entities[curr], ENTITYID_MASK)
+	end
+
+	return size
+end
+
+function Manifest:ForEach(func)
+	if self.Head == NULL_ENTITYID then
+		for _, entity in ipairs(self.Entities) do
+			func(entity)
+		end
+	else
+		for id, entity in ipairs(self.Entities) do
+			if bit32.band(entity, ENTITYID_MASK) ==  id then
+				func(entity)
+			end
+		end
+	end
+end
+
 function Manifest:Snapshot()
 	local head = self.Head
 	local entities = self.Entities
