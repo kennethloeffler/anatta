@@ -85,7 +85,8 @@ function Manifest:Create()
 	end
 
 	local identifier = entities[entityId]
-	local version = bit32.lshift(bit32.rshift(identifier, ENTITYID_WIDTH), ENTITYID_WIDTH)
+	local version = bit32.lshift(bit32.rshift(identifier, ENTITYID_WIDTH),
+	                             ENTITYID_WIDTH)
 	local recycled = bit32.bor(entityId, version)
 
 	-- pop the next id off the stack
@@ -145,7 +146,8 @@ end
 function Manifest:Valid(entity)
 	local id = bit32.band(entity, ENTITYID_MASK)
 
-	return (id <= self.Size and id ~= NULL_ENTITYID) and self.Entities[id] == entity
+	return (id <= self.Size and id ~= NULL_ENTITYID) and
+		self.Entities[id] == entity
 end
 
 --[[
