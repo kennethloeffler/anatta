@@ -92,6 +92,10 @@ return function()
 		end)
 	end)
 
+	describe("Relate", function()
+		
+	end)
+
 	describe("Valid", function()
 		local manifest = Manifest.new()
 		local entity = manifest:Create()
@@ -106,19 +110,19 @@ return function()
 		end)
 	end)
 
-	describe("Orphan", function()
+	describe("Dead", function()
 		local manifest = Manifest.new()
 		local entity = manifest:Create()
 
 		defineTestComponent(manifest)
 
 		it("should return true if the entity has no components", function()
-			expect(manifest:Orphan(entity)).to.equal(true)
+			expect(manifest:Dead(entity)).to.equal(true)
 		end)
 
 		it("should return false if the entity has any components", function()
 			manifest:Assign(entity, manifest.Component.Test, {})
-			expect(manifest:Orphan(entity)).to.equal(false)
+			expect(manifest:Dead(entity)).to.equal(false)
 		end)
 	end)
 

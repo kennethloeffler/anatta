@@ -11,6 +11,7 @@
 local Constants = require(script.Parent.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 local Identify = require(script.Parent.Parent.core.Identify)
+local Snapshot = require(script.Parent.Snapshot)
 local View = require(script.Parent.View)
 
 local DEBUG = Constants.DEBUG
@@ -24,12 +25,12 @@ local ErrInvalid = "entity %X either does not exist or it has been destroyed"
 local ErrMissing = "entity %X does not have this component"
 local ErrBadType = "bad type: expected %s (got %s)"
 
-local getPool
 local assign = Pool.Assign
 local destroy = Pool.Destroy
 local get = Pool.Get
-local has = Pool.Has
 local generateComponentId = Identify.GenerateRuntime
+local getPool
+local has = Pool.Has
 
 local Manifest = {}
 
@@ -41,7 +42,8 @@ function Manifest.new()
 		Head = NULL_ENTITYID,
 		Entities = {},
 		Pools = {},
-		Component = {}
+		Component = {},
+		RelatedManifests = {}
 	}, Manifest)
 end
 
@@ -122,14 +124,28 @@ function Manifest:Destroy(entity)
 end
 
 --[[
+]]
+function Manifest:Relate(sourceManifest, sourceEntity, entity)
+	local manifests = self.RelatedManifests
+	local related = manifests[sourceManifest] or {}
 
- If the entity is alive, return true; otherwise return false
+	if not manifests[sourceManifest] then
+		manifests[sourceManifest] = related
+	end
+
+	related[sourceEntity] = entity
+end
+
+--[[
+
+ If the entity identifier corresponds to a valid entity, return true;
+ otherwise return false
 
 ]]
 function Manifest:Valid(entity)
 	local id = bit32.band(entity, ENTITYID_MASK)
 
-	return id <= self.Size and self.Entities[id] == entity
+	return (id <= self.Size and id ~= NULL_ENTITYID) and self.Entities[id] == entity
 end
 
 --[[
@@ -138,7 +154,7 @@ end
  return false
 
 ]]
-function Manifest:Orphan(entity)
+function Manifest:Dead(entity)
   	for _, pool in ipairs(self.Pools) do
 		if has(pool, entity) then
 			return false
@@ -358,6 +374,24 @@ function Manifest:View(included, ...)
 	return View.new(included, excluded)
 end
 
+function Manifest:Snapshot()
+	local head = self.Head
+	local entities = self.Entities
+	local curr = entities[head]
+
+	return Snapshot.new(
+		self,
+		head == NULL_ENTITYID and head
+			or bit32.bor(head,
+					   bit32.band(curr,
+							    bit32.lshift(bit32.rshift(curr,
+													ENTITYID_WIDTH),
+										  ENTITYID_WIDTH))),
+		function(manifest, entity)
+			
+		end)
+end
+
 getPool = function(manifest, componentId)
 	if DEBUG then
 		assert(manifest.Pools[componentId], ErrBadComponentId)
@@ -367,7 +401,6 @@ getPool = function(manifest, componentId)
 end
 
 if DEBUG then
-	-- for testing
 	Manifest._getPool = getPool
 end
 
