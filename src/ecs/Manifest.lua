@@ -383,10 +383,9 @@ function Manifest:Snapshot()
 		self,
 		head == NULL_ENTITYID and head
 			or bit32.bor(head,
-					   bit32.band(curr,
-							    bit32.lshift(bit32.rshift(curr,
-													ENTITYID_WIDTH),
-										  ENTITYID_WIDTH))),
+			             bit32.lshift(bit32.rshift(curr,
+			                                       ENTITYID_WIDTH),
+			                          ENTITYID_WIDTH)),
 		function(manifest, entity)
 			
 		end)
