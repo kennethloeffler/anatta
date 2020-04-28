@@ -92,10 +92,6 @@ return function()
 		end)
 	end)
 
-	describe("Relate", function()
-		
-	end)
-
 	describe("Valid", function()
 		local manifest = Manifest.new()
 		local entity = manifest:Create()
@@ -335,6 +331,55 @@ return function()
 		it("should return a new view instance", function()
 			expect(view).to.be.ok()
 			expect(view.ComponentPack).to.be.ok()
+		end)
+	end)
+
+	describe("ForEach", function()
+		local manifest = Manifest.new()
+		local t = {}
+
+		for i = 1, 128 do
+			t[i] = manifest:Create()
+		end
+
+		for i, entity in ipairs(t) do
+			if i % 16 == 0 then
+				manifest:Destroy(entity)
+			end
+		end
+
+		-- make some entities which will have incremented versions
+		manifest:Create()
+		manifest:Create()
+		manifest:Create()
+
+		it("should iterate over all non-destroyed entities", function()
+			manifest:ForEach(function(entity)
+				local id = bit32.band(entity, Constants.ENTITYID_MASK)
+
+				expect(id).to.equal(bit32.band(manifest.Entities[id], Constants.ENTITYID_MASK))
+			end)
+		end)
+	end)
+
+	describe("NumEntities", function()
+		local manifest = Manifest.new()
+		local t = {}
+		local num = 128
+
+		for i = 1, num do
+			t[i] = manifest:Create()
+		end
+
+		for i, entity in ipairs(t) do
+			if i % 16 == 0 then
+				num = num - 1
+				manifest:Destroy(entity)
+			end
+		end
+
+		it("should return the number of non-destroyed entities currently in the manifest", function()
+			expect(manifest:NumEntities()).to.equal(num)
 		end)
 	end)
 
