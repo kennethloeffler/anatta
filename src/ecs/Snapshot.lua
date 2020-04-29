@@ -36,7 +36,7 @@ function Snapshot:Destroyed(destination)
 
 		for _ = 1, numDestroyed do
 			curr = getNext(curr)
-			destination:Destroyed(curr)
+			destination:Entity(curr)
 		end
 	end
 
