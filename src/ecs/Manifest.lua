@@ -119,7 +119,7 @@ function Manifest:Destroy(entity)
 	self.Entities[entityId] = bit32.bor(
 		self.Head,
 		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1,
-				   ENTITYID_WIDTH))
+		             ENTITYID_WIDTH))
 
 	self.Head = entityId
 end
@@ -211,7 +211,7 @@ function Manifest:Assign(entity, componentId, component)
 
 		-- just basic type checking for now
 		assert(pool.Type == nil or pool.Type == typeof(component),
-			  ErrBadType:format(pool.Type or "", typeof(component)))
+		       ErrBadType:format(pool.Type or "", typeof(component)))
 	end
 
 	local obj = assign(pool, entity, component)
@@ -234,7 +234,7 @@ function Manifest:GetOrAssign(entity, componentId, component)
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
 		assert(pool.Type == nil or pool.Type == typeof(component),
-			  ErrBadType:format(pool.Type or "", typeof(component)))
+		       ErrBadType:format(pool.Type or "", typeof(component)))
 	end
 
 	local exists = has(pool, entity)
@@ -269,7 +269,7 @@ function Manifest:Replace(entity, componentId, component)
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
 		assert(pool.Type == nil or pool.Type == typeof(component),
-			  ErrBadType:format(pool.Type or "", typeof(component)))
+		       ErrBadType:format(pool.Type or "", typeof(component)))
 
 		assert(index, ErrMissing:format(entity))
 	end
@@ -297,7 +297,7 @@ function Manifest:ReplaceOrAssign(entity, componentId, component)
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
 		assert(pool.Type == nil or pool.Type == typeof(component),
-			  ErrBadType:format(pool.Type or "", typeof(component)))
+		       ErrBadType:format(pool.Type or "", typeof(component)))
 	end
 
 	if index then
