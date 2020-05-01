@@ -20,11 +20,12 @@ local persistentMax = 0
 
 local ErrDNE = "No identifier exists for %s"
 
-local function loadFromIntValue()
+local function fromIntValue()
 	for _, obj in ipairs(script:GetChildren()) do
 		if typeof(obj) == "IntValue" then
 			lookup[obj.Name] = obj.Value
-			persistentMax = obj.Value > persistentMax and obj.Value or persistentMax
+			persistentMax = obj.Value > persistentMax and obj.Value
+				or persistentMax
 
 			obj:Destroy()
 		end
@@ -34,7 +35,7 @@ end
 if ATTRIBUTES_ENABLED then
 	-- might have old intvalues from before attributes were enabled
 	if next(script:GetChildren()) then
-		loadFromIntValue()
+		fromIntValue()
 	end
 
 	for name, id in pairs(script:GetAttributes()) do
@@ -46,7 +47,7 @@ if ATTRIBUTES_ENABLED then
 		end
 	end
 else
-	loadFromIntValue()
+	fromIntValue()
 end
 
 function Identify.Purge()
@@ -93,9 +94,9 @@ end
 
 ]]
 function Identify.GenerateRuntime(name)
-	assert(not lookup[name] or
-			  bit32.rshift(lookup[name], 16) == 0,
-		  "This name is already associated with a runtime identifier")
+	assert(not lookup[name]
+	            or bit32.rshift(lookup[name], 16) == 0,
+	       "This name is already associated with a runtime identifier")
 
 	runtimeMax = runtimeMax + 1
 
