@@ -6,7 +6,7 @@ function Snapshot.new(source, lastDestroyed, getNextDestroyed)
 		Source = source,
 		LastDestroyed = lastDestroyed,
 		GetNextDestroyed = getNextDestroyed
-					}, Snapshot)
+	}, Snapshot)
 end
 
 function Snapshot:Entities(container)
@@ -47,12 +47,20 @@ function Snapshot:Components(container, ...)
 	local instances
 	local serialize
 
-	for num, componentId in ipairs({ ... }) do
+	for _, componentId in ipairs({ ... }) do
 		instances = manifest.Pools[componentId].Objects
-		serialize = container.Serial[num]
+		serialize = getmetatable(container)[componentId]
 
-		for index, entity in ipairs(manifest.Pools[componentId].Internal) do
-			serialize(container, entity, instances[index])
+		if not instances then
+			-- don't try to pass instance because this is an empty component
+			-- type which doesn't have any instances
+			for _, entity in ipairs(manifest.Pools[componentId].Internal) do
+				serialize(container, entity)
+			end
+		else
+			for index, entity in ipairs(manifest.Pools[componentId].Internal) do
+				serialize(container, entity, instances[index])
+			end
 		end
 	end
 

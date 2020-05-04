@@ -5,9 +5,9 @@ local manifest = Manifest.new()
 
 Identify.Purge()
 
-local Component1 = manifest:DefineComponent("Test1", "table")
-local Component2 = manifest:DefineComponent("Test2", "table")
-local Component3 = manifest:DefineComponent("Test3", "table")
+local Component1 = manifest:Define("Test1", "table")
+local Component2 = manifest:Define("Test2", "table")
+local Component3 = manifest:Define("Test3", "table")
 
 local Pool1 = Manifest._getPool(manifest, Component1)
 local Pool2 = Manifest._getPool(manifest, Component2)

@@ -18,12 +18,13 @@ local DEBUG = Constants.DEBUG
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NULL_ENTITYID = Constants.NULL_ENTITYID
+local STRICT = Constants.STRICT
 
 local ErrAlreadyHas = "entity %X already has this component"
 local ErrBadComponentId = "invalid component identifier"
 local ErrInvalid = "entity %X either does not exist or it has been destroyed"
 local ErrMissing = "entity %X does not have this component"
-local ErrBadType = "bad type: expected %s (got %s)"
+local ErrBadType = "bad component data type: expected %s, got %s"
 
 local assign = Pool.Assign
 local destroy = Pool.Destroy
@@ -33,7 +34,6 @@ local getPool
 local has = Pool.Has
 
 local Manifest = {}
-
 Manifest.__index = Manifest
 
 function Manifest.new()
@@ -42,13 +42,12 @@ function Manifest.new()
 		Head = NULL_ENTITYID,
 		Entities = {},
 		Pools = {},
-		Component = {},
-		RelatedManifests = {}
+		Component = {}
 	}, Manifest)
 end
 
 
-function Manifest:DefineComponent(name, dataType)
+function Manifest:Define(name, dataType)
 	if self.Component[name] then
 		return
 	end
@@ -66,9 +65,15 @@ end
  Return a new valid entity identifier
 
  Entity ids are recycled after they are no longer in use to prevent
- boundless growth of self.Entities.  This is done by implicitly
- maintaining a stack in self.Entities; each element points to the next
- available id.
+ boundless growth of the entities array.  This is done by maintaining
+ an implicit stack in the array - each element "points" to the next
+ available id, or to the null entity if there is none.
+
+ This also gives a way to know instantly whether an identifier refers
+ to a destroyed entity or not.  If the id part of the identifier is
+ equal to its position in the array, it refers to a valid entity.  If
+ it equals anything else, the entity is in a destroyed state (see
+ Manifest::Valid).
 
 ]]
 function Manifest:Create()
@@ -76,7 +81,6 @@ function Manifest:Create()
 	local entityId = self.Head
 
 	if entityId == NULL_ENTITYID then
-		-- no entity ids to recycle, generate a new one
 		entityId = self.Size + 1
 		self.Size = entityId
 		entities[entityId] = entityId
@@ -89,7 +93,6 @@ function Manifest:Create()
 	                             ENTITYID_WIDTH)
 	local recycled = bit32.bor(entityId, version)
 
-	-- pop the next id off the stack
 	self.Head = bit32.band(identifier, ENTITYID_MASK)
 	entities[entityId] = recycled
 
@@ -102,7 +105,7 @@ end
 
 ]]
 function Manifest:Destroy(entity)
-	if DEBUG then
+	if STRICT then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 	end
 
@@ -115,26 +118,15 @@ function Manifest:Destroy(entity)
 		end
 	end
 
-	-- push this id onto the stack
+	-- push this id onto the stack so that it can be reused, and
+	-- increment the identifier's version part in order to avoid
+	-- possible collision
 	self.Entities[entityId] = bit32.bor(
 		self.Head,
 		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1,
 		             ENTITYID_WIDTH))
 
 	self.Head = entityId
-end
-
---[[
-]]
-function Manifest:Relate(sourceManifest, sourceEntity, entity)
-	local manifests = self.RelatedManifests
-	local related = manifests[sourceManifest] or {}
-
-	if not manifests[sourceManifest] then
-		manifests[sourceManifest] = related
-	end
-
-	related[sourceEntity] = entity
 end
 
 --[[
@@ -172,7 +164,7 @@ end
 
 ]]
 function Manifest:Has(entity, componentId)
-	if DEBUG then
+	if STRICT then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 	end
 
@@ -187,7 +179,7 @@ end
 function Manifest:Get(entity, componentId)
 	local pool = getPool(self, componentId)
 
-	if DEBUG then
+	if STRICT then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 	end
 
@@ -204,14 +196,14 @@ end
 function Manifest:Assign(entity, componentId, component)
 	local pool = getPool(self, componentId)
 
-	if DEBUG then
+	if STRICT then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
 		assert(not has(pool, entity), ErrAlreadyHas:format(entity))
 
 		-- just basic type checking for now
 		assert(pool.Type == nil or pool.Type == typeof(component),
-		       ErrBadType:format(pool.Type or "", typeof(component)))
+		       ErrBadType:format(pool.Type or "nil", typeof(component)))
 	end
 
 	local obj = assign(pool, entity, component)
@@ -230,18 +222,19 @@ end
 function Manifest:GetOrAssign(entity, componentId, component)
 	local pool = getPool(self, componentId)
 
-	if DEBUG then
+	if STRICT then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
 		assert(pool.Type == nil or pool.Type == typeof(component),
-		       ErrBadType:format(pool.Type or "", typeof(component)))
+		       ErrBadType:format(pool.Type or "nil", typeof(component)))
 	end
 
 	local exists = has(pool, entity)
 	local obj = get(pool, entity)
 
-	-- boolean operators won't work here, b/c obj can be nil if the
-	-- component is empty (i.e. it's a "flag" component)
+	-- boolean operators alone won't work here, because obj can be
+	-- equal to nil if the component is empty (i.e. it's a "flag"
+	-- component)
 	if exists then
 		return obj
 	else
@@ -265,7 +258,7 @@ function Manifest:Replace(entity, componentId, component)
 	local pool = getPool(self, componentId)
 	local index = has(pool, entity)
 
-	if DEBUG then
+	if STRICT then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
 		assert(pool.Type == nil or pool.Type == typeof(component),
@@ -293,7 +286,7 @@ function Manifest:ReplaceOrAssign(entity, componentId, component)
 	local pool = getPool(self, componentId)
 	local index = has(pool, entity)
 
-	if DEBUG then
+	if STRICT then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
 		assert(pool.Type == nil or pool.Type == typeof(component),
@@ -328,7 +321,7 @@ end
 function Manifest:Remove(entity, componentId)
 	local pool = getPool(self, componentId)
 
-	if DEBUG then
+	if STRICT then
 		assert(self:Valid(entity), ErrInvalid:format(entity))
 
 		assert(has(pool, entity), ErrMissing:format(entity))
@@ -339,21 +332,21 @@ function Manifest:Remove(entity, componentId)
 	pool.OnRemove:Dispatch(self, entity)
 end
 
-function Manifest:GetAssignedSignal(componentId)
+function Manifest:Assigned(componentId)
 	return getPool(self, componentId).OnAssign
 end
 
-function Manifest:GetRemovedSignal(componentId)
+function Manifest:Removed(componentId)
 	return getPool(self, componentId).OnRemove
 end
 
-function Manifest:GetUpdatedSignal(componentId)
+function Manifest:Updated(componentId)
 	return getPool(self, componentId).OnUpdate
 end
 
 --[[
 
- Constructs and returns a new view into this entity system instance
+ Constructs and returns a new view into this manifest
 
  The view iterates entities which have all of the components specified
  by `include` but none of the components specified by the variadic
@@ -396,7 +389,7 @@ function Manifest:ForEach(func)
 		end
 	else
 		for id, entity in ipairs(self.Entities) do
-			if bit32.band(entity, ENTITYID_MASK) ==  id then
+			if bit32.band(entity, ENTITYID_MASK) == id then
 				func(entity)
 			end
 		end

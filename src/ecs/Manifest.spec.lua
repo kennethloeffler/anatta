@@ -6,7 +6,7 @@ local TestComponentType = "table"
 
 local function defineTestComponent(manifest)
 	Identify.Purge()
-	return manifest:DefineComponent("Test", TestComponentType)
+	return manifest:Define("Test", TestComponentType)
 end
 
 return function()
@@ -22,7 +22,7 @@ return function()
 		end)
 	end)
 
-	describe("DefineComponent", function()
+	describe("Define", function()
 		local manifest = Manifest.new()
 		local id = defineTestComponent(manifest)
 
@@ -162,7 +162,7 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:GetAssignedSignal(manifest.Component.Test):Connect(function()
+		manifest:Assigned(manifest.Component.Test):Connect(function()
 			ranCallback = true
 		end)
 
@@ -192,7 +192,7 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:GetAssignedSignal(manifest.Component.Test):Connect(function()
+		manifest:Assigned(manifest.Component.Test):Connect(function()
 			ranCallback = true
 		end)
 
@@ -217,7 +217,7 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:GetUpdatedSignal(manifest.Component.Test):Connect(function()
+		manifest:Updated(manifest.Component.Test):Connect(function()
 			ranCallback = true
 		end)
 
@@ -240,11 +240,11 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:GetUpdatedSignal(manifest.Component.Test):Connect(function()
+		manifest:Updated(manifest.Component.Test):Connect(function()
 			ranReplaceCallback = true
 		end)
 
-		manifest:GetAssignedSignal(manifest.Component.Test):Connect(function()
+		manifest:Assigned(manifest.Component.Test):Connect(function()
 			ranAssignCallback = true
 		end)
 
@@ -278,7 +278,7 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:GetRemovedSignal(manifest.Component.Test):Connect(function()
+		manifest:Removed(manifest.Component.Test):Connect(function()
 			ranCallback = true
 		end)
 
@@ -294,33 +294,33 @@ return function()
 		end)
 	end)
 
-	describe("GetAssignedSignal", function()
+	describe("Assigned", function()
 		local manifest = Manifest.new()
 
 		defineTestComponent(manifest)
 
 		it("should return the assigned signal for the specified component", function()
-			expect(manifest:GetAssignedSignal(manifest.Component.Test)).to.equal(manifest.Pools[manifest.Component.Test].OnAssign)
+			expect(manifest:Assigned(manifest.Component.Test)).to.equal(manifest.Pools[manifest.Component.Test].OnAssign)
 		end)
 	end)
 
-	describe("GetRemovedSignal", function()
+	describe("Removed", function()
 		local manifest = Manifest.new()
 
 		defineTestComponent(manifest)
 
 		it("should return the removed signal for the specified component", function()
-			expect(manifest:GetRemovedSignal(manifest.Component.Test)).to.equal(manifest.Pools[manifest.Component.Test].OnRemove)
+			expect(manifest:Removed(manifest.Component.Test)).to.equal(manifest.Pools[manifest.Component.Test].OnRemove)
 		end)
 	end)
 
-	describe("GetUpdatedSignal", function()
+	describe("Updated", function()
 		local manifest = Manifest.new()
 
 		defineTestComponent(manifest)
 
 		it("should return the updated signal for the specified component", function()
-			expect(manifest:GetUpdatedSignal(manifest.Component.Test)).to.equal(manifest.Pools[manifest.Component.Test].OnUpdate)
+			expect(manifest:Updated(manifest.Component.Test)).to.equal(manifest.Pools[manifest.Component.Test].OnUpdate)
 		end)
 	end)
 
