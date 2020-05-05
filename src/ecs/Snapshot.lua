@@ -52,7 +52,7 @@ function Snapshot:Components(container, ...)
 		serialize = getmetatable(container)[componentId]
 
 		if not instances then
-			-- don't try to pass instance because this is an empty component
+			-- don't try to pass an instance because this is an empty component
 			-- type which doesn't have any instances
 			for _, entity in ipairs(manifest.Pools[componentId].Internal) do
 				serialize(container, entity)

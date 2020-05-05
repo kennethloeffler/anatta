@@ -70,10 +70,7 @@ end
  available id, or to the null entity if there is none.
 
  This also gives a way to know instantly whether an identifier refers
- to a destroyed entity or not.  If the id part of the identifier is
- equal to its position in the array, it refers to a valid entity.  If
- it equals anything else, the entity is in a destroyed state (see
- Manifest::Valid).
+ to a destroyed entity or not:  if the identifiers enity.
 
 ]]
 function Manifest:Create()
@@ -418,7 +415,7 @@ function Manifest:Snapshot()
 end
 
 getPool = function(manifest, componentId)
-	if DEBUG then
+	if STRICT then
 		assert(manifest.Pools[componentId], ErrBadComponentId)
 	end
 

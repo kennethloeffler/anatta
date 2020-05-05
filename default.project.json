@@ -1,24 +1,24 @@
 {
     "name": "WorldSmith",
     "tree": {
-	"$className": "DataModel",
-	"ReplicatedStorage": {
-	    "$className": "ReplicatedStorage",
-	    "WorldSmith": {
-		"$path": "src"
-	    }
-	},
-	"ServerStorage": {
-	    "$className": "ServerStorage",
-	    "WorldSmith": {
-		"$className": "Folder",
-		"plugin": {
-		    "$path": "plugin"
-		},
-		"src": {
-		    "$path": "src"
-		}
-	    }
-	}
+	   "$className": "DataModel",
+	   "ReplicatedStorage": {
+		  "$className": "ReplicatedStorage",
+		  "WorldSmith": {
+			 "$path": "src"
+		  }
+	   },
+	   "ServerStorage": {
+		  "$className": "ServerStorage",
+		  "WorldSmith": {
+			 "$className": "Folder",
+			 "plugin": {
+				"$path": "plugin"
+			 },
+			 "src": {
+				"$path": "src"
+			 }
+		  }
+	   }
     }
 }

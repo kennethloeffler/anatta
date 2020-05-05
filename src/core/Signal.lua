@@ -1,20 +1,41 @@
 local Signal = {}
 Signal.__index = Signal
 
+local Connection = {}
+Connection.__index = Connection
+
+function Connection.new(signal)
+	return setmetatable({
+		Signal = signal
+	}, Connection)
+end
+
+function Connection:Disconnect()
+	local signal = self.Signal
+
+	table.remove(signal.Callbacks, signal.Connections[self])
+end
+
 function Signal.new()
 	return setmetatable({
-		Listeners = {}
+		Callbacks = {},
+		Connections = {}
 	}, Signal)
 end
 
 function Signal:Connect(callback)
-	table.insert(self.Listeners, callback)
+	local connection = Connection.new(self)
+
+	table.insert(self.Callbacks, callback)
+	self.Connections[connection] = #self.Callbacks
+
+	return connection
 end
 
 function Signal:Dispatch(...)
-	local listeners = self.Listeners
+	local callbacks = self.Callbacks
 
-	for _, callback in ipairs(listeners) do
+	for _, callback in ipairs(callbacks) do
 		callback(...)
 	end
 end
