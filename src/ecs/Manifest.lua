@@ -64,13 +64,16 @@ end
 
  Return a new valid entity identifier
 
- Entity ids are recycled after they are no longer in use to prevent
- boundless growth of the entities array.  This is done by maintaining
- an implicit stack in the array - each element "points" to the next
- available id, or to the null entity if there is none.
+ Entity ids (which are really just an indices into the entities array)
+ are recycled after they are no longer in use to prevent boundless
+ growth of the entities array.  This is done by:
 
- This also gives a way to know instantly whether an identifier refers
- to a destroyed entity or not:  if the identifiers enity.
+ 1.  maintaining an implicit stack in the array, where each element
+ "points" to the next recyclable id, or to the null id if there are
+ none, and;
+
+ 2.  keeping an incrementing "version" in the high bits of the
+ identifier (the entity id resides in the low bits).
 
 ]]
 function Manifest:Create()
