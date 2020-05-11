@@ -13,7 +13,11 @@ local has
 
 local SparseSet = {}
 
--- create a new empty sparse set and return it
+--[[
+
+ Create a new empty sparse set and return it
+
+]]
 function SparseSet.new()
 	return {
 		external = {},
@@ -24,7 +28,7 @@ end
 
 --[[
 
- If a set contains the value, return its index in the set's internal
+ If the set contains the value, return its index into the set's internal
  array; otherwise, return nil
 
 ]]
@@ -45,8 +49,13 @@ has = SparseSet.has
 
 --[[
 
+<<<<<<< HEAD
  Insert the value into a set and return the set's new size. insertion
  of a value which already exists in a set is undefined
+=======
+ Insert the value into the set. Insertion of a value which already
+ exists in the set is undefined
+>>>>>>> 6a53b5a873d3b3b550eb2e3b0da98ba74b57f505
 
 ]]
 function SparseSet.insert(set, value)
@@ -67,9 +76,8 @@ end
 
 --[[
 
- Remove the value from a set
-
- Removal of a value which does not exist in the set is undefined.
+ Remove the value from the set. Removal of a value which does not
+ exist in the set is undefined
 
 ]]
 function SparseSet.remove(set, value)
