@@ -1,66 +1,99 @@
 local Snapshot = {}
 Snapshot.__index = Snapshot
 
+
+function writeSize(container, size)
+	local t = table.create and table.create(size) or {}
+
+	container[#container + 1] = t
+
+	return t
+end
+
+function writeEntity(container, entity)
+	table.insert(container, entity)
+end
+
+local move
+
+if not table.move then
+	move = function(t1, f, e, t, t2)
+		for i = f, e do
+			t2[t] = t1[i]
+			t = t + 1
+		end
+
+		return t2
+	end
+else
+	move = table.move
+end
+
 function Snapshot.new(source, lastDestroyed, getNextDestroyed)
 	return setmetatable({
-		Source = source,
-		LastDestroyed = lastDestroyed,
-		GetNextDestroyed = getNextDestroyed
+		source = source,
+		lastDestroyed = lastDestroyed,
+		getNextDestroyed = getNextDestroyed
 	}, Snapshot)
 end
 
-function Snapshot:Entities(container)
-	local manifest = self.Source
+function Snapshot:entities(container)
+	local manifest = self.source
+	local write = container.writeEntity or writeEntity
+	local size = container.writeSize or writeSize
+	local cont = size(container, manifest:numEntities())
 
-	container:Size(manifest:NumEntities())
-
-	manifest:ForEach(function(entity)
-		container:Entity(entity)
+	manifest:forEach(function(entity)
+		write(cont, entity)
 	end)
 
 	return self
 end
 
-function Snapshot:Destroyed(container)
-	local manifest = self.Source
-	local numDestroyed  = manifest.Size - manifest:NumEntities()
-	local getNext = self.GetNextDestroyed
+function Snapshot:destroyed(container)
+	local manifest = self.source
+	local numDestroyed  = manifest.size - manifest:numEntities()
+	local getNext = self.getNextDestroyed
+	local write = container.writeEntity or writeEntity
+	local size = container.writeSize or writeSize
+	local cont = size(container, numDestroyed)
 	local curr
 
-	container:Size(numDestroyed)
-
 	if numDestroyed > 0 then
-		curr = self.LastDestroyed
-		container:Destroyed(curr)
+		curr = self.lastDestroyed
+		write(cont, curr)
 
-		for _ = 1, numDestroyed do
+		for _ = 1, numDestroyed - 1 do
 			curr = getNext(curr)
-			container:Entity(curr)
+			write(cont, curr)
 		end
 	end
 
 	return self
 end
 
-function Snapshot:Components(container, ...)
-	local manifest = self.Source
+function Snapshot:components(container, ...)
+	local manifest = self.source
+	local size = container.writeSize or writeSize
+	local cont
 	local instances
-	local serialize
+	local write
+	local pool
+	local poolSize
 
 	for _, componentId in ipairs({ ... }) do
-		instances = manifest.Pools[componentId].Objects
-		serialize = getmetatable(container)[componentId]
+		write = container.writeComponent and container.WriteComponent[componentId] or move
+		pool = manifest.pools[componentId]
+		instances = pool.objects
+		poolSize = pool.size
+		cont = size(container, poolSize)
 
 		if not instances then
-			-- don't try to pass an instance because this is an empty component
-			-- type which doesn't have any instances
-			for _, entity in ipairs(manifest.Pools[componentId].Internal) do
-				serialize(container, entity)
-			end
+			write(pool.internal, 1, poolSize, 1, cont)
 		else
-			for index, entity in ipairs(manifest.Pools[componentId].Internal) do
-				serialize(container, entity, instances[index])
-			end
+			write(pool.internal, 1, poolSize, 1, cont)
+			cont = size(container, poolSize)
+			write(instances, 1, poolSize, 1, cont)
 		end
 	end
 
