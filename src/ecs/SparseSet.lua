@@ -16,9 +16,9 @@ local SparseSet = {}
 -- create a new empty sparse set and return it
 function SparseSet.new()
 	return {
-		External = {},
-		Internal = {},
-		Size = 0
+		external = {},
+		internal = {},
+		size = 0
 	}
 end
 
@@ -28,39 +28,41 @@ end
  array; otherwise, return nil
 
 ]]
-function SparseSet.Has(set, value)
+function SparseSet.has(set, value)
 	if DEBUG then
 		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 	end
 
 	local externalIndex = bit32.band(value, VALUE_MASK)
-	local internalIndex = set.External[externalIndex]
+	local internalIndex = set.external[externalIndex]
 
-	if internalIndex and internalIndex <= set.Size then
+	if internalIndex and internalIndex <= set.size then
 		return internalIndex
 	end
 end
 
-has = SparseSet.Has
+has = SparseSet.has
 
 --[[
 
- Insert the value into a set. Insertion of a value which already
- exists in a set is undefined
+ Insert the value into a set and return the set's new size. insertion
+ of a value which already exists in a set is undefined
 
 ]]
-function SparseSet.Insert(set, value)
+function SparseSet.insert(set, value)
 	if DEBUG then
 		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 		assert(not has(set, value), ErrAlreadyExists)
 	end
 
-	local size = set.Size + 1
+	local size = set.size + 1
 	local externalIndex = bit32.band(value, VALUE_MASK)
 
-	set.Size = size
-	set.Internal[size] = value
-	set.External[externalIndex] = size
+	set.size = size
+	set.internal[size] = value
+	set.external[externalIndex] = size
+
+	return size
 end
 
 --[[
@@ -70,22 +72,22 @@ end
  Removal of a value which does not exist in the set is undefined.
 
 ]]
-function SparseSet.Remove(set, value)
+function SparseSet.remove(set, value)
 	if DEBUG then
 		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 		assert(has(set, value), ErrDoesntExist)
 	end
 
-	local internal = set.Internal
-	local external = set.External
+	local internal = set.internal
+	local external = set.external
 	local externalIndex = bit32.band(value, VALUE_MASK)
 	local internalIndex = external[externalIndex]
-	local size = set.Size - 1
+	local size = set.size
 
-	set.Size = size
+	set.size = size - 1
 
-	if size ~= 0 then
-		local swappedExternal = table.remove(internal)
+	if size > 1 then
+		local swappedExternal = internal[size]
 
 		internal[internalIndex] = swappedExternal
 		external[swappedExternal] = internalIndex
