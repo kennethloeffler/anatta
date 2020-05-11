@@ -3,6 +3,9 @@
 Utility to associate names with numeric identifiers
 
 ]]
+local ErrIdentDNE = "%s does not have an identifier"
+local ErrAlreadyHas = "%s already has an identifier"
+local ErrContextDNE = "context %s does not exist"
 
 local IS_STUDIO = game:GetService("RunService"):IsStudio()
 
@@ -10,50 +13,85 @@ local ATTRIBUTES_ENABLED = pcall(function()
 	return not not script:GetAttributes()
 end)
 
-local PERSISTENT_MASK = 0xFFFF
+local PERSISTENT_WIDTH = 16
+local NULL_ID
+local PERSISTENT_MASK = bit32.rshift(0xFFFFFFFF, PERSISTENT_WIDTH)
 
 local Identify = {}
-local lookup = {}
+Identify.__index = Identify
 
-local runtimeMax = 0
-local persistentMax = 0
+local function contextFolder(context, target)
+	local folder = script:FindFirstChild("context")
 
-local ErrDNE = "No identifier exists for %s"
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = context
+		folder.Parent = target
+	end
 
-local function fromIntValue()
-	for _, obj in ipairs(script:GetChildren()) do
+	return folder
+end
+
+function Identify.new(context, target)
+	return setmetatable({
+		context = context,
+		lookup = {},
+		target = target or script,
+		runtimeMax = 0,
+		persistentMax = 0
+	}, Identify)
+end
+
+function Identify:fromIntValues()
+	local lookup = self.lookup
+	local context = self.context
+	local newMax = self.persistentMax
+	local names = self.target:FindFirstChild(context)
+
+	assert(names, ErrContextDNE:format(context))
+
+	for _, obj in ipairs(names:GetChildren()) do
 		if typeof(obj) == "IntValue" then
 			lookup[obj.Name] = obj.Value
-			persistentMax = obj.Value > persistentMax and obj.Value
-				or persistentMax
-
+			self.persistentMax = obj.Value > newMax and obj.Value or newMax
 			obj:Destroy()
 		end
 	end
 end
 
-if ATTRIBUTES_ENABLED then
-	-- might have old intvalues from before attributes were enabled
-	if next(script:GetChildren()) then
-		fromIntValue()
-	end
+function Identify:load()
+	if ATTRIBUTES_ENABLED then
+		local lookup = self.lookup
+		local newMax = self.persistentMax
+		local context = self.context
+		local names = self.target:GetAttribute(context)
 
-	for name, id in pairs(script:GetAttributes()) do
-		if type(id) == "number" then
-			lookup[name] = id
-			persistentMax = id > persistentMax and id or persistentMax
+		assert(names, ErrContextDNE:format(context))
 
-			script:SetAttribute(name, nil)
+		-- might have old intvalues from before attributes were enabled
+		if next(self.target:GetChildren()) then
+			self:fromIntValues()
+			return
 		end
+
+		for name, id in pairs(names) do
+			if type(id) == "number" then
+				lookup[name] = id
+				self.persistentMax = id > newMax and id or newMax
+			end
+		end
+	else
+		self:fromIntValues()
 	end
-else
-	fromIntValue()
 end
 
-function Identify.Purge()
-	lookup = {}
-	runtimeMax = 0
-	persistentMax = 0
+function Identify:save()
+end
+
+function Identify:clear()
+	self.lookup = {}
+	self.runtimeMax = 0
+	self.persistentMax = 0
 end
 
 --[[
@@ -62,29 +100,36 @@ end
  future runs
 
 ]]
-function Identify.GeneratePersistent(name)
+function Identify:generatePersistent(name)
 	assert(IS_STUDIO, "This function may only exectued in Roblox Studio")
 
-	if not lookup[name]
-	or bit32.band(lookup[name], PERSISTENT_MASK) == 0 then
+	local lookup = self.lookup
+	local newMax = self.persistentMax + 1
+	local context = self.context
+	local ident = lookup[name] and bit32.band(lookup[name], PERSISTENT_MASK)
+
+	assert(not ident or ident == 0, ErrAlreadyHas:format(name))
+
+	if not ident or ident == 0 then
 		if ATTRIBUTES_ENABLED then
-			script:SetAttribute(name, persistentMax)
+			local names = self.target:GetAttribute(context) or {}
+
+			names[name] = newMax
+
+			self.target:SetAttribute(context, names)
 		else
 			local v = Instance.new("IntValue")
 
 			v.Name = name
-			v.Value = persistentMax
-			v.Parent = script
+			v.Value = newMax
+			v.Parent = contextFolder(context, self.target)
 		end
 
-		lookup[name] = lookup[name]
-			and bit32.bor(persistentMax, lookup[name])
-			or persistentMax
-
-		persistentMax = persistentMax + 1
+		lookup[name] = bit32.bor(newMax, ident or 0)
+		self.persistentMax = newMax
 	end
 
-	return bit32.band(lookup[name], PERSISTENT_MASK)
+	return newMax
 end
 
 --[[
@@ -93,18 +138,18 @@ end
  each run
 
 ]]
-function Identify.GenerateRuntime(name)
-	assert(not lookup[name]
-	            or bit32.rshift(lookup[name], 16) == 0,
-	       "This name is already associated with a runtime identifier")
+function Identify:generateRuntime(name)
+	local lookup = self.lookup
+	local newMax = self.runtimeMax + 1
+	local ident = lookup[name]
 
-	runtimeMax = runtimeMax + 1
+	assert(not ident or bit32.rshift(ident, 16) == 0, ErrAlreadyHas:format(name))
 
-	lookup[name] = lookup[name]
-		and bit32.bor(bit32.lshift(runtimeMax, 16), lookup[name])
-		or bit32.lshift(runtimeMax, 16)
+	lookup[name] = bit32.bor(bit32.lshift(newMax, PERSISTENT_WIDTH), ident or 0)
 
-	return runtimeMax
+	self.runtimeMax = newMax
+
+	return newMax
 end
 
 --[[
@@ -115,31 +160,31 @@ end
  when one wants to change the name but keep the same identifier
 
 ]]
-function Identify.Rename(oldName, newName)
-	assert(lookup[oldName], ErrDNE:format(oldName))
+function Identify:rename(oldName, newName)
+	local lookup = self.lookup
+
+	assert(lookup[oldName], ErrIdentDNE:format(oldName))
 
 	lookup[newName] = lookup[oldName]
 	lookup[oldName] = nil
 end
 
-function Identify.Persistent(name)
-	local identifier = lookup[name]
+function Identify:persistent(name)
+	local identifier = self.lookup[name]
+	local n = bit32.band(identifier, PERSISTENT_MASK)
 
-	if identifier then
-		return bit32.band(identifier, PERSISTENT_MASK)
-	end
+	assert(identifier and n ~= 0, ErrIdentDNE:format(name))
 
-	error(ErrDNE:format(name))
+	return n
 end
 
-function Identify.Runtime(name)
-	local identifier = lookup[name]
+function Identify:runtime(name)
+	local identifier = self.lookup[name]
+	local n = bit32.rshift(identifier, PERSISTENT_WIDTH)
 
-	if identifier then
-		return bit32.rshift(identifier, 16)
-	end
+	assert(identifier and n ~= 0, ErrIdentDNE:format(name))
 
-	error(ErrDNE:format(name))
+	return n
 end
 
 return Identify
