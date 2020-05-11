@@ -1,15 +1,12 @@
 local PiecewiseLoader = {}
 
-function PiecewiseLoader:Entities()
+function PiecewiseLoader:entities()
 end
 
-function PiecewiseLoader:Components()
+function PiecewiseLoader:components()
 end
 
-function PiecewiseLoader:Dead()
-end
-
-function PiecewiseLoader:Cleanup()
+function PiecewiseLoader:stubs()
 end
 
 return PiecewiseLoader
