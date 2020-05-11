@@ -1,63 +1,99 @@
 local Manifest = require(script.Parent.Manifest)
-local Snapshot = require(script.Parent.Snapshot)
-local Identify = require(script.Parent.Parent.core.Identify)
+local Constants = require(script.Parent.Parent.Constants)
+
+local ENTITYID_MASK = Constants.ENTITYID_MASK
+local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 
 return function()
 	local manifest = Manifest.new()
 
-	local test1 = manifest:Define("test1", "table")
-	local test2 = manifest:Define("test2", "table")
+	local test1 = manifest:define("test1", "table")
+	local test2 = manifest:define("test2", "table")
 
-	local Container = {
-		[test1] = function(container, entity, test1)
-		end,
-		[test2] = function(container, entity, test2)
+	local ents = {}
+	local destEnts = {}
+	local comps = { {}, {} }
+
+	for i = 1, 32 do
+		local ent = manifest:create()
+
+		if i % 4 == 0 then
+			comps[test1][ent] = manifest:assign(ent, manifest.component.test1, {})
+			comps[test2][ent] = manifest:assign(ent, manifest.component.test2, {})
 		end
-	}
-	Container.__index = Container
 
-	function Container.new()
-		return setmetatable({}, Container)
+		ents[ent] = true
+		destEnts[manifest:create()] = true
 	end
 
-	function Container:Size()
-		self.Data = self.Data or {}
+	for entity in pairs(destEnts) do
+		manifest:destroy(entity)
 	end
-
-	function Container:Entity(entity)
-		table.insert(self.Data, entity)
-	end
-
-	local ent1 = manifest:Create()
-	local ent2 = manifest:Create()
-	local ent3 = manifest:Create()
-
-	manifest:Destroy(manifest:Create())
 
 	describe("new", function()
 		it("should construct a new snapshot instance", function()
-			local getNext = function() end
-			local snapshot = Snapshot.new(manifest, manifest.Head, getNext)
+			local snapshot = manifest:snapshot()
 
-			expect(snapshot.Source).to.equal(manifest)
-			expect(snapshot.LastDestroyed).to.equal(manifest.Head)
-			expect(snapshot.GetNextDestroyed).to.equal(getNext)
+			expect(snapshot.source).to.equal(manifest)
 
-			expect(snapshot.Entities).to.be.a("function")
-			expect(snapshot.Destroyed).to.be.a("function")
-			expect(snapshot.Components).to.be.a("function")
+			expect(snapshot.entities).to.be.a("function")
+			expect(snapshot.destroyed).to.be.a("function")
+			expect(snapshot.components).to.be.a("function")
 		end)
 	end)
 
 	describe("Entities", function()
-		local snapshot = manifest:Snapshot()
+		local snapshot = manifest:snapshot()
+		local container = {}
 
-		
+		snapshot:entities(container)
+
+		it("should serialize all of the entities alive", function()
+			for _, entity in ipairs(container[1]) do
+				expect(ents[entity]).to.be.ok()
+			end
+		end)
 	end)
 
 	describe("Destroyed", function()
+		local snapshot = manifest:snapshot()
+		local container = {}
+
+		snapshot:destroyed(container)
+
+		it("should serialize all of the destroyed entities destroyed", function()
+			   for _, entity in ipairs(container[1]) do
+				local entityId = bit32.band(entity, ENTITYID_MASK)
+				local version = bit32.rshift(entity, ENTITYID_WIDTH)
+
+				-- entityId will be equal to the identifier in destEnts
+				-- i.e. the versions of the initial idenitifers are equal to 0
+				expect(destEnts[entityId]).to.be.ok()
+				expect(version).to.equal(1)
+			end
+		end)
 	end)
 
 	describe("Components", function()
+		local snapshot = manifest:snapshot()
+		local container = {}
+
+		snapshot:components(container, test1, test2)
+
+		it("should serialize components with their entities", function()
+			local idx = 1
+
+			for componentId = 1, 2 do
+				for i, entity in ipairs(container[idx]) do
+					local component = comps[componentId][entity]
+					local serializedComponent = container[idx + 1][i]
+
+					expect(component).to.be.ok()
+					expect(component).to.equal(serializedComponent)
+				end
+
+				idx = idx + 2
+			end
+		end)
 	end)
 end
