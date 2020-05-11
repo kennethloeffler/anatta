@@ -1,59 +1,57 @@
+local Signal = require(script.Parent.Signal)
+
 return function()
-	local Signal = require(script.Parent.Signal)
-
-	FOCUS()
-
 	describe("new", function()
 		it("should create a new signal object", function()
 			local sig = Signal.new()
 
-			expect(sig.Callbacks).to.be.ok()
-			expect(type(sig.Callbacks)).to.equal("table")
-			expect(#sig.Callbacks).to.equal(0)
+			expect(sig.callbacks).to.be.ok()
+			expect(type(sig.callbacks)).to.equal("table")
+			expect(#sig.callbacks).to.equal(0)
 
-			expect(sig.Connections).to.be.ok()
-			expect(type(sig.Connections)).to.equal("table")
-			expect(#sig.Connections).to.equal(0)
+			expect(sig.connections).to.be.ok()
+			expect(type(sig.connections)).to.equal("table")
+			expect(#sig.connections).to.equal(0)
 		end)
 	end)
 
 	describe("Connect", function()
-		it("should insert a callback into .Callbacks", function()
+		it("should insert a callback into .callbacks", function()
 			local sig = Signal.new()
 
 			local callback = function() end
 
-			sig:Connect(callback)
+			sig:connect(callback)
 
-			expect(sig.Callbacks[1]).to.equal(callback)
+			expect(sig.callbacks[1]).to.equal(callback)
 		end)
 	end)
 
 	describe("Dispatch", function()
-		it("should call every callback in .Listeners with the correct parameters", function()
+		it("should call every callback in .listeners with the correct parameters", function()
 			local sig = Signal.new()
 			local num = 0
 
 			for _ = 1, 5 do
-				sig:Connect(function(add)
+				sig:connect(function(add)
 					num = num + add
 				end)
 			end
 
-			sig:Dispatch(1)
+			sig:dispatch(1)
 			expect(num).to.equal(5)
 		end)
 	end)
 
 	describe("Disconnect", function()
-		it("should remove a callback from .Callbacks", function()
+		it("should remove a callback from .callbacks", function()
 			local sig = Signal.new()
 			local callback = function() end
-			local con = sig:Connect(callback)
+			local con = sig:connect(callback)
 
-			con:Disconnect()
+			con:disconnect()
 
-			expect(#sig.Callbacks).to.equal(0)
+			expect(#sig.callbacks).to.equal(0)
 		end)
 	end)
 end
