@@ -1,7 +1,6 @@
 local Snapshot = {}
 Snapshot.__index = Snapshot
 
-local move
 local writeSize
 local writeEntity
 local writeComponents
@@ -79,7 +78,7 @@ writeEntity = function(container, entity)
 end
 
 do
-	move = table.move
+	local move = table.move
 		and table.move
 		or function(t1, f, e, t, t2)
 				for i = f, e do
