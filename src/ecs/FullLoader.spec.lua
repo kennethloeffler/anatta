@@ -38,18 +38,21 @@ return function()
 		:destroyed(cont)
 		:components(cont, source.component.test1, source.component.test2)
 
-	local loader = destination:loader()
+	destination:loader()
 		:entities(cont)
 		:destroyed(cont)
 		:components(cont, destination.component.test1, destination.component.test2)
 
 	describe("new", function()
 		it("should construct a new loader instance", function()
-			expect(loader.destination).to.equal(destination)
+			local m = Manifest.new()
+			local l = m:loader()
 
-			expect(loader.entities).to.be.a("function")
-			expect(loader.destroyed).to.be.a("function")
-			expect(loader.components).to.be.a("function")
+			expect(l.destination).to.equal(m)
+
+			expect(l.entities).to.be.a("function")
+			expect(l.destroyed).to.be.a("function")
+			expect(l.components).to.be.a("function")
 		end)
 	end)
 
