@@ -2,46 +2,26 @@ local Snapshot = {}
 Snapshot.__index = Snapshot
 
 local writeSize
-local writeEntity
+local move
 local writeComponents
 
-function Snapshot.new(source, lastDestroyed, getNextDestroyed)
+function Snapshot.new(source)
 	return setmetatable({
-		source = source,
-		lastDestroyed = lastDestroyed,
-		getNextDestroyed = getNextDestroyed
+		source = source
 	}, Snapshot)
 end
 
-function Snapshot:entities(container)
+function Snapshot:entities(destination)
 	local manifest = self.source
-	local write = container.writeEntity or writeEntity
-	local size = container.writeSize or writeSize
-	local cont = size(container, manifest:numEntities())
+	local write = destination.writeEntity
+	local size = destination.writeSize or writeSize
+	local cont = size(destination, manifest:numEntities())
 
-	manifest:forEach(function(entity)
-		write(cont, entity)
-	end)
-
-	return self
-end
-
-function Snapshot:destroyed(container)
-	local manifest = self.source
-	local numDestroyed  = manifest.size - manifest:numEntities()
-	local getNext = self.getNextDestroyed
-	local write = container.writeEntity or writeEntity
-	local size = container.writeSize or writeSize
-	local cont = size(container, numDestroyed)
-	local curr
-
-	if numDestroyed > 0 then
-		curr = self.lastDestroyed
-		write(cont, curr)
-
-		for _ = 1, numDestroyed - 1 do
-			curr = getNext(curr)
-			write(cont, curr)
+	if not write then
+		move(manifest.entities, 1, manifest.size, 1, cont)
+	else
+		for _, entity in ipairs(manifest.entities) do
+			write(cont, entity)
 		end
 	end
 
@@ -50,13 +30,12 @@ end
 
 function Snapshot:components(container, ...)
 	local manifest = self.source
-	local write
+	local writeFuncs = container.writeComponents
+	local write = container.writeComponents
 	local pool
 
 	for _, componentId in ipairs({ ... }) do
-		write = container.writeComponents
-			and container.writeComponents[componentId]
-			or writeComponents
+		write = writeFuncs and writeFuncs[componentId] or writeComponents
 		pool = manifest:_getPool(componentId)
 
 		write(container, pool.size, pool.internal, pool.objects)
@@ -73,26 +52,23 @@ writeSize = function(container, size)
 	return t
 end
 
-writeEntity = function(container, entity)
-	table.insert(container, entity)
-end
+move = table.move
+	and table.move
+	or function(t1, f, e, t, t2)
+		for i = f, e do
+			t2[t] = t1[i]
+			t = t + 1
+		end
+		return t2
+	   end
 
-do
-	local move = table.move
-		and table.move
-		or function(t1, f, e, t, t2)
-				for i = f, e do
-					t2[t] = t1[i]
-					t = t + 1
-					return t2
-				end
-		   end
+writeComponents = function(container, size, entities, components)
+	local write = container.writeSize or writeSize
 
-	writeComponents = function(container, size, entities, components)
-		local siz = container.writeSize or writeSize
+	move(entities, 1, size, 1, write(container, size))
 
-		move(entities, 1, size, 1, siz(container, size))
-		move(components, 1, size, 1, siz(container, size))
+	if components then
+		move(components, 1, size, 1, write(container, size))
 	end
 end
 
