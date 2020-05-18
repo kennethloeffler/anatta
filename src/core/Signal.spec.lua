@@ -8,10 +8,6 @@ return function()
 			expect(sig.callbacks).to.be.ok()
 			expect(type(sig.callbacks)).to.equal("table")
 			expect(#sig.callbacks).to.equal(0)
-
-			expect(sig.connections).to.be.ok()
-			expect(type(sig.connections)).to.equal("table")
-			expect(#sig.connections).to.equal(0)
 		end)
 	end)
 
@@ -47,9 +43,9 @@ return function()
 		it("should remove a callback from .callbacks", function()
 			local sig = Signal.new()
 			local callback = function() end
-			local con = sig:connect(callback)
+			local disconnect = sig:connect(callback)
 
-			con:disconnect()
+			disconnect()
 
 			expect(#sig.callbacks).to.equal(0)
 		end)
