@@ -325,7 +325,7 @@ end
  assign and return it
 
 ]]
-function Manifest:replaceOrAssign(entity, componentId, component)
+function Manifest:assignOrReplace(entity, componentId, component)
 	local pool = getPool(self, componentId)
 	local index = poolHas(pool, entity)
 
