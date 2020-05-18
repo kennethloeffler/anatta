@@ -14,7 +14,6 @@ local ATTRIBUTES_ENABLED = pcall(function()
 end)
 
 local PERSISTENT_WIDTH = 16
-local NULL_ID
 local PERSISTENT_MASK = bit32.rshift(0xFFFFFFFF, PERSISTENT_WIDTH)
 
 local Identify = {}
