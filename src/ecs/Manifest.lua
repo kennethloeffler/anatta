@@ -399,31 +399,6 @@ function Manifest:updated(componentId)
 	return getPool(self, componentId).onUpdate
 end
 
---[[
-
- Constructs and returns a new view into this manifest
-
- The view iterates entities which have all of the components specified
- by `include` but none of the components specified by the variadic
- argument.
-
-]]
-function Manifest:view(included, ...)
-	local excluded = select("#", ...) > 0 and { ... } or nil
-
-	for i, componentId in ipairs(included) do
-		included[i] = getPool(self, componentId)
-	end
-
-	if excluded then
-		for i, componentId in ipairs(excluded) do
-			excluded[i] = getPool(self, componentId)
-		end
-	end
-
-	return View.new(included, excluded)
-end
-
 function Manifest:numEntities()
 	local entities = self.entities
 	local curr = self.head
@@ -451,22 +426,33 @@ function Manifest:forEach(func)
 	end
 end
 
-function Manifest:snapshot()
-	local entities = self.entities
-	local head = self.head
-	local lastDestroyed = head == NULL_ENTITYID and head
-		or bit32.bor(
-			head,
-			bit32.lshift(bit32.rshift(entities[head], ENTITYID_WIDTH), ENTITYID_WIDTH))
+--[[
 
-	local function getNext(entity)
-		local curr = bit32.band(entities[bit32.band(entity, ENTITYID_MASK)], ENTITYID_MASK)
-		return bit32.bor(
-			curr,
-			bit32.lshift(bit32.rshift(entities[curr], ENTITYID_WIDTH), ENTITYID_WIDTH))
+ Constructs and returns a new view into this manifest
+
+ The view iterates entities which have all of the components specified
+ by `include` but none of the components specified by the variadic
+ argument.
+
+]]
+function Manifest:view(included, ...)
+	local excluded = select("#", ...) > 0 and { ... } or nil
+
+	for i, componentId in ipairs(included) do
+		included[i] = getPool(self, componentId)
 	end
 
-	return Snapshot.new(self, lastDestroyed, getNext)
+	if excluded then
+		for i, componentId in ipairs(excluded) do
+			excluded[i] = getPool(self, componentId)
+		end
+	end
+
+	return View.new(included, excluded)
+end
+
+function Manifest:snapshot()
+	return Snapshot.new(self)
 end
 
 function Manifest:loader()
@@ -474,30 +460,7 @@ function Manifest:loader()
 		assert(self.size == 0, ErrExpectedEmpty)
 	end
 
-	local entities = self.entities
-
-	local function create(entity, dest)
-		local entityId = bit32.band(entity, ENTITYID_MASK)
-		local size = self.size
-
-		if entityId > size + 1 then
-			for i = size + 1, entityId - 1 do
-				entities[i] = i
-			end
-			self.size = entityId
-		end
-
-		entities[entityId] = entity
-
-		if dest then
-			entities[entityId] = bit32.bor(
-				self.head,
-				bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH), ENTITYID_WIDTH))
-			self.head = entityId
-		end
-	end
-
-	return FullLoader.new(self, create)
+	return FullLoader.new(self)
 end
 
 getPool = function(manifest, componentId)
@@ -508,8 +471,6 @@ getPool = function(manifest, componentId)
 	return manifest.pools[componentId]
 end
 
-if DEBUG then
-	Manifest._getPool = getPool
-end
+Manifest._getPool = getPool
 
 return Manifest
