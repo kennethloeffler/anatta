@@ -1,53 +1,61 @@
 local Signal = {}
 Signal.__index = Signal
 
-local Connection = {}
-Connection.__index = Connection
+--[[
 
-function Connection.new(signal)
-	return setmetatable({
-		signal = signal
-	}, Connection)
-end
+ Construct and return new signal object
 
-function Connection:disconnect()
-	local signal = self.signal
-	local connections = signal.connections
-	local index = connections[self]
-
-	-- disconnecting n callbacks will be O(n^2), but if n is large in
-	-- this case, listeners are not the solution to your problem
-	-- anyway
-	table.remove(signal.callbacks, index)
-
-	for con, idx in pairs(connections) do
-		if idx > index then
-			connections[con] = index - 1
-		end
-	end
-end
-
+]]
 function Signal.new()
 	return setmetatable({
 		callbacks = {},
-		connections = {}
+		disconnected = {}
 	}, Signal)
 end
 
+--[[
+
+ Call a function whenever Signal::Dispatch is called
+
+]]
 function Signal:connect(callback)
-	local connection = Connection.new(self)
-
-	table.insert(self.callbacks, callback)
-	self.connections[connection] = #self.callbacks
-
-	return connection
-end
-
-function Signal:dispatch(...)
 	local callbacks = self.callbacks
 
-	for _, callback in ipairs(callbacks) do
-		callback(...)
+	table.insert(callbacks, callback)
+	self.disconnected[callback] = nil
+
+	return function()
+		local new = {}
+		local size = 0
+
+		for _, oldCallback in ipairs(callbacks) do
+			if oldCallback ~= callback then
+				size = size + 1
+				new[size] = oldCallback
+			end
+		end
+
+		self.callbacks = new
+	end
+end
+
+--[[
+
+ Call all of the connected functions
+
+ Function calls are guaranteed to be in the same order they were
+ connected in.
+
+]]
+function Signal:dispatch(...)
+	local disconnected = self.disconnected
+
+	for _, callback in ipairs(self.callbacks) do
+		if not disconnected[callback] then
+			callback(...)
+		else
+			disconnected[callback] = nil
+		end
 	end
 end
 
