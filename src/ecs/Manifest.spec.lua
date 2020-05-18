@@ -230,7 +230,7 @@ return function()
 		end)
 	end)
 
-	describe("ReplaceOrAssign", function()
+	describe("assignOrReplace", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 		local ranReplaceCallback = false
@@ -249,7 +249,7 @@ return function()
 		it("should assign the component if it does not exist on the entity", function()
 			local assigned = {}
 
-			expect(manifest:replaceOrAssign(entity, manifest.component.Test, assigned)).to.equal(assigned)
+			expect(manifest:assignOrReplace(entity, manifest.component.Test, assigned)).to.equal(assigned)
 			expect(manifest:get(entity, manifest.component.Test)).to.equal(assigned)
 		end)
 
@@ -260,7 +260,7 @@ return function()
 		it("should replace the component if it already exists on the entity", function()
 			local replaced = {}
 
-			expect(manifest:replaceOrAssign(entity, manifest.component.Test, replaced)).to.equal(replaced)
+			expect(manifest:assignOrReplace(entity, manifest.component.Test, replaced)).to.equal(replaced)
 			expect(manifest:get(entity, manifest.component.Test)).to.equal(replaced)
 		end)
 
