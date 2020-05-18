@@ -49,7 +49,6 @@ function Manifest.new()
 	}, Manifest)
 end
 
-
 function Manifest:define(name, dataType)
 	if self.component[name] then
 		return
@@ -67,15 +66,11 @@ end
 
  Return a new valid entity identifier
 
-<<<<<<< HEAD
  Entity ids are recycled after they are no longer in use to prevent
  boundless growth of the entities array.  this is done by maintaining
  an implicit stack in the array - each element "points" to the next
  available id, or to the null entity if there is none.
 
- this also gives a way to know instantly whether an identifier refers
- to a destroyed entity or not:  if the identifiers enity.
-=======
  Entity ids (which are really just an indices into the entities array)
  are recycled after they are no longer in use to prevent boundless
  growth of the entities array.  This is done by:
@@ -86,7 +81,6 @@ end
 
  2.  keeping an incrementing "version" in the high bits of the
  identifier (the entity id resides in the low bits).
->>>>>>> 6a53b5a873d3b3b550eb2e3b0da98ba74b57f505
 
 ]]
 function Manifest:create()
