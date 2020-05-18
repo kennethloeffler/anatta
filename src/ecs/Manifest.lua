@@ -107,6 +107,44 @@ end
 
 --[[
 
+ Return a valid entity identifier equal to the one provided if
+ possible
+
+]]
+function Manifest:createFrom(hint)
+	local entityId = bit32.band(hint, ENTITYID_MASK)
+	local entities = self.entities
+	local entity = hint
+	local currEntity = entities[entityId]
+	local currEntityId = currEntity and bit32.band(currEntity, ENTITYID_MASK)
+
+	if not currEntity then
+		for i = self.size + 1, entityId - 1  do
+			entities[i] = self.head
+			self.head = i
+		end
+
+		entities[entityId] = entity
+	elseif currEntityId == entityId then
+		entity = self:create()
+	else
+		local currId = self.head
+
+		while currId ~= entityId do
+			currId = bit32.band(entities[currId], ENTITYID_MASK)
+		end
+
+		entities[currId] = bit32.bor(
+			currEntityId,
+			bit32.lshift(bit32.rshift(entities[currId], ENTITYID_WIDTH), ENTITYID_WIDTH))
+		entities[entityId] = entity
+	end
+
+	return entity
+end
+
+--[[
+
  Destroy the entity, and by extension, all its components
 
 ]]
