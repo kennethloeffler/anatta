@@ -1,4 +1,8 @@
 local Manifest = require(script.Parent.Manifest)
+local Constants = require(script.Parent.Parent.Constants)
+
+local ENTITYID_MASK = Constants.ENTITYID_MASK
+local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 
 return function()
 	local source = Manifest.new()
@@ -35,12 +39,10 @@ return function()
 
 	source:snapshot()
 		:entities(cont)
-		:destroyed(cont)
 		:components(cont, source.component.test1, source.component.test2)
 
 	destination:loader()
 		:entities(cont)
-		:destroyed(cont)
 		:components(cont, destination.component.test1, destination.component.test2)
 
 	describe("new", function()
@@ -51,22 +53,21 @@ return function()
 			expect(l.destination).to.equal(m)
 
 			expect(l.entities).to.be.a("function")
-			expect(l.destroyed).to.be.a("function")
 			expect(l.components).to.be.a("function")
 		end)
 	end)
 
 	describe("entities", function()
 		it("should deserialize all of the entities", function()
-			destination:forEach(function(entity)
-				expect(ents[entity]).to.be.ok()
-			end)
-		end)
-	end)
+			for entity in pairs(ents) do
+				expect(destination:valid(entity)).to.equal(true)
+			end
 
-	describe("destroyed", function()
-		it("should deserialize all of the destroyed entities", function()
 			for entity in pairs(destEnts) do
+				local entityId = bit32.band(entity, ENTITYID_MASK)
+
+				expect(source.entities[entityId]).to.be.ok()
+				expect(bit32.rshift(source.entities[entityId], ENTITYID_WIDTH)).to.equal(bit32.rshift(destination.entities[entityId], ENTITYID_WIDTH))
 				expect(destination:valid(entity)).to.equal(false)
 			end
 		end)
