@@ -105,8 +105,8 @@ function MultiWithExcluded:forEach(func)
 	local shortestPool = selectShortestPool(included)
 
 	for _, entity in ipairs(shortestPool.internal) do
-		if hasIncludedThenPack(entity, included, pack)
-		and doesntHaveExcluded(entity, excluded) then
+		if doesntHaveExcluded(entity, excluded) and
+		hasIncludedThenPack(entity, included, pack) then
 			func(entity, unpack(pack))
 		end
 	end
