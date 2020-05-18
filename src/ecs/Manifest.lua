@@ -375,6 +375,18 @@ function Manifest:remove(entity, componentId)
 	pool.onRemove:dispatch(entity)
 end
 
+function Manifest:removeIfHas(entity, componentId)
+	if STRICT then
+		assert(self:valid(entity), ErrInvalid:format(entity))
+	end
+
+	local pool = getPool(self, componentId)
+
+	if poolHas(pool, entity) then
+		poolDestroy(pool, entity)
+	end
+end
+
 function Manifest:assigned(componentId)
 	return getPool(self, componentId).onAssign
 end
