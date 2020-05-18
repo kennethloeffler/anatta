@@ -49,13 +49,8 @@ has = SparseSet.has
 
 --[[
 
-<<<<<<< HEAD
- Insert the value into a set and return the set's new size. insertion
+ Insert the value into a set and return the set's new size.  Insertion
  of a value which already exists in a set is undefined
-=======
- Insert the value into the set. Insertion of a value which already
- exists in the set is undefined
->>>>>>> 6a53b5a873d3b3b550eb2e3b0da98ba74b57f505
 
 ]]
 function SparseSet.insert(set, value)
