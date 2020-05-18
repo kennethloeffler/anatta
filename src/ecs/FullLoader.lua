@@ -1,98 +1,128 @@
 local Constants = require(script.Parent.Parent.Constants)
 
-local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
+local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 
 local FullLoader = {}
 FullLoader.__index = FullLoader
 
-local readEntities
-local readComponents
+local move = table.move
+	and table.move
+	or function(t1, f, e, t, t2)
+		for i = f, e do
+			t2[t] = t1[i]
+			t = t + 1
+		end
+		return t2
+	   end
 
-function FullLoader.new(destination, create)
+
+local defaultReadNext
+local identity
+
+function FullLoader.new(destination)
 	return setmetatable({
 		destination = destination,
-		create = create,
-		currentIndex = 0
 	}, FullLoader)
 end
 
-function FullLoader:entities(container)
-	local read = container.readEntities or readEntities
+function FullLoader:entities(source)
+	local dest = self.destination
+	local destEntities = dest.entities
+	local read = source.readNext or defaultReadNext
+	local readEntity = source.readEntity
+	local entities = read(source)
 
-	self.currentIndex = read(container, self.currentIndex, self.create, false)
+	if not readEntity then
+		move(entities, 1, #entities, 1, destEntities)
 
-	return self
-end
+		for i, entity in ipairs(entities) do
+			if bit32.band(entity, ENTITYID_MASK) ~= i then
+				destEntities[i] = bit32.bor(
+					dest.head,
+					bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH), ENTITYID_WIDTH))
+				dest.head = i
+			end
+		end
+	else
+		for i, entity in ipairs(entities) do
+			entity = readEntity(source, entity)
 
-function FullLoader:destroyed(container)
-	local read = container.readEntities or readEntities
-
-	self.currentIndex = read(container, self.currentIndex, self.create, true)
-
-	return self
-end
-
-function FullLoader:components(container, ...)
-	local readComp = container.readComponents
-
-	local read
-	local create = self.create
-	local manifest = self.destination
-	local idx = self.currentIndex
-
-	for _, componentId in ipairs({ ... }) do
-		read = (readComp and readComp[componentId])
-			and readComp[componentId]
-			or readComponents
-
-		idx = read(container, idx, create, manifest, componentId)
+			if bit32.band(entity, ENTITYID_MASK) ~= i then
+				destEntities[i] = bit32.bor(
+					dest.head,
+					bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH), ENTITYID_WIDTH))
+				dest.head = i
+			else
+				destEntities[i] = entity
+			end
+		end
 	end
 
-	self.currentIndex = idx
+	dest.size = #entities
+
+	return self
+end
+
+function FullLoader:components(source, ...)
+	local readComps = source.readComponents
+	local dest = self.destination
+	local readNext = source.readNext or defaultReadNext
+	local readEntity = source.readEntity or identity
+	local read
+	local entities
+
+	for _, componentId in ipairs({ ... }) do
+		read = (readComps and readComps[componentId])
+			and readComps[componentId]
+			or identity
+
+		entities = readNext(source)
+
+		if not dest:_getPool(componentId) then
+			for _, entity in ipairs(entities) do
+				entity = readEntity(entity)
+				dest:assign(dest:valid(entity) and entity or dest:create(entity), componentId)
+			end
+		else
+			local components = readNext(source)
+
+			for i, entity in ipairs(entities) do
+				entity = readEntity(entity)
+				dest:assign(dest:valid(entity) and entity or dest:create(entity), componentId, read(components[i]))
+			end
+		end
+	end
 
 	return self
 end
 
 function FullLoader:stubs()
 	local dest = self.destination
-	local entities = dest.entities
-	local entityId
 
 	dest:forEach(function(entity)
 		if dest:stub(entity) then
-			entityId = bit32.band(entity, ENTITYID_MASK)
-			entities[entityId] = bit32.bor(
-				dest.head,
-				bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH), ENTITYID_WIDTH))
-			dest.head = entityId
+			dest:destroy(entity)
 		end
 	end)
+
+	return self
 end
 
-readEntities = function(container, idx, create, destroy)
-	idx = idx + 1
+defaultReadNext = function(source)
+	local idx = (source._idx or 0) + 1
 
-	for _, entity in ipairs(container[idx]) do
-		create(entity, destroy)
+	if idx == #source then
+		source._idx = nil
+	else
+		source._idx = idx
 	end
 
-	return idx
+	return source[idx]
 end
 
-readComponents = function(container, idx, create, manifest, componentId)
-	idx = idx + 2
-
-	local entities = container[idx - 1]
-	local components = container[idx]
-
-	for i, entity in ipairs(entities) do
-		create(entity, false)
-		manifest:assign(entity, componentId, components[i])
-	end
-
-	return idx
+identity = function(x)
+	return x
 end
-
 
 return FullLoader
