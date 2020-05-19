@@ -148,8 +148,10 @@ end
 function PiecewiseLoader:stubs()
 	local destination = self.destination
 
-	self.dest:stubs(function(entity)
-		destination:destroy(entity)
+	destination:forEach(function(entity)
+		if destination:stub(entity) then
+			destination:destroy(entity)
+		end
 	end)
 
 	return self

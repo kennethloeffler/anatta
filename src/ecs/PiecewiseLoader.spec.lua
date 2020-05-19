@@ -171,4 +171,46 @@ return function()
 			end
 		end)
 	end)
+
+	describe("stubs", function()
+		local cont = {}
+
+		Snapshot.new(source):entities(cont)
+		loader:entities(cont)
+
+		it("should remove all entities that don't have any components", function()
+			loader:stubs()
+
+			destination:forEach(function(entity)
+				expect(destination:stub(entity)).to.equal(false)
+			end)
+		end)
+	end)
+
+	describe("clean", function()
+		local cont = {}
+
+		Snapshot.new(source):entities(cont)
+		loader:entities(cont)
+
+		it("should mark mirrored entities as clean after one call", function()
+			loader:clean()
+
+			for _, dirty in pairs(loader.dirty) do
+				expect(dirty).to.equal(false)
+			end
+		end)
+
+		it("should destroy mirrored entities marked as clean after two successive calls", function()
+			loader:entities(cont)
+
+			loader:clean()
+			loader:clean()
+
+			expect(next(loader.dirty)).to.never.be.ok()
+			expect(next(loader.mirrored)).to.never.be.ok()
+
+			expect(destination:numEntities()).to.equal(0)
+		end)
+	end)
 end
