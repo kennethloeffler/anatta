@@ -1,7 +1,7 @@
 local Manifest = require(script.Parent.Manifest)
 local Loader = require(script.Parent.FullLoader)
 local Snapshot = require(script.Parent.Snapshot)
-local Constants = require(script.Parent.Parent.Constants)
+local Constants = require(script.Parent.Constants)
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH

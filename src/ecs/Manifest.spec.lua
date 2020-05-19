@@ -1,5 +1,5 @@
 
-local Constants = require(script.Parent.Parent.Constants)
+local Constants = require(script.Parent.Constants)
 local Manifest = require(script.Parent.Manifest)
 local Pool = require(script.Parent.Pool)
 local TestComponentType = "table"

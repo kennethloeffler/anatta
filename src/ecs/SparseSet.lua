@@ -1,9 +1,9 @@
-local Constants = require(script.Parent.Parent.Constants)
+local Constants = require(script.Parent.Constants)
 
-local DEBUG = Constants.DEBUG
+local STRICT = Constants.STRICT
 
 -- set can contain values on the range [1, VALUE_MASK]
-local VALUE_MASK = require(script.Parent.Parent.Constants).ENTITYID_MASK
+local VALUE_MASK = Constants.ENTITYID_MASK
 
 local ErrOutOfRange = "out of range"
 local ErrDoesntExist = "set does not contain this value"
@@ -33,7 +33,7 @@ end
 
 ]]
 function SparseSet.has(set, value)
-	if DEBUG then
+	if STRICT then
 		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 	end
 
@@ -54,7 +54,7 @@ has = SparseSet.has
 
 ]]
 function SparseSet.insert(set, value)
-	if DEBUG then
+	if STRICT then
 		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 		assert(not has(set, value), ErrAlreadyExists)
 	end
@@ -76,7 +76,7 @@ end
 
 ]]
 function SparseSet.remove(set, value)
-	if DEBUG then
+	if STRICT then
 		assert(bit32.band(value, VALUE_MASK) <= VALUE_MASK, ErrOutOfRange)
 		assert(has(set, value), ErrDoesntExist)
 	end

@@ -1,4 +1,4 @@
-local Constants = require(script.Parent.Parent.Constants)
+local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 
 local View = {}
@@ -227,7 +227,7 @@ hasIncludedThenPack = function(entity, included, pack)
 	return true
 end
 
-if Constants.DEBUG then
+if Constants.STRICT then
 	View._singleMt = Single
 	View._singleWithExclMt = SingleWithExcluded
 	View._multiMt = Multi

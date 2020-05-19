@@ -1,7 +1,7 @@
-local Constants = require(script.Parent.Parent.Constants)
+local Constants = require(script.Parent.Constants)
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
-local DEBUG = Constants.DEBUG
+local STRICT = Constants.STRICT
 
 local PiecewiseLoader = {}
 PiecewiseLoader.__index = PiecewiseLoader
@@ -220,7 +220,7 @@ update = function(component, member, mirrored)
 	local memberVal = component[member]
 	local ty = typeof(memberVal)
 
-	if DEBUG then
+	if STRICT then
 		assert(ty == "number" or ty == "table", ContainerBadType:format(ty))
 
 		if ty == "table" then

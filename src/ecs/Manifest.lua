@@ -8,11 +8,9 @@
 
 ]]
 
-local Constants = require(script.Parent.Parent.Constants)
-local FullLoader = require(script.Parent.FullLoader)
+local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 local Identify = require(script.Parent.Parent.core.Identify)
-local Snapshot = require(script.Parent.Snapshot)
 local View = require(script.Parent.View)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
