@@ -21,6 +21,8 @@ local defaultReadNext
 local identity
 
 function FullLoader.new(destination)
+	assert(destination.size == 0, "manifest must be empty")
+
 	return setmetatable({
 		destination = destination,
 	}, FullLoader)

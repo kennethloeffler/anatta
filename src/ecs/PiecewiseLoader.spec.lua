@@ -1,4 +1,5 @@
 local Manifest = require(script.Parent.Manifest)
+local Snapshot = require(script.Parent.Snapshot)
 local PiecewiseLoader = require(script.Parent.PiecewiseLoader)
 
 return function()
@@ -108,7 +109,7 @@ return function()
 		it("should mirror the given entities", function()
 			local cont = {}
 
-			source:snapshot():entities(cont)
+			Snapshot.new(source):entities(cont)
 			loader:entities(cont)
 
 			for _, entity in ipairs(cont[1]) do
@@ -121,7 +122,7 @@ return function()
 	describe("components", function()
 		local cont = {}
 
-		source:snapshot():components(
+		Snapshot.new(source):components(
 			cont,
 			source.component.test1,
 			source.component.test2)

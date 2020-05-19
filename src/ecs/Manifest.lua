@@ -15,7 +15,6 @@ local Identify = require(script.Parent.Parent.core.Identify)
 local Snapshot = require(script.Parent.Snapshot)
 local View = require(script.Parent.View)
 
-local DEBUG = Constants.DEBUG
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NULL_ENTITYID = Constants.NULL_ENTITYID
@@ -26,7 +25,6 @@ local ErrBadComponentId = "invalid component identifier"
 local ErrInvalid = "entity %X either does not exist or it has been destroyed"
 local ErrMissing = "entity %X does not have this component"
 local ErrBadType = "bad component data type: expected %s, got %s"
-local ErrExpectedEmpty = "manifest must be empty"
 
 local poolAssign = Pool.assign
 local poolDestroy = Pool.destroy
@@ -449,18 +447,6 @@ function Manifest:view(included, ...)
 	end
 
 	return View.new(included, excluded)
-end
-
-function Manifest:snapshot()
-	return Snapshot.new(self)
-end
-
-function Manifest:loader()
-	if STRICT then
-		assert(self.size == 0, ErrExpectedEmpty)
-	end
-
-	return FullLoader.new(self)
 end
 
 getPool = function(manifest, componentId)

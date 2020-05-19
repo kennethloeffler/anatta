@@ -1,4 +1,5 @@
 local Manifest = require(script.Parent.Manifest)
+local Snapshot = require(script.Parent.Snapshot)
 
 return function()
 	local manifest = Manifest.new()
@@ -27,7 +28,7 @@ return function()
 
 	describe("new", function()
 		it("should construct a new snapshot instance", function()
-			local snapshot = manifest:snapshot()
+			local snapshot = Snapshot.new(manifest)
 
 			expect(snapshot.source).to.equal(manifest)
 
@@ -36,10 +37,10 @@ return function()
 		end)
 	end)
 
-	describe("Entities", function()
+	describe("entities", function()
 		local container = {}
 
-		manifest:snapshot():entities(container)
+		Snapshot.new(manifest):entities(container)
 
 		it("should serialize all of the entities", function()
 			for i, entity in ipairs(manifest.entities) do
@@ -49,10 +50,10 @@ return function()
 		end)
 	end)
 
-	describe("Components", function()
+	describe("components", function()
 		local container = {}
 
-		manifest:snapshot():components(container, test1, test2)
+		Snapshot.new(manifest):components(container, test1, test2)
 
 		it("should serialize components with their entities", function()
 			local idx = 1

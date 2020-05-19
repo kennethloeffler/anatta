@@ -1,4 +1,6 @@
 local Manifest = require(script.Parent.Manifest)
+local Loader = require(script.Parent.FullLoader)
+local Snapshot = require(script.Parent.Snapshot)
 local Constants = require(script.Parent.Parent.Constants)
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
@@ -37,18 +39,18 @@ return function()
 
 	local cont = {}
 
-	source:snapshot()
+	Snapshot.new(source)
 		:entities(cont)
 		:components(cont, source.component.test1, source.component.test2)
 
-	destination:loader()
+	Loader.new(destination)
 		:entities(cont)
 		:components(cont, destination.component.test1, destination.component.test2)
 
 	describe("new", function()
 		it("should construct a new loader instance", function()
 			local m = Manifest.new()
-			local l = m:loader()
+			local l = Loader.new(m)
 
 			expect(l.destination).to.equal(m)
 
@@ -97,10 +99,10 @@ return function()
 			local c = {}
 			local dest = Manifest.new()
 
-			source:snapshot()
+			Snapshot.new(source)
 				:entities(c)
 
-			dest:loader()
+			Loader.new(dest)
 				:entities(c)
 				:stubs()
 
