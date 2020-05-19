@@ -64,7 +64,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEach (multi-component)", function()
+	describe("forEach (multi-component)", function()
 		local view = View.new( { Pool1, Pool2, Pool3 })
 		local entitiesToIterate = {}
 
@@ -103,7 +103,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEachEntity (multi-component)", function()
+	describe("forEachEntity (multi-component)", function()
 		local view = View.new( { Pool1, Pool2, Pool3 })
 		local entitiesToIterate = {}
 
@@ -120,7 +120,7 @@ return function()
 		end)
 	end)
 
-	describe("Has (multi-component)", function()
+	describe("has (multi-component)", function()
 		local view = View.new( { Pool1, Pool2, Pool3 })
 
 		it("should return true if the entity is iterated by the view", function()
@@ -140,7 +140,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEach (single-component)", function()
+	describe("forEach (single-component)", function()
 		local view = View.new({ Pool1 })
 		local entitiesToIterate = {}
 
@@ -169,7 +169,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEachEntity (single-component)", function()
+	describe("forEachEntity (single-component)", function()
 		local view = View.new({ Pool1 })
 		local entitiesToIterate = {}
 
@@ -184,7 +184,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEachComponent (single-component)", function()
+	describe("forEachComponent (single-component)", function()
 		local view = View.new({ Pool1 })
 
 		it("should iterate all instances of the specified component", function()
@@ -197,7 +197,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEach (multi-component with exlcusion list)", function()
+	describe("forEach (multi-component with exlcusion list)", function()
 		local view = View.new({ Pool2, Pool1 }, { Pool3 })
 		local entitiesToIterate = {}
 
@@ -234,7 +234,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEachEntity (multi-component with exclusion list)", function()
+	describe("forEachEntity (multi-component with exclusion list)", function()
 		local view = View.new({ Pool1, Pool2 }, { Pool3 })
 		local entitiesToIterate = {}
 
@@ -251,7 +251,7 @@ return function()
 		end)
 	end)
 
-	describe("Has (multi-component with exlcusion list)", function()
+	describe("has (multi-component with exlcusion list)", function()
 		local view = View.new({ Pool1, Pool2 }, { Pool3 })
 
 		it("should return true if the entity is iterated by the view", function()
@@ -279,7 +279,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEach (single-component with exclusion list)", function()
+	describe("forEach (single-component with exclusion list)", function()
 		local view = View.new({ Pool1 }, { Pool2, Pool3 })
 		local entitiesToIterate = {}
 
@@ -312,7 +312,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEachEntity (single-component with exclusion list)", function()
+	describe("forEachEntity (single-component with exclusion list)", function()
 		local view = View.new({ Pool1 }, { Pool2, Pool3 })
 		local entitiesToIterate = {}
 
@@ -329,7 +329,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEachComponent (single-component with exclusion list)", function()
+	describe("forEachComponent (single-component with exclusion list)", function()
 		local view = View.new({ Pool1 }, { Pool2, Pool3 })
 		local entitiesToIterate = {}
 

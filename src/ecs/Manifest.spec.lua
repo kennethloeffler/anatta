@@ -20,7 +20,7 @@ return function()
 		end)
 	end)
 
-	describe("Define", function()
+	describe("define", function()
 		local manifest = Manifest.new()
 		local id = defineTestComponent(manifest)
 
@@ -39,7 +39,7 @@ return function()
 		end)
 	end)
 
-	describe("Create", function()
+	describe("create", function()
 		it("should return a valid entity identifier", function()
 			local manifest = Manifest.new()
 			local entity = manifest:create()
@@ -62,7 +62,7 @@ return function()
 		end)
 	end)
 
-	describe("Destroy", function()
+	describe("destroy", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 		local entityId = bit32.band(entity, Constants.ENTITYID_MASK)
@@ -90,7 +90,7 @@ return function()
 		end)
 	end)
 
-	describe("Valid", function()
+	describe("valid", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 
@@ -120,7 +120,7 @@ return function()
 		end)
 	end)
 
-	describe("Has", function()
+	describe("has", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 
@@ -136,7 +136,7 @@ return function()
 		end)
 	end)
 
-	describe("Get", function()
+	describe("get", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 		local obj = {}
@@ -153,7 +153,7 @@ return function()
 		end)
 	end)
 
-	describe("Assign", function()
+	describe("assign", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 		local ranCallback = false
@@ -182,7 +182,7 @@ return function()
 		end)
 	end)
 
-	describe("GetOrAssign", function()
+	describe("getOrAssign", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 		local obj = {}
@@ -207,7 +207,7 @@ return function()
 		end)
 	end)
 
-	describe("Replace", function()
+	describe("replace", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 		local obj = {}
@@ -269,7 +269,7 @@ return function()
 		end)
 	end)
 
-	describe("Remove", function()
+	describe("remove", function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 		local ranCallback = false
@@ -292,7 +292,7 @@ return function()
 		end)
 	end)
 
-	describe("Assigned", function()
+	describe("assigned", function()
 		local manifest = Manifest.new()
 
 		defineTestComponent(manifest)
@@ -302,7 +302,7 @@ return function()
 		end)
 	end)
 
-	describe("Removed", function()
+	describe("removed", function()
 		local manifest = Manifest.new()
 
 		defineTestComponent(manifest)
@@ -312,7 +312,7 @@ return function()
 		end)
 	end)
 
-	describe("Updated", function()
+	describe("updated", function()
 		local manifest = Manifest.new()
 
 		defineTestComponent(manifest)
@@ -322,7 +322,7 @@ return function()
 		end)
 	end)
 
-	describe("View", function()
+	describe("view", function()
 		local manifest = Manifest.new()
 		local view = manifest:view({ defineTestComponent(manifest) })
 
@@ -332,7 +332,7 @@ return function()
 		end)
 	end)
 
-	describe("ForEach", function()
+	describe("forEach", function()
 		local manifest = Manifest.new()
 		local t = {}
 
@@ -360,7 +360,7 @@ return function()
 		end)
 	end)
 
-	describe("NumEntities", function()
+	describe("numEntities", function()
 		local manifest = Manifest.new()
 		local t = {}
 		local num = 128

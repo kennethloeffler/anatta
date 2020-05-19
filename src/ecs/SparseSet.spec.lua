@@ -13,7 +13,7 @@ return function()
 		end)
 	end)
 
-	describe("Insert", function()
+	describe("insert", function()
 		it("should correctly insert the value into the set", function()
 			local set = SparseSet.new()
 
@@ -27,7 +27,7 @@ return function()
 		end)
 	end)
 
-	describe("Has", function()
+	describe("has", function()
 		local set = SparseSet.new()
 
 		it("should correctly determine if the value exists in the set", function()
@@ -42,7 +42,7 @@ return function()
 		end)
 	end)
 
-	describe("Remove", function()
+	describe("remove", function()
 		it("should correctly remove the value from the set", function()
 			local set = SparseSet.new()
 
