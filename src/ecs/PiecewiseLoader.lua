@@ -237,7 +237,6 @@ update = function(component, member, mirrored)
 			memberVal[i] = mirrored[entity]
 		end
 	elseif ty == "number" then
---		print(memberVal, mirrored[memberVal])
 		component[member] = mirrored[memberVal]
 	end
 end
