@@ -1,3 +1,4 @@
+
 local Constants = require(script.Parent.Parent.Constants)
 local Manifest = require(script.Parent.Manifest)
 local Pool = require(script.Parent.Pool)
@@ -117,6 +118,31 @@ return function()
 		it("should return false if the entity has any components", function()
 			manifest:assign(entity, manifest.component.Test, {})
 			expect(manifest:stub(entity)).to.equal(false)
+		end)
+	end)
+
+	describe("visit", function()
+		local manifest = Manifest.new()
+		local entity = manifest:create()
+		local types = {
+			[manifest:define("test1")] = true,
+			[manifest:define("test2")] = true,
+			[manifest:define("test3")] = true
+		}
+
+		manifest:assign(entity, manifest.component.test1)
+		manifest:assign(entity, manifest.component.test2)
+
+		it("should return the component identifiers managed by the manifest", function()
+			manifest:visit(function(component)
+				expect(types[component]).to.be.ok()
+			end)
+		end)
+
+		it("if passed an entity, should return the component identifiers which it has", function()
+			manifest:visit(function(component)
+				expect(manifest:has(entity, component)).to.equal(true)
+			end, entity)
 		end)
 	end)
 
