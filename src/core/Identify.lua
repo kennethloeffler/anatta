@@ -7,29 +7,17 @@ local ErrIdentDNE = "%s does not have an identifier"
 local ErrAlreadyHas = "%s already has an identifier"
 local ErrContextDNE = "context %s does not exist"
 
-local IS_STUDIO = game:GetService("RunService"):IsStudio()
-
+local IS_STUDIO = __LEMUR__ or game:GetService("RunService"):IsStudio()
 local ATTRIBUTES_ENABLED = pcall(function()
 	return not not script:GetAttributes()
 end)
-
 local PERSISTENT_WIDTH = 16
 local PERSISTENT_MASK = bit32.rshift(0xFFFFFFFF, PERSISTENT_WIDTH)
 
+local contextFolder
+
 local Identify = {}
 Identify.__index = Identify
-
-local function contextFolder(context, target)
-	local folder = script:FindFirstChild("context")
-
-	if not folder then
-		folder = Instance.new("Folder")
-		folder.Name = context
-		folder.Parent = target
-	end
-
-	return folder
-end
 
 function Identify.new(context, target)
 	return setmetatable({
@@ -50,7 +38,8 @@ function Identify:fromIntValues()
 	assert(names, ErrContextDNE:format(context))
 
 	for _, obj in ipairs(names:GetChildren()) do
-		if typeof(obj) == "IntValue" then
+		-- typeof doesn't seem to work properly in lemur
+		if obj.ClassName == "IntValue" then
 			lookup[obj.Name] = obj.Value
 			self.persistentMax = obj.Value > newMax and obj.Value or newMax
 			obj:Destroy()
@@ -142,7 +131,7 @@ function Identify:generateRuntime(name)
 	local newMax = self.runtimeMax + 1
 	local ident = lookup[name]
 
-	assert(not ident or bit32.rshift(ident, 16) == 0, ErrAlreadyHas:format(name))
+	assert(not ident or bit32.rshift(ident, PERSISTENT_WIDTH) == 0, ErrAlreadyHas:format(name))
 
 	lookup[name] = bit32.bor(bit32.lshift(newMax, PERSISTENT_WIDTH), ident or 0)
 
@@ -184,6 +173,18 @@ function Identify:runtime(name)
 	assert(identifier and n ~= 0, ErrIdentDNE:format(name))
 
 	return n
+end
+
+contextFolder = function(context, target)
+	local folder = target:FindFirstChild(context)
+
+	if not folder then
+		folder = Instance.new("Folder")
+		folder.Name = context
+		folder.Parent = target
+	end
+
+	return folder
 end
 
 return Identify
