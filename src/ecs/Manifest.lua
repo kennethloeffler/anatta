@@ -199,6 +199,20 @@ function Manifest:stub(entity)
 	return true
 end
 
+function Manifest:visit(func, entity)
+	if entity then
+		for componentId, pool in ipairs(self.pools) do
+			if poolHas(pool, entity) then
+				func(componentId)
+			end
+		end
+	else
+		for componentId in ipairs(self.pools) do
+			func(componentId)
+		end
+	end
+end
+
 --[[
 
  If the entity has the component, return true; otherwise return false
