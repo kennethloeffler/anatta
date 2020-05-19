@@ -120,9 +120,9 @@ function PiecewiseLoader:components(source, componentIds, members)
 			componentMembers = members and members[componentId]
 
 			if componentMembers then
-				for idx, entity in ipairs(entities) do
+				for i, entity in ipairs(entities) do
 					entity = readEntity(source, entity)
-					component = readComponent(source, components[idx])
+					component = readComponent(source, components[i])
 
 					restore(entity, mirrored, dirty, destination)
 
@@ -133,10 +133,10 @@ function PiecewiseLoader:components(source, componentIds, members)
 					destination:assignOrReplace(mirrored[entity], componentId, component)
 				end
 			else
-				for idx, entity in ipairs(entities) do
+				for i, entity in ipairs(entities) do
 					entity = readEntity(source, entity)
 					restore(entity, mirrored, dirty, destination)
-					destination:assignOrReplace(mirrored[entity], componentId, readComponent(components[idx]))
+					destination:assignOrReplace(mirrored[entity], componentId, readComponent(components[i]))
 				end
 			end
 		end
