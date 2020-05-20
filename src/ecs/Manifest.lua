@@ -62,11 +62,6 @@ end
 
  Return a new valid entity identifier
 
- Entity ids are recycled after they are no longer in use to prevent
- boundless growth of the entities array.  this is done by maintaining
- an implicit stack in the array - each element "points" to the next
- available id, or to the null entity if there is none.
-
  Entity ids (which are really just an indices into the entities array)
  are recycled after they are no longer in use to prevent boundless
  growth of the entities array.  This is done by:

@@ -12,7 +12,7 @@ return function()
 	describe("new", function()
 		local manifest = Manifest.new()
 
-		it("should return a new empty entity system instance", function()
+		it("should construct a new empty Manifest instance", function()
 			expect(manifest.size).to.equal(0)
 			expect(manifest.head).to.equal(0)
 			expect(#manifest.entities).to.equal(0)

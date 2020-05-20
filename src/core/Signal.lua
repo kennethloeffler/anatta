@@ -1,3 +1,5 @@
+-- teensy weensy signal implementation, take it or leave it
+
 local Signal = {}
 Signal.__index = Signal
 
@@ -15,7 +17,7 @@ end
 
 --[[
 
- Call a function whenever Signal::Dispatch is called
+ Add a function to be called whenever Signal::Dispatch is called
 
 ]]
 function Signal:connect(callback)
