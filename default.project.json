@@ -14,9 +14,6 @@
 			 "$className": "Folder",
 			 "plugin": {
 				"$path": "plugin"
-			 },
-			 "src": {
-				"$path": "src"
 			 }
 		  }
 	   }
