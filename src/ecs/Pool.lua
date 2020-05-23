@@ -48,9 +48,8 @@ function Pool.destroy(pool, entity)
 	local size = pool.size
 	local index = remove(pool, entity)
 
-	-- component type could be empty
 	if objects then
-		if size > 1 then
+		if index < size then
 			objects[index] = objects[size]
 		end
 

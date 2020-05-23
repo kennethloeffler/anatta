@@ -89,7 +89,7 @@ function SparseSet.remove(set, value)
 
 	set.size = size - 1
 
-	if size > 1 then
+	if internalIndex < size then
 		local swappedExternal = internal[size]
 
 		internal[internalIndex] = swappedExternal
