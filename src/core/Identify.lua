@@ -159,18 +159,24 @@ end
 
 function Identify:persistent(name)
 	local identifier = self.lookup[name]
+
+	assert(identifier, ErrIdentDNE:format(name))
+
 	local n = bit32.band(identifier, PERSISTENT_MASK)
 
-	assert(identifier and n ~= 0, ErrIdentDNE:format(name))
+	assert(n ~= 0, ErrIdentDNE:format(name))
 
 	return n
 end
 
 function Identify:runtime(name)
 	local identifier = self.lookup[name]
+
+	assert(identifier, ErrIdentDNE:format(name))
+
 	local n = bit32.rshift(identifier, PERSISTENT_WIDTH)
 
-	assert(identifier and n ~= 0, ErrIdentDNE:format(name))
+	assert(n ~= 0, ErrIdentDNE:format(name))
 
 	return n
 end
