@@ -57,4 +57,23 @@ function Pool.destroy(pool, entity)
 	end
 end
 
+function Pool.clear(pool)
+	local internal = pool.internal
+	local external = pool.external
+	local objects = pool.objects
+
+	if objects then
+		for i, entity in ipairs(pool.internal) do
+			internal[i] = nil
+			external[entity] = nil
+			objects[i] = nil
+		end
+	else
+		for i, entity in ipairs(pool.internal) do
+			internal[i] = nil
+			external[entity] = nil
+		end
+	end
+end
+
 return Pool
