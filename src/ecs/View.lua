@@ -1,3 +1,4 @@
+
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 
@@ -212,16 +213,16 @@ hasIncluded = function(entity, included)
 end
 
 hasIncludedThenPack = function(entity, included, pack)
-	local obj
+	local index
 
 	for i, includedPool in ipairs(included) do
-		obj = get(includedPool, entity)
+		index = has(includedPool, entity)
 
-		if not obj then
+		if not index then
 			return false
 		end
 
-		pack[i] = obj
+		pack[i] = includedPool.objects and includedPool.objects[index]
 	end
 
 	return true

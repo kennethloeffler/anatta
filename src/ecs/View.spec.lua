@@ -2,12 +2,16 @@ local View = require(script.Parent.View)
 local Manifest = require(script.Parent.Manifest)
 
 return function()
+	FOCUS()
+
 	local manifest = Manifest.new()
 
 	local Component1 = manifest:define("Test1", "table")
 	local Component2 = manifest:define("Test2", "table")
 	local Component3 = manifest:define("Test3", "table")
+	local Tag = manifest:define("tagComponent")
 
+	local TagPool = Manifest._getPool(manifest, Tag)
 	local Pool1 = Manifest._getPool(manifest, Component1)
 	local Pool2 = Manifest._getPool(manifest, Component2)
 	local Pool3 = Manifest._getPool(manifest, Component3)
@@ -416,6 +420,21 @@ return function()
 			manifest:assign(entity, Component3, {})
 
 			expect(View._hasIncludedThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(false)
+		end)
+
+		it("should properly handle tag components", function()
+			local entity = manifest:create()
+			local componentPack = {}
+
+			local first = manifest:assign(entity, Component1, {})
+			local second = manifest:assign(entity, Component2, {})
+
+			manifest:assign(entity, Tag)
+
+			expect(View._hasIncludedThenPack(entity, { Pool1, TagPool, Pool2 }, componentPack)).to.equal(true)
+			expect(componentPack[1]).to.equal(first)
+			expect(componentPack[2]).to.equal(nil)
+			expect(componentPack[3]).to.equal(second)
 		end)
 	end)
 end
