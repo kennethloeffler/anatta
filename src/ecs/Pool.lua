@@ -19,7 +19,7 @@ function Pool.new(dataType, capacity)
 
 	pool.onAssign = Signal.new()
 	pool.onRemove = Signal.new()
-	pool.onUpdate = Signal.new()
+	pool.onReplace = Signal.new()
 
 	return pool
 end

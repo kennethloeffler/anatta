@@ -26,12 +26,12 @@ return function()
 		local id = defineTestComponent(manifest)
 
 		it("should generate a runtime identifier", function()
-			expect(manifest.component.Test).to.be.ok()
-			expect(typeof(manifest.component.Test)).to.equal("number")
+			expect(manifest.component:named("Test")).to.be.ok()
+			expect(typeof(manifest.component:named("Test"))).to.equal("number")
 		end)
 
 		it("should create a valid component pool", function()
-			expect(manifest.pools[manifest.component.Test]).to.be.ok()
+			expect(manifest.pools[manifest.component:named("Test")]).to.be.ok()
 		end)
 
 		it("should return the component id", function()
@@ -71,7 +71,7 @@ return function()
 		local originalHead = manifest.head
 
 		defineTestComponent(manifest)
-		manifest:assign(entity, manifest.component.Test, {})
+		manifest:assign(entity, manifest.component:named("Test"), {})
 		manifest:destroy(entity)
 
 		local newVersion = bit32.rshift(manifest.entities[entityId], Constants.ENTITYID_WIDTH)
@@ -87,7 +87,7 @@ return function()
 		end)
 
 		it("should remove all components that were on the entity", function()
-			expect(Pool.has(manifest.pools[manifest.component.Test], entity)).to.never.be.ok()
+			expect(Pool.has(manifest.pools[manifest.component:named("Test")], entity)).to.never.be.ok()
 		end)
 	end)
 
@@ -116,7 +116,7 @@ return function()
 		end)
 
 		it("should return false if the entity has any components", function()
-			manifest:assign(entity, manifest.component.Test, {})
+			manifest:assign(entity, manifest.component:named("Test"), {})
 			expect(manifest:stub(entity)).to.equal(false)
 		end)
 	end)
@@ -130,8 +130,8 @@ return function()
 			[manifest:define("test3")] = true
 		}
 
-		manifest:assign(entity, manifest.component.test1)
-		manifest:assign(entity, manifest.component.test2)
+		manifest:assign(entity, manifest.component:named("test1"))
+		manifest:assign(entity, manifest.component:named("test2"))
 
 		it("should return the component identifiers managed by the manifest", function()
 			manifest:visit(function(component)
@@ -153,12 +153,12 @@ return function()
 		defineTestComponent(manifest)
 
 		it("should return false if the entity does not have the component", function()
-			expect(manifest:has(entity, manifest.component.Test)).to.equal(false)
+			expect(manifest:has(entity, manifest.component:named("Test"))).to.equal(false)
 		end)
 
 		it("should return true if the entity has the component", function()
-			manifest:assign(entity, manifest.component.Test, {})
-			expect(manifest:has(entity, manifest.component.Test)).to.equal(true)
+			manifest:assign(entity, manifest.component:named("Test"), {})
+			expect(manifest:has(entity, manifest.component:named("Test"))).to.equal(true)
 		end)
 	end)
 
@@ -170,12 +170,12 @@ return function()
 		defineTestComponent(manifest)
 
 		it("should return nil if the entity does not have the component", function()
-			expect(manifest:get(entity, manifest.component.Test)).to.never.be.ok()
+			expect(manifest:get(entity, manifest.component:named("Test"))).to.never.be.ok()
 		end)
 
 		it("should return the component instance if the entity has the component", function()
-			manifest:assign(entity, manifest.component.Test, obj)
-			expect(manifest:get(entity, manifest.component.Test)).to.equal(obj)
+			manifest:assign(entity, manifest.component:named("Test"), obj)
+			expect(manifest:get(entity, manifest.component:named("Test"))).to.equal(obj)
 		end)
 	end)
 
@@ -186,14 +186,14 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:assigned(manifest.component.Test):connect(function()
+		manifest:assigned(manifest.component:named("Test")):connect(function()
 			ranCallback = true
 		end)
 
 		it("should assign a new component instance to the entity and return it", function()
-			local obj = manifest:assign(entity, manifest.component.Test, {})
+			local obj = manifest:assign(entity, manifest.component:named("Test"), {})
 
-			expect(manifest:get(entity, manifest.component.Test)).to.equal(obj)
+			expect(manifest:get(entity, manifest.component:named("Test"))).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function()
@@ -204,7 +204,7 @@ return function()
 			manifest:destroy(entity)
 			entity = manifest:create()
 
-			expect(manifest:assign(entity, manifest.component.Test, {})).to.equal(manifest:get(entity, manifest.component.Test))
+			expect(manifest:assign(entity, manifest.component:named("Test"), {})).to.equal(manifest:get(entity, manifest.component:named("Test")))
 		end)
 	end)
 
@@ -216,16 +216,16 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:assigned(manifest.component.Test):connect(function()
+		manifest:assigned(manifest.component:named("Test")):connect(function()
 			ranCallback = true
 		end)
 
 		it("should assign and return the component if the entity doesn't have it", function()
-			expect(manifest:getOrAssign(entity, manifest.component.Test, obj)).to.equal(obj)
+			expect(manifest:getOrAssign(entity, manifest.component:named("Test"), obj)).to.equal(obj)
 		end)
 
 		it("should return the component instance if the entity already has it", function()
-			expect(manifest:getOrAssign(entity, manifest.component.Test, obj)).to.equal(obj)
+			expect(manifest:getOrAssign(entity, manifest.component:named("Test"), obj)).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function()
@@ -241,14 +241,14 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:updated(manifest.component.Test):connect(function()
+		manifest:replaced(manifest.component:named("Test")):connect(function()
 			ranCallback = true
 		end)
 
 		it("should replace an existing component instance with a new one", function()
-			manifest:assign(entity, manifest.component.Test, {})
-			expect(manifest:replace(entity, manifest.component.Test, obj)).to.equal(obj)
-			expect(manifest:get(entity, manifest.component.Test)).to.equal(obj)
+			manifest:assign(entity, manifest.component:named("Test"), {})
+			expect(manifest:replace(entity, manifest.component:named("Test"), obj)).to.equal(obj)
+			expect(manifest:get(entity, manifest.component:named("Test"))).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function()
@@ -264,19 +264,19 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:updated(manifest.component.Test):connect(function()
+		manifest:replaced(manifest.component:named("Test")):connect(function()
 			ranReplaceCallback = true
 		end)
 
-		manifest:assigned(manifest.component.Test):connect(function()
+		manifest:assigned(manifest.component:named("Test")):connect(function()
 			ranAssignCallback = true
 		end)
 
 		it("should assign the component if it does not exist on the entity", function()
 			local assigned = {}
 
-			expect(manifest:assignOrReplace(entity, manifest.component.Test, assigned)).to.equal(assigned)
-			expect(manifest:get(entity, manifest.component.Test)).to.equal(assigned)
+			expect(manifest:assignOrReplace(entity, manifest.component:named("Test"), assigned)).to.equal(assigned)
+			expect(manifest:get(entity, manifest.component:named("Test"))).to.equal(assigned)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function()
@@ -286,8 +286,8 @@ return function()
 		it("should replace the component if it already exists on the entity", function()
 			local replaced = {}
 
-			expect(manifest:assignOrReplace(entity, manifest.component.Test, replaced)).to.equal(replaced)
-			expect(manifest:get(entity, manifest.component.Test)).to.equal(replaced)
+			expect(manifest:assignOrReplace(entity, manifest.component:named("Test"), replaced)).to.equal(replaced)
+			expect(manifest:get(entity, manifest.component:named("Test"))).to.equal(replaced)
 		end)
 
 		it("should dispatch the component pool's replacement listeners", function()
@@ -302,15 +302,15 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:removed(manifest.component.Test):connect(function()
+		manifest:removed(manifest.component:named("Test")):connect(function()
 			ranCallback = true
 		end)
 
 		it("should remove a component that has been assigned to the entity", function()
-			manifest:assign(entity, manifest.component.Test, {})
-			manifest:remove(entity, manifest.component.Test)
+			manifest:assign(entity, manifest.component:named("Test"), {})
+			manifest:remove(entity, manifest.component:named("Test"))
 
-			expect(manifest:has(entity, manifest. component.Test)).to.equal(false)
+			expect(manifest:has(entity, manifest. component:named("Test"))).to.equal(false)
 		end)
 
 		it("should dispatch the component pool's removed listeners", function()
@@ -324,7 +324,7 @@ return function()
 		defineTestComponent(manifest)
 
 		it("should return the assigned signal for the specified component", function()
-			expect(manifest:assigned(manifest.component.Test)).to.equal(manifest.pools[manifest.component.Test].onAssign)
+			expect(manifest:assigned(manifest.component:named("Test"))).to.equal(manifest.pools[manifest.component:named("Test")].onAssign)
 		end)
 	end)
 
@@ -334,17 +334,17 @@ return function()
 		defineTestComponent(manifest)
 
 		it("should return the removed signal for the specified component", function()
-			expect(manifest:removed(manifest.component.Test)).to.equal(manifest.pools[manifest.component.Test].onRemove)
+			expect(manifest:removed(manifest.component:named("Test"))).to.equal(manifest.pools[manifest.component:named("Test")].onRemove)
 		end)
 	end)
 
-	describe("updated", function()
+	describe("replaced", function()
 		local manifest = Manifest.new()
 
 		defineTestComponent(manifest)
 
-		it("should return the updated signal for the specified component", function()
-			expect(manifest:updated(manifest.component.Test)).to.equal(manifest.pools[manifest.component.Test].onUpdate)
+		it("should return the replaced signal for the specified component", function()
+			expect(manifest:replaced(manifest.component:named("Test"))).to.equal(manifest.pools[manifest.component:named("Test")].onReplace)
 		end)
 	end)
 
@@ -413,7 +413,7 @@ return function()
 		defineTestComponent(manifest)
 
 		it("should return the pool for the specified component type", function()
-			expect(Manifest._getPool(manifest, manifest.component.Test)).to.equal(manifest.pools[manifest.component.Test])
+			expect(Manifest._getPool(manifest, manifest.component:named("Test"))).to.equal(manifest.pools[manifest.component:named("Test")])
 		end)
 	end)
 end

@@ -2,8 +2,6 @@ local View = require(script.Parent.View)
 local Manifest = require(script.Parent.Manifest)
 
 return function()
-	FOCUS()
-
 	local manifest = Manifest.new()
 
 	local Component1 = manifest:define("Test1", "table")

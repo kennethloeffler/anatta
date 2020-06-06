@@ -26,8 +26,8 @@ return function()
 		destroyedEntities[source:create()] = true
 
 		if i % 4 == 0 then
-			source:assign(entity, source.component.test1, { entity = entity })
-			source:assign(entity, source.component.test2, { entityList = { entity }})
+			source:assign(entity, source.component:named("test1"), { entity = entity })
+			source:assign(entity, source.component:named("test2"), { entityList = { entity }})
 			componentEntities[entity] = true
 		end
 	end
@@ -67,15 +67,15 @@ return function()
 		it("should mirror a single given component on a given entity", function()
 			local component = {}
 
-			loader:component(e2, destination.component.test1, component)
+			loader:component(e2, destination.component:named("test1"), component)
 
 			local mirrorEntity = loader.mirrored[e2]
 
 			expect(mirrorEntity).to.be.ok()
 			expect(destination:valid(mirrorEntity)).to.equal(true)
-			expect(destination:has(mirrorEntity, destination.component.test1))
+			expect(destination:has(mirrorEntity, destination.component:named("test1")))
 				.to.equal(true)
-			expect(destination:get(mirrorEntity, destination.component.test1))
+			expect(destination:get(mirrorEntity, destination.component:named("test1")))
 				.to.equal(component)
 		end)
 
@@ -90,12 +90,12 @@ return function()
 
 			loader:component(
 				e2,
-				destination.component.test1,
+				destination.component:named("test1"),
 				{ entity = e1, entityList = { e2, e1 } },
 				{ "entity", "entityList" })
 
 			local mirrorEntity = loader.mirrored[e2]
-			local mirrorComponent = destination:get(mirrorEntity, destination.component.test1)
+			local mirrorComponent = destination:get(mirrorEntity, destination.component:named("test1"))
 
 			expect(mirrorComponent.entity).to.equal(loader.mirrored[e1])
 
@@ -124,18 +124,18 @@ return function()
 
 		Snapshot.new(source):components(
 			cont,
-			source.component.test1,
-			source.component.test2)
+			source.component:named("test1"),
+			source.component:named("test2"))
 
 		loader:components(
 			cont,
 			{
-				destination.component.test1,
-				destination.component.test2
+				destination.component:named("test1"),
+				destination.component:named("test2")
 			},
 			{
-				[destination.component.test1] = { "entity" },
-				[destination.component.test2] = { "entityList" }
+				[destination.component:named("test1")] = { "entity" },
+				[destination.component:named("test2")] = { "entityList" }
 			})
 
 		it("should mirror the given components and their entities", function()
@@ -145,13 +145,13 @@ return function()
 				mirrorEntity = loader.mirrored[entity]
 
 				expect(destination:valid(mirrorEntity)).to.equal(true)
-				expect(destination:has(mirrorEntity, destination.component.test1)).to.equal(true)
-				expect(destination:get(mirrorEntity, destination.component.test1))
-					.to.equal(source:get(entity, source.component.test1))
+				expect(destination:has(mirrorEntity, destination.component:named("test1"))).to.equal(true)
+				expect(destination:get(mirrorEntity, destination.component:named("test1")))
+					.to.equal(source:get(entity, source.component:named("test1")))
 
-				expect(destination:has(mirrorEntity, destination.component.test2)).to.equal(true)
-				expect(destination:get(mirrorEntity, destination.component.test2))
-					.to.equal(source:get(entity, source.component.test2))
+				expect(destination:has(mirrorEntity, destination.component:named("test2"))).to.equal(true)
+				expect(destination:get(mirrorEntity, destination.component:named("test2")))
+					.to.equal(source:get(entity, source.component:named("test2")))
 			end
 		end)
 
@@ -161,12 +161,12 @@ return function()
 			for entity in pairs(componentEntities) do
 				mirrorEntity = loader.mirrored[entity]
 
-				local comp1 = destination:get(mirrorEntity, destination.component.test1)
+				local comp1 = destination:get(mirrorEntity, destination.component:named("test1"))
 
 				expect(comp1.entity)
 					.to.equal(mirrorEntity)
 
-				expect(destination:get(mirrorEntity, destination.component.test2).entityList[1])
+				expect(destination:get(mirrorEntity, destination.component:named("test2")).entityList[1])
 					.to.equal(mirrorEntity)
 			end
 		end)

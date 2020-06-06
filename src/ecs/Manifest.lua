@@ -18,13 +18,14 @@ local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NULL_ENTITYID = Constants.NULL_ENTITYID
 local STRICT = Constants.STRICT
 
-local ErrAlreadyHas = "entity %X already has this component"
+local ErrAlreadyHas = "entity %06X already has this component"
 local ErrBadComponentId = "invalid component identifier"
-local ErrInvalid = "entity %X either does not exist or it has been destroyed"
-local ErrMissing = "entity %X does not have this component"
+local ErrInvalid = "entity %06X either does not exist or it has been destroyed"
+local ErrMissing = "entity %06X does not have this component"
 local ErrBadType = "bad component data type: expected %s, got %s"
 
 local poolAssign = Pool.assign
+local poolClear = Pool.clear
 local poolDestroy = Pool.destroy
 local poolGet = Pool.get
 local poolHas = Pool.has
@@ -40,22 +41,27 @@ function Manifest.new()
 		head = NULL_ENTITYID,
 		entities = {},
 		pools = {},
-		component = {},
-		ident = Identify.new()
+		component = Identify.new("__component"),
+		observer = Identify.new()
 	}, Manifest)
 end
 
 function Manifest:define(name, dataType)
-	if self.component[name] then
-		return
-	end
+	local id = self.component:generate(name)
 
-	local componentId = self.ident:generateRuntime(name)
+	self.pools[id] = Pool.new(dataType)
 
-	self.component[name] = componentId
-	self.pools[componentId] = Pool.new(dataType)
+	return id
+end
 
-	return componentId
+function Manifest:observer(name, match)
+	local observerId = self.observer:generate(name)
+	local pool = Pool.new("number")
+
+	self.pools[observerId] = pool
+	match:_connect(self, pool)
+
+	return observerId
 end
 
 --[[
@@ -194,14 +200,14 @@ end
 
 function Manifest:visit(func, entity)
 	if entity then
-		for componentId, pool in ipairs(self.pools) do
+		for id, pool in ipairs(self.pools) do
 			if poolHas(pool, entity) then
-				func(componentId)
+				func(id)
 			end
 		end
 	else
-		for componentId in ipairs(self.pools) do
-			func(componentId)
+		for id in ipairs(self.pools) do
+			func(id)
 		end
 	end
 end
@@ -211,12 +217,12 @@ end
  If the entity has the component, return true; otherwise return false
 
 ]]
-function Manifest:has(entity, componentId)
+function Manifest:has(entity, id)
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
 	end
 
-	return not not poolHas(getPool(self, componentId), entity)
+	return not not poolHas(getPool(self, id), entity)
 end
 
 --[[
@@ -224,8 +230,8 @@ end
  If the entity has the component, return it; otherwise return nil
 
 ]]
-function Manifest:get(entity, componentId)
-	local pool = getPool(self, componentId)
+function Manifest:get(entity, id)
+	local pool = getPool(self, id)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -241,8 +247,8 @@ end
  Assigning to an entity that already has the component is undefined.
 
 ]]
-function Manifest:assign(entity, componentId, component)
-	local pool = getPool(self, componentId)
+function Manifest:assign(entity, id, component)
+	local pool = getPool(self, id)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -267,8 +273,8 @@ end
  and return it
 
 ]]
-function Manifest:getOrAssign(entity, componentId, component)
-	local pool = getPool(self, componentId)
+function Manifest:getOrAssign(entity, id, component)
+	local pool = getPool(self, id)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -302,8 +308,8 @@ end
  undefined.
 
 ]]
-function Manifest:replace(entity, componentId, component)
-	local pool = getPool(self, componentId)
+function Manifest:replace(entity, id, component)
+	local pool = getPool(self, id)
 	local index = poolHas(pool, entity)
 
 	if STRICT then
@@ -319,7 +325,7 @@ function Manifest:replace(entity, componentId, component)
 		pool.objects[index] = component
 	end
 
-	pool.onUpdate:dispatch(entity)
+	pool.onReplace:dispatch(entity)
 
 	return component
 end
@@ -330,8 +336,8 @@ end
  assign and return it
 
 ]]
-function Manifest:assignOrReplace(entity, componentId, component)
-	local pool = getPool(self, componentId)
+function Manifest:assignOrReplace(entity, id, component)
+	local pool = getPool(self, id)
 	local index = poolHas(pool, entity)
 
 	if STRICT then
@@ -346,7 +352,7 @@ function Manifest:assignOrReplace(entity, componentId, component)
 			pool.objects[index] = component
 		end
 
-		pool.onUpdate:dispatch(entity)
+		pool.onReplace:dispatch(entity)
 
 		return component
 	end
@@ -366,8 +372,8 @@ end
  undefined.
 
 ]]
-function Manifest:remove(entity, componentId)
-	local pool = getPool(self, componentId)
+function Manifest:remove(entity, id)
+	local pool = getPool(self, id)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -380,28 +386,32 @@ function Manifest:remove(entity, componentId)
 	pool.onRemove:dispatch(entity)
 end
 
-function Manifest:removeIfHas(entity, componentId)
+function Manifest:removeIfHas(entity, id)
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
 	end
 
-	local pool = getPool(self, componentId)
+	local pool = getPool(self, id)
 
 	if poolHas(pool, entity) then
 		poolDestroy(pool, entity)
 	end
 end
 
-function Manifest:assigned(componentId)
-	return getPool(self, componentId).onAssign
+function Manifest:assigned(id)
+	return getPool(self, id).onAssign
 end
 
-function Manifest:removed(componentId)
-	return getPool(self, componentId).onRemove
+function Manifest:removed(id)
+	return getPool(self, id).onRemove
 end
 
-function Manifest:updated(componentId)
-	return getPool(self, componentId).onUpdate
+function Manifest:replaced(id)
+	return getPool(self, id).onReplace
+end
+
+function Manifest:clear(id)
+	poolClear(getPool(self, id))
 end
 
 function Manifest:numEntities()
@@ -433,7 +443,7 @@ end
 
 --[[
 
- Constructs and returns a new view into this manifest
+ Constructs and returns a view into this manifest
 
  The view iterates entities which have all of the components specified
  by `include` but none of the components specified by the variadic
@@ -443,25 +453,25 @@ end
 function Manifest:view(included, ...)
 	local excluded = select("#", ...) > 0 and { ... } or nil
 
-	for i, componentId in ipairs(included) do
-		included[i] = getPool(self, componentId)
+	for i, id in ipairs(included) do
+		included[i] = getPool(self, id)
 	end
 
 	if excluded then
-		for i, componentId in ipairs(excluded) do
-			excluded[i] = getPool(self, componentId)
+		for i, id in ipairs(excluded) do
+			excluded[i] = getPool(self, id)
 		end
 	end
 
 	return View.new(included, excluded)
 end
 
-getPool = function(manifest, componentId)
+getPool = function(manifest, id)
 	if STRICT then
-		assert(manifest.pools[componentId], ErrBadComponentId)
+		assert(manifest.pools[id], ErrBadComponentId)
 	end
 
-	return manifest.pools[componentId]
+	return manifest.pools[id]
 end
 
 Manifest._getPool = getPool

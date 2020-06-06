@@ -15,8 +15,8 @@ return function()
 		local ent = manifest:create()
 
 		if i % 4 == 0 then
-			comps[test1][ent] = manifest:assign(ent, manifest.component.test1, {})
-			comps[test2][ent] = manifest:assign(ent, manifest.component.test2, {})
+			comps[test1][ent] = manifest:assign(ent, manifest.component:named("test1"), {})
+			comps[test2][ent] = manifest:assign(ent, manifest.component:named("test2"), {})
 		end
 
 		ents[ent] = true

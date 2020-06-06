@@ -1,7 +1,3 @@
-local ATTRIBUTES_ENABLED = pcall(function()
-	return not not script:GetAttributes()
-end)
-
 return function()
 	local Identify = require(script.Parent.Identify)
 
@@ -11,8 +7,7 @@ return function()
 
 			expect(ident.context).to.equal("testContext")
 			expect(ident.target).to.equal(script)
-			expect(ident.runtimeMax).to.equal(0)
-			expect(ident.persistentMax).to.equal(0)
+			expect(ident.max).to.equal(0)
 			expect(next(ident.lookup)).to.never.be.ok()
 		end)
 	end)
@@ -31,11 +26,11 @@ return function()
 			val.Parent = folder
 		end
 
-		it("should load persistent identifiers from the store of IntValues", function()
+		it("should load persisted identifiers from the store of IntValues", function()
 			ident:fromIntValues()
 
 			for i = 1, 5 do
-				expect(ident:persistent(string.char(i))).to.equal(i)
+				expect(ident:named(string.char(i))).to.equal(i)
 			end
 		end)
 
@@ -50,15 +45,16 @@ return function()
 		local ident = Identify.new("testContext2", script)
 
 		for i = 1, 5 do
-			ident:generatePersistent(string.char(i))
+			ident:generate(string.char(i))
 		end
 
-		it("should load the stored persistent identifiers", function()
+		it("should load the persisted identifiers", function()
+			ident:save()
 			ident:clear()
 			ident:load()
 
 			for i = 1, 5 do
-				expect(ident:persistent(string.char(i))).to.equal(i)
+				expect(ident:named(string.char(i))).to.equal(i)
 			end
 		end)
 	end)
@@ -67,108 +63,50 @@ return function()
 		local ident = Identify.new()
 
 		it("should reset the state of the Identify instance", function()
-			ident:generatePersistent("A")
-			ident:generateRuntime("A")
+			ident:generate("A")
+			ident:generate("B")
 
 			ident:clear()
 
-			expect(ident.persistentMax).to.equal(0)
-			expect(ident.runtimeMax).to.equal(0)
+			expect(ident.max).to.equal(0)
 			expect(next(ident.lookup)).to.never.be.ok()
-			expect(pcall(ident.runtime, ident, "A")).to.never.equal(true)
-			expect(pcall(ident.persistent, ident, "A")).to.never.equal(true)
+			expect(pcall(ident.named, ident, "A")).to.equal(false)
+			expect(pcall(ident.named, ident, "B")).to.equal(false)
 		end)
 	end)
 
-	describe("generatePersistent", function()
+	describe("generate", function()
 		local ident = Identify.new("testContext3", script)
 
 		it("should generate a sequence", function()
 			local lastId
 
 			for i = 1, 5 do
-				local id = ident:generatePersistent(string.char(i))
+				local id = ident:generate(string.char(i))
 
 				expect(id).to.equal(lastId and lastId + 1 or id)
 				lastId = id
 			end
 		end)
 
-		it("should create IntValues or a table attribute (if enabled) under the instance's context", function()
-			local name = string.char(6)
-			local id = ident:generatePersistent(name)
+		it("should throw if the name is already associated with an identifier", function()
+			ident:generate(string.char(7))
 
-			if ATTRIBUTES_ENABLED then
-				local att = script:GetAttribute()
-
-				expect(att).to.be.ok()
-				expect(att).to.be.a("table")
-				expect(att[name]).to.equal(id)
-			else
-				local folder = script:FindFirstChild("testContext3")
-
-				expect(folder).to.be.ok()
-
-				local val = folder:FindFirstChild(name)
-
-				expect(val).to.be.ok()
-				expect(val.Value).to.equal(id)
-			end
-		end)
-
-		it("should throw if the name is already associated with a persistent identifier", function()
-			ident:generatePersistent(string.char(7))
-
-			expect(pcall(ident.generatePersistent, ident, string.char(7))).to.never.equal(true)
+			expect(pcall(ident.generate, ident, string.char(7))).to.equal(false)
 		end)
 	end)
 
-	describe("generateRuntime", function()
-		local ident = Identify.new()
-
-		it("should generate a sequence", function()
-			local lastId
-
-			for i = 1, 5 do
-				local id = ident:generateRuntime(string.char(i))
-
-				expect(id).to.equal(lastId and lastId + 1 or id)
-				lastId = id
-			end
-		end)
-
-		it("should throw if the name is already associated with a runtime identifier", function()
-			ident:generateRuntime(string.char(6))
-
-			expect(pcall(ident.generateRuntime, ident, string.char(6))).to.never.equal(true)
-		end)
-	end)
-
-	describe("runtime", function()
-		local ident = Identify.new()
-
-		it("should throw if the name is not associated with a runtime identifier", function()
-			expect(pcall(ident.runtime, ident, string.char(2))).to.never.equal(true)
-		end)
-
-		it("should return the correct runtime identifier", function()
-			local id = ident:generateRuntime(string.char(1))
-
-			expect(ident:runtime(string.char(1))).to.equal(id)
-		end)
-	end)
-
-	describe("persistent", function()
+	describe("named", function()
 		local ident = Identify.new("testContext4", script)
 
-		it("should throw if the name is not associated with a persistent identifier", function()
-			expect(pcall(ident.persistent, ident, string.char(2))).to.never.equal(true)
+		it("should throw if the name is not associated with an identifier", function()
+			expect(pcall(ident.named, ident, string.char(2))).to.equal(false)
 		end)
 
-		it("should return the correct persistent identifier", function()
-			local id = ident:generatePersistent(string.char(1))
+		it("should return the correct identifier", function()
+			local id = ident:generate(string.char(1))
 
-			expect(ident:persistent(string.char(1))).to.equal(id)
+			expect(ident:named(string.char(1))).to.equal(id)
 		end)
 	end)
 

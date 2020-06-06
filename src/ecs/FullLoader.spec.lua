@@ -28,8 +28,8 @@ return function()
 		destEnts[source:create()] = true
 
 		if i % 4 == 0 then
-			source:assign(ent, source.component.test1, {})
-			source:assign(ent, source.component.test2, {})
+			source:assign(ent, source.component:named("test1"), {})
+			source:assign(ent, source.component:named("test2"), {})
 		end
 	end
 
@@ -41,11 +41,11 @@ return function()
 
 	Snapshot.new(source)
 		:entities(cont)
-		:components(cont, source.component.test1, source.component.test2)
+		:components(cont, source.component:named("test1"), source.component:named("test2"))
 
 	Loader.new(destination)
 		:entities(cont)
-		:components(cont, destination.component.test1, destination.component.test2)
+		:components(cont, destination.component:named("test1"), destination.component:named("test2"))
 
 	describe("new", function()
 		it("should construct a new loader instance", function()
@@ -77,19 +77,19 @@ return function()
 
 	describe("components", function()
 		it("should deserialize the components", function()
-			local test1 = destination.component.test1
-			local test2 = destination.component.test2
+			local test1 = destination.component:named("test1")
+			local test2 = destination.component:named("test2")
 			local test1Pool = destination:_getPool(test1)
 			local test2Pool = destination:_getPool(test2)
 
 			for _, entity in ipairs(test1Pool.internal) do
 				expect(destination:has(entity, test1)).to.equal(true)
-				expect(destination:get(entity, test1)).to.equal(source:get(entity, source.component.test1))
+				expect(destination:get(entity, test1)).to.equal(source:get(entity, source.component:named("test1")))
 			end
 
 			for _, entity in ipairs(test2Pool.internal) do
 				expect(destination:has(entity, test2)).to.equal(true)
-				expect(destination:get(entity, test2)).to.equal(source:get(entity, source.component.test2))
+				expect(destination:get(entity, test2)).to.equal(source:get(entity, source.component:named("test2")))
 			end
 		end)
 	end)
