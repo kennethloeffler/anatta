@@ -18,11 +18,11 @@ local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NULL_ENTITYID = Constants.NULL_ENTITYID
 local STRICT = Constants.STRICT
 
-local ErrAlreadyHas = "entity %06X already has this component"
+local ErrAlreadyHas = "entity %06X already has this component type"
 local ErrBadComponentId = "invalid component identifier"
 local ErrInvalid = "entity %06X either does not exist or it has been destroyed"
-local ErrMissing = "entity %06X does not have this component"
-local ErrBadType = "bad component data type: expected %s, got %s"
+local ErrMissing = "entity %06X does not have this component type"
+local ErrBadType = "bad component value type: expected %s, got %s"
 
 local poolAssign = Pool.assign
 local poolClear = Pool.clear
@@ -36,16 +36,40 @@ local Manifest = {}
 Manifest.__index = Manifest
 
 function Manifest.new()
+	local ident = Identify.new()
+
 	return setmetatable({
 		size = 0,
 		head = NULL_ENTITYID,
 		entities = {},
 		pools = {},
-		component = Identify.new("__component"),
-		observer = Identify.new()
+		component = ident,
+		observer = ident
 	}, Manifest)
 end
 
+--[[
+
+ Register a component type for the manifest and return its handle
+
+ Handles may be retrieved again via manifest.component (see
+ src/core/Identify.lua). Example:
+
+	-- someplace...
+	manifest:define("position", "Vector3")
+
+	-- elsewhere...
+	local position = manifest.component:named("position")
+
+	manifest:assign(manifest:create(), position, Vector3.new(2, 4, 16))
+
+ This approach was chosen over string literals because it makes the
+ relationship between a component type and the manifest which manages
+ it more explicit. Also, stashing component type handles at the
+ beginning of each system makes it obvious at a glance which component
+ types a given system operates on.
+
+]]
 function Manifest:define(name, dataType)
 	local id = self.component:generate(name)
 
@@ -54,30 +78,58 @@ function Manifest:define(name, dataType)
 	return id
 end
 
+--[[
+
+ Register an observer on the manifest and return its handle
+
+ Observer handles may be retrieved and used similarly to component
+ type handles:
+
+	-- someplace...
+	local bullet = manifest:component:named("bullet")
+	local position = manifest:component:named("position")
+	local updatedBulletPositions = manifest:observer("updatedBulletPositions",
+		match:all(bullet):updated(position))
+
+	manifest:view(updatedB)
+
+	-- elsewhere...
+	local view = manifest:view({manifest.observer:named("updatedBulletPositions")})
+
+	view:forEachEntity(function(entity)
+		...
+	end)
+
+ Observer names and component type names may not overlap per-manifest;
+ an error will be raised if a name is already in use. Also note that
+ an observer's associated pool is number-valued. This is an
+ implementation detail - these values must not be modified and there
+ should be no reason to inspect them.
+
+]]
 function Manifest:observer(name, match)
-	local observerId = self.observer:generate(name)
+	local id = self.observer:generate(name)
 	local pool = Pool.new("number")
 
-	self.pools[observerId] = pool
+	self.pools[id] = pool
 	match:_connect(self, pool)
 
-	return observerId
+	return id
 end
 
 --[[
 
  Return a new valid entity identifier
 
- Entity ids (which are really just an indices into the entities array)
- are recycled after they are no longer in use to prevent boundless
- growth of the entities array.  This is done by:
+ Each entity identifier (for our purposes, a 32-bit integer) is
+ composed of an id part in the low bits and a version part in the high
+ bits. The width of these fields is specified by the constant
+ ENTITYID_WIDTH.
 
- 1.  maintaining an implicit stack in the array, where each element
- "points" to the next recyclable id, or to the null id if there are
- none, and;
-
- 2.  keeping an incrementing "version" in the high bits of the
- identifier (the entity id resides in the low bits).
+ Entity ids are recycled after destruction to prevent boundless growth
+ of the entities array.  This is done by maintaining an implicit stack
+ in the array, where each element "points" to the next recyclable id,
+ or to the null id if there are none.
 
 ]]
 function Manifest:create()
@@ -107,11 +159,13 @@ end
  Return a valid entity identifier equal to the one provided if
  possible
 
+ An identifier equal to hint is returned if and only if the hint's id
+ is not in use by the manifest.
+
 ]]
 function Manifest:createFrom(hint)
 	local entityId = bit32.band(hint, ENTITYID_MASK)
 	local entities = self.entities
-	local entity = hint
 	local currEntity = entities[entityId]
 	local currEntityId = currEntity and bit32.band(currEntity, ENTITYID_MASK)
 
@@ -121,9 +175,11 @@ function Manifest:createFrom(hint)
 			self.head = i
 		end
 
-		entities[entityId] = entity
+		entities[entityId] = hint
+
+		return hint
 	elseif currEntityId == entityId then
-		entity = self:create()
+		return self:create()
 	else
 		local currId = self.head
 
@@ -134,10 +190,10 @@ function Manifest:createFrom(hint)
 		entities[currId] = bit32.bor(
 			currEntityId,
 			bit32.lshift(bit32.rshift(entities[currId], ENTITYID_WIDTH), ENTITYID_WIDTH))
-		entities[entityId] = entity
-	end
+		entities[entityId] = hint
 
-	return entity
+		return hint
+	end
 end
 
 --[[
@@ -184,7 +240,7 @@ end
 
 --[[
 
- If the entity has no assigned components, return true; otherwise
+ If the entity has no assigned component types, return true; otherwise
  return false
 
 ]]
@@ -198,6 +254,14 @@ function Manifest:stub(entity)
 	return true
 end
 
+--[[
+
+ Passes all the component types handles to the supplied function
+
+ If an entity is supplied, only the component type handles assigned to
+ the entity are passed
+
+]]
 function Manifest:visit(func, entity)
 	if entity then
 		for id, pool in ipairs(self.pools) do
@@ -214,20 +278,48 @@ end
 
 --[[
 
- If the entity has the component, return true; otherwise return false
+ If the entity has all of the specified component types, return true;
+ otherwise return false
 
 ]]
-function Manifest:has(entity, id)
+function Manifest:has(entity, ...)
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
 	end
 
-	return not not poolHas(getPool(self, id), entity)
+	for i = 1, select("#", ...) do
+		if not poolHas(getPool(self, select(i, ...)), entity) then
+			return false
+		end
+	end
+
+	return true
 end
 
 --[[
 
- If the entity has the component, return it; otherwise return nil
+ If the entity has any of the specified component types, return true;
+ otherwise return false
+
+]]
+function Manifest:any(entity, ...)
+	if STRICT then
+		assert(self:valid(entity), ErrInvalid:format(entity))
+	end
+
+	for i = 1, select("#", ...) do
+		if poolHas(getPool(self, select(i, ...)), entity) then
+			return true
+		end
+	end
+
+	return false
+end
+
+--[[
+
+ If the entity has the component type, return its value; otherwise
+ return nil
 
 ]]
 function Manifest:get(entity, id)
@@ -242,9 +334,10 @@ end
 
 --[[
 
- Assign a component to the entity
+ Assign the component type to the entity and return its value
 
- Assigning to an entity that already has the component is undefined.
+ Assigning a component type to an entity which already has it is
+ undefined.
 
 ]]
 function Manifest:assign(entity, id, component)
@@ -269,8 +362,8 @@ end
 
 --[[
 
- If the entity already has the component, return it; otherwise assign
- and return it
+ If the entity has the component type, return its value; otherwise
+ assign it and return its value
 
 ]]
 function Manifest:getOrAssign(entity, id, component)
@@ -286,9 +379,6 @@ function Manifest:getOrAssign(entity, id, component)
 	local exists = poolHas(pool, entity)
 	local obj = poolGet(pool, entity)
 
-	-- boolean operators alone won't work here, because obj can be
-	-- equal to nil if the component is empty (i.e. it's a "flag"
-	-- component)
 	if exists then
 		return obj
 	else
@@ -302,9 +392,9 @@ end
 
 --[[
 
- Replace the component assigned to the entity with a new one
+ Replace the component type's currently assigned value on the entity
 
- Replacing a component which is not assigned to the entity is
+ Replacing a component type which is not assigned to the entity is
  undefined.
 
 ]]
@@ -332,8 +422,8 @@ end
 
 --[[
 
- If the entity has the component, replace and return it; otherweise,
- assign and return it
+ If the entity has the component type, replace and return its value;
+ otherwise assign and return its value
 
 ]]
 function Manifest:assignOrReplace(entity, id, component)
@@ -366,9 +456,9 @@ end
 
 --[[
 
- Remove the component from the entity
+ Remove the component type from the entity
 
- Removing a component which is not assigned to the entity is
+ Removing a component type from an entity which does not have it is
  undefined.
 
 ]]
@@ -386,6 +476,12 @@ function Manifest:remove(entity, id)
 	pool.onRemove:dispatch(entity)
 end
 
+--[[
+
+ If the entity has the component type, remove it; otherwise, do
+ nothing
+
+]]
 function Manifest:removeIfHas(entity, id)
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -398,22 +494,50 @@ function Manifest:removeIfHas(entity, id)
 	end
 end
 
+--[[
+
+ Return a signal which fires whenever the component type is assigned to
+ an entity
+
+]]
 function Manifest:assigned(id)
 	return getPool(self, id).onAssign
 end
 
+--[[
+
+ Return a signal which fires whenever the component type is removed from
+ an entity
+
+]]
 function Manifest:removed(id)
 	return getPool(self, id).onRemove
 end
 
+--[[
+
+ Return a signal which fires whenever the component type's value on an
+ entity is replaced
+
+]]
 function Manifest:replaced(id)
 	return getPool(self, id).onReplace
 end
 
+--[[
+
+ Clear the underlying storage for the component type
+
+]]
 function Manifest:clear(id)
 	poolClear(getPool(self, id))
 end
 
+--[[
+
+ Return the total number of entities currently in use by the manifest
+
+]]
 function Manifest:numEntities()
 	local entities = self.entities
 	local curr = self.head
@@ -427,6 +551,11 @@ function Manifest:numEntities()
 	return size
 end
 
+--[[
+
+ Apply func to each entity in use by the manifest
+
+]]
 function Manifest:forEach(func)
 	if self.head == NULL_ENTITYID then
 		for _, entity in ipairs(self.entities) do
@@ -443,11 +572,11 @@ end
 
 --[[
 
- Constructs and returns a view into this manifest
+ Constructs and returns a view into the manifest
 
- The view iterates entities which have all of the components specified
- by `include` but none of the components specified by the variadic
- argument.
+ The view iterates entities which have all of the component types
+ specified by `included` but none of the component types specified by
+ the variadic argument.
 
 ]]
 function Manifest:view(included, ...)
