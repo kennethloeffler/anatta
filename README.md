@@ -1,42 +1,14 @@
-(not production ready; use at your own risk)
+<p align="center"><b>This library is currently in an incomplete, experimental state - use at your own risk!</b></p>
 
-# WorldSmith -  a game creation plugin for Roblox Studio
+# Intro
 
-## Introduction
+The entity component system (aka ECS, entity system) is an architectural pattern which models an application as a collection of entities associated with various component value objects which represent units of state. Systems proper are free functions called each frame (or at some other frequency) which operate on entities fulfilling some criteria (e.g. all entities with both a `Health` component and a `Regeneration` component). However, systems need not strictly adhere to this; they can have state, for example, or be implemented in terms of events without issue. For details see:
 
-WorldSmith is an [entity-component-system](https://en.wikipedia.org/wiki/Entity–component–system) for Roblox Studio. It allows **components** to be tied to instances (which can be thought of as representing **entities**). Components consist *only of data* - all behavior lives in the **systems**. WorldSmith's interface allows a game creator to give an instance as many different components as he or she wishes; in this way, game objects can be built with extremely varied and customizable behavior with no dependency issues, and changing/adding behaviors is often as simple as editing a few component parameters/adding new components, including during runtime \[!].
+* [A Data-Driven Game Object System](https://www.gamedevs.org/uploads/data-driven-game-object-system.pdf)
+* [Evolve Your Hierarchy](http://cowboyprogramming.com/2007/01/05/evolve-your-heirachy/)
+* [Entity Systems are the future of MMOG development](http://t-machine.org/index.php/2007/09/03/entity-systems-are-the-future-of-mmog-development-part-1/)
+* [ECS back and forth](https://skypjack.github.io/2019-02-14-ecs-baf-part-1/)
 
-### Requiring the EntityManager module
-EntityManager must be required by both the server and client.
+# Motivation
 
-In a Script on the server (i.e. ServerScriptService):
-```
-local EntityManager = require(game.ReplicatedStorage.WorldSmith.EntityManager)
-```
-
-In a LocalScript on the client (i.e. StarterPlayerScripts):
-```
-local EntityManager = require(game.ReplicatedStorage.WorldSmith.EntityManager)
-```
-
-## Table of contents
-
-- [The WorldSmith interface](https://github.com/kennethloeffler/WorldSmith#the-worldsmith-interface)
-  - [Add component window](https://github.com/kennethloeffler/WorldSmith#add-component-window)
-  - [Show components window](https://github.com/kennethloeffler/WorldSmith#show-components-window)
-  - [Rigid body button](https://github.com/kennethloeffler/WorldSmith#rigid-body-button)
-  - [Refresh components button](https://github.com/kennethloeffler/WorldSmith#refresh-components-button)
- - [EntityManager](https://github.com/kennethloeffler/WorldSmith#EntityManager)
-  
-## The WorldSmith interface
-### Add component window
-The add component window allows components to be added to the selected instance.
-### Show components window
-The show components window displays all the components a selected instance possesses. 
-### Rigid body button
-The rigid body button creates a rigid body out of a selected model - the model must have a PrimaryPart, and all BaseParts contained in the model will be rigidly attached to the PrimaryPart.
-### Refresh components button
-The refresh components button hot-swaps the plugin's currently loaded ComponentDesc module with the one in ReplicatedStorage.WorldSmith.
-
-## EntityManager
-EntityManager is the workhorse of the ECS - it provides many useful methods for getting and manipulating groups of entities and their components. [EntityManager.lua](https://github.com/kennethloeffler/WorldSmith/blob/master/WorldSmith/EntityManager.lua) contains a full API reference.
+An entity component system for use on Roblox was mainly motivated by the inadequacy of the `DataModel` to elegantly solve problems with state and identity - particularly when `Workspace.StreamingEnabled` is set, when uniquely replicating `Instance`s via `PlayerGui` (where each client in a typical setup has their own copy of the `Instance`), or in other cases when there is not necessarily a one-to-one correspondence between an `Instance` and a logical game object. See the wiki (after I write it, anyway :zany_face:) for further information on how to use the library, examples and use cases, and some common pitfalls.
