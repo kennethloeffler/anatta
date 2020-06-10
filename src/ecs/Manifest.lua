@@ -90,7 +90,7 @@ end
 	local updatedPositions = manifest:observe("updatedPositions", match:updated(position))
 
 	-- elsewhere...
-	local view = manifest:view({manifest.observer:named("updatedBulletPositions")})
+	local view = manifest:view({manifest.observer:named("updatedPositions")})
 
 	view:forEachEntity(function(entity)
 		...
