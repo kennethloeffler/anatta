@@ -19,14 +19,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# Emacs temp files
-*.lua~
-*.lua#
-*.md#
-*.md~
-*.gitignore#
-*.gitignore~
-
 # =========================
 # Operating System Files
 # =========================
