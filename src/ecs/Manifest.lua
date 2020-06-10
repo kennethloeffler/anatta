@@ -86,12 +86,8 @@ end
  type handles:
 
 	-- someplace...
-	local bullet = manifest:component:named("bullet")
 	local position = manifest:component:named("position")
-	local updatedBulletPositions = manifest:observer("updatedBulletPositions",
-		match:all(bullet):updated(position))
-
-	manifest:view(updatedB)
+	local updatedPositions = manifest:observe("updatedPositions", match:updated(position))
 
 	-- elsewhere...
 	local view = manifest:view({manifest.observer:named("updatedBulletPositions")})
@@ -107,7 +103,7 @@ end
  should be no reason to inspect them.
 
 ]]
-function Manifest:observer(name, match)
+function Manifest:observe(name, match)
 	local id = self.observer:generate(name)
 	local pool = Pool.new("number")
 
