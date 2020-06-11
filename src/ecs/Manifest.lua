@@ -141,8 +141,9 @@ function Manifest:create()
 	end
 
 	local identifier = entities[entityId]
-	local version = bit32.lshift(bit32.rshift(identifier, ENTITYID_WIDTH), ENTITYID_WIDTH)
-	local recycled = bit32.bor(entityId, version)
+	local recycled = bit32.bor(
+		entityId,
+		bit32.lshift(bit32.rshift(identifier, ENTITYID_WIDTH), ENTITYID_WIDTH))
 
 	self.head = bit32.band(identifier, ENTITYID_MASK)
 	entities[entityId] = recycled
@@ -186,6 +187,7 @@ function Manifest:createFrom(hint)
 		entities[currId] = bit32.bor(
 			currEntityId,
 			bit32.lshift(bit32.rshift(entities[currId], ENTITYID_WIDTH), ENTITYID_WIDTH))
+
 		entities[entityId] = hint
 
 		return hint
@@ -212,8 +214,8 @@ function Manifest:destroy(entity)
 	end
 
 	-- push this id onto the stack so that it can be reused, and
-	-- increment the identifier's version part in order to avoid
-	-- possible collision
+	-- increment the identifier's version part to avoid possible
+	-- collision
 	self.entities[entityId] = bit32.bor(
 		self.head,
 		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH))
