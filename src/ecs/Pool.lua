@@ -7,9 +7,13 @@ local has = SparseSet.has
 
 local Pool = {}
 
+Pool.__tostring = function(pool)
+	return pool.name
+end
+
 Pool.has = has
 
-function Pool.new(dataType, capacity)
+function Pool.new(name, dataType, capacity)
 	local pool = SparseSet.new(capacity)
 
 	if dataType then
@@ -17,11 +21,13 @@ function Pool.new(dataType, capacity)
 		pool.type = dataType
 	end
 
+	pool.name = name
+
 	pool.onAssign = Signal.new()
 	pool.onRemove = Signal.new()
 	pool.onReplace = Signal.new()
 
-	return pool
+	return setmetatable(pool, Pool)
 end
 
 function Pool.get(pool, entity)

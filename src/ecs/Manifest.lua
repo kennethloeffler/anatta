@@ -73,7 +73,7 @@ end
 function Manifest:define(name, dataType)
 	local id = self.component:generate(name)
 
-	self.pools[id] = Pool.new(dataType)
+	self.pools[id] = Pool.new(name, dataType)
 
 	return id
 end
@@ -105,7 +105,7 @@ end
 ]]
 function Manifest:observe(name, match)
 	local id = self.observer:generate(name)
-	local pool = Pool.new("number")
+	local pool = Pool.new(name, "number")
 
 	self.pools[id] = pool
 	match:_connect(self, pool)
