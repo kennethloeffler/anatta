@@ -186,19 +186,6 @@ return function()
 		end)
 	end)
 
-	describe("forEachComponent (single-component)", function()
-		local view = View.new({ Pool1 })
-
-		it("should iterate all instances of the specified component", function()
-			local index = 1
-
-			view:forEachComponent(function(component)
-				expect(Pool1.objects[index]).to.equal(component)
-				index = index + 1
-			end)
-		end)
-	end)
-
 	describe("forEach (multi-component with exlcusion list)", function()
 		local view = View.new({ Pool2, Pool1 }, { Pool3 })
 		local entitiesToIterate = {}
@@ -326,23 +313,6 @@ return function()
 			end
 
 			view:forEachEntity(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
-			end)
-		end)
-	end)
-
-	describe("forEachComponent (single-component with exclusion list)", function()
-		local view = View.new({ Pool1 }, { Pool2, Pool3 })
-		local entitiesToIterate = {}
-
-		it("should iterate all instances of the included component which do not belong to an entity with any of the excluded components", function()
-			for _, entity in ipairs(Pool1.internal) do
-				if not Pool2.external[entity] and not Pool3.external[entity] then
-					entitiesToIterate[entity] = true
-				end
-			end
-
-			view:forEachComponent(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)
