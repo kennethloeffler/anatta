@@ -22,7 +22,6 @@ local doesntHaveExcluded
 local hasIncludedThenPack
 
 local has = Pool.has
-local get = Pool.get
 
 function View.new(included, excluded)
 	local numIncluded = #included
@@ -82,12 +81,6 @@ end
 function Single:forEachEntity(func)
 	for _, entity in ipairs(self.included.internal) do
 		func(entity)
-	end
-end
-
-function Single:forEachComponent(func)
-	for _, component in ipairs(self.included.objects) do
-		func(component)
 	end
 end
 
@@ -158,18 +151,6 @@ function SingleWithExcluded:forEachEntity(func)
 	for _, entity in ipairs(included.internal) do
 		if doesntHaveExcluded(entity, excluded) then
 			func(entity)
-		end
-	end
-end
-
-function SingleWithExcluded:forEachComponent(func)
-	local included = self.included
-	local excluded = self.excluded
-	local objs = included.objects
-
-	for index, entity in ipairs(included.internal) do
-		if doesntHaveExcluded(entity, excluded) then
-			func(entity, objs[index])
 		end
 	end
 end

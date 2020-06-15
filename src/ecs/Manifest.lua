@@ -4,8 +4,6 @@
 
  TODO: luau types
 
- TODO: groups?
-
 ]]
 
 local Constants = require(script.Parent.Constants)
@@ -90,7 +88,7 @@ end
 	local updatedPositions = manifest:observe("updatedPositions", match:updated(position))
 
 	-- elsewhere...
-	local view = manifest:view({manifest.observer:named("updatedPositions")})
+	local view = manifest:view{ manifest.observer:named("updatedPositions") }
 
 	view:forEachEntity(function(entity)
 		...

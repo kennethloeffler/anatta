@@ -45,10 +45,12 @@ function Match:_connect(manifest, pool)
 	local required = self.required
 	local forbidden = self.forbidden
 	local replaced = self.replaced
+	local has = manifest.has
+	local any = manifest.any
 
 	local function maybeAdd(idx)
 		return function(entity)
-			if manifest:has(entity, unpack(required)) and not manifest:any(entity, unpack(forbidden)) then
+			if has(manifest, entity, unpack(required)) and not any(manifest, entity, unpack(forbidden)) then
 				assign(pool, entity,
 					bit32.bor(get(pool, entity) or assign(pool, entity, 0), bit32.lshift(1, idx)))
 			end
