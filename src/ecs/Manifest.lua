@@ -9,6 +9,7 @@
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 local Identify = require(script.Parent.Parent.core.Identify)
+local Match = require(script.Parent.Match)
 local View = require(script.Parent.View)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
@@ -88,8 +89,8 @@ end
  type handles:
 
 	-- someplace...
-	local position = manifest:component:named("position")
-	local updatedPositions = manifest:observe("updatedPositions", match:updated(position))
+	local position = manifest.component:named("position")
+	local updatedPositions = manifest:observe("updatedPositions"):updated(position)()
 
 	-- elsewhere...
 	local view = manifest:view{ manifest.observer:named("updatedPositions") }
@@ -99,20 +100,17 @@ end
 	end)
 
  Observer names and component type names may not overlap per-manifest;
- an error will be raised if a name is already in use. Also note that
- an observer's associated pool is number-valued. This is an
- implementation detail - these values must not be modified and there
- should be no reason to inspect them.
+ an error will be raised if a name is already in use.
 
 ]]
-function Manifest:observe(name, match)
+function Manifest:observe(name)
 	local id = self.observer:generate(name)
-	local pool = Pool.new(name, "number")
+	local pool = Pool.new(name)
+	local match = Match.new(self, id, pool)
 
 	self.pools[id] = pool
-	match:_connect(self, pool)
 
-	return id
+	return match
 end
 
 --[[
@@ -471,9 +469,8 @@ function Manifest:remove(entity, id)
 		assert(poolHas(pool, entity), ErrMissing:format(entity))
 	end
 
-	poolDestroy(pool, entity)
-
 	pool.onRemove:dispatch(entity)
+	poolDestroy(pool, entity)
 end
 
 --[[
@@ -490,6 +487,7 @@ function Manifest:removeIfHas(entity, id)
 	local pool = getPool(self, id)
 
 	if poolHas(pool, entity) then
+		pool.onRemove:dispatch(entity)
 		poolDestroy(pool, entity)
 	end
 end

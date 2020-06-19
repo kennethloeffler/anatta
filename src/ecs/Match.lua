@@ -1,22 +1,68 @@
-local Pool = require(script.Parent.Pool)
+--[[
 
-local assign = Pool.assign
-local destroy = Pool.destroy
-local get = Pool.get
+  Helper class for observers
 
-local OBS_REQUIRE = 0
-local OBS_FORBID = 1
-local OBS_REPLACED = 2
+]]
+
+local Constants = require(script.Parent.Constants)
+local SparseSet = require(script.Parent.SparseSet)
+
+local OBS_REQUIRE = Constants.OBS_REQUIRE
+local OBS_FORBID = Constants.OBS_FORBID
+local OBS_REPLACED = Constants.OBS_REPLACED
+
+local remove = SparseSet.remove
+local insert = SparseSet.insert
+local has = SparseSet.has
 
 local Match = {}
 Match.__index = Match
 
+local move = table.move
+	and table.move
+	or function(t1, f, e, t, t2)
+		for i = f, e do
+			t2[t] = t1[i]
+			t = t + 1
+		end
+		return t2
+	end
+
 local function append(source, destination)
-	table.move(source, 1, #source, #destination, destination)
+	move(source, 1, #source, #destination + 1, destination)
 end
 
-function Match.new()
+local function maybeAdd(manifest, required, forbidden, pool)
+	if #required == 0 and #forbidden == 0 then
+		return function(entity)
+			if not has(pool, entity) then
+				insert(pool, entity)
+			end
+		end
+	end
+
+	return function(entity)
+		if manifest:has(entity, unpack(required)) and not manifest:any(entity, unpack(forbidden)) then
+			if not has(pool, entity) then
+				insert(pool, entity)
+			end
+		end
+	end
+end
+
+local function maybeRemove(pool)
+	return function(entity)
+		if has(pool, entity) then
+			remove(pool, entity)
+		end
+	end
+end
+
+function Match.new(manifest, id, pool)
 	return setmetatable({
+		manifest = manifest,
+		id = id,
+		pool = pool,
 		required = {},
 		forbidden = {},
 		replaced = {}
@@ -41,49 +87,28 @@ function Match:replaced(...)
 	return self
 end
 
-function Match:_connect(manifest, pool)
+function Match:__call()
 	local required = self.required
 	local forbidden = self.forbidden
-	local replaced = self.replaced
-	local has = manifest.has
-	local any = manifest.any
+	local manifest = self.manifest
+	local pool = self.pool
 
-	local function maybeAdd(idx)
-		return function(entity)
-			if has(manifest, entity, unpack(required)) and not any(manifest, entity, unpack(forbidden)) then
-				assign(pool, entity,
-					bit32.bor(get(pool, entity) or assign(pool, entity, 0), bit32.lshift(1, idx)))
-			end
-		end
+	for _, reqId in ipairs(required) do
+		manifest:assigned(reqId):connect(maybeAdd(manifest, required, forbidden, pool, OBS_REQUIRE))
+		manifest:removed(reqId):connect(maybeRemove(pool, OBS_REQUIRE))
 	end
 
-	local function maybeRemove(idx)
-		return function(entity)
-			local flags = get(pool, entity)
-			local new = flags and bit32.band(flags, bit32.bnot(bit32.lshift(1, idx)))
-
-			destroy(pool, entity)
-
-			if new ~= 0 then
-				assign(pool, entity, new)
-			end
-		end
+	for _, forId in ipairs(forbidden) do
+		manifest:removed(forId):connect(maybeAdd(manifest, required, forbidden, pool, OBS_FORBID))
+		manifest:assigned(forId):connect(maybeRemove(pool, OBS_FORBID))
 	end
 
-	for _, id in ipairs(required) do
-		manifest:assigned(id):connect(maybeAdd(OBS_REQUIRE))
-		manifest:removed(id):connect(maybeRemove(OBS_REQUIRE))
+	for _, repId in ipairs(self.replaced) do
+		self:replaced(repId):connect(maybeAdd(manifest, required, forbidden, pool, OBS_REPLACED))
+		self:removed(repId):connect(maybeRemove(pool, OBS_REPLACED))
 	end
 
-	for _, id in ipairs(forbidden) do
-		manifest:assigned(id):connect(maybeAdd(OBS_FORBID))
-		manifest:removed(id):connect(maybeAdd(OBS_FORBID))
-	end
-
-	for _, id in ipairs(replaced) do
-		manifest:replaced(id):connect(maybeAdd(OBS_REPLACED))
-		manifest:removed(id):connect(maybeRemove(OBS_REPLACED))
-	end
+	return self.id
 end
 
 return Match

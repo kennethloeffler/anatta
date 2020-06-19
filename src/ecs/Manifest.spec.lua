@@ -39,6 +39,82 @@ return function()
 		end)
 	end)
 
+	describe("observe", function()
+		local manifest = Manifest.new()
+		local comp1 = manifest:define(nil, "test1")
+		local comp2 = manifest:define(nil, "test2")
+		local comp3 = manifest:define(nil, "test3")
+		local comp4 = manifest:define(nil, "test4")
+
+		it("should capture entities with all required components", function()
+			local ents = {}
+			local obsEnts = {}
+			local obs = manifest:observe("testObs1"):all(comp1, comp2)()
+
+			for i = 1, 100 do
+				local entity = manifest:create()
+
+				manifest:assign(entity, comp1)
+				manifest:assign(entity, comp2)
+
+				-- remove some to confirm that they are successfully culled from the observer
+				if i % 32 == 0 then
+					manifest:remove(entity, comp1)
+				else
+					ents[entity] = true
+				end
+			end
+
+			manifest:view{ obs }:forEachEntity(function(entity)
+				obsEnts[entity] = true
+			end)
+
+			for entity in pairs(obsEnts) do
+				expect(ents[entity]).to.be.ok()
+			end
+
+			for entity in pairs(ents) do
+				expect(obsEnts[entity]).to.be.ok()
+			end
+		end)
+
+		it("should reject entities that have forbidden components", function()
+			local ents = {}
+			local obsEnts = {}
+			local obs = manifest:observe("testObs2"):all(comp1, comp2):except(comp3, comp4)()
+
+			for i = 1, 100 do
+				local entity = manifest:create()
+
+				ents[entity] = true
+				manifest:assign(entity, comp1)
+				manifest:assign(entity, comp2)
+
+				if i % 16 == 0 then
+					manifest:assign(entity, comp3)
+					ents[entity] = nil
+				end
+
+				if i % 32 == 0 then
+					manifest:assign(entity, comp4)
+					ents[entity] = nil
+				end
+			end
+
+			manifest:view{ obs }:forEachEntity(function(entity)
+				obsEnts[entity] = true
+			end)
+
+			for entity in pairs(obsEnts) do
+				expect(ents[entity]).to.be.ok()
+			end
+
+			for entity in pairs(ents) do
+				expect(obsEnts[entity]).to.be.ok()
+			end
+		end)
+	end)
+
 	describe("create", function()
 		it("should return a valid entity identifier", function()
 			local manifest = Manifest.new()
