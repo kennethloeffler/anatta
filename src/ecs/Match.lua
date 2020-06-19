@@ -3,13 +3,7 @@
   Helper class for observers
 
 ]]
-
-local Constants = require(script.Parent.Constants)
 local SparseSet = require(script.Parent.SparseSet)
-
-local OBS_REQUIRE = Constants.OBS_REQUIRE
-local OBS_FORBID = Constants.OBS_FORBID
-local OBS_REPLACED = Constants.OBS_REPLACED
 
 local remove = SparseSet.remove
 local insert = SparseSet.insert
@@ -94,18 +88,18 @@ function Match:__call()
 	local pool = self.pool
 
 	for _, reqId in ipairs(required) do
-		manifest:assigned(reqId):connect(maybeAdd(manifest, required, forbidden, pool, OBS_REQUIRE))
-		manifest:removed(reqId):connect(maybeRemove(pool, OBS_REQUIRE))
+		manifest:assigned(reqId):connect(maybeAdd(manifest, required, forbidden, pool))
+		manifest:removed(reqId):connect(maybeRemove(pool))
 	end
 
 	for _, forId in ipairs(forbidden) do
-		manifest:removed(forId):connect(maybeAdd(manifest, required, forbidden, pool, OBS_FORBID))
-		manifest:assigned(forId):connect(maybeRemove(pool, OBS_FORBID))
+		manifest:removed(forId):connect(maybeAdd(manifest, required, forbidden, pool))
+		manifest:assigned(forId):connect(maybeRemove(pool))
 	end
 
 	for _, repId in ipairs(self.replaced) do
-		self:replaced(repId):connect(maybeAdd(manifest, required, forbidden, pool, OBS_REPLACED))
-		self:removed(repId):connect(maybeRemove(pool, OBS_REPLACED))
+		self:replaced(repId):connect(maybeAdd(manifest, required, forbidden, pool))
+		self:removed(repId):connect(maybeRemove(pool))
 	end
 
 	return self.id
