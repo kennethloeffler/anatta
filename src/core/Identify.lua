@@ -1,6 +1,6 @@
 --[[
 
-  Utility to associate names with monotonically increasing integral
+  Utility to associate names with strictly increasing integral
   identifiers
 
 ]]

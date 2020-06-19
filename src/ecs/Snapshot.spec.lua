@@ -4,8 +4,8 @@ local Snapshot = require(script.Parent.Snapshot)
 return function()
 	local manifest = Manifest.new()
 
-	local test1 = manifest:define("test1", "table")
-	local test2 = manifest:define("test2", "table")
+	local test1 = manifest:define("table", "test1")
+	local test2 = manifest:define("table", "test2")
 
 	local ents = {}
 	local destEnts = {}

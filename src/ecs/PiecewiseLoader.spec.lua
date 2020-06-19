@@ -7,13 +7,13 @@ return function()
 	local destination = Manifest.new()
 	local loader = PiecewiseLoader.new(destination)
 
-	source:define("test1", "table")
-	source:define("test2", "table")
+	source:define("table", "test1")
+	source:define("table", "test2")
 
 	-- these will end up having the same respective component ids, but
 	-- this test does not rely on that fact
-	destination:define("test1", "table")
-	destination:define("test2", "table")
+	destination:define("table", "test1")
+	destination:define("table", "test2")
 
 	local entities = {}
 	local componentEntities = {}

@@ -54,7 +54,7 @@ end
  src/core/Identify.lua). Example:
 
 	-- someplace...
-	manifest:define("position", "Vector3")
+	manifest:define("Vector3", "position")
 
 	-- elsewhere...
 	local position = manifest.component:named("position")
@@ -68,7 +68,11 @@ end
  types a given system operates on.
 
 ]]
-function Manifest:define(name, dataType)
+function Manifest:define(dataType, name)
+	if STRICT then
+		assert(name and type(name) == "string", ("bad argument #2 (expected string, got %s)"):format(type(name)))
+	end
+
 	local id = self.component:generate(name)
 
 	self.pools[id] = Pool.new(name, dataType)

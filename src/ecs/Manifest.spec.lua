@@ -4,7 +4,7 @@ local Pool = require(script.Parent.Pool)
 local TestComponentType = "table"
 
 local function defineTestComponent(manifest)
-	return manifest:define("Test", TestComponentType)
+	return manifest:define(TestComponentType, "Test")
 end
 
 return function()
@@ -124,9 +124,9 @@ return function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 		local types = {
-			[manifest:define("test1")] = true,
-			[manifest:define("test2")] = true,
-			[manifest:define("test3")] = true
+			[manifest:define(nil, "test1")] = true,
+			[manifest:define(nil, "test2")] = true,
+			[manifest:define(nil, "test3")] = true
 		}
 
 		manifest:assign(entity, manifest.component:named("test1"))
