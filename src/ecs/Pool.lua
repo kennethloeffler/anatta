@@ -25,7 +25,7 @@ function Pool.new(name, dataType, capacity)
 
 	pool.onAssign = Signal.new()
 	pool.onRemove = Signal.new()
-	pool.onReplace = Signal.new()
+	pool.onUpdate = Signal.new()
 
 	return setmetatable(pool, Pool)
 end

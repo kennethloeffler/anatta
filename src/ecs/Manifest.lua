@@ -413,7 +413,7 @@ function Manifest:replace(entity, id, component)
 		pool.objects[index] = component
 	end
 
-	pool.onReplace:dispatch(entity)
+	pool.onUpdate:dispatch(entity)
 
 	return component
 end
@@ -440,7 +440,7 @@ function Manifest:assignOrReplace(entity, id, component)
 			pool.objects[index] = component
 		end
 
-		pool.onReplace:dispatch(entity)
+		pool.onUpdate:dispatch(entity)
 
 		return component
 	end
@@ -515,11 +515,11 @@ end
 --[[
 
  Return a signal which fires whenever the component type's value on an
- entity is replaced
+ entity is updated
 
 ]]
-function Manifest:replaced(id)
-	return getPool(self, id).onReplace
+function Manifest:updated(id)
+	return getPool(self, id).onUpdate
 end
 
 --[[

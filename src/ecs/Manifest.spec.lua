@@ -316,7 +316,7 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:replaced(manifest.component:named("Test")):connect(function()
+		manifest:updated(manifest.component:named("Test")):connect(function()
 			ranCallback = true
 		end)
 
@@ -326,7 +326,7 @@ return function()
 			expect(manifest:get(entity, manifest.component:named("Test"))).to.equal(obj)
 		end)
 
-		it("should dispatch the component pool's assignment listeners", function()
+		it("should dispatch the component pool's update listeners", function()
 			expect(ranCallback).to.equal(true)
 		end)
 	end)
@@ -339,7 +339,7 @@ return function()
 
 		defineTestComponent(manifest)
 
-		manifest:replaced(manifest.component:named("Test")):connect(function()
+		manifest:updated(manifest.component:named("Test")):connect(function()
 			ranReplaceCallback = true
 		end)
 
@@ -413,13 +413,13 @@ return function()
 		end)
 	end)
 
-	describe("replaced", function()
+	describe("updated", function()
 		local manifest = Manifest.new()
 
 		defineTestComponent(manifest)
 
-		it("should return the replaced signal for the specified component", function()
-			expect(manifest:replaced(manifest.component:named("Test"))).to.equal(manifest.pools[manifest.component:named("Test")].onReplace)
+		it("should return the update signal for the specified component", function()
+			expect(manifest:updated(manifest.component:named("Test"))).to.equal(manifest.pools[manifest.component:named("Test")].onUpdate)
 		end)
 	end)
 

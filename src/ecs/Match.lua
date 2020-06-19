@@ -59,7 +59,7 @@ function Match.new(manifest, id, pool)
 		pool = pool,
 		required = {},
 		forbidden = {},
-		replaced = {}
+		updated = {}
 	}, Match)
 end
 
@@ -75,8 +75,8 @@ function Match:except(...)
 	return self
 end
 
-function Match:replaced(...)
-	append({ ... }, self.replaced)
+function Match:updated(...)
+	append({ ... }, self.updated)
 
 	return self
 end
@@ -97,8 +97,8 @@ function Match:__call()
 		manifest:assigned(forId):connect(maybeRemove(pool))
 	end
 
-	for _, repId in ipairs(self.replaced) do
-		self:replaced(repId):connect(maybeAdd(manifest, required, forbidden, pool))
+	for _, repId in ipairs(self.updated) do
+		self:updated(repId):connect(maybeAdd(manifest, required, forbidden, pool))
 		self:removed(repId):connect(maybeRemove(pool))
 	end
 
