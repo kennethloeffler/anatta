@@ -46,72 +46,80 @@ return function()
 		local comp3 = manifest:define(nil, "test3")
 		local comp4 = manifest:define(nil, "test4")
 
-		it("should capture entities with all required components", function()
-			local ents = {}
-			local obsEnts = {}
-			local obs = manifest:observe("testObs1"):all(comp1, comp2)()
+		local obsAll = manifest:observe("all"):all(comp1, comp2)()
+		local obsAllExcept = manifest:observe("allExcept"):all(comp1, comp2):except(comp3, comp4)()
+		local obsUpdated = manifest:observe("updated"):updated(comp1, comp2)()
 
-			for i = 1, 100 do
+		describe("all", function()
+			it("should capture entities with all required components", function()
 				local entity = manifest:create()
 
 				manifest:assign(entity, comp1)
 				manifest:assign(entity, comp2)
 
-				-- remove some to confirm that they are successfully culled from the observer
-				if i % 32 == 0 then
-					manifest:remove(entity, comp1)
-				else
-					ents[entity] = true
-				end
-			end
-
-			manifest:view{ obs }:forEachEntity(function(entity)
-				obsEnts[entity] = true
+				expect(manifest:has(entity, obsAll)).to.equal(true)
 			end)
 
-			for entity in pairs(obsEnts) do
-				expect(ents[entity]).to.be.ok()
-			end
+			it("should cull entities that lose any required components", function()
+				local entity = manifest:create()
 
-			for entity in pairs(ents) do
-				expect(obsEnts[entity]).to.be.ok()
-			end
+				manifest:assign(entity, comp1)
+				manifest:assign(entity, comp2)
+
+				manifest:remove(entity, comp1)
+				expect(manifest:has(entity, obsAll)).to.equal(false)
+			end)
 		end)
 
-		it("should reject entities that have forbidden components", function()
-			local ents = {}
-			local obsEnts = {}
-			local obs = manifest:observe("testObs2"):all(comp1, comp2):except(comp3, comp4)()
-
-			for i = 1, 100 do
+		describe("except", function()
+			it("should reject entities that have any forbidden components", function()
 				local entity = manifest:create()
 
-				ents[entity] = true
+				manifest:assign(entity, comp3)
+
 				manifest:assign(entity, comp1)
 				manifest:assign(entity, comp2)
 
-				if i % 16 == 0 then
-					manifest:assign(entity, comp3)
-					ents[entity] = nil
-				end
-
-				if i % 32 == 0 then
-					manifest:assign(entity, comp4)
-					ents[entity] = nil
-				end
-			end
-
-			manifest:view{ obs }:forEachEntity(function(entity)
-				obsEnts[entity] = true
+				expect(manifest:has(entity, obsAllExcept)).to.equal(false)
 			end)
 
-			for entity in pairs(obsEnts) do
-				expect(ents[entity]).to.be.ok()
-			end
+			it("should cull entities that gain any forbidden components", function()
+				local entity = manifest:create()
 
-			for entity in pairs(ents) do
-				expect(obsEnts[entity]).to.be.ok()
-			end
+				manifest:assign(entity, comp1)
+				manifest:assign(entity, comp2)
+				expect(manifest:has(entity, obsAllExcept)).to.equal(true)
+
+				manifest:assign(entity, comp4)
+				expect(manifest:has(entity, obsAllExcept)).to.equal(false)
+			end)
+		end)
+
+		describe("update", function()
+			it("should capture entities for which the given components have been updated", function()
+				local e1 = manifest:create()
+				local e2 = manifest:create()
+
+				manifest:assign(e1, comp1)
+				manifest:assign(e2, comp2)
+
+				manifest:replace(e1, comp1)
+				expect(manifest:has(e1, obsUpdated)).to.equal(true)
+
+				manifest:replace(e2, comp2)
+				expect(manifest:has(e2, obsUpdated)).to.equal(true)
+			end)
+
+			it("should cull entities which are destroyed after having been updated", function()
+				local entity = manifest:create()
+
+				manifest:assign(entity, comp1)
+				manifest:replace(entity, comp1)
+				expect(manifest:has(entity, obsUpdated)).to.equal(true)
+
+				manifest:remove(entity, comp1)
+				expect(manifest:has(entity, obsUpdated)).to.equal(false)
+			end)
 		end)
 	end)
 

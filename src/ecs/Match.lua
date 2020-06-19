@@ -28,9 +28,12 @@ end
 
 local function maybeAdd(manifest, required, forbidden, pool)
 	if #required == 0 and #forbidden == 0 then
+		-- this means the observer is only watching updated components, so it only needs to check that
+		-- it hasn't already captured the entity in question
 		return function(entity)
 			if not has(pool, entity) then
 				insert(pool, entity)
+				pool.onAssign:dispatch(entity)
 			end
 		end
 	end
@@ -39,6 +42,7 @@ local function maybeAdd(manifest, required, forbidden, pool)
 		if manifest:has(entity, unpack(required)) and not manifest:any(entity, unpack(forbidden)) then
 			if not has(pool, entity) then
 				insert(pool, entity)
+				pool.onAssign:dispatch(entity)
 			end
 		end
 	end
@@ -47,6 +51,7 @@ end
 local function maybeRemove(pool)
 	return function(entity)
 		if has(pool, entity) then
+			pool.onRemove:dispatch(entity)
 			remove(pool, entity)
 		end
 	end
@@ -59,7 +64,7 @@ function Match.new(manifest, id, pool)
 		pool = pool,
 		required = {},
 		forbidden = {},
-		updated = {}
+		changed = {}
 	}, Match)
 end
 
@@ -76,7 +81,7 @@ function Match:except(...)
 end
 
 function Match:updated(...)
-	append({ ... }, self.updated)
+	append({ ... }, self.changed)
 
 	return self
 end
@@ -87,19 +92,19 @@ function Match:__call()
 	local manifest = self.manifest
 	local pool = self.pool
 
-	for _, reqId in ipairs(required) do
-		manifest:assigned(reqId):connect(maybeAdd(manifest, required, forbidden, pool))
-		manifest:removed(reqId):connect(maybeRemove(pool))
+	for _, id in ipairs(required) do
+		manifest:assigned(id):connect(maybeAdd(manifest, required, forbidden, pool))
+		manifest:removed(id):connect(maybeRemove(pool))
 	end
 
-	for _, forId in ipairs(forbidden) do
-		manifest:removed(forId):connect(maybeAdd(manifest, required, forbidden, pool))
-		manifest:assigned(forId):connect(maybeRemove(pool))
+	for _, id in ipairs(forbidden) do
+		manifest:removed(id):connect(maybeAdd(manifest, required, forbidden, pool))
+		manifest:assigned(id):connect(maybeRemove(pool))
 	end
 
-	for _, repId in ipairs(self.updated) do
-		self:updated(repId):connect(maybeAdd(manifest, required, forbidden, pool))
-		self:removed(repId):connect(maybeRemove(pool))
+	for _, id in ipairs(self.changed) do
+		manifest:updated(id):connect(maybeAdd(manifest, required, forbidden, pool))
+		manifest:removed(id):connect(maybeRemove(pool))
 	end
 
 	return self.id
