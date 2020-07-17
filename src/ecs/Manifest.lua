@@ -29,8 +29,6 @@ local poolDestroy = Pool.destroy
 local poolGet = Pool.get
 local poolHas = Pool.has
 
-local getPool
-
 local Manifest = {}
 Manifest.__index = Manifest
 
@@ -286,7 +284,7 @@ function Manifest:has(entity, ...)
 	end
 
 	for i = 1, select("#", ...) do
-		if not poolHas(getPool(self, select(i, ...)), entity) then
+		if not poolHas(self:_getPool(select(i, ...)), entity) then
 			return false
 		end
 	end
@@ -306,7 +304,7 @@ function Manifest:any(entity, ...)
 	end
 
 	for i = 1, select("#", ...) do
-		if poolHas(getPool(self, select(i, ...)), entity) then
+		if poolHas(self:_getPool(select(i, ...)), entity) then
 			return true
 		end
 	end
@@ -321,7 +319,7 @@ end
 
 ]]
 function Manifest:get(entity, id)
-	local pool = getPool(self, id)
+	local pool = self:_getPool(id)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -397,7 +395,7 @@ end
 
 ]]
 function Manifest:replace(entity, id, component)
-	local pool = getPool(self, id)
+	local pool = self:_getPool(id)
 	local index = poolHas(pool, entity)
 
 	if STRICT then
@@ -424,9 +422,8 @@ end
  otherwise assign and return its value
 
 ]]
-function Manifest:assignOrReplace(entity, id, component)
-	local pool = getPool(self, id)
 function Manifest:addOrReplace(entity, id, component)
+	local pool = self:_getPool(id)
 	local index = poolHas(pool, entity)
 
 	if STRICT then
@@ -462,7 +459,7 @@ end
 
 ]]
 function Manifest:remove(entity, id)
-	local pool = getPool(self, id)
+	local pool = self:_getPool(id)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -485,7 +482,7 @@ function Manifest:removeIfHas(entity, id)
 		assert(self:valid(entity), ErrInvalid:format(entity))
 	end
 
-	local pool = getPool(self, id)
+	local pool = self:_getPool(id)
 
 	if poolHas(pool, entity) then
 		pool.onRemove:dispatch(entity)
@@ -510,7 +507,7 @@ end
 
 ]]
 function Manifest:removed(id)
-	return getPool(self, id).onRemove
+	return self:_getPool(id).onRemove
 end
 
 --[[
@@ -520,7 +517,7 @@ end
 
 ]]
 function Manifest:updated(id)
-	return getPool(self, id).onUpdate
+	return self:_getPool(id).onUpdate
 end
 
 --[[
@@ -529,7 +526,7 @@ end
 
 ]]
 function Manifest:clear(id)
-	poolClear(getPool(self, id))
+	poolClear(self:_getPool(id))
 end
 
 --[[
@@ -582,26 +579,24 @@ function Manifest:view(included, ...)
 	local excluded = select("#", ...) > 0 and { ... } or nil
 
 	for i, id in ipairs(included) do
-		included[i] = getPool(self, id)
+		included[i] = self:_getPool(id)
 	end
 
 	if excluded then
 		for i, id in ipairs(excluded) do
-			excluded[i] = getPool(self, id)
+			excluded[i] = self:_getPool(id)
 		end
 	end
 
 	return View.new(included, excluded)
 end
 
-getPool = function(manifest, id)
-	if STRICT then
-		assert(manifest.pools[id], ErrBadComponentId)
+function Manifest:_getPool(id)
+     if STRICT then
+		assert(self.pools[id], ErrBadComponentId)
 	end
 
-	return manifest.pools[id]
+	return self.pools[id]
 end
-
-Manifest._getPool = getPool
 
 return Manifest
