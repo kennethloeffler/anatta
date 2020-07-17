@@ -93,13 +93,13 @@ function Match:__call()
 	local pool = self.pool
 
 	for _, id in ipairs(required) do
-		manifest:assigned(id):connect(maybeAdd(manifest, required, forbidden, pool))
+		manifest:added(id):connect(maybeAdd(manifest, required, forbidden, pool))
 		manifest:removed(id):connect(maybeRemove(pool))
 	end
 
 	for _, id in ipairs(forbidden) do
 		manifest:removed(id):connect(maybeAdd(manifest, required, forbidden, pool))
-		manifest:assigned(id):connect(maybeRemove(pool))
+		manifest:added(id):connect(maybeRemove(pool))
 	end
 
 	for _, id in ipairs(self.changed) do

@@ -338,8 +338,8 @@ end
  undefined.
 
 ]]
-function Manifest:assign(entity, id, component)
-	local pool = getPool(self, id)
+function Manifest:add(entity, id, component)
+	local pool = self:_getPool(id)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -364,8 +364,8 @@ end
  assign it and return its value
 
 ]]
-function Manifest:getOrAssign(entity, id, component)
-	local pool = getPool(self, id)
+function Manifest:getOrAdd(entity, id, component)
+	local pool = self:_getPool(id)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
@@ -426,6 +426,7 @@ end
 ]]
 function Manifest:assignOrReplace(entity, id, component)
 	local pool = getPool(self, id)
+function Manifest:addOrReplace(entity, id, component)
 	local index = poolHas(pool, entity)
 
 	if STRICT then
@@ -494,12 +495,12 @@ end
 
 --[[
 
- Return a signal which fires whenever the component type is assigned to
- an entity
+ Return a signal which fires whenever the a component of the given type is
+ added to an entity.
 
 ]]
-function Manifest:assigned(id)
-	return getPool(self, id).onAssign
+function Manifest:added(id)
+	return self:_getPool(id).onAssign
 end
 
 --[[
