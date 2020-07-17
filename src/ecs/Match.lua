@@ -28,8 +28,8 @@ end
 
 local function maybeAdd(manifest, required, forbidden, pool)
 	if #required == 0 and #forbidden == 0 then
-		-- this means the observer is only watching updated components, so it only needs to check that
-		-- it hasn't already captured the entity in question
+		-- the observer is only watching updated components, so it only needs
+		-- to check that it hasn't already captured the entity in question
 		return function(entity)
 			if not has(pool, entity) then
 				insert(pool, entity)
