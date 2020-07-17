@@ -18,15 +18,15 @@ return function()
 		local entity = manifest:create()
 
 		if i % 2 == 0 then
-			manifest:assign(entity, Component1, {})
+			manifest:add(entity, Component1, {})
 		end
 
 		if i % 4 == 0 then
-			manifest:assign(entity, Component2, {})
+			manifest:add(entity, Component2, {})
 		end
 
 		if i % 8 == 0 then
-			manifest:assign(entity, Component3, {})
+			manifest:add(entity, Component3, {})
 		end
 	end
 
@@ -128,9 +128,9 @@ return function()
 		it("should return true if the entity is iterated by the view", function()
 			local entity = manifest:create()
 
-			manifest:assign(entity, Component1, {})
-			manifest:assign(entity, Component2, {})
-			manifest:assign(entity, Component3, {})
+			manifest:add(entity, Component1, {})
+			manifest:add(entity, Component2, {})
+			manifest:add(entity, Component3, {})
 
 			expect(view:has(entity)).to.equal(true)
 		end)
@@ -246,8 +246,8 @@ return function()
 		it("should return true if the entity is iterated by the view", function()
 			local entity = manifest:create()
 
-			manifest:assign(entity, Component1, {})
-			manifest:assign(entity, Component2, {})
+			manifest:add(entity, Component1, {})
+			manifest:add(entity, Component2, {})
 
 			expect(view:has(entity)).to.equal(true)
 		end)
@@ -256,12 +256,12 @@ return function()
 			local entity1 = manifest:create()
 			local entity2 = manifest:create()
 
-			manifest:assign(entity1, Component1, {})
-			manifest:assign(entity1, Component2, {})
-			manifest:assign(entity1, Component3, {})
+			manifest:add(entity1, Component1, {})
+			manifest:add(entity1, Component2, {})
+			manifest:add(entity1, Component3, {})
 
-			manifest:assign(entity2, Component2, {})
-			manifest:assign(entity2, Component3, {})
+			manifest:add(entity2, Component2, {})
+			manifest:add(entity2, Component3, {})
 
 			expect(view:has(entity1)).to.equal(false)
 			expect(view:has(entity2)).to.equal(false)
@@ -329,7 +329,7 @@ return function()
 		it("should return true if the entity has none of the specified components", function()
 			local entity = manifest:create()
 
-			manifest:assign(entity, Component1, {})
+			manifest:add(entity, Component1, {})
 
 			expect(View._doesntHaveExcluded(entity, { Pool2, Pool3 })).to.equal(true)
 		end)
@@ -337,8 +337,8 @@ return function()
 		it("should return false if the entity has any of the specified components", function()
 			local entity = manifest:create()
 
-			manifest:assign(entity, Component1, {})
-			manifest:assign(entity, Component3, {})
+			manifest:add(entity, Component1, {})
+			manifest:add(entity, Component3, {})
 
 			expect(View._doesntHaveExcluded(entity, { Pool1, Pool3 })).to.equal(false)
 		end)
@@ -348,8 +348,8 @@ return function()
 		it("should return false if the entity doesn't have all of the specified components", function()
 			local entity = manifest:create()
 
-			manifest:assign(entity, Component1, {})
-			manifest:assign(entity, Component3, {})
+			manifest:add(entity, Component1, {})
+			manifest:add(entity, Component3, {})
 
 			expect(View._hasIncluded(entity, { Pool1, Pool2 })).to.equal(false)
 		end)
@@ -357,9 +357,9 @@ return function()
 		it("should return true if the entity has all of the specified components", function()
 			local entity = manifest:create()
 
-			manifest:assign(entity, Component1, {})
-			manifest:assign(entity, Component2, {})
-			manifest:assign(entity, Component3, {})
+			manifest:add(entity, Component1, {})
+			manifest:add(entity, Component2, {})
+			manifest:add(entity, Component3, {})
 
 			expect(View._hasIncluded(entity, { Pool1, Pool2, Pool3 })).to.equal(true)
 		end)
@@ -370,9 +370,9 @@ return function()
 			local entity = manifest:create()
 			local componentPack = {}
 
-			local first = manifest:assign(entity, Component1, {})
-			local second = manifest:assign(entity, Component2, {})
-			local third = manifest:assign(entity, Component3, {})
+			local first = manifest:add(entity, Component1, {})
+			local second = manifest:add(entity, Component2, {})
+			local third = manifest:add(entity, Component3, {})
 
 			expect(View._hasIncludedThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(true)
 			expect(componentPack[1]).to.equal(first)
@@ -384,8 +384,8 @@ return function()
 			local entity = manifest:create()
 			local componentPack = {}
 
-			manifest:assign(entity, Component1, {})
-			manifest:assign(entity, Component3, {})
+			manifest:add(entity, Component1, {})
+			manifest:add(entity, Component3, {})
 
 			expect(View._hasIncludedThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(false)
 		end)
@@ -394,10 +394,10 @@ return function()
 			local entity = manifest:create()
 			local componentPack = {}
 
-			local first = manifest:assign(entity, Component1, {})
-			local second = manifest:assign(entity, Component2, {})
+			local first = manifest:add(entity, Component1, {})
+			local second = manifest:add(entity, Component2, {})
 
-			manifest:assign(entity, Tag)
+			manifest:add(entity, Tag)
 
 			expect(View._hasIncludedThenPack(entity, { Pool1, TagPool, Pool2 }, componentPack)).to.equal(true)
 			expect(componentPack[1]).to.equal(first)
