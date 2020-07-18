@@ -304,10 +304,11 @@ end
 
 ]]
 function Manifest:get(entity, id)
-	local pool = self:_getPool(id)
+	local pool = self.pools[id]
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
+		assert(pool, ErrBadComponentId)
 	end
 
 	return poolGet(pool, entity)
@@ -322,11 +323,11 @@ end
 
 ]]
 function Manifest:add(entity, id, component)
-	local pool = self:_getPool(id)
+	local pool = self.pools[id]
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
-
+		assert(pool, ErrBadComponentId)
 		assert(not poolHas(pool, entity), ErrAlreadyHas:format(entity))
 
 		-- just basic type checking for now
@@ -348,10 +349,11 @@ end
 
 ]]
 function Manifest:getOrAdd(entity, id, component)
-	local pool = self:_getPool(id)
+	local pool = self.pools[id]
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
+		assert(pool, ErrBadComponentId)
 		assert(tostring(pool.type) == typeof(component),
 			ErrBadType:format(tostring(pool.type), typeof(component)))
 	end
@@ -378,15 +380,16 @@ end
 
 ]]
 function Manifest:replace(entity, id, component)
-	local pool = self:_getPool(id)
-	local index = poolHas(pool, entity)
+	local pool = self.pools[id]
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
-		assert(index, ErrMissing:format(entity))
+		assert(poolHas(pool, entity), ErrMissing:format(entity))
 		assert(tostring(pool.type) == typeof(component),
 			ErrBadType:format(tostring(pool.type), typeof(component)))
 	end
+
+	local index = poolHas(pool, entity)
 
 	if pool.objects then
 		pool.objects[index] = component
@@ -405,14 +408,16 @@ end
 
 ]]
 function Manifest:addOrReplace(entity, id, component)
-	local pool = self:_getPool(id)
-	local index = poolHas(pool, entity)
+	local pool = self.pools[id]
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
+		assert(pool, ErrBadComponentId)
 		assert(tostring(pool.type) == typeof(component),
 			ErrBadType:format(tostring(pool.type), typeof(component)))
 	end
+
+	local index = poolHas(pool, entity)
 
 	if index then
 		if pool.objects then
@@ -439,11 +444,11 @@ end
 
 ]]
 function Manifest:remove(entity, id)
-	local pool = self:_getPool(id)
+	local pool = self.pools[id]
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
-
+		assert(pool, ErrBadComponentId)
 		assert(poolHas(pool, entity), ErrMissing:format(entity))
 	end
 
@@ -458,11 +463,12 @@ end
 
 ]]
 function Manifest:removeIfHas(entity, id)
+	local pool = self.pools[id]
+
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
+		assert(pool, ErrBadComponentId)
 	end
-
-	local pool = self:_getPool(id)
 
 	if poolHas(pool, entity) then
 		pool.onRemove:dispatch(entity)
@@ -477,7 +483,13 @@ end
 
 ]]
 function Manifest:added(id)
-	return self:_getPool(id).onAssign
+	local pool = self.pools[id]
+
+	if STRICT then
+		assert(pool, ErrBadComponentId)
+	end
+
+	return pool.onAssign
 end
 
 --[[
@@ -487,7 +499,13 @@ end
 
 ]]
 function Manifest:removed(id)
-	return self:_getPool(id).onRemove
+	local pool = self.pools[id]
+
+	if STRICT then
+		assert(pool, ErrBadComponentId)
+	end
+
+	return pool.onRemove
 end
 
 --[[
@@ -499,7 +517,13 @@ end
 
 ]]
 function Manifest:updated(id)
-	return self:_getPool(id).onUpdate
+	local pool = self.pools[id]
+
+	if STRICT then
+		assert(pool, ErrBadComponentId)
+	end
+
+	return pool.onUpdate
 end
 
 --[[
