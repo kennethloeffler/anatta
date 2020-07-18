@@ -17,11 +17,11 @@ local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NULL_ENTITYID = Constants.NULL_ENTITYID
 local STRICT = Constants.STRICT
 
-local ErrAlreadyHas = "entity %06X already has this component type"
+local ErrAlreadyHas = "entity %08X already has this component type"
 local ErrBadComponentId = "invalid component identifier"
-local ErrInvalid = "entity %06X either does not exist or it has been destroyed"
-local ErrMissing = "entity %06X does not have this component type"
 local ErrBadType = "bad component value type: expected %s, got %s"
+local ErrInvalid = "entity %08X either does not exist or it has been destroyed"
+local ErrMissing = "entity %08X does not have this component type"
 
 local poolAssign = Pool.assign
 local poolClear = Pool.clear
