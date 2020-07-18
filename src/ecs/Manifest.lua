@@ -576,7 +576,7 @@ end
 
  Construct and return a view into the manifest.
 
- The view includes entities which have all components of the types given in
+ The view contains entities which have all components of the types given in
  `included` but no components of the types given in the variadic argument.
 
 ]]
