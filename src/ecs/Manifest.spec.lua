@@ -249,34 +249,34 @@ return function()
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function(context)
-               local manifest = context.manifest
-               local ranCallback
+			local manifest = context.manifest
+			local ranCallback
 
-               manifest:added(context.testComponent):connect(function()
-                    ranCallback = true
-               end)
+			manifest:added(context.testComponent):connect(function()
+				ranCallback = true
+			end)
 
-               manifest:add(manifest:create(), context.testComponent, {})
+			manifest:add(manifest:create(), context.testComponent, {})
 			expect(ranCallback).to.equal(true)
 		end)
 
 		it("should return the correct component instance when a recycled entity is used", function(context)
-               local manifest = context.manifest
-               local entity = manifest:create()
+			local manifest = context.manifest
+			local entity = manifest:create()
 
 			manifest:destroy(entity)
 			entity = manifest:create()
 
 			expect(manifest:add(entity, context.testComponent, {}))
-                    .to.equal(manifest:get(entity, context.testComponent))
+				.to.equal(manifest:get(entity, context.testComponent))
 		end)
 
-          it("should correctly handle tag components", function(context)
-               local manifest = context.manifest
-               local entity = manifest:create()
-               local tag = manifest:define(nil, "tag")
+		it("should correctly handle tag components", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+			local tag = manifest:define(nil, "tag")
 
-               manifest:add(entity, tag)
+			manifest:add(entity, tag)
 
                expect(manifest:has(entity, tag)).to.equal(true)
                expect(manifest:get(entity, tag)).to.equal(nil)
