@@ -19,9 +19,9 @@ local STRICT = Constants.STRICT
 
 local ErrAlreadyHas = "entity %08X already has this component type"
 local ErrBadComponentId = "invalid component identifier"
-local ErrBadType = "bad component value type: expected %s, got %s"
 local ErrInvalid = "entity %08X either does not exist or it has been destroyed"
 local ErrMissing = "entity %08X does not have this component type"
+local ErrBadType = "bad component type: expected %s, got %s"
 
 local poolAssign = Pool.assign
 local poolClear = Pool.clear
@@ -63,7 +63,8 @@ end
 ]]
 function Manifest:define(dataType, name)
 	if STRICT then
-		assert(name and type(name) == "string", ("bad argument #2 (expected string, got %s)"):format(type(name)))
+		assert(name and type(name) == "string",
+			("bad argument #2 (expected string, got %s)"):format(type(name)))
 	end
 
 	local id = self.component:generate(name)
@@ -330,7 +331,7 @@ function Manifest:add(entity, id, component)
 
 		-- just basic type checking for now
 		assert(tostring(pool.type) == typeof(component),
-		       ErrBadType:format(pool.type or "nil", typeof(component)))
+			ErrBadType:format(tostring(pool.type), typeof(component)))
 	end
 
 	local obj = poolAssign(pool, entity, component)
@@ -351,9 +352,8 @@ function Manifest:getOrAdd(entity, id, component)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
-
-		assert(pool.type == nil or pool.type == typeof(component),
-		       ErrBadType:format(pool.type or "nil", typeof(component)))
+		assert(tostring(pool.type) == typeof(component),
+			ErrBadType:format(tostring(pool.type), typeof(component)))
 	end
 
 	local exists = poolHas(pool, entity)
@@ -383,11 +383,9 @@ function Manifest:replace(entity, id, component)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
-
-		assert(pool.type == nil or pool.type == typeof(component),
-		       ErrBadType:format(pool.type or "", typeof(component)))
-
 		assert(index, ErrMissing:format(entity))
+		assert(tostring(pool.type) == typeof(component),
+			ErrBadType:format(tostring(pool.type), typeof(component)))
 	end
 
 	if pool.objects then
@@ -412,9 +410,8 @@ function Manifest:addOrReplace(entity, id, component)
 
 	if STRICT then
 		assert(self:valid(entity), ErrInvalid:format(entity))
-
-		assert(pool.type == nil or pool.type == typeof(component),
-		       ErrBadType:format(pool.type or "", typeof(component)))
+		assert(tostring(pool.type) == typeof(component),
+			ErrBadType:format(tostring(pool.type), typeof(component)))
 	end
 
 	if index then
