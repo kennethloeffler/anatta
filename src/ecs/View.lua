@@ -40,7 +40,7 @@ function Multi:forEach(func)
 	local included = self.included
 	local shortestPool = selectShortestPool(included)
 
-	for _, entity in ipairs(shortestPool.internal) do
+	for _, entity in ipairs(shortestPool.dense) do
 		if hasIncludedThenPack(entity, included, pack) then
 			func(entity, unpack(pack))
 		end
@@ -51,7 +51,7 @@ function Multi:forEachEntity(func)
 	local included = self.included
 	local shortestPool = selectShortestPool(included)
 
-	for _, entity in ipairs(shortestPool.internal) do
+	for _, entity in ipairs(shortestPool.dense) do
 		if hasIncluded(entity, included, shortestPool) then
 			func(entity)
 		end
@@ -72,13 +72,13 @@ function Single:forEach(func)
 	local pool = self.included
 	local objs = pool.objects
 
-	for index, entity in ipairs(pool.internal) do
+	for index, entity in ipairs(pool.dense) do
 		func(entity, objs[index])
 	end
 end
 
 function Single:forEachEntity(func)
-	for _, entity in ipairs(self.included.internal) do
+	for _, entity in ipairs(self.included.dense) do
 		func(entity)
 	end
 end
@@ -97,7 +97,7 @@ function MultiWithExcluded:forEach(func)
 	local excluded = self.excluded
 	local shortestPool = selectShortestPool(included)
 
-	for _, entity in ipairs(shortestPool.internal) do
+	for _, entity in ipairs(shortestPool.dense) do
 		if doesntHaveExcluded(entity, excluded) and
 		hasIncludedThenPack(entity, included, pack) then
 			func(entity, unpack(pack))
@@ -111,7 +111,7 @@ function MultiWithExcluded:forEachEntity(func)
 	local excluded = self.excluded
 	local shortestPool = selectShortestPool(included)
 
-	for _, entity in ipairs(shortestPool.internal) do
+	for _, entity in ipairs(shortestPool.dense) do
 		if hasIncluded(entity, included, shortestPool) and
 		doesntHaveExcluded(entity, excluded) then
 			func(entity)
@@ -136,7 +136,7 @@ function SingleWithExcluded:forEach(func)
 	local excluded = self.excluded
 	local objects = included.objects
 
-	for index, entity in ipairs(included.internal) do
+	for index, entity in ipairs(included.dense) do
 		if doesntHaveExcluded(entity, excluded) then
 			func(entity, objects[index])
 		end
@@ -147,7 +147,7 @@ function SingleWithExcluded:forEachEntity(func)
 	local included = self.included
 	local excluded = self.excluded
 
-	for _, entity in ipairs(included.internal) do
+	for _, entity in ipairs(included.dense) do
 		if doesntHaveExcluded(entity, excluded) then
 			func(entity)
 		end

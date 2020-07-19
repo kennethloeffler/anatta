@@ -1,83 +1,91 @@
+local Constants = require(script.Parent.Constants)
 local Signal = require(script.Parent.Parent.core.Signal)
-local SparseSet = require(script.Parent.SparseSet)
 
-local remove = SparseSet.remove
-local insert = SparseSet.insert
-local has = SparseSet.has
+local ENTITYID_MASK = Constants.ENTITYID_MASK
 
 local Pool = {}
-
-Pool.__tostring = function(pool)
-	return pool.name
-end
-
-Pool.has = has
+Pool.__index = Pool
 
 function Pool.new(name, dataType, capacity)
-	local pool = SparseSet.new(capacity)
+	return setmetatable({
+		name = name,
+		underlyingType = dataType,
 
-	if dataType then
-		pool.objects = {} -- table.create(capacity or 0)
-		pool.type = dataType
-	end
+		onAssign = Signal.new(),
+		onRemove = Signal.new(),
+		onUpdate = Signal.new(),
 
-	pool.name = name
-
-	pool.onAssign = Signal.new()
-	pool.onRemove = Signal.new()
-	pool.onUpdate = Signal.new()
-
-	return setmetatable(pool, Pool)
+		size = 0,
+		sparse = {},
+		dense = {},
+		objects = {},
+	}, Pool)
 end
 
-function Pool.get(pool, entity)
-	local index = has(pool, entity)
-	local objects = pool.objects
+function Pool:__tostring()
+	return ("%s: %s"):format(self.name, self.underlyingType)
+end
 
-	if objects and index then
-		return objects[index]
+function Pool:has(entity)
+	local idx = self.sparse[bit32.band(entity, ENTITYID_MASK)]
+
+	return (idx and idx <= self.size) and idx
+end
+
+function Pool:get(entity)
+	local idx = self:has(entity)
+
+	if idx then
+		return self.objects[idx]
 	end
 end
 
-function Pool.assign(pool, entity, object)
-	local size = insert(pool, entity)
+function Pool:assign(entity, object)
+	local size = self.size + 1
 
-	if pool.objects then
-		pool.objects[size] = object
+	self.size = size
+	self.dense[size] = entity
+	self.sparse[bit32.band(entity, ENTITYID_MASK)] = size
+
+	if self.underlyingType then
+		self.objects[size] = object
 
 		return object
 	end
 end
 
-function Pool.destroy(pool, entity)
-	local objects = pool.objects
-	local size = pool.size
-	local index = remove(pool, entity)
+function Pool:destroy(entity)
+	local sparseIdx = bit32.band(entity, ENTITYID_MASK)
+	local denseIdx = self.sparse[sparseIdx]
+	local size = self.size
 
-	if objects then
-		if index < size then
-			objects[index] = objects[size]
-		end
+	self.size = size - 1
 
-		objects[size] = nil
+	if denseIdx < size then
+		local swapped = self.dense[size]
+
+		self.dense[denseIdx] = swapped
+		self.sparse[swapped] = denseIdx
+		self.objects[denseIdx] = self.objects[size]
+
+	else
+		self.dense[denseIdx] = nil
+		self.objects[denseIdx] = nil
 	end
 end
 
-function Pool.clear(pool)
-	local internal = pool.internal
-	local external = pool.external
-	local objects = pool.objects
-
-	if objects then
-		for i, entity in ipairs(pool.internal) do
-			internal[i] = nil
-			external[entity] = nil
-			objects[i] = nil
+function Pool:clear()
+	-- does this pool contain tag components?
+	if self.underlyingType then
+		for i, entity in ipairs(self.sparse) do
+			self.dense[i] = nil
+			self.sparse[entity] = nil
+			self.objects[i] = nil
 		end
 	else
-		for i, entity in ipairs(pool.internal) do
-			internal[i] = nil
-			external[entity] = nil
+		for i, entity in ipairs(self.dense) do
+			self.dense[i] = nil
+			self.sparse[entity] = nil
 		end
 	end
 end

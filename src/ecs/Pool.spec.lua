@@ -10,6 +10,9 @@ return function()
 		it("should return a new empty pool", function()
 			expect(pool).to.be.a("table")
 			expect(next(pool.objects)).to.never.be.ok()
+			expect(next(pool.sparse)).to.never.be.ok()
+			expect(next(pool.dense)).to.never.be.ok()
+			expect(pool.size).to.equal(0)
 		end)
 
 		it("should have lifecycle events", function()
@@ -19,17 +22,12 @@ return function()
 		end)
 
 		it("should be of the correct type", function()
-			expect(pool.type).to.equal(ty)
+			expect(pool.underlyingType).to.equal(ty)
 		end)
 
-		it("should not have .objects when the associated component is empty", function()
+		it("should not have .underlyingType when the associated component is empty", function()
 			pool = Pool.new()
-			expect(pool.objects).to.never.be.ok()
-		end)
-
-		it("should not have a type when the associated component is empty", function()
-			pool = Pool.new()
-			expect(pool.type).to.never.be.ok()
+			expect(pool.underlyingType).to.never.be.ok()
 		end)
 	end)
 
@@ -39,7 +37,7 @@ return function()
 		local pool = Pool.new("testPool", typeof(obj))
 
 		it("should correctly assign a component to an entity", function()
-			local component = Pool.assign(pool, entity, obj)
+			local component = pool:assign(entity, obj)
 			local _, objInPool = next(pool.objects)
 
 			expect(component).to.equal(obj)
@@ -48,7 +46,7 @@ return function()
 
 		it("should return nil when the associated component is empty", function()
 			pool = Pool.new()
-			expect(Pool.assign(pool, entity)).to.never.be.ok()
+			expect(pool:assign(entity)).to.never.be.ok()
 		end)
 	end)
 
@@ -57,15 +55,15 @@ return function()
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 
-		Pool.assign(pool, entity, obj)
+		pool:assign(entity, obj)
 
 		it("should correctly determine if an entity has a component", function()
-			expect(Pool.get(pool, entity)).to.be.ok()
-			expect(Pool.get(pool, manifest:create())).to.never.be.ok()
+			expect(pool:get(entity)).to.be.ok()
+			expect(pool:get(manifest:create())).to.never.be.ok()
 		end)
 
 		it("should return the correct object", function()
-			expect(Pool.get(pool, entity)).to.equal(obj)
+			expect(pool:get(entity)).to.equal(obj)
 		end)
 	end)
 
@@ -75,10 +73,10 @@ return function()
 		local entity = manifest:create()
 
 		it("should correctly remove the component from the pool", function()
-			Pool.assign(pool, entity, obj)
-			Pool.destroy(pool, entity)
+			pool:assign(entity, obj)
+			pool:destroy(entity)
 
-			expect(pool.objects[pool.external[entity]]).to.never.be.ok()
+			expect(pool.objects[pool.sparse[entity]]).to.never.be.ok()
 		end)
 
 		it("should throw when the pool does not contain the component", function()

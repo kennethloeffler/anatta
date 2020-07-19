@@ -3,12 +3,6 @@
   Helper class for observers
 
 ]]
-local SparseSet = require(script.Parent.SparseSet)
-
-local remove = SparseSet.remove
-local insert = SparseSet.insert
-local has = SparseSet.has
-
 local Match = {}
 Match.__index = Match
 
@@ -31,8 +25,8 @@ local function maybeAdd(manifest, required, forbidden, pool)
 		-- the observer is only watching updated components, so it only needs
 		-- to check that it hasn't already captured the entity in question
 		return function(entity)
-			if not has(pool, entity) then
-				insert(pool, entity)
+			if not pool:has(entity) then
+				pool:assign(entity)
 				pool.onAssign:dispatch(entity)
 			end
 		end
@@ -40,8 +34,8 @@ local function maybeAdd(manifest, required, forbidden, pool)
 
 	return function(entity)
 		if manifest:has(entity, unpack(required)) and not manifest:any(entity, unpack(forbidden)) then
-			if not has(pool, entity) then
-				insert(pool, entity)
+			if not pool:has(entity) then
+				pool:assign(entity)
 				pool.onAssign:dispatch(entity)
 			end
 		end
@@ -50,9 +44,9 @@ end
 
 local function maybeRemove(pool)
 	return function(entity)
-		if has(pool, entity) then
+		if pool:has(entity) then
 			pool.onRemove:dispatch(entity)
-			remove(pool, entity)
+			pool:destroy(entity)
 		end
 	end
 end

@@ -71,8 +71,8 @@ return function()
 		local entitiesToIterate = {}
 
 		it("should iterate all entities with at least the specified components", function()
-			for _, entity in ipairs(Pool3.internal) do
-				if Pool1.external[entity] and Pool2.external[entity] then
+			for _, entity in ipairs(Pool3.dense) do
+				if Pool1:has(entity) and Pool2:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
@@ -85,8 +85,8 @@ return function()
 		it("should pass component instances in the order given at the view's construction", function()
 			entitiesToIterate = {}
 
-			for _, entity in ipairs(Pool3.internal) do
-				if Pool1.external[entity] and Pool2.external[entity] then
+			for _, entity in ipairs(Pool3.dense) do
+				if Pool1:has(entity) and Pool2:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
@@ -110,8 +110,8 @@ return function()
 		local entitiesToIterate = {}
 
 		it("should iterate all entities with at least the specified components", function()
-			for _, entity in ipairs(Pool3.internal) do
-				if Pool1.external[entity] and Pool2.external[entity] then
+			for _, entity in ipairs(Pool3.dense) do
+				if Pool1:has(entity) and Pool2:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
@@ -147,7 +147,7 @@ return function()
 		local entitiesToIterate = {}
 
 		it("should iterate all the entities with at least the specified component", function()
-			for _, entity in ipairs(Pool1.internal) do
+			for _, entity in ipairs(Pool1.dense) do
 				entitiesToIterate[entity] = true
 			end
 
@@ -159,7 +159,7 @@ return function()
 		it("should pass the correct component instance", function()
 			entitiesToIterate = {}
 
-			for _, entity in ipairs(Pool1.internal) do
+			for _, entity in ipairs(Pool1.dense) do
 				entitiesToIterate[entity] = true
 			end
 
@@ -176,7 +176,7 @@ return function()
 		local entitiesToIterate = {}
 
 		it("should iterate all the entities with at least the specified component", function()
-			for _, entity in ipairs(Pool1.internal) do
+			for _, entity in ipairs(Pool1.dense) do
 				entitiesToIterate[entity] = true
 			end
 
@@ -191,8 +191,8 @@ return function()
 		local entitiesToIterate = {}
 
 		it("should iterate all the entities with at least the included components and none of the excluded components", function()
-			for _, entity in ipairs(Pool2.internal) do
-				if Pool1.external[entity] and not Pool3.external[entity] then
+			for _, entity in ipairs(Pool2.dense) do
+				if Pool1:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
@@ -205,8 +205,8 @@ return function()
 		it("should pass component instances in the order given at the view's construction", function()
 			entitiesToIterate = {}
 
-			for _, entity in ipairs(Pool2.internal) do
-				if Pool1.external[entity] and not Pool3.external[entity] then
+			for _, entity in ipairs(Pool2.dense) do
+				if Pool1:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
@@ -228,8 +228,8 @@ return function()
 		local entitiesToIterate = {}
 
 		it("should iterate all the entities with at least the included components and none of the excluded components", function()
-			for _, entity in ipairs(Pool2.internal) do
-				if Pool1.external[entity] and not Pool3.external[entity] then
+			for _, entity in ipairs(Pool2.dense) do
+				if Pool1:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
@@ -273,8 +273,8 @@ return function()
 		local entitiesToIterate = {}
 
 		it("should iterate all the entities with at least the included component and none of the excluded components", function()
-			for _, entity in ipairs(Pool1.internal) do
-				if not Pool2.external[entity] and not Pool3.external[entity] then
+			for _, entity in ipairs(Pool1.dense) do
+				if not Pool2:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
@@ -287,8 +287,8 @@ return function()
 		it("should pass the correct component instance", function()
 			entitiesToIterate = {}
 
-			for _, entity in ipairs(Pool1.internal) do
-				if not Pool2.external[entity] and not Pool3.external[entity] then
+			for _, entity in ipairs(Pool1.dense) do
+				if not Pool2:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
@@ -306,8 +306,8 @@ return function()
 		local entitiesToIterate = {}
 
 		it("should iterate all the entities with at least the included component and none of the excluded components", function()
-			for _, entity in ipairs(Pool1.internal) do
-				if not Pool2.external[entity] and not Pool3.external[entity] then
+			for _, entity in ipairs(Pool1.dense) do
+				if not Pool2:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
 				end
 			end
