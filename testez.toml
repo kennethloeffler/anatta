@@ -30,6 +30,14 @@ type = "string"
 required = true
 type = "function"
 
+[[beforeAll.args]]
+required = true
+type = "function"
+
+[[beforeEach.args]]
+required = true
+type = "function"
+
 [FOCUS]
 args = []
 
