@@ -31,7 +31,7 @@ function Manifest.new()
 
 	return setmetatable({
 		size = 0,
-		head = NULL_ENTITYID,
+		nextRecyclable = NULL_ENTITYID,
 		entities = {},
 		pools = {},
 		component = ident,
@@ -106,27 +106,25 @@ end
 
 ]]
 function Manifest:create()
-	local entities = self.entities
-	local entityId = self.head
+	local entityId = self.nextRecyclable
 
-     -- are there any recyclable entity ids?
 	if entityId == NULL_ENTITYID then
 		entityId = self.size + 1
 		self.size = entityId
-		entities[entityId] = entityId
+		self.entities[entityId] = entityId
 
 		return entityId
+	else
+		local identifier = self.entities[entityId]
+		local recycled = bit32.bor(
+			entityId,
+			bit32.lshift(bit32.rshift(identifier, ENTITYID_WIDTH), ENTITYID_WIDTH))
+
+		self.nextRecyclable = bit32.band(identifier, ENTITYID_MASK)
+		self.entities[entityId] = recycled
+
+		return recycled
 	end
-
-	local identifier = entities[entityId]
-	local recycled = bit32.bor(
-		entityId,
-		bit32.lshift(bit32.rshift(identifier, ENTITYID_WIDTH), ENTITYID_WIDTH))
-
-	self.head = bit32.band(identifier, ENTITYID_MASK)
-	entities[entityId] = recycled
-
-	return recycled
 end
 
 --[[
@@ -139,34 +137,33 @@ end
 
 ]]
 function Manifest:createFrom(hint)
-	local entityId = bit32.band(hint, ENTITYID_MASK)
+	local hintId = bit32.band(hint, ENTITYID_MASK)
 	local entities = self.entities
-	local currEntity = entities[entityId]
-	local currEntityId = currEntity and bit32.band(currEntity, ENTITYID_MASK)
+	local existingEntity = entities[hintId]
+	local existingEntityId = existingEntity and bit32.band(existingEntity, ENTITYID_MASK)
 
-	if not currEntity then
-		for i = self.size + 1, entityId - 1  do
-			entities[i] = self.head
-			self.head = i
+	if not existingEntity then
+		for id = self.size + 1, hintId - 1  do
+			entities[id] = self.nextRecyclable
+			self.nextRecyclable = id
 		end
 
-		entities[entityId] = hint
+		entities[hintId] = hint
 
 		return hint
-	elseif currEntityId == entityId then
+	elseif existingEntityId == hintId then
 		return self:create()
 	else
-		local currId = self.head
+		local nextRecyclable = self.nextRecylable
 
-		while currId ~= entityId do
-			currId = bit32.band(entities[currId], ENTITYID_MASK)
+		while nextRecyclable ~= hintId do
+			nextRecyclable = bit32.band(entities[nextRecyclable], ENTITYID_MASK)
 		end
 
-		entities[currId] = bit32.bor(
-			currEntityId,
-			bit32.lshift(bit32.rshift(entities[currId], ENTITYID_WIDTH), ENTITYID_WIDTH))
-
-		entities[entityId] = hint
+		entities[nextRecyclable] = bit32.bor(
+			existingEntityId,
+			bit32.lshift(bit32.rshift(entities[nextRecyclable], ENTITYID_WIDTH), ENTITYID_WIDTH))
+		entities[hintId] = hint
 
 		return hint
 	end
@@ -194,10 +191,10 @@ function Manifest:destroy(entity)
 	-- push this id onto the stack so that it can be reused, and increment the
 	-- identifier's version part to avoid possible collision
 	self.entities[entityId] = bit32.bor(
-		self.head,
+		self.nextRecyclable,
 		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH))
 
-	self.head = entityId
+	self.nextRecyclable = entityId
 end
 
 --[[
@@ -536,7 +533,7 @@ end
 ]]
 function Manifest:numEntities()
 	local entities = self.entities
-	local curr = self.head
+	local curr = self.nextRecyclable
 	local size = self.size
 
 	while curr ~= NULL_ENTITYID do
@@ -553,7 +550,7 @@ end
 
 ]]
 function Manifest:forEach(func)
-	if self.head == NULL_ENTITYID then
+	if self.nextRecyclable == NULL_ENTITYID then
 		for _, entity in ipairs(self.entities) do
 			func(entity)
 		end

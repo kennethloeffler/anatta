@@ -15,7 +15,7 @@ return function()
                local manifest = Manifest.new()
 
 			expect(manifest.size).to.equal(0)
-			expect(manifest.head).to.equal(0)
+			expect(manifest.nextRecyclable).to.equal(Constants.NULL_ENTITYID)
 			expect(#manifest.entities).to.equal(0)
 			expect(#manifest.pools).to.equal(0)
 			expect(#manifest.component).to.equal(0)
