@@ -9,7 +9,7 @@
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 local Identify = require(script.Parent.Parent.core.Identify)
-local Match = require(script.Parent.Match)
+local Observer = require(script.Parent.Observer)
 local View = require(script.Parent.View)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
@@ -80,7 +80,8 @@ end
 	local updatedPositions = manifest:observe("updatedPositions"):updated(position)()
 
 	-- elsewhere...
-	local view = manifest:view{ manifest.observer:named("updatedPositions") }
+	local updatedPositions = manifest.observer:named("updatedPositions")
+	local view = manifest:view():all(updatedPositions)()
 
 	view:forEachEntity(function(entity)
 		...
@@ -93,11 +94,11 @@ end
 function Manifest:observe(name)
 	local id = self.observer:generate(name)
 	local pool = Pool.new(name)
-	local match = Match.new(self, id, pool)
+	local observer = Observer.new(self, id, pool)
 
 	self.pools[id] = pool
 
-	return match
+	return observer
 end
 
 --[[
@@ -571,20 +572,8 @@ end
  `included` but no components of the types given in the variadic argument.
 
 ]]
-function Manifest:view(included, ...)
-	local excluded = select("#", ...) > 0 and { ... } or nil
-
-	for i, id in ipairs(included) do
-		included[i] = self:_getPool(id)
-	end
-
-	if excluded then
-		for i, id in ipairs(excluded) do
-			excluded[i] = self:_getPool(id)
-		end
-	end
-
-	return View.new(included, excluded)
+function Manifest:view()
+	return View.new(self)
 end
 
 function Manifest:_getPool(id)

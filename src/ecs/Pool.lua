@@ -23,7 +23,7 @@ function Pool.new(name, dataType, capacity)
 end
 
 function Pool:__tostring()
-	return ("%s: %s"):format(self.name, self.underlyingType)
+	return ("%s"):format(self.name)
 end
 
 function Pool:has(entity)

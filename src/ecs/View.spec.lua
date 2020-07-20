@@ -9,10 +9,10 @@ return function()
 	local Component3 = manifest:define("table", "Test3")
 	local Tag = manifest:define(nil, "tagComponent")
 
-	local TagPool = Manifest._getPool(manifest, Tag)
-	local Pool1 = Manifest._getPool(manifest, Component1)
-	local Pool2 = Manifest._getPool(manifest, Component2)
-	local Pool3 = Manifest._getPool(manifest, Component3)
+	local TagPool = manifest:_getPool(Tag)
+	local Pool1 = manifest:_getPool(Component1)
+	local Pool2 = manifest:_getPool(Component2)
+	local Pool3 = manifest:_getPool(Component3)
 
 	for i = 1, 100 do
 		local entity = manifest:create()
@@ -31,43 +31,43 @@ return function()
 	end
 
 	describe("new", function()
-		it("should construct a single-component view when there is one included component and no excluded components", function()
-			local view = View.new({ Pool1 })
+		it("should construct a single-component view when there is one required component and no forbidden components", function()
+			local view = View.new(manifest):all(Component1)()
 
 			expect(getmetatable(view)).to.equal(View._singleMt)
-			expect(view.included).to.equal(Pool1)
-			expect(view.excluded).to.never.be.ok()
+			expect(view.required[1]).to.equal(Pool1)
+			expect(next(view.forbidden)).to.never.be.ok()
 		end)
 
-		it("should construct a single-component view with exclusion list when there is one included component and one or more excluded components", function()
-			local view = View.new({ Pool1 }, { Pool3 })
+		it("should construct a single-component view with exclusion list when there is one required component and one or more forbidden components", function()
+			local view = View.new(manifest):all(Component1):except(Component3)()
 
 			expect(getmetatable(view)).to.equal(View._singleWithExclMt)
-			expect(view.included).to.equal(Pool1)
-			expect(view.excluded[1]).to.equal(Pool3)
+			expect(view.required[1]).to.equal(Pool1)
+			expect(view.forbidden[1]).to.equal(Pool3)
 		end)
 
-		it("should construct a multi-component view when there are multiple included components and no excluded components", function()
-			local view = View.new({ Pool1, Pool2 })
+		it("should construct a multi-component view when there are multiple required components and no forbidden components", function()
+			local view = View.new(manifest):all(Component1, Component2)()
 
 			expect(getmetatable(view)).to.equal(View._multiMt)
-			expect(view.included[1]).to.equal(Pool1)
-			expect(view.included[2]).to.equal(Pool2)
-			expect(view.excluded).to.never.be.ok()
+			expect(view.required[1]).to.equal(Pool1)
+			expect(view.required[2]).to.equal(Pool2)
+			expect(next(view.forbidden)).to.never.be.ok()
 		end)
 
-		it("should construct a multi-component view with exclusion list when there are multiple included components and one or more excluded components", function()
-			local view = View.new({ Pool1, Pool2 }, { Pool3 })
+		it("should construct a multi-component view with exclusion list when there are multiple required components and one or more forbidden components", function()
+			local view = View.new(manifest):all(Component1, Component2):except(Component3)()
 
 			expect(getmetatable(view)).to.equal(View._multiWithExclMt)
-			expect(view.included[1]).to.equal(Pool1)
-			expect(view.included[2]).to.equal(Pool2)
-			expect(view.excluded[1]).to.equal(Pool3)
+			expect(view.required[1]).to.equal(Pool1)
+			expect(view.required[2]).to.equal(Pool2)
+			expect(view.forbidden[1]).to.equal(Pool3)
 		end)
 	end)
 
 	describe("forEach (multi-component)", function()
-		local view = View.new( { Pool1, Pool2, Pool3 })
+		local view = View.new(manifest):all(Component1, Component2, Component3)()
 		local entitiesToIterate = {}
 
 		it("should iterate all entities with at least the specified components", function()
@@ -106,7 +106,7 @@ return function()
 	end)
 
 	describe("forEachEntity (multi-component)", function()
-		local view = View.new( { Pool1, Pool2, Pool3 })
+		local view = View.new(manifest):all(Component1, Component2, Component3)()
 		local entitiesToIterate = {}
 
 		it("should iterate all entities with at least the specified components", function()
@@ -123,7 +123,7 @@ return function()
 	end)
 
 	describe("has (multi-component)", function()
-		local view = View.new( { Pool1, Pool2, Pool3 })
+		local view = View.new(manifest):all(Component1, Component2, Component3)()
 
 		it("should return true if the entity is iterated by the view", function()
 			local entity = manifest:create()
@@ -143,7 +143,7 @@ return function()
 	end)
 
 	describe("forEach (single-component)", function()
-		local view = View.new({ Pool1 })
+		local view = View.new(manifest):all(Component1)()
 		local entitiesToIterate = {}
 
 		it("should iterate all the entities with at least the specified component", function()
@@ -172,7 +172,7 @@ return function()
 	end)
 
 	describe("forEachEntity (single-component)", function()
-		local view = View.new({ Pool1 })
+		local view = View.new(manifest):all(Component1)()
 		local entitiesToIterate = {}
 
 		it("should iterate all the entities with at least the specified component", function()
@@ -187,10 +187,10 @@ return function()
 	end)
 
 	describe("forEach (multi-component with exlcusion list)", function()
-		local view = View.new({ Pool2, Pool1 }, { Pool3 })
+		local view = View.new(manifest):all(Component2, Component1):except(Component3)()
 		local entitiesToIterate = {}
 
-		it("should iterate all the entities with at least the included components and none of the excluded components", function()
+		it("should iterate all the entities with at least the required components and none of the forbidden components", function()
 			for _, entity in ipairs(Pool2.dense) do
 				if Pool1:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
@@ -224,10 +224,10 @@ return function()
 	end)
 
 	describe("forEachEntity (multi-component with exclusion list)", function()
-		local view = View.new({ Pool1, Pool2 }, { Pool3 })
+		local view = View.new(manifest):all(Component1, Component2):except(Component3)()
 		local entitiesToIterate = {}
 
-		it("should iterate all the entities with at least the included components and none of the excluded components", function()
+		it("should iterate all the entities with at least the required components and none of the forbidden components", function()
 			for _, entity in ipairs(Pool2.dense) do
 				if Pool1:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
@@ -241,7 +241,7 @@ return function()
 	end)
 
 	describe("has (multi-component with exlcusion list)", function()
-		local view = View.new({ Pool1, Pool2 }, { Pool3 })
+		local view = View.new(manifest):all(Component1, Component2):except(Component3)()
 
 		it("should return true if the entity is iterated by the view", function()
 			local entity = manifest:create()
@@ -269,10 +269,10 @@ return function()
 	end)
 
 	describe("forEach (single-component with exclusion list)", function()
-		local view = View.new({ Pool1 }, { Pool2, Pool3 })
+		local view = View.new(manifest):all(Component1):except(Component3, Component2)()
 		local entitiesToIterate = {}
 
-		it("should iterate all the entities with at least the included component and none of the excluded components", function()
+		it("should iterate all the entities with at least the required component and none of the forbidden components", function()
 			for _, entity in ipairs(Pool1.dense) do
 				if not Pool2:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
@@ -302,10 +302,10 @@ return function()
 	end)
 
 	describe("forEachEntity (single-component with exclusion list)", function()
-		local view = View.new({ Pool1 }, { Pool2, Pool3 })
+		local view = View.new(manifest):all(Component1):except(Component3, Component2)()
 		local entitiesToIterate = {}
 
-		it("should iterate all the entities with at least the included component and none of the excluded components", function()
+		it("should iterate all the entities with at least the required component and none of the forbidden components", function()
 			for _, entity in ipairs(Pool1.dense) do
 				if not Pool2:has(entity) and not Pool3:has(entity) then
 					entitiesToIterate[entity] = true
@@ -325,13 +325,13 @@ return function()
 		end)
 	end)
 
-	describe("doesntHaveExcluded", function()
+	describe("doesntHaveForbidden", function()
 		it("should return true if the entity has none of the specified components", function()
 			local entity = manifest:create()
 
 			manifest:add(entity, Component1, {})
 
-			expect(View._doesntHaveExcluded(entity, { Pool2, Pool3 })).to.equal(true)
+			expect(View._doesntHaveForbidden(entity, { Pool2, Pool3 })).to.equal(true)
 		end)
 
 		it("should return false if the entity has any of the specified components", function()
@@ -340,18 +340,18 @@ return function()
 			manifest:add(entity, Component1, {})
 			manifest:add(entity, Component3, {})
 
-			expect(View._doesntHaveExcluded(entity, { Pool1, Pool3 })).to.equal(false)
+			expect(View._doesntHaveForbidden(entity, { Pool1, Pool3 })).to.equal(false)
 		end)
 	end)
 
-	describe("hasIncluded", function()
+	describe("hasRequired", function()
 		it("should return false if the entity doesn't have all of the specified components", function()
 			local entity = manifest:create()
 
 			manifest:add(entity, Component1, {})
-			manifest:add(entity, Component3, {})
+ manifest:add(entity, Component3, {})
 
-			expect(View._hasIncluded(entity, { Pool1, Pool2 })).to.equal(false)
+			expect(View._hasRequired(entity, { Pool1, Pool2 })).to.equal(false)
 		end)
 
 		it("should return true if the entity has all of the specified components", function()
@@ -361,11 +361,11 @@ return function()
 			manifest:add(entity, Component2, {})
 			manifest:add(entity, Component3, {})
 
-			expect(View._hasIncluded(entity, { Pool1, Pool2, Pool3 })).to.equal(true)
+			expect(View._hasRequired(entity, { Pool1, Pool2, Pool3 })).to.equal(true)
 		end)
 	end)
 
-	describe("hasIncludedThenPack", function()
+	describe("hasRequiredThenPack", function()
 		it("should return true and correctly populate the component pack if the entity has all of the specified components", function()
 			local entity = manifest:create()
 			local componentPack = {}
@@ -374,7 +374,7 @@ return function()
 			local second = manifest:add(entity, Component2, {})
 			local third = manifest:add(entity, Component3, {})
 
-			expect(View._hasIncludedThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(true)
+			expect(View._hasRequiredThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(true)
 			expect(componentPack[1]).to.equal(first)
 			expect(componentPack[2]).to.equal(second)
 			expect(componentPack[3]).to.equal(third)
@@ -387,7 +387,7 @@ return function()
 			manifest:add(entity, Component1, {})
 			manifest:add(entity, Component3, {})
 
-			expect(View._hasIncludedThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(false)
+			expect(View._hasRequiredThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(false)
 		end)
 
 		it("should properly handle tag components", function()
@@ -399,7 +399,7 @@ return function()
 
 			manifest:add(entity, Tag)
 
-			expect(View._hasIncludedThenPack(entity, { Pool1, TagPool, Pool2 }, componentPack)).to.equal(true)
+			expect(View._hasRequiredThenPack(entity, { Pool1, TagPool, Pool2 }, componentPack)).to.equal(true)
 			expect(componentPack[1]).to.equal(first)
 			expect(componentPack[2]).to.equal(nil)
 			expect(componentPack[3]).to.equal(second)

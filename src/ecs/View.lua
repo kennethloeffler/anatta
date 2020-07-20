@@ -1,66 +1,80 @@
-local Constants = require(script.Parent.Constants)
-local Pool = require(script.Parent.Pool)
+local Matcher = require(script.Parent.Matcher)
 
 local View = {}
+View.__index = Matcher
 
 local Multi = {}
 Multi.__index = Multi
 
-local MultiWithExcluded = {}
-MultiWithExcluded.__index = MultiWithExcluded
+local MultiWithForbidden = {}
+MultiWithForbidden.__index = MultiWithForbidden
 
 local Single = {}
 Single.__index = Single
 
-local SingleWithExcluded = {}
-SingleWithExcluded.__index = SingleWithExcluded
+local SingleWithForbidden = {}
+SingleWithForbidden.__index = SingleWithForbidden
 
 local selectShortestPool
-local hasIncluded
-local doesntHaveExcluded
-local hasIncludedThenPack
+local hasRequired
+local doesntHaveForbidden
+local hasRequiredThenPack
 
-local has = Pool.has
+function View.new(manifest)
+	local view = Matcher.new()
 
-function View.new(included, excluded)
-	local numIncluded = #included
-	local viewKind = numIncluded == 1
-		and (excluded and SingleWithExcluded or Single)
-		or (excluded and MultiWithExcluded or Multi)
+	view.manifest = manifest
 
-	return setmetatable({
-		included = numIncluded > 1 and included or included[1],
-		excluded = excluded,
-		componentPack = {} -- table.create(numIncluded)
-	}, viewKind)
+	return setmetatable(view, View)
+end
+
+function View:__call()
+	local numRequired = #self.required
+	local forbidden = #self.forbidden > 0
+
+	local viewKind = numRequired == 1
+		and (forbidden and SingleWithForbidden or Single)
+		or (forbidden and MultiWithForbidden or Multi)
+
+	self.componentPack = table.create and table.create(numRequired) or {}
+
+	for i, id in ipairs(self.required) do
+		self.required[i] = self.manifest:_getPool(id)
+	end
+
+	for i, id in ipairs(self.forbidden) do
+		self.forbidden[i] = self.manifest:_getPool(id)
+	end
+
+	return setmetatable(self, viewKind)
 end
 
 function Multi:forEach(func)
 	local pack = self.componentPack
-	local included = self.included
-	local shortestPool = selectShortestPool(included)
+	local required = self.required
+	local shortestPool = selectShortestPool(required)
 
 	for _, entity in ipairs(shortestPool.dense) do
-		if hasIncludedThenPack(entity, included, pack) then
+		if hasRequiredThenPack(entity, required, pack) then
 			func(entity, unpack(pack))
 		end
 	end
 end
 
 function Multi:forEachEntity(func)
-	local included = self.included
-	local shortestPool = selectShortestPool(included)
+	local required = self.required
+	local shortestPool = selectShortestPool(required)
 
 	for _, entity in ipairs(shortestPool.dense) do
-		if hasIncluded(entity, included, shortestPool) then
+		if hasRequired(entity, required, shortestPool) then
 			func(entity)
 		end
 	end
 end
 
 function Multi:has(entity)
-	for _, pool in ipairs(self.included) do
-		if not has(pool, entity) then
+	for _, pool in ipairs(self.required) do
+		if not pool:has(entity) then
 			return false
 		end
 	end
@@ -69,7 +83,7 @@ function Multi:has(entity)
 end
 
 function Single:forEach(func)
-	local pool = self.included
+	local pool = self.required[1]
 	local objs = pool.objects
 
 	for index, entity in ipairs(pool.dense) do
@@ -78,52 +92,43 @@ function Single:forEach(func)
 end
 
 function Single:forEachEntity(func)
-	for _, entity in ipairs(self.included.dense) do
+	for _, entity in ipairs(self.required[1].dense) do
 		func(entity)
 	end
 end
 
---[[
-
- For each entity in the view, call the function FUNC; the entity
- followed by the components specified by the view are passed as
- arguments. the order of the parameterized components with respect to
- each other is the same as their order in the view's contructor
-
-]]
-function MultiWithExcluded:forEach(func)
+function MultiWithForbidden:forEach(func)
 	local pack = self.componentPack
-	local included = self.included
-	local excluded = self.excluded
-	local shortestPool = selectShortestPool(included)
+	local required = self.required
+	local forbidden = self.forbidden
+	local shortestPool = selectShortestPool(required)
 
 	for _, entity in ipairs(shortestPool.dense) do
-		if doesntHaveExcluded(entity, excluded) and
-		hasIncludedThenPack(entity, included, pack) then
+		if doesntHaveForbidden(entity, forbidden) and
+		hasRequiredThenPack(entity, required, pack) then
 			func(entity, unpack(pack))
 		end
 	end
 end
 
--- same as above, but only pass the entity
-function MultiWithExcluded:forEachEntity(func)
-	local included = self.included
-	local excluded = self.excluded
-	local shortestPool = selectShortestPool(included)
+function MultiWithForbidden:forEachEntity(func)
+	local required = self.required
+	local forbidden = self.forbidden
+	local shortestPool = selectShortestPool(required)
 
 	for _, entity in ipairs(shortestPool.dense) do
-		if hasIncluded(entity, included, shortestPool) and
-		doesntHaveExcluded(entity, excluded) then
+		if hasRequired(entity, required, shortestPool) and
+		doesntHaveForbidden(entity, forbidden) then
 			func(entity)
 		end
 	end
 end
 
-function MultiWithExcluded:has(entity)
-	local excluded = self.excluded
+function MultiWithForbidden:has(entity)
+	local forbidden = self.forbidden
 
-	for _, pool in ipairs(self.included) do
-		if not has(pool, entity) or not doesntHaveExcluded(entity, excluded) then
+	for _, pool in ipairs(self.required) do
+		if not pool:has(entity) or not doesntHaveForbidden(entity, forbidden) then
 			return false
 		end
 	end
@@ -131,33 +136,33 @@ function MultiWithExcluded:has(entity)
 	return true
 end
 
-function SingleWithExcluded:forEach(func)
-	local included = self.included
-	local excluded = self.excluded
-	local objects = included.objects
+function SingleWithForbidden:forEach(func)
+	local required = self.required[1]
+	local forbidden = self.forbidden
+	local objects = required.objects
 
-	for index, entity in ipairs(included.dense) do
-		if doesntHaveExcluded(entity, excluded) then
+	for index, entity in ipairs(required.dense) do
+		if doesntHaveForbidden(entity, forbidden) then
 			func(entity, objects[index])
 		end
 	end
 end
 
-function SingleWithExcluded:forEachEntity(func)
-	local included = self.included
-	local excluded = self.excluded
+function SingleWithForbidden:forEachEntity(func)
+	local required = self.required[1]
+	local forbidden = self.forbidden
 
-	for _, entity in ipairs(included.dense) do
-		if doesntHaveExcluded(entity, excluded) then
+	for _, entity in ipairs(required.dense) do
+		if doesntHaveForbidden(entity, forbidden) then
 			func(entity)
 		end
 	end
 end
 
-function SingleWithExcluded:has(entity)
-	local excluded = self.excluded
+function SingleWithForbidden:has(entity)
+	local forbidden = self.forbidden
 
-	return has(self.included, entity) and doesntHaveExcluded(entity, excluded)
+	return self.required:has(entity) and doesntHaveForbidden(entity, forbidden)
 end
 
 selectShortestPool = function(pools)
@@ -172,9 +177,9 @@ selectShortestPool = function(pools)
 	return candidate
 end
 
-doesntHaveExcluded = function(entity, excluded)
-	for _, pool in ipairs(excluded) do
-		if has(pool, entity) then
+doesntHaveForbidden = function(entity, forbidden)
+	for _, pool in ipairs(forbidden) do
+		if pool:has(entity) then
 			return false
 		end
 	end
@@ -182,9 +187,9 @@ doesntHaveExcluded = function(entity, excluded)
 	return true
 end
 
-hasIncluded = function(entity, included)
-	for _, includedPool in ipairs(included) do
-		if not has(includedPool, entity) then
+hasRequired = function(entity, required)
+	for _, requiredPool in ipairs(required) do
+		if not requiredPool:has(entity) then
 			return false
 		end
 	end
@@ -192,32 +197,30 @@ hasIncluded = function(entity, included)
 	return true
 end
 
-hasIncludedThenPack = function(entity, included, pack)
+hasRequiredThenPack = function(entity, required, pack)
 	local index
 
-	for i, includedPool in ipairs(included) do
-		index = has(includedPool, entity)
+	for i, requiredPool in ipairs(required) do
+		index = requiredPool:has(entity)
 
 		if not index then
 			return false
 		end
 
-		pack[i] = includedPool.objects and includedPool.objects[index]
+		pack[i] = requiredPool.objects and requiredPool.objects[index]
 	end
 
 	return true
 end
 
-if Constants.STRICT then
-	View._singleMt = Single
-	View._singleWithExclMt = SingleWithExcluded
-	View._multiMt = Multi
-	View._multiWithExclMt = MultiWithExcluded
+View._singleMt = Single
+View._singleWithExclMt = SingleWithForbidden
+View._multiMt = Multi
+View._multiWithExclMt = MultiWithForbidden
 
-	View._selectShortestPool = selectShortestPool
-	View._doesntHaveExcluded = doesntHaveExcluded
-	View._hasIncluded = hasIncluded
-	View._hasIncludedThenPack = hasIncludedThenPack
-end
+View._selectShortestPool = selectShortestPool
+View._doesntHaveForbidden = doesntHaveForbidden
+View._hasRequired = hasRequired
+View._hasRequiredThenPack = hasRequiredThenPack
 
 return View

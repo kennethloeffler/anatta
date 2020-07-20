@@ -1,29 +1,13 @@
---[[
+local Matcher = require(script.Parent.Matcher)
 
-  Helper class for observers
-
-]]
-local Match = {}
-Match.__index = Match
-
-local move = table.move
-	and table.move
-	or function(t1, f, e, t, t2)
-		for i = f, e do
-			t2[t] = t1[i]
-			t = t + 1
-		end
-		return t2
-	end
-
-local function append(source, destination)
-	move(source, 1, #source, #destination + 1, destination)
-end
+local Observer = {}
+Observer.__index = Matcher
 
 local function maybeAdd(manifest, required, forbidden, pool)
+	-- is this observer only watching components that have been updated? if so,
+	-- we can just ensure that we haven't already captured this entity and skip
+	-- checks for required and forbidden components
 	if #required == 0 and #forbidden == 0 then
-		-- the observer is only watching updated components, so it only needs
-		-- to check that it hasn't already captured the entity in question
 		return function(entity)
 			if not pool:has(entity) then
 				pool:assign(entity)
@@ -51,36 +35,17 @@ local function maybeRemove(pool)
 	end
 end
 
-function Match.new(manifest, id, pool)
-	return setmetatable({
-		manifest = manifest,
-		id = id,
-		pool = pool,
-		required = {},
-		forbidden = {},
-		changed = {}
-	}, Match)
+function Observer.new(manifest, id, pool)
+	local observer = Matcher.new()
+
+	observer.manifest = manifest
+	observer.id = id
+	observer.pool = pool
+
+	return setmetatable(observer, Observer)
 end
 
-function Match:all(...)
-	append({ ... }, self.required)
-
-	return self
-end
-
-function Match:except(...)
-	append({ ... }, self.forbidden)
-
-	return self
-end
-
-function Match:updated(...)
-	append({ ... }, self.changed)
-
-	return self
-end
-
-function Match:__call()
+function Observer:__call()
 	local required = self.required
 	local forbidden = self.forbidden
 	local manifest = self.manifest
@@ -104,4 +69,4 @@ function Match:__call()
 	return self.id
 end
 
-return Match
+return Observer

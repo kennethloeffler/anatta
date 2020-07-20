@@ -446,6 +446,9 @@ return function()
                local view = context.manifest:view({ context.testComponent })
 
 			expect(view).to.be.ok()
+
+			view()
+
 			expect(view.componentPack).to.be.ok()
 		end)
 	end)
