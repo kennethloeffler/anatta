@@ -260,7 +260,7 @@ function Manifest:has(entity, ...)
 	end
 
 	for i = 1, select("#", ...) do
-		if not (self.pools[select(i, ...)]):has(entity) then
+		if not self.pools[select(i, ...)]:has(entity) then
 			return false
 		end
 	end
@@ -280,7 +280,7 @@ function Manifest:any(entity, ...)
 	end
 
 	for i = 1, select("#", ...) do
-		if (self.pools[select(i, ...)]):has(entity) then
+		if self.pools[select(i, ...)]:has(entity) then
 			return true
 		end
 	end
@@ -523,7 +523,7 @@ end
 
 ]]
 function Manifest:clear(id)
-	(self:_getPool(id)):clear()
+	self:_getPool(id):clear()
 end
 
 --[[
