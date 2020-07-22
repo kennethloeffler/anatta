@@ -72,8 +72,7 @@ end
 
  Register an observer on the manifest and return its handle.
 
- Observer handles may be retrieved and used similarly to component
- type handles:
+ Observer handles may be retrieved and used similarly to component type handles:
 
 	-- someplace...
 	local position = manifest.component:named("position")
@@ -87,8 +86,8 @@ end
 		...
 	end)
 
- Observer names and component type names may not overlap per-manifest.
- An error will be raised if a name is already in use.
+ Observer names and component type names may not overlap per-manifest.  An error
+ will be raised if a name is already in use.
 
 ]]
 function Manifest:observe(name)
@@ -131,11 +130,11 @@ end
 
 --[[
 
- Return a valid entity identifier equal to the supplied "hint"
- identifier if possible.
+ Return a valid entity identifier equal to the supplied "hint" identifier if
+ possible.
 
- An identifier equal to hint is returned if and only if hint's id is
- not in use by the manifest.
+ An identifier equal to hint is returned if and only if hint's id is not in use
+ by the manifest.
 
 ]]
 function Manifest:createFrom(hint)
@@ -190,8 +189,8 @@ function Manifest:destroy(entity)
 		end
 	end
 
-	-- push this id onto the stack so that it can be reused, and increment the
-	-- identifier's version part to avoid possible collision
+	-- push this id onto the stack so that it can be recycled, and increment
+	-- the identifier's version to avoid possible collision
 	self.entities[entityId] = bit32.bor(
 		self.nextRecyclable,
 		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH))
@@ -471,8 +470,8 @@ end
 
 --[[
 
- Return a signal which fires whenever the a component of the given type is
- added to an entity.
+ Return a signal which fires whenever the a component of the given type is added
+ to an entity.
 
 ]]
 function Manifest:added(id)
@@ -567,10 +566,7 @@ end
 
 --[[
 
- Construct and return a view into the manifest.
-
- The view contains entities which have all components of the types given in
- `included` but no components of the types given in the variadic argument.
+ Construct and return a view into the manifest (see ./View.lua).
 
 ]]
 function Manifest:view()
