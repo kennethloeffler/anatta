@@ -237,19 +237,24 @@ return function()
 	end)
 
 	describe("has", function()
-		it("should return false if the entity does not have the component", function(context)
+		it("should return false if the entity does not have the components", function(context)
                local manifest = context.manifest
                local entity = manifest:create()
+			local testComponent2 = manifest:define(nil, "testComponent2")
 
-			expect(manifest:has(entity, context.testComponent)).to.equal(false)
+			expect(manifest:has(entity, context.testComponent, testComponent2)).to.equal(false)
 		end)
 
-		it("should return true if the entity has the component", function(context)
+		it("should return true if the entity has the components", function(context)
                local manifest = context.manifest
                local entity = manifest:create()
+			local testComponent2 = manifest:define(nil, "testComponent2")
 
 			manifest:add(entity, context.testComponent, {})
-			expect(manifest:has(entity, context.testComponent)).to.equal(true)
+			manifest:add(entity, testComponent2)
+			expect(manifest:has(entity, context.testComponent, testComponent2)).to.equal(true)
+		end)
+	end)
 		end)
 	end)
 
