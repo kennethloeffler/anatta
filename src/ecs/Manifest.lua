@@ -155,7 +155,7 @@ function Manifest:createFrom(hint)
 	elseif existingEntityId == hintId then
 		return self:create()
 	else
-		local nextRecyclable = self.nextRecylable
+		local nextRecyclable = self.nextRecyclable
 
 		while nextRecyclable ~= hintId do
 			nextRecyclable = bit32.band(entities[nextRecyclable], ENTITYID_MASK)

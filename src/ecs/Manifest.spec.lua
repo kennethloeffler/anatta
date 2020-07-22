@@ -1,6 +1,5 @@
 local Constants = require(script.Parent.Constants)
 local Manifest = require(script.Parent.Manifest)
-local Pool = require(script.Parent.Pool)
 
 return function()
      beforeEach(function(context)
@@ -131,6 +130,39 @@ return function()
 			local entity = context.manifest:create()
 
 			expect(context.manifest:valid(entity)).to.equal(true)
+		end)
+	end)
+
+	describe("createFrom", function()
+		local numEntities = 100
+
+		it("should return an entity identifier equal to hint when hint's entity id is not in use", function(context)
+			expect(context.manifest:createFrom(0xDEADBEEF)).to.equal(0xDEADBEEF)
+		end)
+
+		it("should return an entity identifier equal to hint when hint's entity id has been recycled", function(context)
+			local manifest = context.manifest
+
+			for _ = 1, numEntities do
+				manifest:create()
+			end
+
+			manifest:destroy(50)
+
+			for _ = 1, 100 do
+				-- all of these will have entity id == 50
+				manifest:destroy(manifest:create())
+			end
+
+			expect(manifest:createFrom(50)).to.equal(50)
+		end)
+
+		it("should return a brand new entity identifier when the entity id is in use", function(context)
+			for _ = 1, numEntities do
+				context.manifest:create()
+			end
+
+			expect(context.manifest:createFrom(numEntities - 1)).to.equal(numEntities + 1)
 		end)
 	end)
 
