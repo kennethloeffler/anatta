@@ -107,22 +107,23 @@ end
 
 ]]
 function Manifest:create()
-	local entityId = self.nextRecyclable
+	local recyclableId = self.nextRecyclable
 
-	if entityId == NULL_ENTITYID then
-		entityId = self.size + 1
+	if recyclableId == NULL_ENTITYID then
+		local entityId = self.size + 1
+
 		self.size = entityId
 		self.entities[entityId] = entityId
 
 		return entityId
 	else
-		local identifier = self.entities[entityId]
+		local node = self.entities[recyclableId]
 		local recycled = bit32.bor(
-			entityId,
-			bit32.lshift(bit32.rshift(identifier, ENTITYID_WIDTH), ENTITYID_WIDTH))
+			recyclableId,
+			bit32.lshift(bit32.rshift(node, ENTITYID_WIDTH), ENTITYID_WIDTH))
 
-		self.nextRecyclable = bit32.band(identifier, ENTITYID_MASK)
-		self.entities[entityId] = recycled
+		self.nextRecyclable = bit32.band(node, ENTITYID_MASK)
+		self.entities[recyclableId] = recycled
 
 		return recycled
 	end
