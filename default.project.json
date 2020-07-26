@@ -1,21 +1,21 @@
 {
-    "name": "WorldSmith",
-    "tree": {
-	   "$className": "DataModel",
-	   "ReplicatedStorage": {
-		  "$className": "ReplicatedStorage",
-		  "WorldSmith": {
-			 "$path": "src"
-		  }
-	   },
-	   "ServerStorage": {
-		  "$className": "ServerStorage",
-		  "WorldSmith": {
-			 "$className": "Folder",
-			 "plugin": {
-				"$path": "plugin"
-			 }
-		  }
-	   }
+  "name": "ecs",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "ecs": {
+        "$path": "src"
+      }
+    },
+    "TestService": {
+      "$className": "TestService",
+      "TestEZ": {
+        "$path": "vendor/testez/src"
+      },
+      "TestRunner" : {
+        "$path": "TestRunner.server.lua"
+      }
     }
+  }
 }

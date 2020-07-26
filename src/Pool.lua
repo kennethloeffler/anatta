@@ -1,5 +1,5 @@
 local Constants = require(script.Parent.Constants)
-local Signal = require(script.Parent.Parent.core.Signal)
+local Signal = require(script.Parent.core.Signal)
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 local STRICT = Constants.STRICT

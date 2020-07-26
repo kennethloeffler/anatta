@@ -8,7 +8,7 @@
 
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
-local Identify = require(script.Parent.Parent.core.Identify)
+local Identify = require(script.Parent.core.Identify)
 local Observer = require(script.Parent.Observer)
 local View = require(script.Parent.View)
 
