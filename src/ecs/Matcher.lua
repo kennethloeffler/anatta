@@ -1,6 +1,6 @@
 --[[
 
-  Helper class for observers
+	Helper class for observers and views
 
 ]]
 local Matcher = {}

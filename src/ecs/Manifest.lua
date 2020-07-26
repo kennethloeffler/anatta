@@ -1,8 +1,8 @@
 --[[
 
- Manifest.lua
+	Manifest.lua
 
- TODO: luau types
+	TODO: luau types
 
 ]]
 
@@ -41,10 +41,10 @@ end
 
 --[[
 
- Register a component type on the manifest and return its handle.
+	Register a component type on the manifest and return its handle.
 
- Handles may be retrieved again via manifest.component (see
- src/core/Identify.lua). For example:
+	Handles may be retrieved again via manifest.component (see
+	src/core/Identify.lua). For example:
 
 	-- someplace...
 	manifest:define("Vector3", "position")
@@ -70,9 +70,10 @@ end
 
 --[[
 
- Register an observer on the manifest and return its handle.
+	Register an observer on the manifest and return its handle.
 
- Observer handles may be retrieved and used similarly to component type handles:
+	Observer handles may be retrieved and used similarly to component type
+	handles:
 
 	-- someplace...
 	local position = manifest.component:named("position")
@@ -80,14 +81,13 @@ end
 
 	-- elsewhere...
 	local updatedPositions = manifest.observer:named("updatedPositions")
-	local view = manifest:view():all(updatedPositions)()
 
-	view:forEachEntity(function(entity)
-		...
+	manifest:view():all(updatedPositions)():forEachEntity(function(entity)
+	...
 	end)
 
- Observer names and component type names may not overlap per-manifest.  An error
- will be raised if a name is already in use.
+	Observer names and component type names may not overlap per-manifest.  An
+	error will be raised if a name is already in use.
 
 ]]
 function Manifest:observe(name)
@@ -102,7 +102,7 @@ end
 
 --[[
 
- Return a new valid entity identifier.
+	Return a new valid entity identifier.
 
 ]]
 function Manifest:create()
@@ -130,11 +130,11 @@ end
 
 --[[
 
- Return a valid entity identifier equal to the supplied "hint" identifier if
- possible.
+	Return a valid entity identifier equal to the supplied "hint" identifier if
+	possible.
 
- An identifier equal to hint is returned if and only if hint's id is not in use
- by the manifest.
+	An identifier equal to hint is returned if and only if hint's id is not in
+	use by the manifest.
 
 ]]
 function Manifest:createFrom(hint)
@@ -172,7 +172,7 @@ end
 
 --[[
 
- Destroy the entity, and by extension, all its components.
+	Destroy the entity, and by extension, all its components.
 
 ]]
 function Manifest:destroy(entity)
@@ -200,8 +200,8 @@ end
 
 --[[
 
- If the entity identifier corresponds to a valid entity, return true.
- Otherwise, return false.
+	If the entity identifier corresponds to a valid entity, return true.
+	Otherwise, return false.
 
 ]]
 function Manifest:valid(entity)
@@ -213,8 +213,8 @@ end
 
 --[[
 
- If the entity has no assigned components, return true.  Otherwise, return
- false.
+	If the entity has no assigned components, return true.  Otherwise, return
+	false.
 
 ]]
 function Manifest:stub(entity)
@@ -229,10 +229,10 @@ end
 
 --[[
 
- Pass all the component type handles in use to the given function.
+	Pass all the component type handles in use to the given function.
 
- If an entity is given, pass only the handles of which the entity has a
- component.
+	If an entity is given, pass only the handles of which the entity has a
+	component.
 
 ]]
 function Manifest:visit(func, entity)
@@ -251,8 +251,8 @@ end
 
 --[[
 
- If the entity has a component of all of the given types, return true.
- Otherwise, return false.
+	If the entity has a component of all of the given types, return true.
+	Otherwise, return false.
 
 ]]
 function Manifest:has(entity, ...)
@@ -271,8 +271,8 @@ end
 
 --[[
 
- If the entity has a component of any of the given types, return
- true. Otherwise, return false.
+	If the entity has a component of any of the given types, return
+	true. Otherwise, return false.
 
 ]]
 function Manifest:any(entity, ...)
@@ -291,8 +291,8 @@ end
 
 --[[
 
- If the entity has a component of the given type, return it. Otherwise, return
- nil.
+	If the entity has a component of the given type, return it. Otherwise,
+	return nil.
 
 ]]
 function Manifest:get(entity, id)
@@ -308,10 +308,10 @@ end
 
 --[[
 
- Add the given component to the entity and return it.
+	Add the given component to the entity and return it.
 
- An entity may only have one component of each type at a time. Adding a
- component to an entity which already has one of the same type is undefined.
+	An entity may only have one component of each type at a time. Adding a
+	component to an entity which already has one of the same type is undefined.
 
 ]]
 function Manifest:add(entity, id, component)
@@ -336,8 +336,8 @@ end
 
 --[[
 
- If the entity has a component of the given type, return it. Otherwise, add the
- given component to the entity and return it.
+	If the entity has a component of the given type, return it. Otherwise, add
+	the given component to the entity and return it.
 
 ]]
 function Manifest:getOrAdd(entity, id, component)
@@ -366,9 +366,9 @@ end
 
 --[[
 
- Replace the entity's component of the given type with the given component.
+	Replace the entity's component of the given type with the given component.
 
- Replacing a component that the entity does not have is undefined.
+	Replacing a component that the entity does not have is undefined.
 
 ]]
 function Manifest:replace(entity, id, component)
@@ -394,9 +394,9 @@ end
 
 --[[
 
- If the entity has a component of the given type, replace it with the given
- component and return the given component. Otherwise, add the given component to
- the entity and return it.
+	If the entity has a component of the given type, replace it with the given
+	component and return the given component. Otherwise, add the given component to
+	the entity and return it.
 
 ]]
 function Manifest:addOrReplace(entity, id, component)
@@ -430,9 +430,9 @@ end
 
 --[[
 
- Remove a component of the given type from the entity.
+	Remove a component of the given type from the entity.
 
- Removing a component which the entity does not have is undefined.
+	Removing a component which the entity does not have is undefined.
 
 ]]
 function Manifest:remove(entity, id)
@@ -450,8 +450,8 @@ end
 
 --[[
 
- If the entity has a component of the given type, remove it. Otherwise, do
- nothing.
+	If the entity has a component of the given type, remove it. Otherwise, do
+	nothing.
 
 ]]
 function Manifest:removeIfHas(entity, id)
@@ -470,8 +470,8 @@ end
 
 --[[
 
- Return a signal which fires whenever the a component of the given type is added
- to an entity.
+	Return a signal which fires whenever the a component of the given type is
+	added to an entity.
 
 ]]
 function Manifest:added(id)
@@ -486,8 +486,8 @@ end
 
 --[[
 
- Return a signal which fires whenever a component of the given type is removed
- from an entity.
+	Return a signal which fires whenever a component of the given type is
+	removed from an entity.
 
 ]]
 function Manifest:removed(id)
@@ -502,10 +502,10 @@ end
 
 --[[
 
- Return a signal which fires whenever a component of the given type is changed
- in some way.
+	Return a signal which fires whenever a component of the given type is
+	changed in some way.
 
- Currently, this signal only fires upon a call to Manifest:replace.
+	Currently, this signal only fires upon a call to Manifest:replace.
 
 ]]
 function Manifest:updated(id)
@@ -520,7 +520,7 @@ end
 
 --[[
 
- Clear the underlying storage for components of the given type.
+	Clear the underlying storage for components of the given type.
 
 ]]
 function Manifest:clear(id)
@@ -529,7 +529,7 @@ end
 
 --[[
 
- Return the number of entities currently in use.
+	Return the number of entities currently in use.
 
 ]]
 function Manifest:numEntities()
@@ -547,7 +547,7 @@ end
 
 --[[
 
- Pass each entity currently in use to func.
+	Pass each entity currently in use to func.
 
 ]]
 function Manifest:forEach(func)
@@ -566,7 +566,7 @@ end
 
 --[[
 
- Construct and return a view into the manifest (see ./View.lua).
+	Construct and return a view into the manifest (see ./View.lua).
 
 ]]
 function Manifest:view()
