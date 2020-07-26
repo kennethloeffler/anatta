@@ -2,11 +2,23 @@ local Constants = require(script.Parent.Constants)
 local Signal = require(script.Parent.Parent.core.Signal)
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
+local STRICT = Constants.STRICT
+
+local ErrBadType = "bad component type: expected %s, got %s"
 
 local Pool = {}
 Pool.__index = Pool
 
-function Pool.new(name, dataType, capacity)
+local function componentTypeOk(underlyingType, component)
+	if tostring(underlyingType) ~= typeof(component) then
+		return false, ErrBadType
+			:format(tostring(underlyingType), typeof(component))
+	else
+		return true
+	end
+end
+
+function Pool.new(name, dataType)
 	return setmetatable({
 		name = name,
 		underlyingType = dataType,
@@ -40,17 +52,21 @@ function Pool:get(entity)
 	end
 end
 
-function Pool:assign(entity, object)
+function Pool:assign(entity, component)
 	local size = self.size + 1
+
+	if STRICT then
+		assert(componentTypeOk(self.underlyingType, component))
+	end
 
 	self.size = size
 	self.dense[size] = entity
 	self.sparse[bit32.band(entity, ENTITYID_MASK)] = size
 
 	if self.underlyingType then
-		self.objects[size] = object
+		self.objects[size] = component
 
-		return object
+		return component
 	end
 end
 
