@@ -557,6 +557,15 @@ function Manifest:view()
 	return View.new(self)
 end
 
+
+--[[
+
+	Inject a context variable into the manifest.
+
+	Providing value results in a write to the given context, even if there
+	already exists a variable for that context.
+
+]]
 function Manifest:context(context, value)
 	if value then
 		self.contexts[context] = value
