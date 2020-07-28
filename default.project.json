@@ -1,10 +1,10 @@
 {
-  "name": "ecs",
+  "name": "anatta",
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "ecs": {
+      "anatta": {
         "$path": "src"
       }
     },
