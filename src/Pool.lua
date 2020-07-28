@@ -10,12 +10,10 @@ local Pool = {}
 Pool.__index = Pool
 
 local function componentTypeOk(underlyingType, component)
-	if tostring(underlyingType) ~= typeof(component) then
-		return false, ErrBadType
-			:format(tostring(underlyingType), typeof(component))
-	else
-		return true
-	end
+	local ty = typeof(component)
+
+	return tostring(underlyingType) == (ty == "Instance" and component:IsA(underlyingType) or ty),
+	ErrBadType:format(tostring(underlyingType), typeof(component))
 end
 
 function Pool.new(name, dataType)
