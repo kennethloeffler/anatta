@@ -557,6 +557,14 @@ function Manifest:view()
 	return View.new(self)
 end
 
+function Manifest:context(context, value)
+	if value then
+		self.contexts[context] = value
+	end
+
+	return self.contexts[context]
+end
+
 function Manifest:_getPool(id)
      if STRICT then
 		assert(self.pools[id], ErrBadComponentId)
