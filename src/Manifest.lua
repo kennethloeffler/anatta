@@ -33,6 +33,7 @@ function Manifest.new()
 		nextRecyclable = NULL_ENTITYID,
 		entities = {},
 		pools = {},
+		contexts = {},
 		component = ident,
 		observer = ident
 	}, Manifest)
