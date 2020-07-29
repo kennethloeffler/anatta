@@ -1,10 +1,10 @@
-local Manifest = require(script.Parent.ecs.Manifest)
+local Manifest = require(script.Manifest)
 
 return function(projectRoot)
-	local components = projectRoot:FindFirstChild("components")
+	local components = projectRoot:FindFirstChild("Components")
 	local ecs = Manifest.new()
 
-	for _, instance in ipairs(components:GetChildren()) do
+	for _, instance in ipairs(components:GetDescendants()) do
 		if instance:IsA("ModuleScript") then
 			require(instance)(ecs)
 		end
