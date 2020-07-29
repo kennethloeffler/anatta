@@ -325,6 +325,16 @@ function Manifest:add(entity, id, component)
 	return obj
 end
 
+function Manifest:assign(entity, ...)
+	local num = select("#", ...)
+
+	assert(num % 2 == 0, "insufficient arguments")
+
+	for i = 1, num, 2 do
+		self:add(entity, select(i, ...), select(i + 1, ...))
+	end
+end
+
 --[[
 
 	If the entity has a component of the given type, return it. Otherwise, add
