@@ -1,5 +1,7 @@
 local Matcher = require(script.Parent.Matcher)
 
+local EMPTY = {}
+
 local View = {}
 View.__index = Matcher
 
@@ -140,6 +142,20 @@ function Single:forEachEntity(func)
 	for _, entity in ipairs(self.required[1].dense) do
 		func(entity)
 	end
+end
+
+function Single:consume(func)
+	local pool = self.required[1]
+
+	for _, entity in ipairs(pool.dense) do
+		func(entity)
+		pool.sparse[entity] = nil
+	end
+
+	table.move(EMPTY, 1, #pool.dense, pool.dense)
+	table.move(EMPTY, 1, #pool.objects, pool.objects)
+
+	pool.size = 0
 end
 
 function MultiWithForbidden:forEach(func)
