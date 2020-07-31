@@ -515,15 +515,6 @@ end
 
 --[[
 
-	Clear the underlying storage for components of the given type.
-
-]]
-function Manifest:clear(id)
-	self:_getPool(id):clear()
-end
-
---[[
-
 	Return the number of entities currently in use.
 
 ]]

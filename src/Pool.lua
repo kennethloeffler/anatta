@@ -93,20 +93,4 @@ function Pool:destroy(entity)
 	end
 end
 
-function Pool:clear()
-	-- does this pool contain tag components?
-	if self.underlyingType then
-		for i, entity in ipairs(self.sparse) do
-			self.dense[i] = nil
-			self.sparse[entity] = nil
-			self.objects[i] = nil
-		end
-	else
-		for i, entity in ipairs(self.dense) do
-			self.dense[i] = nil
-			self.sparse[entity] = nil
-		end
-	end
-end
-
 return Pool
