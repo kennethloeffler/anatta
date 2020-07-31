@@ -36,13 +36,15 @@ local function maybeRemove(pool)
 end
 
 function Observer.new(manifest, id, pool)
-	local observer = Matcher.new()
+	return setmetatable({
+		manifest = manifest,
+		id = id,
+		pool = pool,
 
-	observer.manifest = manifest
-	observer.id = id
-	observer.pool = pool
-
-	return setmetatable(observer, Observer)
+		required = {},
+		forbidden = {},
+		changed = {}
+	}, Observer)
 end
 
 function Observer:__call()

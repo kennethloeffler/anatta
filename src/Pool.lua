@@ -11,13 +11,13 @@ Pool.__index = Pool
 
 local function componentTypeOk(underlyingType, component)
 	local ty = typeof(component)
-	local ok = true
+	local instanceTypeOk = false
 
 	if ty == "Instance" then
-		ok = component:IsA(underlyingType)
+		instanceTypeOk = component:IsA(underlyingType)
 	end
 
-	return (tostring(underlyingType) == ty) or ok,
+	return (tostring(underlyingType) == ty) or instanceTypeOk,
 	ErrBadType:format(tostring(underlyingType), typeof(component))
 end
 
@@ -66,7 +66,7 @@ function Pool:assign(entity, component)
 	self.dense[size] = entity
 	self.sparse[bit32.band(entity, ENTITYID_MASK)] = size
 
-	if self.underlyingType then
+	if component then
 		self.objects[size] = component
 
 		return component
@@ -90,22 +90,6 @@ function Pool:destroy(entity)
 	else
 		self.dense[denseIdx] = nil
 		self.objects[denseIdx] = nil
-	end
-end
-
-function Pool:clear()
-	-- does this pool contain tag components?
-	if self.underlyingType then
-		for i, entity in ipairs(self.sparse) do
-			self.dense[i] = nil
-			self.sparse[entity] = nil
-			self.objects[i] = nil
-		end
-	else
-		for i, entity in ipairs(self.dense) do
-			self.dense[i] = nil
-			self.sparse[entity] = nil
-		end
 	end
 end
 
