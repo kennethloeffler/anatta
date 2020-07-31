@@ -20,14 +20,6 @@ local function append(source, destination)
 	move(source, 1, #source, #destination + 1, destination)
 end
 
-function Matcher.new()
-	return setmetatable({
-		required = {},
-		forbidden = {},
-		changed = {}
-	}, Matcher)
-end
-
 function Matcher:all(...)
 	append({ ... }, self.required)
 

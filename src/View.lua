@@ -1,5 +1,7 @@
 local Matcher = require(script.Parent.Matcher)
 
+local EMPTY = {}
+
 local View = {}
 View.__index = Matcher
 
@@ -15,17 +17,62 @@ Single.__index = Single
 local SingleWithForbidden = {}
 SingleWithForbidden.__index = SingleWithForbidden
 
-local selectShortestPool
-local hasRequired
-local doesntHaveForbidden
-local hasRequiredThenPack
+local function selectShortestPool(pools)
+	local _, candidate = next(pools)
+
+	for _, pool in ipairs(pools) do
+		if pool.size < candidate.size then
+			candidate = pool
+		end
+	end
+
+	return candidate
+end
+
+local function doesntHaveForbidden(entity, forbidden)
+	for _, pool in ipairs(forbidden) do
+		if pool:has(entity) then
+			return false
+		end
+	end
+
+	return true
+end
+
+local function hasRequired(entity, required)
+	for _, requiredPool in ipairs(required) do
+		if not requiredPool:has(entity) then
+			return false
+		end
+	end
+
+	return true
+end
+
+local function hasRequiredThenPack(entity, required, pack)
+	local index
+
+	for i, requiredPool in ipairs(required) do
+		index = requiredPool:has(entity)
+
+		if not index then
+			return false
+		end
+
+		pack[i] = requiredPool.objects and requiredPool.objects[index]
+	end
+
+	return true
+end
 
 function View.new(manifest)
-	local view = Matcher.new()
+	return setmetatable({
+		manifest = manifest,
 
-	view.manifest = manifest
-
-	return setmetatable(view, View)
+		required = {},
+		forbidden = {},
+		changed = {},
+	}, View)
 end
 
 function View:__call()
@@ -84,10 +131,10 @@ end
 
 function Single:forEach(func)
 	local pool = self.required[1]
-	local objs = pool.objects
+	local objects = pool.objects
 
 	for index, entity in ipairs(pool.dense) do
-		func(entity, objs[index])
+		func(entity, objects[index])
 	end
 end
 
@@ -95,6 +142,20 @@ function Single:forEachEntity(func)
 	for _, entity in ipairs(self.required[1].dense) do
 		func(entity)
 	end
+end
+
+function Single:consume(func)
+	local pool = self.required[1]
+
+	for _, entity in ipairs(pool.dense) do
+		func(entity)
+		pool.sparse[entity] = nil
+	end
+
+	table.move(EMPTY, 1, #pool.dense, pool.dense)
+	table.move(EMPTY, 1, #pool.objects, pool.objects)
+
+	pool.size = 0
 end
 
 function MultiWithForbidden:forEach(func)
@@ -163,54 +224,6 @@ function SingleWithForbidden:has(entity)
 	local forbidden = self.forbidden
 
 	return self.required:has(entity) and doesntHaveForbidden(entity, forbidden)
-end
-
-selectShortestPool = function(pools)
-	local _, candidate = next(pools)
-
-	for _, pool in ipairs(pools) do
-		if pool.size < candidate.size then
-			candidate = pool
-		end
-	end
-
-	return candidate
-end
-
-doesntHaveForbidden = function(entity, forbidden)
-	for _, pool in ipairs(forbidden) do
-		if pool:has(entity) then
-			return false
-		end
-	end
-
-	return true
-end
-
-hasRequired = function(entity, required)
-	for _, requiredPool in ipairs(required) do
-		if not requiredPool:has(entity) then
-			return false
-		end
-	end
-
-	return true
-end
-
-hasRequiredThenPack = function(entity, required, pack)
-	local index
-
-	for i, requiredPool in ipairs(required) do
-		index = requiredPool:has(entity)
-
-		if not index then
-			return false
-		end
-
-		pack[i] = requiredPool.objects and requiredPool.objects[index]
-	end
-
-	return true
 end
 
 View._singleMt = Single

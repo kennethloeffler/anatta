@@ -157,6 +157,28 @@ return function()
 			expect(manifest:createFrom(50)).to.equal(50)
 		end)
 
+		it("should properly remove an entity from the stack of recyclable entities", function(context)
+			local manifest = context.manifest
+
+			for _ = 1, numEntities do
+				manifest:create()
+			end
+
+			manifest:destroy(2)
+			manifest:destroy(4)
+			manifest:destroy(16)
+			manifest:destroy(32)
+			manifest:destroy(64)
+
+			expect(manifest:createFrom(16)).to.equal(16)
+			expect(manifest:createFrom(bit32.bor(64, bit32.lshift(16, Constants.ENTITYID_WIDTH))))
+				.to.equal(bit32.bor(64, bit32.lshift(16, Constants.ENTITYID_WIDTH)))
+			expect(manifest:createFrom(4)).to.equal(4)
+
+			expect(bit32.band(manifest:create(), Constants.ENTITYID_MASK)).to.equal(32)
+			expect(bit32.band(manifest:create(), Constants.ENTITYID_MASK)).to.equal(2)
+		end)
+
 		it("should return a brand new entity identifier when the entity id is in use", function(context)
 			for _ = 1, numEntities do
 				context.manifest:create()
