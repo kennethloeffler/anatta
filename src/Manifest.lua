@@ -135,10 +135,9 @@ end
 function Manifest:createFrom(hint)
 	local hintId = bit32.band(hint, ENTITYID_MASK)
 	local entities = self.entities
-	local existingEntity = entities[hintId]
-	local existingEntityId = existingEntity and bit32.band(existingEntity, ENTITYID_MASK)
+	local existingEntityId = bit32.band(entities[hintId] or NULL_ENTITYID, ENTITYID_MASK)
 
-	if not existingEntity then
+	if existingEntityId == NULL_ENTITYID then
 		for id = self.size + 1, hintId - 1  do
 			entities[id] = self.nextRecyclable
 			self.nextRecyclable = id
@@ -150,15 +149,26 @@ function Manifest:createFrom(hint)
 	elseif existingEntityId == hintId then
 		return self:create()
 	else
-		local nextRecyclable = self.nextRecyclable
+		local curr = self.nextRecyclable
 
-		while nextRecyclable ~= hintId do
-			nextRecyclable = bit32.band(entities[nextRecyclable], ENTITYID_MASK)
+		if curr == hintId then
+			self.nextRecyclable = bit32.band(entities[hintId], ENTITYID_MASK)
+			entities[hintId] = hint
+
+			return hint
 		end
 
-		entities[nextRecyclable] = bit32.bor(
-			existingEntityId,
-			bit32.lshift(bit32.rshift(entities[nextRecyclable], ENTITYID_WIDTH), ENTITYID_WIDTH))
+		local last
+
+		while curr ~= hintId do
+			last = curr
+			curr = bit32.band(entities[curr], ENTITYID_MASK)
+		end
+
+		entities[last] = bit32.bor(
+			bit32.band(entities[hintId], ENTITYID_MASK),
+			bit32.lshift(bit32.rshift(entities[last], ENTITYID_WIDTH), ENTITYID_WIDTH))
+
 		entities[hintId] = hint
 
 		return hint
