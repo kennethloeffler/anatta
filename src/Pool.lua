@@ -66,7 +66,7 @@ function Pool:assign(entity, component)
 	self.dense[size] = entity
 	self.sparse[bit32.band(entity, ENTITYID_MASK)] = size
 
-	if self.underlyingType then
+	if component then
 		self.objects[size] = component
 
 		return component
