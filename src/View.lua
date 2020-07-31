@@ -129,10 +129,10 @@ end
 
 function Single:forEach(func)
 	local pool = self.required[1]
-	local objs = pool.objects
+	local objects = pool.objects
 
 	for index, entity in ipairs(pool.dense) do
-		func(entity, objs[index])
+		func(entity, objects[index])
 	end
 end
 
