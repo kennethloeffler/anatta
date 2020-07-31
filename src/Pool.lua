@@ -11,13 +11,13 @@ Pool.__index = Pool
 
 local function componentTypeOk(underlyingType, component)
 	local ty = typeof(component)
-	local ok = true
+	local instanceTypeOk = false
 
 	if ty == "Instance" then
-		ok = component:IsA(underlyingType)
+		instanceTypeOk = component:IsA(underlyingType)
 	end
 
-	return (tostring(underlyingType) == ty) or ok,
+	return (tostring(underlyingType) == ty) or instanceTypeOk,
 	ErrBadType:format(tostring(underlyingType), typeof(component))
 end
 
