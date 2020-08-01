@@ -133,7 +133,7 @@ end
 function Identify:named(name)
 	local ident = self.lookup[name]
 
-	assert(ident, ErrIdentDNE)
+	assert(ident, ErrIdentDNE:format(name))
 
 	return ident
 end
