@@ -580,6 +580,9 @@ end
 ]]
 function Manifest:context(context, value)
 	if value then
+		assert(self.contexts[context] == nil, ("context %s already set")
+			:format(context))
+
 		self.contexts[context] = value
 	end
 
