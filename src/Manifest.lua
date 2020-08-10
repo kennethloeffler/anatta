@@ -315,6 +315,16 @@ function Manifest:get(entity, id)
 	return pool:get(entity)
 end
 
+function Manifest:multiGet(entity, output, ...)
+	for i = 1, select("#", ...) do
+		local id = select(i, ...)
+
+		output[i] = self.pools[id]:get(entity, select(i, ...))
+	end
+
+	return unpack(output)
+end
+
 --[[
 
 	Add the given component to the entity and return it.
@@ -590,6 +600,14 @@ function Manifest:context(context, value)
 	end
 
 	return self.contexts[context]
+end
+
+function Manifest:poolSize(id)
+	if STRICT then
+		assert(self.pools[id], ErrBadComponentId)
+	end
+
+	return self.pools[id].size
 end
 
 function Manifest:_getPool(id)
