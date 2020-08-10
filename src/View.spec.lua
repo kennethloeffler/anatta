@@ -35,34 +35,32 @@ return function()
 			local view = View.new(manifest):all(Component1)()
 
 			expect(getmetatable(view)).to.equal(View._singleMt)
-			expect(view.required[1]).to.equal(Pool1)
-			expect(next(view.forbidden)).to.never.be.ok()
+			expect(view.required[1]).to.equal(Component1)
 		end)
 
 		it("should construct a single-component view with exclusion list when there is one required component and one or more forbidden components", function()
 			local view = View.new(manifest):all(Component1):except(Component3)()
 
 			expect(getmetatable(view)).to.equal(View._singleWithExclMt)
-			expect(view.required[1]).to.equal(Pool1)
-			expect(view.forbidden[1]).to.equal(Pool3)
+			expect(view.required[1]).to.equal(Component1)
+			expect(view.forbidden[1]).to.equal(Component3)
 		end)
 
 		it("should construct a multi-component view when there are multiple required components and no forbidden components", function()
 			local view = View.new(manifest):all(Component1, Component2)()
 
 			expect(getmetatable(view)).to.equal(View._multiMt)
-			expect(view.required[1]).to.equal(Pool1)
-			expect(view.required[2]).to.equal(Pool2)
-			expect(next(view.forbidden)).to.never.be.ok()
+			expect(view.required[1]).to.equal(Component1)
+			expect(view.required[2]).to.equal(Component2)
 		end)
 
 		it("should construct a multi-component view with exclusion list when there are multiple required components and one or more forbidden components", function()
 			local view = View.new(manifest):all(Component1, Component2):except(Component3)()
 
 			expect(getmetatable(view)).to.equal(View._multiWithExclMt)
-			expect(view.required[1]).to.equal(Pool1)
-			expect(view.required[2]).to.equal(Pool2)
-			expect(view.forbidden[1]).to.equal(Pool3)
+			expect(view.required[1]).to.equal(Component1)
+			expect(view.required[2]).to.equal(Component2)
+			expect(view.forbidden[1]).to.equal(Component3)
 		end)
 	end)
 
@@ -321,88 +319,9 @@ return function()
 	describe("selectShortestPool", function()
 		it("should return the pool containing the fewest number of elements for the specified components", function()
 			-- Pool3 is the shortest pool (see line 41)
-			expect(View._selectShortestPool({ Pool1, Pool2, Pool3 })).to.equal(Pool3)
-		end)
-	end)
-
-	describe("doesntHaveForbidden", function()
-		it("should return true if the entity has none of the specified components", function()
-			local entity = manifest:create()
-
-			manifest:add(entity, Component1, {})
-
-			expect(View._doesntHaveForbidden(entity, { Pool2, Pool3 })).to.equal(true)
-		end)
-
-		it("should return false if the entity has any of the specified components", function()
-			local entity = manifest:create()
-
-			manifest:add(entity, Component1, {})
-			manifest:add(entity, Component3, {})
-
-			expect(View._doesntHaveForbidden(entity, { Pool1, Pool3 })).to.equal(false)
-		end)
-	end)
-
-	describe("hasRequired", function()
-		it("should return false if the entity doesn't have all of the specified components", function()
-			local entity = manifest:create()
-
-			manifest:add(entity, Component1, {})
- manifest:add(entity, Component3, {})
-
-			expect(View._hasRequired(entity, { Pool1, Pool2 })).to.equal(false)
-		end)
-
-		it("should return true if the entity has all of the specified components", function()
-			local entity = manifest:create()
-
-			manifest:add(entity, Component1, {})
-			manifest:add(entity, Component2, {})
-			manifest:add(entity, Component3, {})
-
-			expect(View._hasRequired(entity, { Pool1, Pool2, Pool3 })).to.equal(true)
-		end)
-	end)
-
-	describe("hasRequiredThenPack", function()
-		it("should return true and correctly populate the component pack if the entity has all of the specified components", function()
-			local entity = manifest:create()
-			local componentPack = {}
-
-			local first = manifest:add(entity, Component1, {})
-			local second = manifest:add(entity, Component2, {})
-			local third = manifest:add(entity, Component3, {})
-
-			expect(View._hasRequiredThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(true)
-			expect(componentPack[1]).to.equal(first)
-			expect(componentPack[2]).to.equal(second)
-			expect(componentPack[3]).to.equal(third)
-		end)
-
-		it("should return false if the entity doesn't have all of the specified components", function()
-			local entity = manifest:create()
-			local componentPack = {}
-
-			manifest:add(entity, Component1, {})
-			manifest:add(entity, Component3, {})
-
-			expect(View._hasRequiredThenPack(entity, { Pool1, Pool2, Pool3 }, componentPack)).to.equal(false)
-		end)
-
-		it("should properly handle tag components", function()
-			local entity = manifest:create()
-			local componentPack = {}
-
-			local first = manifest:add(entity, Component1, {})
-			local second = manifest:add(entity, Component2, {})
-
-			manifest:add(entity, Tag)
-
-			expect(View._hasRequiredThenPack(entity, { Pool1, TagPool, Pool2 }, componentPack)).to.equal(true)
-			expect(componentPack[1]).to.equal(first)
-			expect(componentPack[2]).to.equal(nil)
-			expect(componentPack[3]).to.equal(second)
+			expect(View._selectShortestPool(
+				manifest, { Component1, Component2, Component3 })
+			).to.equal(Pool3)
 		end)
 	end)
 end
