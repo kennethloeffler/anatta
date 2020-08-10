@@ -88,11 +88,10 @@ end
 function Manifest:observe(name)
 	local id = self.observer:generate(name)
 	local pool = Pool.new(name)
-	local observer = Observer.new(self, id, pool)
 
 	self.pools[id] = pool
 
-	return observer
+	return Observer.new(self, id, pool)
 end
 
 --[[
@@ -101,23 +100,19 @@ end
 
 ]]
 function Manifest:create()
-	local recyclableId = self.nextRecyclable
+	if self.nextRecyclable == NULL_ENTITYID then
+		self.size += 1
+		self.entities[self.size] = self.size
 
-	if recyclableId == NULL_ENTITYID then
-		local entityId = self.size + 1
-
-		self.size = entityId
-		self.entities[entityId] = entityId
-
-		return entityId
+		return self.size
 	else
-		local node = self.entities[recyclableId]
+		local node = self.entities[self.nextRecyclable]
 		local recycled = bit32.bor(
-			recyclableId,
+			self.nextRecyclable,
 			bit32.lshift(bit32.rshift(node, ENTITYID_WIDTH), ENTITYID_WIDTH))
 
+		self.entities[self.nextRecyclable] = recycled
 		self.nextRecyclable = bit32.band(node, ENTITYID_MASK)
-		self.entities[recyclableId] = recycled
 
 		return recycled
 	end
@@ -134,16 +129,18 @@ end
 ]]
 function Manifest:createFrom(hint)
 	local hintId = bit32.band(hint, ENTITYID_MASK)
-	local entities = self.entities
-	local existingEntityId = bit32.band(entities[hintId] or NULL_ENTITYID, ENTITYID_MASK)
+	local existingEntityId = bit32.band(
+		self.entities[hintId] or NULL_ENTITYID,
+		ENTITYID_MASK
+	)
 
 	if existingEntityId == NULL_ENTITYID then
 		for id = self.size + 1, hintId - 1  do
-			entities[id] = self.nextRecyclable
+			self.entities[id] = self.nextRecyclable
 			self.nextRecyclable = id
 		end
 
-		entities[hintId] = hint
+		self.entities[hintId] = hint
 
 		return hint
 	elseif existingEntityId == hintId then
@@ -152,8 +149,11 @@ function Manifest:createFrom(hint)
 		local curr = self.nextRecyclable
 
 		if curr == hintId then
-			self.nextRecyclable = bit32.band(entities[hintId], ENTITYID_MASK)
-			entities[hintId] = hint
+			self.nextRecyclable = bit32.band(
+				self.entities[hintId],
+				ENTITYID_MASK
+			)
+			self.entities[hintId] = hint
 
 			return hint
 		end
@@ -162,14 +162,18 @@ function Manifest:createFrom(hint)
 
 		while curr ~= hintId do
 			last = curr
-			curr = bit32.band(entities[curr], ENTITYID_MASK)
+			curr = bit32.band(self.entities[curr], ENTITYID_MASK)
 		end
 
-		entities[last] = bit32.bor(
-			bit32.band(entities[hintId], ENTITYID_MASK),
-			bit32.lshift(bit32.rshift(entities[last], ENTITYID_WIDTH), ENTITYID_WIDTH))
+		self.entities[last] = bit32.bor(
+			bit32.band(self.entities[hintId], ENTITYID_MASK),
+			bit32.lshift(
+				bit32.rshift(self.entities[last], ENTITYID_WIDTH),
+				ENTITYID_WIDTH
+			)
+		)
 
-		entities[hintId] = hint
+		self.entities[hintId] = hint
 
 		return hint
 	end
@@ -529,16 +533,15 @@ end
 
 ]]
 function Manifest:numEntities()
-	local entities = self.entities
 	local curr = self.nextRecyclable
-	local size = self.size
+	local num = self.size
 
 	while curr ~= NULL_ENTITYID do
-		size = size - 1
-		curr = bit32.band(entities[curr], ENTITYID_MASK)
+		num -= 1
+		curr = bit32.band(self.entities[curr], ENTITYID_MASK)
 	end
 
-	return size
+	return num
 end
 
 --[[

@@ -56,41 +56,38 @@ function Pool:get(entity)
 end
 
 function Pool:assign(entity, component)
-	local size = self.size + 1
-
 	if STRICT then
 		assert(componentTypeOk(self.underlyingType, component))
 	end
 
-	self.size = size
-	self.dense[size] = entity
-	self.sparse[bit32.band(entity, ENTITYID_MASK)] = size
+	self.size += 1
+	self.dense[self.size] = entity
+	self.sparse[bit32.band(entity, ENTITYID_MASK)] = self.size
 
 	if component then
-		self.objects[size] = component
+		self.objects[self.size] = component
 
 		return component
 	end
 end
 
 function Pool:destroy(entity)
+	self.size -= 1
+
 	local sparseIdx = bit32.band(entity, ENTITYID_MASK)
 	local denseIdx = self.sparse[sparseIdx]
-	local size = self.size
 
-	self.size = size - 1
-
-	if denseIdx < size then
+	if denseIdx < self.size + 1 then
 		local swapped = self.dense[size]
 
 		self.dense[denseIdx] = swapped
 		self.sparse[swapped] = denseIdx
 		self.objects[denseIdx] = self.objects[size]
-
 	else
 		self.dense[denseIdx] = nil
 		self.objects[denseIdx] = nil
 	end
+
 end
 
 return Pool
