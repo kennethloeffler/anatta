@@ -81,62 +81,62 @@ end
 
 --[[
 
-	Return a valid entity identifier equal to the supplied "hint" identifier if
-	possible.
+	Return a new valid entity identifier equal to the supplied entity
+	identifier if possible.
 
-	An identifier equal to hint is returned if and only if hint's id is not in
-	use by the manifest.
+	An identifier equal to entity is returned if and only if entity's id is not
+	in use by the manifest.
 
 ]]
-function Manifest:createFrom(hint)
-	local hintId = bit32.band(hint, ENTITYID_MASK)
+function Manifest:createFrom(entity)
+	local entityId = bit32.band(entity, ENTITYID_MASK)
 	local existingEntityId = bit32.band(
-		self.entities[hintId] or NULL_ENTITYID,
+		self.entities[entityId] or NULL_ENTITYID,
 		ENTITYID_MASK
 	)
 
 	if existingEntityId == NULL_ENTITYID then
-		for id = self.size + 1, hintId - 1  do
+		for id = self.size + 1, entityId - 1  do
 			self.entities[id] = self.nextRecyclable
 			self.nextRecyclable = id
 		end
 
-		self.entities[hintId] = hint
+		self.entities[entityId] = entity
 
-		return hint
-	elseif existingEntityId == hintId then
+		return entity
+	elseif existingEntityId == entityId then
 		return self:create()
 	else
 		local curr = self.nextRecyclable
 
-		if curr == hintId then
+		if curr == entityId then
 			self.nextRecyclable = bit32.band(
-				self.entities[hintId],
+				self.entities[entityId],
 				ENTITYID_MASK
 			)
-			self.entities[hintId] = hint
+			self.entities[entityId] = entity
 
-			return hint
+			return entity
 		end
 
 		local last
 
-		while curr ~= hintId do
+		while curr ~= entityId do
 			last = curr
 			curr = bit32.band(self.entities[curr], ENTITYID_MASK)
 		end
 
 		self.entities[last] = bit32.bor(
-			bit32.band(self.entities[hintId], ENTITYID_MASK),
+			bit32.band(self.entities[entityId], ENTITYID_MASK),
 			bit32.lshift(
 				bit32.rshift(self.entities[last], ENTITYID_WIDTH),
 				ENTITYID_WIDTH
 			)
 		)
 
-		self.entities[hintId] = hint
+		self.entities[entityId] = entity
 
-		return hint
+		return entity
 	end
 end
 
@@ -184,7 +184,7 @@ end
 
 ]]
 function Manifest:stub(entity)
-  	for _, pool in ipairs(self.pools) do
+	for _, pool in ipairs(self.pools) do
 		if pool:has(entity) then
 			return false
 		end
@@ -292,13 +292,19 @@ function Manifest:add(entity, id, component)
 	return obj
 end
 
-function Manifest:assign(entity, ...)
+function Manifest:multiAdd(entity, ...)
 	local num = select("#", ...)
-
-	assert(num % 2 == 0, "insufficient arguments")
 
 	for i = 1, num, 2 do
 		self:add(entity, select(i, ...), select(i + 1, ...))
+	end
+
+	return entity
+end
+
+function Manifest:assign(entities, id, component)
+	for _, entity in ipairs(entities) do
+		self:add(entity, id, component)
 	end
 end
 
@@ -317,7 +323,6 @@ function Manifest:getOrAdd(entity, id, component)
 		return obj
 	else
 		obj = pool:assign(entity, component)
-
 		pool.onAssign:dispatch(entity)
 
 		return obj
