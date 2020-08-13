@@ -15,12 +15,6 @@ local View = require(script.Parent.View)
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NULL_ENTITYID = Constants.NULL_ENTITYID
-local STRICT = Constants.STRICT
-
-local ErrAlreadyHas = "entity %08X already has this component type"
-local ErrBadComponentId = "invalid component identifier"
-local ErrInvalid = "entity %08X either does not exist or it has been destroyed"
-local ErrMissing = "entity %08X does not have this component type"
 
 local Manifest = {}
 Manifest.__index = Manifest
@@ -185,10 +179,6 @@ end
 
 ]]
 function Manifest:destroy(entity)
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-	end
-
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 
 	for _, pool in ipairs(self.pools) do
@@ -265,10 +255,6 @@ end
 
 ]]
 function Manifest:has(entity, ...)
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-	end
-
 	for i = 1, select("#", ...) do
 		if not self.pools[select(i, ...)]:has(entity) then
 			return false
@@ -285,10 +271,6 @@ end
 
 ]]
 function Manifest:any(entity, ...)
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-	end
-
 	for i = 1, select("#", ...) do
 		if self.pools[select(i, ...)]:has(entity) then
 			return true
@@ -305,14 +287,15 @@ end
 
 ]]
 function Manifest:get(entity, id)
+	return self.pools[id]:get(entity)
+end
+
+function Manifest:getIfHas(entity, id)
 	local pool = self.pools[id]
 
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-		assert(pool, ErrBadComponentId)
+	if pool:has(entity) then
+		return pool:get(entity)
 	end
-
-	return pool:get(entity)
 end
 
 function Manifest:multiGet(entity, output, ...)
@@ -335,13 +318,6 @@ end
 ]]
 function Manifest:add(entity, id, component)
 	local pool = self.pools[id]
-
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-		assert(pool, ErrBadComponentId)
-		assert(not pool:has(entity), ErrAlreadyHas:format(entity))
-	end
-
 	local obj = pool:assign(entity, component)
 
 	pool.onAssign:dispatch(entity)
@@ -367,12 +343,6 @@ end
 ]]
 function Manifest:getOrAdd(entity, id, component)
 	local pool = self.pools[id]
-
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-		assert(pool, ErrBadComponentId)
-	end
-
 	local exists = pool:has(entity)
 	local obj = pool:get(entity)
 
@@ -397,17 +367,7 @@ end
 function Manifest:replace(entity, id, component)
 	local pool = self.pools[id]
 
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-		assert(pool:has(entity), ErrMissing:format(entity))
-	end
-
-	local index = pool:has(entity)
-
-	if pool.objects then
-		pool.objects[index] = component
-	end
-
+	pool.objects[pool:has(entity)] = component
 	pool.onUpdate:dispatch(entity)
 
 	return component
@@ -422,26 +382,16 @@ end
 ]]
 function Manifest:addOrReplace(entity, id, component)
 	local pool = self.pools[id]
-
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-		assert(pool, ErrBadComponentId)
-	end
-
 	local index = pool:has(entity)
 
 	if index then
-		if pool.objects then
-			pool.objects[index] = component
-		end
-
+		pool.objects[index] = component
 		pool.onUpdate:dispatch(entity)
 
 		return component
 	end
 
 	local obj = pool:assign(entity, component)
-
 	pool.onAssign:dispatch(entity)
 
 	return obj
@@ -457,12 +407,6 @@ end
 function Manifest:remove(entity, id)
 	local pool = self.pools[id]
 
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-		assert(pool, ErrBadComponentId)
-		assert(pool:has(entity), ErrMissing:format(entity))
-	end
-
 	pool.onRemove:dispatch(entity)
 	pool:destroy(entity)
 end
@@ -476,31 +420,35 @@ end
 function Manifest:removeIfHas(entity, id)
 	local pool = self.pools[id]
 
-	if STRICT then
-		assert(self:valid(entity), ErrInvalid:format(entity))
-		assert(pool, ErrBadComponentId)
-	end
-
 	if pool:has(entity) then
 		pool.onRemove:dispatch(entity)
 		pool:destroy(entity)
+
+		return true
 	end
 end
 
+function Manifest:patch(entity, id, ...)
+	local pool = self.pools[id]
+	local num = select("#", ...)
+	local component = pool:get(entity)
+
+	for i = 1, num, 2 do
+		pool.onUpdate:dispatch(entity, select(i, ...), select(i + 1, ...))
+	end
+
+	return component
+end
+
+
 --[[
 
-	Return a signal which fires whenever the a component of the given type is
+	Return a signal which fires just after the component of the given type is
 	added to an entity.
 
 ]]
-function Manifest:added(id)
-	local pool = self.pools[id]
-
-	if STRICT then
-		assert(pool, ErrBadComponentId)
-	end
-
-	return pool.onAssign
+function Manifest:addedSignal(id)
+	return self.pools[id].onAssign
 end
 
 --[[
@@ -509,14 +457,8 @@ end
 	removed from an entity.
 
 ]]
-function Manifest:removed(id)
-	local pool = self.pools[id]
-
-	if STRICT then
-		assert(pool, ErrBadComponentId)
-	end
-
-	return pool.onRemove
+function Manifest:removedSignal(id)
+	return self.pools[id].onRemove
 end
 
 --[[
@@ -524,17 +466,9 @@ end
 	Return a signal which fires whenever a component of the given type is
 	changed in some way.
 
-	Currently, this signal only fires upon a call to Manifest:replace.
-
 ]]
-function Manifest:updated(id)
-	local pool = self.pools[id]
-
-	if STRICT then
-		assert(pool, ErrBadComponentId)
-	end
-
-	return pool.onUpdate
+function Manifest:updatedSignal(id)
+	return self.pools[id].onUpdate
 end
 
 --[[
@@ -603,18 +537,10 @@ function Manifest:context(context, value)
 end
 
 function Manifest:poolSize(id)
-	if STRICT then
-		assert(self.pools[id], ErrBadComponentId)
-	end
-
 	return self.pools[id].size
 end
 
 function Manifest:_getPool(id)
-     if STRICT then
-		assert(self.pools[id], ErrBadComponentId)
-	end
-
 	return self.pools[id]
 end
 
