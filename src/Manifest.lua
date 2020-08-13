@@ -6,11 +6,10 @@
 
 ]]
 
+local Constraint = require(script.Parent.Constraint)
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 local Identify = require(script.Parent.core.Identify)
-local Observer = require(script.Parent.Observer)
-local View = require(script.Parent.View)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
@@ -29,7 +28,6 @@ function Manifest.new()
 		pools = {},
 		contexts = {},
 		component = ident,
-		observer = ident
 	}, Manifest)
 end
 
@@ -55,37 +53,6 @@ function Manifest:define(typeName, name)
 	self.pools[id] = Pool.new(name, typeName)
 
 	return id
-end
-
---[[
-
-	Register an observer on the manifest and return its handle.
-
-	Observer handles may be retrieved and used similarly to component type
-	handles:
-
-	-- someplace...
-	local position = manifest.component:named("position")
-	local updatedPositions = manifest:observe("updatedPositions"):updated(position)()
-
-	-- elsewhere...
-	local updatedPositions = manifest.observer:named("updatedPositions")
-
-	manifest:view():all(updatedPositions)():forEachEntity(function(entity)
-	...
-	end)
-
-	Observer names and component type names may not overlap per-manifest.  An
-	error will be raised if a name is already in use.
-
-]]
-function Manifest:observe(name)
-	local id = self.observer:generate(name)
-	local pool = Pool.new(name)
-
-	self.pools[id] = pool
-
-	return Observer.new(self, id, pool)
 end
 
 --[[
@@ -507,15 +474,17 @@ function Manifest:forEach(func)
 	end
 end
 
---[[
-
-	Construct and return a view into the manifest (see ./View.lua).
-
-]]
-function Manifest:view()
-	return View.new(self)
+function Manifest:all(...)
+	return Constraint.new(self, { ... })
 end
 
+function Manifest:except(...)
+	return Constraint.new(self, nil, { ... })
+end
+
+function Manifest:updated(...)
+	return Constraint.new(self, nil, nil, { ... })
+end
 
 --[[
 

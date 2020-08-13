@@ -37,94 +37,6 @@ return function()
 		end)
 	end)
 
-	describe("observe", function()
-          beforeEach(function(context)
-               local manifest = context.manifest
-
-               context.comp1 = manifest:define(nil, "test1")
-               context.comp2 = manifest:define(nil, "test2")
-               context.comp3 = manifest:define(nil, "test3")
-               context.comp4 = manifest:define(nil, "test4")
-
-               context.obsAll = manifest:observe("all"):all(context.comp1, context.comp2)()
-               context.obsAllExcept = manifest:observe("allExcept"):all(context.comp1, context.comp2)
-                    :except(context.comp3, context.comp4)()
-               context.obsUpdated = manifest:observe("updated"):updated(context.comp1, context.comp2)()
-          end)
-
-		describe("all", function()
-			it("should capture entities with all required components", function(context)
-				local entity = context.manifest:create()
-
-				context.manifest:add(entity, context.comp1)
-				context.manifest:add(entity, context.comp2)
-
-				expect(context.manifest:has(entity, context.obsAll)).to.equal(true)
-			end)
-
-			it("should cull entities that lose any required components", function(context)
-				local entity = context.manifest:create()
-
-				context.manifest:add(entity, context.comp1)
-				context.manifest:add(entity, context.comp2)
-
-				context.manifest:remove(entity, context.comp1)
-				expect(context.manifest:has(entity, context.obsAll)).to.equal(false)
-			end)
-		end)
-
-		describe("except", function()
-			it("should reject entities that have any forbidden components", function(context)
-				local entity = context.manifest:create()
-
-				context.manifest:add(entity, context.comp3)
-
-				context.manifest:add(entity, context.comp1)
-				context.manifest:add(entity, context.comp2)
-
-				expect(context.manifest:has(entity, context.obsAllExcept)).to.equal(false)
-			end)
-
-			it("should cull entities that gain any forbidden components", function(context)
-				local entity = context.manifest:create()
-
-				context.manifest:add(entity, context.comp1)
-				context.manifest:add(entity, context.comp2)
-				expect(context.manifest:has(entity, context.obsAllExcept)).to.equal(true)
-
-				context.manifest:add(entity, context.comp4)
-				expect(context.manifest:has(entity, context.obsAllExcept)).to.equal(false)
-			end)
-		end)
-
-		describe("updated", function()
-			it("should capture entities for which the given components have been updated", function(context)
-				local e1 = context.manifest:create()
-				local e2 = context.manifest:create()
-
-				context.manifest:add(e1, context.comp1)
-				context.manifest:add(e2, context.comp2)
-
-				context.manifest:replace(e1, context.comp1)
-				expect(context.manifest:has(e1, context.obsUpdated)).to.equal(true)
-
-				context.manifest:replace(e2, context.comp2)
-				expect(context.manifest:has(e2, context.obsUpdated)).to.equal(true)
-			end)
-
-			it("should cull entities which are destroyed after having been updated", function(context)
-				local entity = context.manifest:create()
-
-				context.manifest:add(entity, context.comp1)
-				context.manifest:replace(entity, context.comp1)
-				expect(context.manifest:has(entity, context.obsUpdated)).to.equal(true)
-
-				context.manifest:remove(entity, context.comp1)
-				expect(context.manifest:has(entity, context.obsUpdated)).to.equal(false)
-			end)
-		end)
-	end)
-
 	describe("create", function()
 		it("should return a valid entity identifier", function(context)
 			local entity = context.manifest:create()
@@ -329,7 +241,7 @@ return function()
 			local manifest = context.manifest
 			local ranCallback
 
-			manifest:added(context.testComponent):connect(function()
+			manifest:addedSignal(context.testComponent):connect(function()
 				ranCallback = true
 			end)
 
@@ -381,7 +293,7 @@ return function()
                local manifest =  context.manifest
                local ranCallback
 
-               manifest:added(context.testComponent):connect(function()
+               manifest:addedSignal(context.testComponent):connect(function()
                     ranCallback = true
                end)
 
@@ -406,7 +318,7 @@ return function()
                local entity = manifest:create()
                local ranCallback
 
-               manifest:updated(context.testComponent):connect(function()
+               manifest:updatedSignal(context.testComponent):connect(function()
                     ranCallback = true
                end)
 
@@ -431,7 +343,7 @@ return function()
                local manifest = context.manifest
                local ranAddCallback
 
-               manifest:added(context.testComponent):connect(function()
+               manifest:addedSignal(context.testComponent):connect(function()
                     ranAddCallback = true
                end)
 
@@ -453,7 +365,7 @@ return function()
                local entity = manifest:create()
                local ranReplaceCallback = false
 
-               manifest:updated(context.testComponent):connect(function()
+               manifest:updatedSignal(context.testComponent):connect(function()
                     ranReplaceCallback = true
                end)
 
@@ -480,7 +392,7 @@ return function()
                local entity = manifest:create()
                local ranCallback
 
-               manifest:removed(context.testComponent):connect(function()
+               manifest:removedSignal(context.testComponent):connect(function()
                     ranCallback = true
                end)
 
@@ -491,42 +403,30 @@ return function()
 		end)
 	end)
 
-	describe("added", function()
+	describe("addedSignal", function()
 		it("should return the added signal for the specified component", function(context)
                local manifest = context.manifest
 
-			expect(manifest:added(context.testComponent))
+			expect(manifest:addedSignal(context.testComponent))
                     .to.equal(manifest.pools[context.testComponent].onAssign)
 		end)
 	end)
 
-	describe("removed", function()
+	describe("removedSignal", function()
 		it("should return the removed signal for the specified component", function(context)
                local manifest = context.manifest
 
-               expect(manifest:removed(context.testComponent))
+               expect(manifest:removedSignal(context.testComponent))
                     .to.equal(manifest.pools[context.testComponent].onRemove)
 		end)
 	end)
 
-	describe("updated", function()
+	describe("updatedSignal", function()
 		it("should return the update signal for the specified component", function(context)
                local manifest = context.manifest
 
-			expect(manifest:updated(context.testComponent))
+			expect(manifest:updatedSignal(context.testComponent))
                     .to.equal(manifest.pools[context.testComponent].onUpdate)
-		end)
-	end)
-
-	describe("view", function()
-		it("should return a new view instance", function(context)
-               local view = context.manifest:view({ context.testComponent })
-
-			expect(view).to.be.ok()
-
-			view()
-
-			expect(view.componentPack).to.be.ok()
 		end)
 	end)
 
