@@ -107,7 +107,7 @@ return function()
                context.manifest:add(entity, context.testComponent, {})
                context.manifest:destroy(entity)
 
-			expect(context.manifest:_getPool(context.testComponent):has(entity)).to.equal(false)
+			expect(context.manifest:_getPool(context.testComponent):has(entity)).to.equal(nil)
 		end)
 	end)
 

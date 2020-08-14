@@ -53,12 +53,14 @@ function Pool:assign(entity, component)
 end
 
 function Pool:destroy(entity)
-	self.size -= 1
-
 	local sparseIdx = bit32.band(entity, ENTITYID_MASK)
 	local denseIdx = self.sparse[sparseIdx]
+	local size = self.size
 
-	if denseIdx < self.size + 1 then
+	self.size -= 1
+	self.sparse[sparseIdx] = nil
+
+	if denseIdx < size then
 		local swapped = self.dense[size]
 
 		self.dense[denseIdx] = swapped
