@@ -2,24 +2,9 @@ local Constants = require(script.Parent.Constants)
 local Signal = require(script.Parent.core.Signal)
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
-local STRICT = Constants.STRICT
-
-local ErrBadType = "bad component type: expected %s, got %s"
 
 local Pool = {}
 Pool.__index = Pool
-
-local function componentTypeOk(underlyingType, component)
-	local ty = typeof(component)
-	local instanceTypeOk = false
-
-	if ty == "Instance" then
-		instanceTypeOk = component:IsA(underlyingType)
-	end
-
-	return (tostring(underlyingType) == ty) or instanceTypeOk,
-	ErrBadType:format(tostring(underlyingType), typeof(component))
-end
 
 function Pool.new(name, dataType)
 	return setmetatable({
@@ -38,7 +23,7 @@ function Pool.new(name, dataType)
 end
 
 function Pool:__tostring()
-	return ("%s"):format(self.name)
+	return self.name
 end
 
 function Pool:has(entity)
@@ -56,10 +41,6 @@ function Pool:get(entity)
 end
 
 function Pool:assign(entity, component)
-	if STRICT then
-		assert(componentTypeOk(self.underlyingType, component))
-	end
-
 	self.size += 1
 	self.dense[self.size] = entity
 	self.sparse[bit32.band(entity, ENTITYID_MASK)] = self.size
@@ -72,12 +53,14 @@ function Pool:assign(entity, component)
 end
 
 function Pool:destroy(entity)
-	self.size -= 1
-
 	local sparseIdx = bit32.band(entity, ENTITYID_MASK)
 	local denseIdx = self.sparse[sparseIdx]
+	local size = self.size
 
-	if denseIdx < self.size + 1 then
+	self.size -= 1
+	self.sparse[sparseIdx] = nil
+
+	if denseIdx < size then
 		local swapped = self.dense[size]
 
 		self.dense[denseIdx] = swapped

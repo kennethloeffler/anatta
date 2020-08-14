@@ -1,9 +1,4 @@
-local Matcher = require(script.Parent.Matcher)
-
-local EMPTY = {}
-
-local View = {}
-View.__index = Matcher
+local NONE = {}
 
 local Multi = {}
 Multi.__index = Multi
@@ -17,27 +12,19 @@ Single.__index = Single
 local SingleWithForbidden = {}
 SingleWithForbidden.__index = SingleWithForbidden
 
-function View.new(manifest)
-	return setmetatable({
-		manifest = manifest,
+local View = {}
 
-		required = {},
-		forbidden = {},
-		changed = {},
-	}, View)
-end
-
-function View:__call()
-	local numRequired = #self.required
-	local forbidden = #self.forbidden > 0
+function View.new(constraint)
+	local numRequired = #constraint.required
+	local forbidden = #constraint.forbidden > 0
 
 	local viewKind = numRequired == 1
 		and (forbidden and SingleWithForbidden or Single)
 		or (forbidden and MultiWithForbidden or Multi)
 
-	self.componentPack = table.create(numRequired)
+	constraint.componentPack = table.create(numRequired)
 
-	return setmetatable(self, viewKind)
+	return setmetatable(constraint, viewKind)
 end
 
 local function selectShortestPool(manifest, required)
@@ -50,6 +37,10 @@ local function selectShortestPool(manifest, required)
 	end
 
 	return manifest:_getPool(candidate)
+end
+
+local function size(view)
+	return selectShortestPool(view.manifest, view.required)
 end
 
 function Multi:forEach(func)
@@ -81,6 +72,8 @@ function Multi:has(entity)
 	return self.manifest:has(entity, unpack(self.required))
 end
 
+Multi.size = size
+
 function Single:forEach(func)
 	local pool = self.manifest:_getPool(self.required[1])
 
@@ -103,11 +96,13 @@ function Single:consume(func)
 		pool.sparse[entity] = nil
 	end
 
-	table.move(EMPTY, 1, #pool.dense, 1, pool.dense)
-	table.move(EMPTY, 1, #pool.objects, 1, pool.objects)
+	table.move(NONE, 1, #pool.dense, 1, pool.dense)
+	table.move(NONE, 1, #pool.objects, 1, pool.objects)
 
 	pool.size = 0
 end
+
+Single.size = size
 
 function MultiWithForbidden:forEach(func)
 	for _, entity in ipairs(
@@ -141,6 +136,8 @@ function MultiWithForbidden:has(entity)
 		and self.manifest:has(entity, unpack(self.required))
 end
 
+MultiWithForbidden.size = size
+
 function SingleWithForbidden:forEach(func)
 	local pool = self.manifest:_getPool(self.required[1])
 
@@ -165,14 +162,14 @@ function SingleWithForbidden:consume(func)
 	local pool = self.manifest:_getPool(self.required[1])
 
 	for _, entity in ipairs(pool.dense) do
-		if not self.manifest:any(entity, unpack(forbidden)) then
+		if not self.manifest:any(entity, unpack(self.forbidden)) then
 			func(entity)
 			pool.sparse[entity] = nil
 		end
 	end
 
-	table.move(EMPTY, 1, pool.size, 1, pool.dense)
-	table.move(EMPTY, 1, pool.size, 1, pool.objects)
+	table.move(NONE, 1, pool.size, 1, pool.dense)
+	table.move(NONE, 1, pool.size, 1, pool.objects)
 
 	pool.size = 0
 end
@@ -181,6 +178,8 @@ function SingleWithForbidden:has(entity)
 	return self.manifest:has(entity, unpack(self.required))
 		and not self.manifest:any(entity, unpack(self.forbidden))
 end
+
+SingleWithForbidden.size = size
 
 View._singleMt = Single
 View._singleWithExclMt = SingleWithForbidden
