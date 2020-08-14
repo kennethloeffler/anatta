@@ -1,74 +1,60 @@
-local Matcher = require(script.Parent.Matcher)
+local Pool = require(script.Parent.Pool)
 
 local Observer = {}
-Observer.__index = Matcher
+Observer.__index = Observer
 
-local function maybeAdd(manifest, required, forbidden, pool)
-	-- is this observer only watching components that have been updated? if so,
-	-- we can just ensure that we haven't already captured this entity and skip
-	-- checks for required and forbidden components
-	if #required == 0 and #forbidden == 0 then
-		return function(entity)
-			if not pool:has(entity) then
-				pool:assign(entity)
-				pool.onAssign:dispatch(entity)
-			end
-		end
+function Observer.new(constraint, name)
+	local manifest = constraint.manifest
+	local obsName = name or string.format("__observer%s", #manifest.pools + 1)
+	local obsId = manifest.component:generate(obsName)
+	local pool = Pool.new(obsName)
+
+	manifest.pools[obsId] = pool
+	setmetatable(constraint, Observer)
+
+	for _, id in ipairs(constraint.required) do
+		manifest:addedSignal(id):connect(constraint:maybeAdd(pool))
+		manifest:removedSignal(id):connect(constraint:maybeRemove(pool))
 	end
 
+	for _, id in ipairs(constraint.forbidden) do
+		manifest:removedSignal(id):connect(constraint:maybeAdd(pool))
+		manifest:addedSignal(id):connect(constraint:maybeRemove(pool))
+	end
+
+	for _, id in ipairs(constraint.changed) do
+		manifest:updatedSignal(id):connect(constraint:maybeAdd(pool))
+		manifest:removedSignal(id):connect(constraint:maybeRemove(pool))
+	end
+
+	return obsId
+end
+
+function Observer:maybeAdd(pool)
+	local manifest = self.manifest
+	local required = self.required
+	local forbidden = self.forbidden
+
 	return function(entity)
-		if manifest:has(entity, unpack(required)) and not manifest:any(entity, unpack(forbidden)) then
-			if not pool:has(entity) then
-				pool:assign(entity)
-				pool.onAssign:dispatch(entity)
-			end
+		if not manifest:has(entity, unpack(required))
+		or manifest:any(entity, unpack(forbidden)) then
+			return
+		end
+
+		if not pool:has(entity) then
+			pool:assign(entity)
+			pool.onAssign:dispatch(entity)
 		end
 	end
 end
 
-local function maybeRemove(pool)
+function Observer:maybeRemove(pool, observed)
 	return function(entity)
 		if pool:has(entity) then
 			pool.onRemove:dispatch(entity)
 			pool:destroy(entity)
 		end
 	end
-end
-
-function Observer.new(manifest, id, pool)
-	return setmetatable({
-		manifest = manifest,
-		id = id,
-		pool = pool,
-
-		required = {},
-		forbidden = {},
-		changed = {}
-	}, Observer)
-end
-
-function Observer:__call()
-	local required = self.required
-	local forbidden = self.forbidden
-	local manifest = self.manifest
-	local pool = self.pool
-
-	for _, id in ipairs(required) do
-		manifest:added(id):connect(maybeAdd(manifest, required, forbidden, pool))
-		manifest:removed(id):connect(maybeRemove(pool))
-	end
-
-	for _, id in ipairs(forbidden) do
-		manifest:removed(id):connect(maybeAdd(manifest, required, forbidden, pool))
-		manifest:added(id):connect(maybeRemove(pool))
-	end
-
-	for _, id in ipairs(self.changed) do
-		manifest:updated(id):connect(maybeAdd(manifest, required, forbidden, pool))
-		manifest:removed(id):connect(maybeRemove(pool))
-	end
-
-	return self.id
 end
 
 return Observer
