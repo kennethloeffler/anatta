@@ -82,7 +82,13 @@ return function()
 				context.manifest:add(e2, context.comp2)
 
 				context.manifest:replace(e1, context.comp1)
+				expect(context.manifest:has(e1, context.obsUpdated)).to.equal(false)
+
+				context.manifest:replace(e1, context.comp2)
 				expect(context.manifest:has(e1, context.obsUpdated)).to.equal(true)
+
+				context.manifest:replace(e2, context.comp1)
+				expect(context.manifest:has(e2, context.obsUpdated)).to.equal(false)
 
 				context.manifest:replace(e2, context.comp2)
 				expect(context.manifest:has(e2, context.obsUpdated)).to.equal(true)
