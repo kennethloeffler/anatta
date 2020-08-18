@@ -22,7 +22,7 @@ local function assert(cond, msg, ...)
 		return
 	end
 
-	error(msg:format(...), 3)
+	error(select(1, ...) ~= nil and msg:format(...) or msg:format("nil"), 3)
 end
 
 return function(ecs)
