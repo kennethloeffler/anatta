@@ -27,8 +27,14 @@ function Manifest.new()
 		entities = {},
 		pools = {},
 		contexts = {},
-		component = ident,
+		ident = ident,
 	}, Manifest)
+end
+
+function Manifest:T(name)
+	local id = self.ident:named(name)
+
+	return id, self:context(id)
 end
 
 --[[
@@ -48,7 +54,7 @@ end
 
 ]]
 function Manifest:define(typeName, name)
-	local id = self.component:generate(name)
+	local id = self.ident:generate(name)
 
 	self.pools[id] = Pool.new(name, typeName)
 

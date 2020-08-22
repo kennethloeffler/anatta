@@ -6,7 +6,7 @@ Observer.__index = Observer
 function Observer.new(constraint, name)
 	local manifest = constraint.manifest
 	local obsName = name or string.format("__observer%s", #manifest.pools + 1)
-	local obsId = manifest.component:generate(obsName)
+	local obsId = manifest.ident:generate(obsName)
 	local pool = Pool.new(obsName)
 	local updated = {}
 

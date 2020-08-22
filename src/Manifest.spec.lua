@@ -17,7 +17,7 @@ return function()
 			expect(manifest.nextRecyclable).to.equal(Constants.NULL_ENTITYID)
 			expect(#manifest.entities).to.equal(0)
 			expect(#manifest.pools).to.equal(0)
-			expect(#manifest.component).to.equal(0)
+			expect(#manifest.ident).to.equal(0)
 		end)
 	end)
 
@@ -161,8 +161,8 @@ return function()
                local manifest = context.manifest
                local entity = manifest:create()
 
-               manifest:add(entity, manifest.component:named("test1"))
-               manifest:add(entity, manifest.component:named("test2"))
+               manifest:add(entity, manifest:T "test1")
+               manifest:add(entity, manifest:T "test2")
 
 			manifest:visit(function(component)
 				expect(manifest:has(entity, component)).to.equal(true)
