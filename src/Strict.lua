@@ -26,207 +26,240 @@ local function assert(cond, msg, ...)
 end
 
 return function(ecs)
-	local mt = getmetatable(ecs)
-
-	local newMt = {
-		context = mt.context,
-		numEntities = mt.numEntities,
-		assign = mt.assign,
-		stub = mt.stub,
-		create = mt.create,
-		createFrom = mt.createFrom,
-		define = mt.define,
-		new = mt.new,
-		all = mt.all,
-		except = mt.except,
-		updated = mt.updated,
-
-		destroy = function(self, entity)
-			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
-
-			return mt.destroy(self, entity)
+	local strict = {
+		T = function(self, name)
+			return ecs:T(name)
 		end,
 
-		valid = function(self, entity)
-			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-
-			return mt.valid(self, entity)
+		context = function(self, context, value)
+			return ecs:context(context, value)
 		end,
 
-		has = function(self, entity, ...)
+		numEntities = function()
+			return ecs:numEntities()
+		end,
+
+		assign = function(_, entities, id, component, ...)
+			return ecs:assign(entities, id, component, ...)
+		end,
+
+		stub = function(_, entity)
+			return ecs:stub(entity)
+		end,
+
+		create = function()
+			return ecs:create()
+		end,
+
+		createFrom = function(_, entity)
+			return ecs:createFrom(entity)
+		end,
+
+		define = function(_, typeName, name)
+			return ecs:define(typeName, name)
+		end,
+
+		new = function()
+			return ecs.new()
+		end,
+
+		all = function(_, ...)
+			return ecs:all(...)
+		end,
+
+		except = function(_, ...)
+			return ecs:except(...)
+		end,
+
+		updated = function(_, ...)
+			return ecs:updated(...)
+		end,
+
+		destroy = function(_, entity)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
+
+			return ecs:destroy(entity)
+		end,
+
+		valid = function(_, entity)
+			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
+
+			return ecs:valid(entity)
+		end,
+
+		has = function(_, entity, ...)
+			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
+			assert(ecs:valid(entity), ErrInvalid, entity)
 
 			for i = 1, select("#", ...) do
-				assert(self.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
+				assert(ecs.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
 			end
 
-			return mt.has(self, entity, ...)
+			return ecs:has(entity, ...)
 		end,
 
-		any = function(self, entity, ...)
+		any = function(_, entity, ...)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 
 			for i = 1, select("#", ...) do
-				assert(self.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
+				assert(ecs.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
 			end
 
-			return mt.any(self, entity, ...)
+			return ecs:any(entity, ...)
 		end,
 
-		get = function(self, entity, id)
-			local pool = self.pools[id]
+		get = function(_, entity, id)
+			local pool = ecs.pools[id]
 
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(pool:has(entity), ErrMissing, entity, pool.name)
 
-			return mt.get(self, entity, id)
+			return ecs:get(entity, id)
 		end,
 
-		getIfHas = function(self, entity, id)
+		getIfHas = function(_, entity, id)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 
-			return mt.getIfHas(self, entity, id)
+			return ecs:getIfHas(entity, id)
 		end,
 
-		multiGet = function(self, entity, output, ...)
+		multiGet = function(_, entity, output, ...)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 
 			for i = 1, select("#", ...) do
-				assert(self.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
+				assert(ecs.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
 			end
 
-			return mt.multiGet(self, entity, output, ...)
+			return ecs:multiGet(entity, output, ...)
 		end,
 
-		add = function(self, entity, id, component)
-			local pool = self.pools[id]
+		add = function(_, entity, id, component)
+			local pool = ecs.pools[id]
 
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(not pool:has(entity), ErrAlreadyHas, entity, pool.name)
 			assert(componentTypeOk(pool.underlyingType, component))
 
-			return mt.add(self, entity, id, component)
+			return ecs:add(entity, id, component)
 		end,
 
-		multiAdd = function(self, entity, ...)
+		multiAdd = function(_, entity, ...)
 			assert(select("#", ...) % 2 == 0, "insufficient arguments")
 
-			return mt.multiAdd(self, entity, ...)
+			return ecs:multiAdd(entity, ...)
 		end,
 
-		getOrAdd = function(self, entity, id, component)
-			local pool = self.pools[id]
+		getOrAdd = function(_, entity, id, component)
+			local pool = ecs.pools[id]
 
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 
-			return mt.getOrAdd(self, entity, id, component)
+			return ecs:getOrAdd(entity, id, component)
 		end,
 
-		replace = function(self, entity, id, component)
-			local pool = self.pools[id]
+		replace = function(_, entity, id, component)
+			local pool = ecs.pools[id]
 
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(pool:has(entity), ErrMissing, entity, pool.name)
 			assert(componentTypeOk(pool.underlyingType, component))
 
-			return mt.replace(self, entity, id, component)
+			return ecs:replace(entity, id, component)
 		end,
 
-		addOrReplace = function(self, entity, id, component)
-			local pool = self.pools[id]
+		addOrReplace = function(_, entity, id, component)
+			local pool = ecs.pools[id]
 
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(componentTypeOk(pool.underlyingType, component))
 
-			return mt.addOrReplace(self, entity, id, component)
+			return ecs:addOrReplace(entity, id, component)
 		end,
 
-		remove = function(self, entity, id)
-			local pool = self.pools[id]
+		remove = function(_, entity, id)
+			local pool = ecs.pools[id]
 
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(pool:has(entity), ErrMissing, entity, id)
 
-			return mt.remove(self, entity, id)
+			return ecs:remove(entity, id)
 		end,
 
-		removeIfHas = function(self, entity, id)
-			local pool = self.pools[id]
+		removeIfHas = function(_, entity, id)
+			local pool = ecs.pools[id]
 
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 
-			return mt.removeIfHas(self, entity, id)
+			return ecs:removeIfHas(entity, id)
 		end,
 
-		patch = function(self, entity, id, ...)
-			local pool = self.pools[id]
+		patch = function(_, entity, id, ...)
+			local pool = ecs.pools[id]
 
 			assert(select("#", ...) % 2 == 0, "insufficient arguments")
 			assert(pool:has(entity), ErrMissing, entity, id)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(mt.valid(self, entity), ErrInvalid, entity, id)
+			assert(ecs:valid(entity), ErrInvalid, entity, id)
 			assert(pool, ErrBadComponentId, id)
 
-			return mt.patch(self, entity, id, ...)
+			return ecs:patch(entity, id, ...)
 		end,
 
-		addedSignal = function(self, id)
-			local pool = self.pools[id]
-
-			assert(pool, ErrBadComponentId, id)
-
-			return mt.addedSignal(self, id)
-		end,
-
-		removedSignal = function(self, id)
-			local pool = self.pools[id]
+		addedSignal = function(_, id)
+			local pool = ecs.pools[id]
 
 			assert(pool, ErrBadComponentId, id)
 
-			return mt.removedSignal(self, id)
+			return ecs:addedSignal(id)
 		end,
 
-		updatedSignal = function(self, id)
-			local pool = self.pools[id]
+		removedSignal = function(_, id)
+			local pool = ecs.pools[id]
 
 			assert(pool, ErrBadComponentId, id)
 
-			return mt.updatedSignal(self, id)
+			return ecs:removedSignal(id)
 		end,
 
-		poolSize = function(self, id)
-			assert(self.pools[id], ErrBadComponentId, id)
+		updatedSignal = function(_, id)
+			local pool = ecs.pools[id]
 
-			return mt.poolSize(self, id)
+			assert(pool, ErrBadComponentId, id)
+
+			return ecs:updatedSignal(id)
 		end,
 
-		_getPool = function(self, id)
-			assert(self.pools[id], ErrBadComponentId, id)
+		poolSize = function(_, id)
+			assert(ecs.pools[id], ErrBadComponentId, id)
 
-			return mt._getPool(self, id)
+			return ecs:poolSize(id)
+		end,
+
+		_getPool = function(_, id)
+			assert(ecs.pools[id], ErrBadComponentId, id)
+
+			return ecs:_getPool(id)
 		end
 	}
 
-	newMt.__index = newMt
-
-	return setmetatable(ecs, newMt)
+	strict.__index = strict
+	return setmetatable({}, strict)
 end
