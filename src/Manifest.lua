@@ -33,10 +33,10 @@ end
 
 --[[
 
-	Register a component type on the manifest and return its handle.
+	Register a component type and return its handle.
 
 	Handles may be retrieved again via manifest.component (see
-	src/core/Identify.lua). For example:
+	src/core/Identify.lua).  For example:
 
 	-- someplace...
 	manifest:define("Vector3", "position")
@@ -81,11 +81,12 @@ end
 
 --[[
 
-	Return a new valid entity identifier equal to the supplied entity
-	identifier if possible.
+	If possible, return a new valid entity identifier equal to the given entity
+	identifier.
 
-	An identifier equal to entity is returned if and only if entity's id is not
-	in use by the manifest.
+	An identifier equal to the given identifier is returned if and only if the
+	given identifier's id part is not in use by the manifest.  Otherwise, a new
+	identifier created via Manifest:create() is returned.
 
 ]]
 function Manifest:createFrom(entity)
@@ -233,8 +234,8 @@ end
 
 --[[
 
-	If the entity has a component of any of the given types, return
-	true. Otherwise, return false.
+	If the entity has a component of any of the given types, return true.
+	Otherwise, return false.
 
 ]]
 function Manifest:any(entity, ...)
@@ -249,8 +250,8 @@ end
 
 --[[
 
-	If the entity has a component of the given type, return it. Otherwise,
-	return nil.
+	If the entity has a component of the given type, return the component
+	instance.  Otherwise, return nil.
 
 ]]
 function Manifest:get(entity, id)
@@ -277,10 +278,12 @@ end
 
 --[[
 
-	Add the given component to the entity and return it.
+	Add the given component to the entity and return the new component
+	instance.
 
-	An entity may only have one component of each type at a time. Adding a
-	component to an entity which already has one of the same type is undefined.
+	An entity may only have one component from each type at a time. Adding a
+	component to an entity that already has a component of the same type is
+	undefined.
 
 ]]
 function Manifest:add(entity, id, component)
@@ -320,8 +323,9 @@ end
 
 --[[
 
-	If the entity has a component of the given type, return it. Otherwise, add
-	the given component to the entity and return it.
+	If the entity has a component of the given type, return the component
+	instance.  Otherwise, add the given component to the entity and return the
+	new component.
 
 ]]
 function Manifest:getOrAdd(entity, id, component)
@@ -358,8 +362,8 @@ end
 --[[
 
 	If the entity has a component of the given type, replace it with the given
-	component and return the given component. Otherwise, add the given component to
-	the entity and return it.
+	component and return the new component instance. Otherwise, add the given
+	component to the entity and return the new component instance.
 
 ]]
 function Manifest:addOrReplace(entity, id, component)
@@ -395,7 +399,7 @@ end
 
 --[[
 
-	If the entity has a component of the given type, remove it. Otherwise, do
+	If the entity has a component of the given type, remove it.  Otherwise, do
 	nothing.
 
 ]]
@@ -472,7 +476,7 @@ end
 
 --[[
 
-	Pass each entity currently in use to func.
+	Pass each entity currently in use to the given function.
 
 ]]
 function Manifest:forEach(func)
@@ -504,9 +508,6 @@ end
 --[[
 
 	Inject a context variable into the manifest.
-
-	Providing value results in a write to the given context, even if there
-	already exists a variable for that context.
 
 ]]
 function Manifest:context(context, value)
