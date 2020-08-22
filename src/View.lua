@@ -91,9 +91,15 @@ end
 function Single:consume(func)
 	local pool = self.manifest:_getPool(self.required[1])
 
-	for _, entity in ipairs(pool.dense) do
-		func(entity)
-		pool.sparse[entity] = nil
+	if func then
+		for entity in pairs(pool.sparse) do
+			func(entity)
+			pool.sparse[entity] = nil
+		end
+	else
+		for entity in pairs(pool.sparse) do
+			pool.sparse[entity] = nil
+		end
 	end
 
 	table.move(NONE, 1, #pool.dense, 1, pool.dense)
@@ -161,10 +167,18 @@ end
 function SingleWithForbidden:consume(func)
 	local pool = self.manifest:_getPool(self.required[1])
 
-	for _, entity in ipairs(pool.dense) do
-		if not self.manifest:any(entity, unpack(self.forbidden)) then
-			func(entity)
-			pool.sparse[entity] = nil
+	if func then
+		for entity in pairs(pool.sparse) do
+			if not self.manifest:any(entity, unpack(self.forbidden)) then
+				func(entity)
+				pool.sparse[entity] = nil
+			end
+		end
+	else
+		for entity in pairs(pool.sparse) do
+			if not self.manifest:any(entity, unpack(self.forbidden)) then
+				pool.sparse[entity] = nil
+			end
 		end
 	end
 
