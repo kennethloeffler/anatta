@@ -31,9 +31,9 @@ function Constraint:except(...)
 end
 
 function Constraint:updated(...)
-    self.changed = { ... }
+	self.changed = { ... }
 
-    return self
+	return self
 end
 
 function Constraint:view()

@@ -19,6 +19,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+roblox.toml
+
 # =========================
 # Operating System Files
 # =========================
