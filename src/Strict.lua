@@ -208,7 +208,7 @@ return function(ecs)
 
 				assert(pool, ErrBadComponentId, select(i, ...))
 				assert(not pool:has(entity), ErrAlreadyHas, entity, pool.name)
-				assert(componentTypeOk(pool.underlyingType, select(i + 1)))
+				assert(componentTypeOk(pool.underlyingType, select(i + 1, ...)))
 			end
 
 			return ecs:multiAdd(entity, ...)
