@@ -65,7 +65,7 @@ return function()
 		end)
 	end)
 
-	describe("forEach (multi-component)", function()
+	describe("each (multi-component)", function()
 		local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
 		local entitiesToIterate = {}
 
@@ -76,7 +76,7 @@ return function()
 				end
 			end
 
-			view:forEach(function(entity)
+			view:each(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)
@@ -90,7 +90,7 @@ return function()
 				end
 			end
 
-			view:forEach(function(entity, first, second, third)
+			view:each(function(entity, first, second, third)
 				expect(entitiesToIterate[entity]).to.be.ok()
 
 				expect(manifest:get(entity, Component1)).to.be.ok()
@@ -104,7 +104,7 @@ return function()
 		end)
 	end)
 
-	describe("forEachEntity (multi-component)", function()
+	describe("eachEntity (multi-component)", function()
 		local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
 		local entitiesToIterate = {}
 
@@ -115,7 +115,7 @@ return function()
 				end
 			end
 
-			view:forEach(function(entity)
+			view:each(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)
@@ -141,7 +141,7 @@ return function()
 		end)
 	end)
 
-	describe("forEach (single-component)", function()
+	describe("each (single-component)", function()
 		local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
 		local entitiesToIterate = {}
 
@@ -150,7 +150,7 @@ return function()
 				entitiesToIterate[entity] = true
 			end
 
-			view:forEach(function(entity)
+			view:each(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)
@@ -162,7 +162,7 @@ return function()
 				entitiesToIterate[entity] = true
 			end
 
-			view:forEach(function(entity, component)
+			view:each(function(entity, component)
 				expect(entitiesToIterate[entity]).to.be.ok()
 				expect(manifest:has(entity, Component1)).to.be.ok()
 				expect(manifest:get(entity, Component1)).to.equal(component)
@@ -170,7 +170,7 @@ return function()
 		end)
 	end)
 
-	describe("forEachEntity (single-component)", function()
+	describe("eachEntity (single-component)", function()
 		local view = View.new(Constraint.new(manifest, {Component1}))
 		local entitiesToIterate = {}
 
@@ -179,13 +179,13 @@ return function()
 				entitiesToIterate[entity] = true
 			end
 
-			view:forEachEntity(function(entity)
+			view:eachEntity(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)
 	end)
 
-	describe("forEach (multi-component with exlcusion list)", function()
+	describe("each (multi-component with exlcusion list)", function()
 		local view = View.new(Constraint.new(manifest, {Component2, Component1}, {Component3}))
 		local entitiesToIterate = {}
 
@@ -196,7 +196,7 @@ return function()
 				end
 			end
 
-			view:forEach(function(entity)
+			view:each(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)
@@ -210,7 +210,7 @@ return function()
 				end
 			end
 
-			view:forEach(function(entity, component2, component1)
+			view:each(function(entity, component2, component1)
 				expect(entitiesToIterate[entity]).to.be.ok()
 
 				expect(manifest:get(entity, Component1)).to.be.ok()
@@ -222,7 +222,7 @@ return function()
 		end)
 	end)
 
-	describe("forEachEntity (multi-component with exclusion list)", function()
+	describe("eachEntity (multi-component with exclusion list)", function()
 		local view = View.new(Constraint.new(manifest, {Component1, Component2}, {Component3}))
 		local entitiesToIterate = {}
 
@@ -233,7 +233,7 @@ return function()
 				end
 			end
 
-			view:forEach(function(entity)
+			view:each(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)
@@ -267,7 +267,7 @@ return function()
 		end)
 	end)
 
-	describe("forEach (single-component with exclusion list)", function()
+	describe("each (single-component with exclusion list)", function()
 		local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
 		local entitiesToIterate = {}
 
@@ -278,7 +278,7 @@ return function()
 				end
 			end
 
-			view:forEach(function(entity)
+			view:each(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)
@@ -292,7 +292,7 @@ return function()
 				end
 			end
 
-			view:forEach(function(entity, component)
+			view:each(function(entity, component)
 				expect(entitiesToIterate[entity]).to.be.ok()
 				expect(manifest:has(entity, Component1)).to.be.ok()
 				expect(manifest:get(entity, Component1)).to.equal(component)
@@ -300,7 +300,7 @@ return function()
 		end)
 	end)
 
-	describe("forEachEntity (single-component with exclusion list)", function()
+	describe("eachEntity (single-component with exclusion list)", function()
 		local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
 		local entitiesToIterate = {}
 
@@ -311,7 +311,7 @@ return function()
 				end
 			end
 
-			view:forEachEntity(function(entity)
+			view:eachEntity(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
 		end)

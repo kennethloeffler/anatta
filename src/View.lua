@@ -43,25 +43,23 @@ local function size(view)
 	return selectShortestPool(view.manifest, view.required)
 end
 
-function Multi:forEach(func)
+function Multi:each(func)
 	for _, entity in ipairs(
-		selectShortestPool(self.manifest, self.required).dense
-	) do
+		selectShortestPool(self.manifest, self.required).dense)
+	do
 		if self.manifest:has(entity, unpack(self.required)) then
 			func(entity, self.manifest:multiGet(
 					entity,
 					self.componentPack,
-					unpack(self.required)
-				)
-			)
+					unpack(self.required)))
 		end
 	end
 end
 
-function Multi:forEachEntity(func)
+function Multi:eachEntity(func)
 	for _, entity in ipairs(
-		selectShortestPool(self.manifest, self.required).dense
-	) do
+		selectShortestPool(self.manifest, self.required).dense)
+	do
 		if self.manifest:has(entity, unpack(self.required)) then
 			func(entity)
 		end
@@ -74,7 +72,7 @@ end
 
 Multi.size = size
 
-function Single:forEach(func)
+function Single:each(func)
 	local pool = self.manifest:_getPool(self.required[1])
 
 	for index, entity in ipairs(pool.dense) do
@@ -82,7 +80,7 @@ function Single:forEach(func)
 	end
 end
 
-function Single:forEachEntity(func)
+function Single:eachEntity(func)
 	for _, entity in ipairs(self.manifest:_getPool(self.required[1]).dense) do
 		func(entity)
 	end
@@ -110,26 +108,23 @@ end
 
 Single.size = size
 
-function MultiWithForbidden:forEach(func)
+function MultiWithForbidden:each(func)
 	for _, entity in ipairs(
-		selectShortestPool(self.manifest, self.required).dense
-	) do
+		selectShortestPool(self.manifest, self.required).dense) do
 		if not self.manifest:any(entity, unpack(self.forbidden))
 		and self.manifest:has(entity, unpack(self.required)) then
 			func(entity, self.manifest:multiGet(
 					entity,
 					self.componentPack,
-					unpack(self.required)
-				)
-			)
+					unpack(self.required)))
 		end
 	end
 end
 
-function MultiWithForbidden:forEachEntity(func)
+function MultiWithForbidden:eachEntity(func)
 	for _, entity in ipairs(
-		selectShortestPool(self.manifest, self.required).dense
-	) do
+		selectShortestPool(self.manifest, self.required).dense)
+	do
 		if not self.manifest:any(entity, unpack(self.forbidden))
 		and self.manifest:has(entity, unpack(self.required)) then
 			func(entity)
@@ -144,7 +139,7 @@ end
 
 MultiWithForbidden.size = size
 
-function SingleWithForbidden:forEach(func)
+function SingleWithForbidden:each(func)
 	local pool = self.manifest:_getPool(self.required[1])
 
 	for index, entity in ipairs(pool.dense) do
@@ -154,10 +149,10 @@ function SingleWithForbidden:forEach(func)
 	end
 end
 
-function SingleWithForbidden:forEachEntity(func)
+function SingleWithForbidden:eachEntity(func)
 	for _, entity in ipairs(
-		self.manifest:_getPool(self.required[1]).dense
-	) do
+		self.manifest:_getPool(self.required[1]).dense)
+	do
 		if not self.manifest:any(entity, unpack(self.forbidden)) then
 			func(entity)
 		end

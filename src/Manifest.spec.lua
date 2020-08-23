@@ -553,7 +553,7 @@ return function()
                manifest:create()
                manifest:create()
 
-			manifest:forEach(function(entity)
+			manifest:each(function(entity)
 				local id = bit32.band(entity, Constants.ENTITYID_MASK)
 
 				expect(id).to.equal(bit32.band(manifest.entities[id], Constants.ENTITYID_MASK))

@@ -487,7 +487,7 @@ end
 	Pass each entity currently in use to the given function.
 
 ]]
-function Manifest:forEach(func)
+function Manifest:each(func)
 	if self.nextRecyclable == NULL_ENTITYID then
 		for _, entity in ipairs(self.entities) do
 			func(entity)
