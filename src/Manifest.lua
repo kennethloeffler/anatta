@@ -41,14 +41,13 @@ end
 
 	Register a component type and return its handle.
 
-	Handles may be retrieved again via manifest.component (see
-	src/core/Identify.lua).  For example:
+	Handles may be retrieved again via manifest:T:
 
 	-- someplace...
 	manifest:define("Vector3", "position")
 
 	-- elsewhere...
-	local position = manifest.component:named("position")
+	local position = manifest:T "position"
 
 	manifest:add(manifest:create(), position, Vector3.new(2, 4, 16))
 
