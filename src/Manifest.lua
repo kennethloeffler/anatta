@@ -41,14 +41,13 @@ end
 
 	Register a component type and return its handle.
 
-	Handles may be retrieved again via manifest.component (see
-	src/core/Identify.lua).  For example:
+	Handles may be retrieved again via manifest:T:
 
 	-- someplace...
 	manifest:define("Vector3", "position")
 
 	-- elsewhere...
-	local position = manifest.component:named("position")
+	local position = manifest:T "position"
 
 	manifest:add(manifest:create(), position, Vector3.new(2, 4, 16))
 
@@ -264,7 +263,7 @@ function Manifest:get(entity, id)
 	return self.pools[id]:get(entity)
 end
 
-function Manifest:getIfHas(entity, id)
+function Manifest:maybeGet(entity, id)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
@@ -294,6 +293,20 @@ end
 ]]
 function Manifest:add(entity, id, component)
 	local pool = self.pools[id]
+	local obj = pool:assign(entity, component)
+
+	pool.onAssign:dispatch(entity)
+
+	return obj
+end
+
+function Manifest:maybeAdd(entity, id, component)
+	local pool = self.pools[id]
+
+	if pool:has(entity) then
+		return
+	end
+
 	local obj = pool:assign(entity, component)
 
 	pool.onAssign:dispatch(entity)
@@ -409,7 +422,7 @@ end
 	nothing.
 
 ]]
-function Manifest:removeIfHas(entity, id)
+function Manifest:maybeRemove(entity, id)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
@@ -418,20 +431,9 @@ function Manifest:removeIfHas(entity, id)
 
 		return true
 	end
+
+	return false
 end
-
-function Manifest:patch(entity, id, ...)
-	local pool = self.pools[id]
-	local num = select("#", ...)
-	local component = pool:get(entity)
-
-	for i = 1, num, 2 do
-		pool.onUpdate:dispatch(entity, select(i, ...), select(i + 1, ...))
-	end
-
-	return component
-end
-
 
 --[[
 

@@ -22,16 +22,16 @@ local function assert(cond, msg, ...)
 		return
 	end
 
-	error(msg:format(...), 3)
+	error(select(1, ...) ~= nil and msg:format(...) or msg:format("nil"), 3)
 end
 
 return function(ecs)
 	local strict = {
-		T = function(self, name)
+		T = function(_, name)
 			return ecs:T(name)
 		end,
 
-		context = function(self, context, value)
+		context = function(_, context, value)
 			return ecs:context(context, value)
 		end,
 
@@ -40,10 +40,22 @@ return function(ecs)
 		end,
 
 		assign = function(_, entities, id, component, ...)
+			local pool = ecs.pools[id]
+
+			assert(pool, ErrBadComponentId, id)
+
+			for _, entity in ipairs(entities) do
+				assert(ecs:valid(entity), ErrInvalid, entity)
+			end
+
+			assert(componentTypeOk(pool.underlyingType, component))
+
 			return ecs:assign(entities, id, component, ...)
 		end,
 
 		stub = function(_, entity)
+			assert(ecs:valid(entity), ErrInvalid, entity)
+
 			return ecs:stub(entity)
 		end,
 
@@ -52,6 +64,10 @@ return function(ecs)
 		end,
 
 		createFrom = function(_, entity)
+			if ecs:valid(entity) then
+				warn(("creating a new entity because %08X's id is already in use - did you mean to do this?"):format(entity))
+			end
+
 			return ecs:createFrom(entity)
 		end,
 
@@ -64,14 +80,32 @@ return function(ecs)
 		end,
 
 		all = function(_, ...)
+			for i = 1, select("#", ...) do
+				local id = select(i, ...)
+
+				assert(ecs.pools[id], ErrBadComponentId, id)
+			end
+
 			return ecs:all(...)
 		end,
 
 		except = function(_, ...)
+			for i = 1, select("#", ...) do
+				local id = select(i, ...)
+
+				assert(ecs.pools[id], ErrBadComponentId, id)
+			end
+
 			return ecs:except(...)
 		end,
 
 		updated = function(_, ...)
+			for i = 1, select("#", ...) do
+				local id = select(i, ...)
+
+				assert(ecs.pools[id], ErrBadComponentId, id)
+			end
+
 			return ecs:updated(...)
 		end,
 
@@ -121,11 +155,11 @@ return function(ecs)
 			return ecs:get(entity, id)
 		end,
 
-		getIfHas = function(_, entity, id)
+		maybeGet = function(_, entity, id)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 
-			return ecs:getIfHas(entity, id)
+			return ecs:maybeGet(entity, id)
 		end,
 
 		multiGet = function(_, entity, output, ...)
@@ -133,7 +167,10 @@ return function(ecs)
 			assert(ecs:valid(entity), ErrInvalid, entity)
 
 			for i = 1, select("#", ...) do
-				assert(ecs.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
+				local pool = ecs.pools[select(i, ...)]
+
+				assert(pool, ErrBadComponentId, select(i, ...))
+				assert(not pool:has(entity), ErrMissing, entity, pool.name)
 			end
 
 			return ecs:multiGet(entity, output, ...)
@@ -151,8 +188,28 @@ return function(ecs)
 			return ecs:add(entity, id, component)
 		end,
 
+		maybeAdd = function(_, entity, id, component)
+			local pool = ecs.pools[id]
+
+			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
+			assert(ecs:valid(entity), ErrInvalid, entity)
+			assert(pool, ErrBadComponentId, id)
+			assert(componentTypeOk(pool.underlyingType, component))
+
+			return ecs:maybeAdd(entity, id, component)
+		end,
+
 		multiAdd = function(_, entity, ...)
 			assert(select("#", ...) % 2 == 0, "insufficient arguments")
+			assert(ecs:valid(entity), ErrInvalid, entity)
+
+			for i = 1, select("#", ...), 2 do
+				local pool = ecs.pools[select(i, ...)]
+
+				assert(pool, ErrBadComponentId, select(i, ...))
+				assert(not pool:has(entity), ErrAlreadyHas, entity, pool.name)
+				assert(componentTypeOk(pool.underlyingType, select(i + 1)))
+			end
 
 			return ecs:multiAdd(entity, ...)
 		end,
@@ -201,14 +258,14 @@ return function(ecs)
 			return ecs:remove(entity, id)
 		end,
 
-		removeIfHas = function(_, entity, id)
+		maybeRemove = function(_, entity, id)
 			local pool = ecs.pools[id]
 
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 
-			return ecs:removeIfHas(entity, id)
+			return ecs:maybeRemove(entity, id)
 		end,
 
 		patch = function(_, entity, id, ...)

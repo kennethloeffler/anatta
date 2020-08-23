@@ -104,10 +104,10 @@ return function()
           it("should remove all components that were on the entity", function(context)
                local entity = context.manifest:create()
 
-               context.manifest:add(entity, context.testComponent, {})
+               context.manifest.pools[context.testComponent]:assign(entity, context.testComponent, {})
                context.manifest:destroy(entity)
 
-			expect(context.manifest:_getPool(context.testComponent):has(entity)).to.equal(nil)
+			expect(context.manifest.pools[context.testComponent]:has(entity)).to.equal(nil)
 		end)
 	end)
 
@@ -161,11 +161,11 @@ return function()
                local manifest = context.manifest
                local entity = manifest:create()
 
-               manifest:add(entity, manifest:T "test1")
-               manifest:add(entity, manifest:T "test2")
+               manifest.pools[manifest:T "test1"]:assign(entity)
+               manifest.pools[manifest:T "test2"]:assign(entity)
 
 			manifest:visit(function(component)
-				expect(manifest:has(entity, component)).to.equal(true)
+				expect(manifest.pools[component]:has(entity)).to.be.ok()
 			end, entity)
 		end)
 	end)
@@ -184,8 +184,8 @@ return function()
                local entity = manifest:create()
 			local testComponent2 = manifest:define(nil, "testComponent2")
 
-			manifest:add(entity, context.testComponent, {})
-			manifest:add(entity, testComponent2)
+			manifest.pools[context.testComponent]:assign(entity)
+			manifest.pools[testComponent2]:assign(entity)
 			expect(manifest:has(entity, context.testComponent, testComponent2)).to.equal(true)
 		end)
 	end)
@@ -204,18 +204,29 @@ return function()
                local entity = manifest:create()
 			local testComponent2 = manifest:define(nil, "testComponent2")
 
-			manifest:add(entity, testComponent2)
+			manifest.pools[testComponent2]:assign(entity)
 
 			expect(manifest:any(entity, context.testComponent, testComponent2)).to.equal(true)
 		end)
 	end)
 
 	describe("get", function()
+		it("should return the component instance if the entity has the component", function(context)
+               local manifest = context.manifest
+               local entity = manifest:create()
+               local obj = {}
+
+			manifest.pools[context.testComponent]:assign(entity, obj)
+			expect(manifest:get(entity, context.testComponent)).to.equal(obj)
+		end)
+	end)
+
+	describe("maybeGet", function()
 		it("should return nil if the entity does not have the component", function(context)
                local manifest = context.manifest
                local entity = manifest:create()
 
-			expect(manifest:get(entity, context.testComponent)).to.never.be.ok()
+			expect(manifest:maybeGet(entity, context.testComponent)).to.never.be.ok()
 		end)
 
 		it("should return the component instance if the entity has the component", function(context)
@@ -224,24 +235,27 @@ return function()
                local obj = {}
 
 			manifest:add(entity, context.testComponent, obj)
-			expect(manifest:get(entity, context.testComponent)).to.equal(obj)
+			expect(manifest:maybeGet(entity, context.testComponent)).to.equal(obj)
 		end)
+
 	end)
 
 	describe("add", function()
 		it("should add a new component instance to the entity and return it", function(context)
                local manifest = context.manifest
                local entity = manifest:create()
-			local obj = manifest:add(entity, context.testComponent, {})
+			local t = {}
+			local obj = manifest:add(entity, context.testComponent, t)
 
-			expect(manifest:get(entity, context.testComponent)).to.equal(obj)
+			expect(manifest.pools[context.testComponent]:has(entity)).to.be.ok()
+			expect(t).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function(context)
 			local manifest = context.manifest
 			local ranCallback
 
-			manifest:addedSignal(context.testComponent):connect(function()
+			manifest.pools[context.testComponent].onAssign:connect(function()
 				ranCallback = true
 			end)
 
@@ -257,7 +271,7 @@ return function()
 			entity = manifest:create()
 
 			expect(manifest:add(entity, context.testComponent, {}))
-				.to.equal(manifest:get(entity, context.testComponent))
+				.to.equal(manifest.pools[context.testComponent]:get(entity))
 		end)
 
 		it("should correctly handle tag components", function(context)
@@ -267,9 +281,64 @@ return function()
 
 			manifest:add(entity, tag)
 
-               expect(manifest:has(entity, tag)).to.equal(true)
-               expect(manifest:get(entity, tag)).to.equal(nil)
+               expect(manifest.pools[tag]:has(entity)).to.be.ok()
+               expect(manifest.pools[tag]:get(entity)).to.equal(nil)
           end)
+	end)
+
+	describe("maybeAdd", function()
+		it("should return nil if the component already exists on the entity", function(context)
+			local manifest = context.manifest
+               local entity = manifest:create()
+			local obj = manifest.pools[context.testComponent]:assign(entity, {})
+
+			expect(manifest:maybeAdd(entity, context.testComponent)).to.equal(nil)
+		end)
+
+		it("should add a new component instance to the entity and return it if the component does not exist on the entity", function(context)
+               local manifest = context.manifest
+               local entity = manifest:create()
+			local t = {}
+			local obj = manifest:maybeAdd(entity, context.testComponent, t)
+
+			expect(manifest.pools[context.testComponent]:has(entity)).to.be.ok()
+			expect(t).to.equal(obj)
+		end)
+
+		it("should dispatch the component pool's assignment listeners", function(context)
+			local manifest = context.manifest
+			local ranCallback
+
+			manifest.pools[context.testComponent].onAssign:connect(function()
+				ranCallback = true
+			end)
+
+			manifest:maybeAdd(manifest:create(), context.testComponent, {})
+			expect(ranCallback).to.equal(true)
+		end)
+
+		it("should return the correct component instance when a recycled entity is used", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+
+			manifest:destroy(entity)
+			entity = manifest:create()
+
+			expect(manifest:maybeAdd(entity, context.testComponent, {}))
+				.to.equal(manifest.pools[context.testComponent]:get(entity))
+		end)
+
+		it("should correctly handle tag components", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+			local tag = manifest:define(nil, "tag")
+
+			manifest:maybeAdd(entity, tag)
+
+               expect(manifest.pools[tag]:has(entity)).to.be.ok()
+               expect(manifest.pools[tag]:get(entity)).to.equal(nil)
+          end)
+
 	end)
 
 	describe("getOrAdd", function()
@@ -284,7 +353,7 @@ return function()
 		it("should return the component instance if the entity already has it", function(context)
                local manifest = context.manifest
                local entity = manifest:create()
-               local obj = manifest:add(entity, context.testComponent, {})
+               local obj = manifest.pools[context.testComponent]:assign(entity, {})
 
 			expect(manifest:getOrAdd(entity, context.testComponent, {})).to.equal(obj)
 		end)
@@ -293,7 +362,7 @@ return function()
                local manifest =  context.manifest
                local ranCallback
 
-               manifest:addedSignal(context.testComponent):connect(function()
+               manifest.pools[context.testComponent].onAssign:connect(function()
                     ranCallback = true
                end)
 
@@ -308,9 +377,9 @@ return function()
                local entity = manifest:create()
                local obj = {}
 
-			manifest:add(entity, context.testComponent, {})
+			manifest.pools[context.testComponent]:assign(entity, {})
 			expect(manifest:replace(entity, context.testComponent, obj)).to.equal(obj)
-			expect(manifest:get(entity, context.testComponent)).to.equal(obj)
+			expect(manifest.pools[context.testComponent]:get(entity)).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's update listeners", function(context)
@@ -318,11 +387,11 @@ return function()
                local entity = manifest:create()
                local ranCallback
 
-               manifest:updatedSignal(context.testComponent):connect(function()
+               manifest.pools[context.testComponent].onUpdate:connect(function()
                     ranCallback = true
                end)
 
-               manifest:add(entity, context.testComponent, {})
+               manifest.pools[context.testComponent]:assign(entity, {})
                manifest:replace(entity, context.testComponent, {})
 
                expect(ranCallback).to.equal(true)
@@ -336,14 +405,14 @@ return function()
 			local added = {}
 
 			expect(manifest:addOrReplace(entity, context.testComponent, added)).to.equal(added)
-			expect(manifest:get(entity, context.testComponent)).to.equal(added)
+			expect(manifest.pools[context.testComponent]:get(entity)).to.equal(added)
 		end)
 
 		it("should dispatch the component pool's added listeners", function(context)
                local manifest = context.manifest
                local ranAddCallback
 
-               manifest:addedSignal(context.testComponent):connect(function()
+               manifest.pools[context.testComponent].onAssign:connect(function()
                     ranAddCallback = true
                end)
 
@@ -357,7 +426,7 @@ return function()
                local replaced = {}
 
 			expect(manifest:addOrReplace(entity, context.testComponent, replaced)).to.equal(replaced)
-			expect(manifest:get(entity, context.testComponent)).to.equal(replaced)
+			expect(manifest.pools[context.testComponent]:get(entity)).to.equal(replaced)
 		end)
 
 		it("should dispatch the component pool's replacement listeners", function(context)
@@ -365,11 +434,11 @@ return function()
                local entity = manifest:create()
                local ranReplaceCallback = false
 
-               manifest:updatedSignal(context.testComponent):connect(function()
+               manifest.pools[context.testComponent].onUpdate:connect(function()
                     ranReplaceCallback = true
                end)
 
-               manifest:add(entity, context.testComponent, {})
+               manifest.pools[context.testComponent]:assign(entity, {})
                manifest:addOrReplace(entity, context.testComponent, {})
 
 			expect(ranReplaceCallback).to.equal(true)
@@ -381,10 +450,10 @@ return function()
                local manifest = context.manifest
                local entity = manifest:create()
 
-			manifest:add(entity, context.testComponent, {})
+			manifest.pools[context.testComponent]:assign(entity, {})
 			manifest:remove(entity, context.testComponent)
 
-			expect(manifest:has(entity, context.testComponent)).to.equal(false)
+			expect(manifest.pools[context.testComponent]:has(entity)).to.equal(nil)
 		end)
 
 		it("should dispatch the component pool's removed listeners", function(context)
@@ -392,12 +461,46 @@ return function()
                local entity = manifest:create()
                local ranCallback
 
-               manifest:removedSignal(context.testComponent):connect(function()
+               manifest.pools[context.testComponent].onRemove:connect(function()
                     ranCallback = true
                end)
 
-               manifest:add(entity, context.testComponent, {})
+               manifest.pools[context.testComponent]:assign(entity, {})
 			manifest:remove(entity, context.testComponent)
+
+			expect(ranCallback).to.equal(true)
+		end)
+	end)
+
+	describe("maybeRemove", function()
+		it("should return false if the component does not exist on the entity", function(context)
+			local manifest = context.manifest
+               local entity = manifest:create()
+
+			expect(manifest:maybeRemove(entity, context.testComponent)).to.equal(false)
+		end)
+
+		it("should remove a component if it exists on the entity and return true", function(context)
+               local manifest = context.manifest
+               local entity = manifest:create()
+
+			manifest.pools[context.testComponent]:assign(entity, {})
+			expect(manifest:maybeRemove(entity, context.testComponent)).to.equal(true)
+
+			expect(manifest.pools[context.testComponent]:has(entity)).to.equal(nil)
+		end)
+
+		it("should dispatch the component pool's removed listeners", function(context)
+               local manifest = context.manifest
+               local entity = manifest:create()
+               local ranCallback
+
+               manifest.pools[context.testComponent].onRemove:connect(function()
+                    ranCallback = true
+               end)
+
+               manifest.pools[context.testComponent]:assign(entity, {})
+			manifest:maybeRemove(entity, context.testComponent)
 
 			expect(ranCallback).to.equal(true)
 		end)
