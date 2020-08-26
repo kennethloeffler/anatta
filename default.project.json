@@ -3,7 +3,7 @@
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
-	 "$className": "ReplicatedStorage",
+      "$className": "ReplicatedStorage",
       "anatta": {
         "$path": "src"
       }
