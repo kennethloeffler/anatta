@@ -36,32 +36,32 @@ return function()
 			local view = View.new(Constraint.new(manifest, {Component1}))
 
 			expect(getmetatable(view)).to.equal(View._singleMt)
-			expect(view.required[1]).to.equal(Component1)
+			expect(view.required[1]).to.equal(Pool1)
 		end)
 
 		it("should construct a single-component view with exclusion list when there is one required component and one or more forbidden components", function()
 			local view = View.new(Constraint.new(manifest, {Component1}, {Component3}))
 
 			expect(getmetatable(view)).to.equal(View._singleWithExclMt)
-			expect(view.required[1]).to.equal(Component1)
-			expect(view.forbidden[1]).to.equal(Component3)
+			expect(view.required[1]).to.equal(Pool1)
+			expect(view.forbidden[1]).to.equal(Pool3)
 		end)
 
 		it("should construct a multi-component view when there are multiple required components and no forbidden components", function()
 			local view = View.new(Constraint.new(manifest, {Component1, Component2}))
 
 			expect(getmetatable(view)).to.equal(View._multiMt)
-			expect(view.required[1]).to.equal(Component1)
-			expect(view.required[2]).to.equal(Component2)
+			expect(view.required[1]).to.equal(Pool1)
+			expect(view.required[2]).to.equal(Pool2)
 		end)
 
 		it("should construct a multi-component view with exclusion list when there are multiple required components and one or more forbidden components", function()
 			local view = View.new(Constraint.new(manifest, {Component1, Component2}, {Component3}))
 
 			expect(getmetatable(view)).to.equal(View._multiWithExclMt)
-			expect(view.required[1]).to.equal(Component1)
-			expect(view.required[2]).to.equal(Component2)
-			expect(view.forbidden[1]).to.equal(Component3)
+			expect(view.required[1]).to.equal(Pool1)
+			expect(view.required[2]).to.equal(Pool2)
+			expect(view.forbidden[1]).to.equal(Pool3)
 		end)
 	end)
 
@@ -118,26 +118,6 @@ return function()
 			view:each(function(entity)
 				expect(entitiesToIterate[entity]).to.be.ok()
 			end)
-		end)
-	end)
-
-	describe("has (multi-component)", function()
-		local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
-
-		it("should return true if the entity is iterated by the view", function()
-			local entity = manifest:create()
-
-			manifest:add(entity, Component1, {})
-			manifest:add(entity, Component2, {})
-			manifest:add(entity, Component3, {})
-
-			expect(view:has(entity)).to.equal(true)
-		end)
-
-		it("should return false if the entity is not iterated by the view", function()
-			local entity = manifest:create()
-
-			expect(view:has(entity)).to.equal(false)
 		end)
 	end)
 
@@ -239,34 +219,6 @@ return function()
 		end)
 	end)
 
-	describe("has (multi-component with exclusion list)", function()
-		local view = View.new(Constraint.new(manifest, {Component1, Component2}, {Component3}))
-
-		it("should return true if the entity is iterated by the view", function()
-			local entity = manifest:create()
-
-			manifest:add(entity, Component1, {})
-			manifest:add(entity, Component2, {})
-
-			expect(view:has(entity)).to.equal(true)
-		end)
-
-		it("should return false if the entity is not iterated by the view", function()
-			local entity1 = manifest:create()
-			local entity2 = manifest:create()
-
-			manifest:add(entity1, Component1, {})
-			manifest:add(entity1, Component2, {})
-			manifest:add(entity1, Component3, {})
-
-			manifest:add(entity2, Component2, {})
-			manifest:add(entity2, Component3, {})
-
-			expect(view:has(entity1)).to.equal(false)
-			expect(view:has(entity2)).to.equal(false)
-		end)
-	end)
-
 	describe("each (single-component with exclusion list)", function()
 		local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
 		local entitiesToIterate = {}
@@ -320,8 +272,7 @@ return function()
 	describe("selectShortestPool", function()
 		it("should return the pool containing the fewest number of elements for the specified components", function()
 			-- Pool3 is the shortest pool (see line 41)
-			expect(View._selectShortestPool(
-				manifest, { Component1, Component2, Component3 })
+			expect(View._selectShortestPool({ Pool1, Pool2, Pool3 })
 			).to.equal(Pool3)
 		end)
 	end)

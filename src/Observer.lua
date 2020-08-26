@@ -13,12 +13,14 @@ function Observer.new(constraint, name)
 	manifest.pools[obsId] = pool
 	setmetatable(constraint, Observer)
 
-	for _, id in ipairs(constraint.required) do
+	for i, id in ipairs(constraint.required) do
+		constraint.required[i] = manifest:_getPool(id)
 		manifest:addedSignal(id):connect(constraint:maybeAdd(pool, updated))
 		manifest:removedSignal(id):connect(constraint:maybeRemove(pool, updated))
 	end
 
-	for _, id in ipairs(constraint.forbidden) do
+	for i, id in ipairs(constraint.forbidden) do
+		constraint.forbidden[i] = manifest:_getPool(id)
 		manifest:removedSignal(id):connect(constraint:maybeAdd(pool, updated))
 		manifest:addedSignal(id):connect(constraint:maybeRemove(pool, updated))
 	end
@@ -31,7 +33,7 @@ function Observer.new(constraint, name)
 	return obsId
 end
 
-function Observer:maybeAdd(pool, updated)
+function Observer:maybeAdd(obsPool, updated)
 	local manifest = self.manifest
 	local required = self.required
 	local forbidden = self.forbidden
@@ -39,36 +41,50 @@ function Observer:maybeAdd(pool, updated)
 
 	if numChanged > 0 then
 		return function(entity)
-			if not manifest:has(entity, unpack(required))
-			or manifest:any(entity, unpack(forbidden)) then
-				return
+			for _, pool in ipairs(forbidden) do
+				if pool.sparse[entity] then
+					return
+				end
+			end
+
+			for _, pool in ipairs(required) do
+				if not pool.sparse[entity] then
+					return
+				end
 			end
 
 			local val = (updated[entity] or 0) + 1
 
 			updated[entity] = val
 
-			if not pool:has(entity) and val == numChanged then
-				pool:assign(entity)
-				pool.onAssign:dispatch(entity)
+			if not obsPool:has(entity) and val == numChanged then
+				obsPool:assign(entity)
+				obsPool.onAssign:dispatch(entity)
 			end
 		end
 	end
 
 	return function(entity)
-		if not manifest:has(entity, unpack(required))
-		or manifest:any(entity, unpack(forbidden)) then
-			return
+		for _, pool in ipairs(forbidden) do
+			if pool.sparse[entity] then
+				return
+			end
 		end
 
-		if not pool:has(entity) then
-			pool:assign(entity)
-			pool.onAssign:dispatch(entity)
+		for _, pool in ipairs(required) do
+			if not pool.sparse[entity] then
+				return
+			end
+		end
+
+		if not obsPool:has(entity) then
+			obsPool:assign(entity)
+			obsPool.onAssign:dispatch(entity)
 		end
 	end
 end
 
-function Observer:maybeRemove(pool, updated)
+function Observer:maybeRemove(obsPool, updated)
 	local numChanged = #self.changed
 
 	if numChanged > 0 then
@@ -83,17 +99,17 @@ function Observer:maybeRemove(pool, updated)
 				end
 			end
 
-			if pool:has(entity) then
-				pool.onRemove:dispatch(entity)
-				pool:destroy(entity)
+			if obsPool:has(entity) then
+				obsPool.onRemove:dispatch(entity)
+				obsPool:destroy(entity)
 			end
 		end
 	end
 
 	return function(entity)
-		if pool:has(entity) then
-			pool.onRemove:dispatch(entity)
-			pool:destroy(entity)
+		if obsPool:has(entity) then
+			obsPool.onRemove:dispatch(entity)
+			obsPool:destroy(entity)
 		end
 	end
 end
