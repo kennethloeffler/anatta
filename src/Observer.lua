@@ -15,26 +15,25 @@ function Observer.new(constraint, name)
 
 	for i, id in ipairs(constraint.required) do
 		constraint.required[i] = manifest:_getPool(id)
-		manifest:addedSignal(id):connect(constraint:maybeAdd(pool, updated))
-		manifest:removedSignal(id):connect(constraint:maybeRemove(pool, updated))
+		manifest:onAdded(id):connect(constraint:maybeAdd(pool, updated))
+		manifest:onRemoved(id):connect(constraint:maybeRemove(pool, updated))
 	end
 
 	for i, id in ipairs(constraint.forbidden) do
 		constraint.forbidden[i] = manifest:_getPool(id)
-		manifest:removedSignal(id):connect(constraint:maybeAdd(pool, updated))
-		manifest:addedSignal(id):connect(constraint:maybeRemove(pool, updated))
+		manifest:onRemoved(id):connect(constraint:maybeAdd(pool, updated))
+		manifest:onAdded(id):connect(constraint:maybeRemove(pool, updated))
 	end
 
 	for _, id in ipairs(constraint.changed) do
-		manifest:updatedSignal(id):connect(constraint:maybeAdd(pool, updated))
-		manifest:removedSignal(id):connect(constraint:maybeRemove(pool, updated))
+		manifest:onUpdated(id):connect(constraint:maybeAdd(pool, updated))
+		manifest:onRemoved(id):connect(constraint:maybeRemove(pool, updated))
 	end
 
 	return obsId
 end
 
 function Observer:maybeAdd(obsPool, updated)
-	local manifest = self.manifest
 	local required = self.required
 	local forbidden = self.forbidden
 	local numChanged = #self.changed
@@ -92,7 +91,7 @@ function Observer:maybeRemove(obsPool, updated)
 			if updated[entity] then
 				local val = updated[entity] - 1
 
-				if value == 0 then
+				if val == 0 then
 					updated[entity] = nil
 				else
 					updated[entity] = val

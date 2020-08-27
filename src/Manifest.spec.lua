@@ -506,29 +506,29 @@ return function()
 		end)
 	end)
 
-	describe("addedSignal", function()
+	describe("onAdded", function()
 		it("should return the added signal for the specified component", function(context)
                local manifest = context.manifest
 
-			expect(manifest:addedSignal(context.testComponent))
+			expect(manifest:onAdded(context.testComponent))
                     .to.equal(manifest.pools[context.testComponent].onAssign)
 		end)
 	end)
 
-	describe("removedSignal", function()
+	describe("onRemoved", function()
 		it("should return the removed signal for the specified component", function(context)
                local manifest = context.manifest
 
-               expect(manifest:removedSignal(context.testComponent))
+               expect(manifest:onRemoved(context.testComponent))
                     .to.equal(manifest.pools[context.testComponent].onRemove)
 		end)
 	end)
 
-	describe("updatedSignal", function()
+	describe("onUpdated", function()
 		it("should return the update signal for the specified component", function(context)
                local manifest = context.manifest
 
-			expect(manifest:updatedSignal(context.testComponent))
+			expect(manifest:onUpdated(context.testComponent))
                     .to.equal(manifest.pools[context.testComponent].onUpdate)
 		end)
 	end)

@@ -118,8 +118,7 @@ function Manifest:createFrom(entity)
 		if curr == entityId then
 			self.nextRecyclable = bit32.band(
 				self.entities[entityId],
-				ENTITYID_MASK
-			)
+				ENTITYID_MASK)
 			self.entities[entityId] = entity
 
 			return entity
@@ -136,9 +135,7 @@ function Manifest:createFrom(entity)
 			bit32.band(self.entities[entityId], ENTITYID_MASK),
 			bit32.lshift(
 				bit32.rshift(self.entities[last], ENTITYID_WIDTH),
-				ENTITYID_WIDTH
-			)
-		)
+				ENTITYID_WIDTH))
 
 		self.entities[entityId] = entity
 
@@ -441,7 +438,7 @@ end
 	added to an entity.
 
 ]]
-function Manifest:addedSignal(id)
+function Manifest:onAdded(id)
 	return self.pools[id].onAssign
 end
 
@@ -451,7 +448,7 @@ end
 	removed from an entity.
 
 ]]
-function Manifest:removedSignal(id)
+function Manifest:onRemoved(id)
 	return self.pools[id].onRemove
 end
 
@@ -461,7 +458,7 @@ end
 	changed in some way.
 
 ]]
-function Manifest:updatedSignal(id)
+function Manifest:onUpdated(id)
 	return self.pools[id].onUpdate
 end
 
