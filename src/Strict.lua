@@ -280,28 +280,28 @@ return function(ecs)
 			return ecs:patch(entity, id, ...)
 		end,
 
-		addedSignal = function(_, id)
+		onAdded = function(_, id)
 			local pool = ecs.pools[id]
 
 			assert(pool, ErrBadComponentId, id)
 
-			return ecs:addedSignal(id)
+			return ecs:onAdded(id)
 		end,
 
-		removedSignal = function(_, id)
+		onRemoved = function(_, id)
 			local pool = ecs.pools[id]
 
 			assert(pool, ErrBadComponentId, id)
 
-			return ecs:removedSignal(id)
+			return ecs:onRemoved(id)
 		end,
 
-		updatedSignal = function(_, id)
+		onUpdated = function(_, id)
 			local pool = ecs.pools[id]
 
 			assert(pool, ErrBadComponentId, id)
 
-			return ecs:updatedSignal(id)
+			return ecs:onUpdated(id)
 		end,
 
 		poolSize = function(_, id)
