@@ -2,7 +2,7 @@
 
 # Intro
 
-The entity component system (aka ECS, entity system) is an architectural pattern which models an application as a collection of entities associated with various component value objects which represent units of state. Systems proper are free functions called each frame (or at some other frequency) which operate on entities fulfilling some criteria (e.g. all entities with both a `Health` component and a `Regeneration` component). However, systems need not strictly adhere to this: e.g. they may be implemented in terms of events without issue. For details see:
+The entity component system (aka ECS, entity system) is an architectural pattern that models an application as a collection of entities associated with various component value objects that represent units of state. Systems proper are free functions called each frame (or at some other frequency) that operate on entities fulfilling some criteria (e.g. all entities with both a `Health` component and a `Regeneration` component). However, systems need not strictly follow this: e.g. they may be implemented in terms of events without issue. For details see:
 
 * [A Data-Driven Game Object System](https://www.gamedevs.org/uploads/data-driven-game-object-system.pdf)
 * [Evolve Your Hierarchy](http://cowboyprogramming.com/2007/01/05/evolve-your-heirachy/)

@@ -9,11 +9,11 @@ Constraint.__index = Constraint
 
 function Constraint.new(manifest, required, forbidden, changed)
 	return setmetatable({
-		manifest = manifest,
 		required = required or NONE,
 		forbidden = forbidden or NONE,
 		changed = changed or NONE,
 
+		manifest = manifest,
 		componentPack = NONE
 	}, Constraint)
 end

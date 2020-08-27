@@ -15,182 +15,239 @@ SingleWithForbidden.__index = SingleWithForbidden
 local View = {}
 
 function View.new(constraint)
+	local manifest = constraint.manifest
 	local numRequired = #constraint.required
-	local forbidden = #constraint.forbidden > 0
+	local numForbidden = #constraint.forbidden
 
 	local viewKind = numRequired == 1
-		and (forbidden and SingleWithForbidden or Single)
-		or (forbidden and MultiWithForbidden or Multi)
+		and (numForbidden > 0 and SingleWithForbidden or Single)
+		or (numForbidden > 0 and MultiWithForbidden or Multi)
 
 	constraint.componentPack = table.create(numRequired)
+
+	for i, id in ipairs(constraint.required) do
+		constraint.required[i] = manifest:_getPool(id)
+	end
+
+	for i, id in ipairs(constraint.forbidden) do
+		constraint.forbidden[i] = manifest:_getPool(id)
+	end
 
 	return setmetatable(constraint, viewKind)
 end
 
-local function selectShortestPool(manifest, required)
+local function selectShortestPool(required)
 	local _, candidate = next(required)
 
-	for _, id in ipairs(required) do
-		if manifest:poolSize(id) < manifest:poolSize(candidate) then
-			candidate = id
+	for _, pool in ipairs(required) do
+		if pool.size < candidate.size then
+			candidate = pool
 		end
 	end
 
-	return manifest:_getPool(candidate)
+	return candidate
 end
 
 local function size(view)
-	return selectShortestPool(view.manifest, view.required)
+	return selectShortestPool(view.required)
 end
 
-function Multi:forEach(func)
-	for _, entity in ipairs(
-		selectShortestPool(self.manifest, self.required).dense
-	) do
-		if self.manifest:has(entity, unpack(self.required)) then
-			func(entity, self.manifest:multiGet(
-					entity,
-					self.componentPack,
-					unpack(self.required)
-				)
-			)
+function Multi:each(func)
+	local required = self.required
+	local componentPack = self.componentPack
+
+	for _, entity in ipairs(selectShortestPool(required).dense) do
+		local hasRequired = true
+		for i, pool in ipairs(required) do
+			local idx = pool.sparse[entity]
+
+			if not idx then
+				hasRequired = false
+				break
+			end
+
+			componentPack[i] = pool.objects[idx]
+		end
+
+		if hasRequired then
+			func(entity, unpack(componentPack))
 		end
 	end
 end
 
-function Multi:forEachEntity(func)
-	for _, entity in ipairs(
-		selectShortestPool(self.manifest, self.required).dense
-	) do
-		if self.manifest:has(entity, unpack(self.required)) then
+function Multi:eachEntity(func)
+	local required = self.required
+
+	for _, entity in ipairs(selectShortestPool(required).dense) do
+		local hasRequired = true
+		for i, pool in ipairs(required) do
+			if not pool.sparse[entity] then
+				hasRequired = false
+				break
+			end
+		end
+
+		if hasRequired then
 			func(entity)
 		end
 	end
 end
 
-function Multi:has(entity)
-	return self.manifest:has(entity, unpack(self.required))
-end
-
 Multi.size = size
 
-function Single:forEach(func)
-	local pool = self.manifest:_getPool(self.required[1])
+function Single:each(func)
+	local pool = self.required[1]
 
-	for index, entity in ipairs(pool.dense) do
-		func(entity, pool.objects[index])
+	for i, entity in ipairs(pool.dense) do
+		func(entity, pool.objects[i])
 	end
 end
 
-function Single:forEachEntity(func)
-	for _, entity in ipairs(self.manifest:_getPool(self.required[1]).dense) do
+function Single:eachEntity(func)
+	for _, entity in ipairs(self.required[1].dense) do
 		func(entity)
 	end
 end
 
 function Single:consume(func)
-	local pool = self.manifest:_getPool(self.required[1])
+	local pool = self.required[1]
+	local dense = pool.dense
+	local sparse = pool.sparse
 
 	if func then
-		for entity in pairs(pool.sparse) do
+		for _, entity in ipairs(dense) do
 			func(entity)
-			pool.sparse[entity] = nil
-		end
-	else
-		for entity in pairs(pool.sparse) do
-			pool.sparse[entity] = nil
 		end
 	end
 
-	table.move(NONE, 1, #pool.dense, 1, pool.dense)
-	table.move(NONE, 1, #pool.objects, 1, pool.objects)
+	for entity in pairs(sparse) do
+		sparse[entity] = nil
+	end
 
+	table.move(NONE, 1, pool.size, 1, dense)
+	table.move(NONE, 1, pool.size, 1, pool.objects)
 	pool.size = 0
 end
 
 Single.size = size
 
-function MultiWithForbidden:forEach(func)
-	for _, entity in ipairs(
-		selectShortestPool(self.manifest, self.required).dense
-	) do
-		if not self.manifest:any(entity, unpack(self.forbidden))
-		and self.manifest:has(entity, unpack(self.required)) then
-			func(entity, self.manifest:multiGet(
-					entity,
-					self.componentPack,
-					unpack(self.required)
-				)
-			)
+function MultiWithForbidden:each(func)
+	local required = self.required
+	local forbidden = self.forbidden
+	local componentPack = self.componentPack
+
+	for _, entity in ipairs(selectShortestPool(required).dense) do
+		local hasForbidden = false
+		local hasRequired = true
+
+		for i, pool in ipairs(forbidden) do
+			if pool.sparse[entity] then
+				hasForbidden = true
+				break
+			end
+		end
+
+		if hasForbidden then
+			continue
+		end
+
+		for i, pool in ipairs(required) do
+			local idx = pool.sparse[entity]
+
+			if not idx then
+				hasRequired = false
+				break
+			end
+
+			componentPack[i] = pool.objects[idx]
+		end
+
+		if hasRequired then
+			func(entity, unpack(componentPack))
 		end
 	end
 end
 
-function MultiWithForbidden:forEachEntity(func)
-	for _, entity in ipairs(
-		selectShortestPool(self.manifest, self.required).dense
-	) do
-		if not self.manifest:any(entity, unpack(self.forbidden))
-		and self.manifest:has(entity, unpack(self.required)) then
-			func(entity)
+function MultiWithForbidden:eachEntity(func)
+	local required = self.required
+	local forbidden = self.forbidden
+	local componentPack = self.componentPack
+
+	for _, entity in ipairs(selectShortestPool(required).dense) do
+		local hasForbidden = false
+		local hasRequired = true
+
+		for i, pool in ipairs(forbidden) do
+			if pool.sparse[entity] then
+				hasForbidden = true
+				break
+			end
+		end
+
+		if hasForbidden then
+			continue
+		end
+
+		for i, pool in ipairs(required) do
+			local idx = pool.sparse[entity]
+
+			if not idx then
+				hasRequired = false
+				break
+			end
+
+			componentPack[i] = pool.objects[idx]
+		end
+
+		if hasRequired then
+			func(entity, unpack(componentPack))
 		end
 	end
-end
-
-function MultiWithForbidden:has(entity)
-	return not self.manifest:any(entity, unpack(self.forbidden))
-		and self.manifest:has(entity, unpack(self.required))
 end
 
 MultiWithForbidden.size = size
 
-function SingleWithForbidden:forEach(func)
-	local pool = self.manifest:_getPool(self.required[1])
+function SingleWithForbidden:each(func)
+	local objects = self.required[1].objects
+	local forbidden = self.forbidden
 
-	for index, entity in ipairs(pool.dense) do
-		if not self.manifest:any(entity, unpack(self.forbidden)) then
-			func(entity, pool.objects[index])
-		end
-	end
-end
+	for idx, entity in ipairs(self.required[1].dense) do
+		local hasForbidden = false
 
-function SingleWithForbidden:forEachEntity(func)
-	for _, entity in ipairs(
-		self.manifest:_getPool(self.required[1]).dense
-	) do
-		if not self.manifest:any(entity, unpack(self.forbidden)) then
-			func(entity)
-		end
-	end
-end
-
-function SingleWithForbidden:consume(func)
-	local pool = self.manifest:_getPool(self.required[1])
-
-	if func then
-		for entity in pairs(pool.sparse) do
-			if not self.manifest:any(entity, unpack(self.forbidden)) then
-				func(entity)
-				pool.sparse[entity] = nil
+		for i, pool in ipairs(forbidden) do
+			if pool.sparse[entity] then
+				hasForbidden = true
+				break
 			end
 		end
-	else
-		for entity in pairs(pool.sparse) do
-			if not self.manifest:any(entity, unpack(self.forbidden)) then
-				pool.sparse[entity] = nil
-			end
+
+		if hasForbidden then
+			continue
 		end
+
+		func(entity, objects[idx])
 	end
-
-	table.move(NONE, 1, pool.size, 1, pool.dense)
-	table.move(NONE, 1, pool.size, 1, pool.objects)
-
-	pool.size = 0
 end
 
-function SingleWithForbidden:has(entity)
-	return self.manifest:has(entity, unpack(self.required))
-		and not self.manifest:any(entity, unpack(self.forbidden))
+function SingleWithForbidden:eachEntity(func)
+	local forbidden = self.forbidden
+
+	for _, entity in ipairs(self.required[1].dense) do
+		local hasForbidden = false
+
+		for i, pool in ipairs(forbidden) do
+			if pool.sparse[entity] then
+				hasForbidden = true
+				break
+			end
+		end
+
+		if hasForbidden then
+			continue
+		end
+
+		func(entity)
+	end
 end
 
 SingleWithForbidden.size = size
