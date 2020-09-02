@@ -1,20 +1,14 @@
 local ErrAlreadyHas = "entity %08X already has a %s"
 local ErrBadArg = "bad argument #%s (expected %s, got %s)"
 local ErrBadComponentId = "invalid component identifier: %s"
-local ErrBadType = "bad component type: expected %s, got %s"
+local ErrBadComponentType = "bad type for %s: %s"
 local ErrInvalid = "entity %08X either does not exist or it has been destroyed"
 local ErrMissing = "entity %08X does not have a %s"
 
-local function componentTypeOk(underlyingType, component)
-	local ty = typeof(component)
-	local instanceTypeOk = false
+local function componentTypeOk(pool, component)
+	local typeOk, msg = pool.tFunction(component)
 
-	if ty == "Instance" then
-		instanceTypeOk = component:IsA(underlyingType)
-	end
-
-	return (tostring(underlyingType) == ty) or instanceTypeOk,
-	ErrBadType:format(tostring(underlyingType), typeof(component))
+	return typeOk, not typeOk and string.format(ErrBadComponentType, pool.name, msg)
 end
 
 local function assert(cond, msg, ...)
@@ -22,7 +16,7 @@ local function assert(cond, msg, ...)
 		return
 	end
 
-	error(select(1, ...) ~= nil and msg:format(...) or msg:format("nil"), 3)
+	error(select(1, ...) ~= nil and string.format(msg, ...) or string.format(msg, "nil"), 3)
 end
 
 return function(ecs)
@@ -48,7 +42,7 @@ return function(ecs)
 				assert(ecs:valid(entity), ErrInvalid, entity)
 			end
 
-			assert(componentTypeOk(pool.underlyingType, component))
+			assert(componentTypeOk(pool, component))
 
 			return ecs:assign(entities, id, component, ...)
 		end,
@@ -158,6 +152,7 @@ return function(ecs)
 		maybeGet = function(_, entity, id)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
+			assert(ecs.pools[id], ErrBadComponentId, id)
 
 			return ecs:maybeGet(entity, id)
 		end,
@@ -170,7 +165,7 @@ return function(ecs)
 				local pool = ecs.pools[select(i, ...)]
 
 				assert(pool, ErrBadComponentId, select(i, ...))
-				assert(not pool:has(entity), ErrMissing, entity, pool.name)
+				assert(pool:has(entity), ErrMissing, entity, pool.name)
 			end
 
 			return ecs:multiGet(entity, output, ...)
@@ -183,7 +178,7 @@ return function(ecs)
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(not pool:has(entity), ErrAlreadyHas, entity, pool.name)
-			assert(componentTypeOk(pool.underlyingType, component))
+			assert(componentTypeOk(pool, component))
 
 			return ecs:add(entity, id, component)
 		end,
@@ -194,7 +189,7 @@ return function(ecs)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
-			assert(componentTypeOk(pool.underlyingType, component))
+			assert(componentTypeOk(pool, component))
 
 			return ecs:maybeAdd(entity, id, component)
 		end,
@@ -208,7 +203,7 @@ return function(ecs)
 
 				assert(pool, ErrBadComponentId, select(i, ...))
 				assert(not pool:has(entity), ErrAlreadyHas, entity, pool.name)
-				assert(componentTypeOk(pool.underlyingType, select(i + 1, ...)))
+				assert(componentTypeOk(pool, select(i + 1, ...)))
 			end
 
 			return ecs:multiAdd(entity, ...)
@@ -231,7 +226,7 @@ return function(ecs)
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(pool:has(entity), ErrMissing, entity, pool.name)
-			assert(componentTypeOk(pool.underlyingType, component))
+			assert(componentTypeOk(pool, component))
 
 			return ecs:replace(entity, id, component)
 		end,
@@ -242,7 +237,7 @@ return function(ecs)
 			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
-			assert(componentTypeOk(pool.underlyingType, component))
+			assert(componentTypeOk(pool, component))
 
 			return ecs:addOrReplace(entity, id, component)
 		end,
@@ -266,18 +261,6 @@ return function(ecs)
 			assert(pool, ErrBadComponentId, id)
 
 			return ecs:maybeRemove(entity, id)
-		end,
-
-		patch = function(_, entity, id, ...)
-			local pool = ecs.pools[id]
-
-			assert(select("#", ...) % 2 == 0, "insufficient arguments")
-			assert(pool:has(entity), ErrMissing, entity, id)
-			assert(type(entity) == "number", ErrBadArg, 1, "number", type(entity))
-			assert(ecs:valid(entity), ErrInvalid, entity, id)
-			assert(pool, ErrBadComponentId, id)
-
-			return ecs:patch(entity, id, ...)
 		end,
 
 		onAdded = function(_, id)
@@ -318,5 +301,5 @@ return function(ecs)
 	}
 
 	strict.__index = strict
-	return setmetatable({}, strict)
+	return setmetatable({ t = ecs.t }, strict)
 end

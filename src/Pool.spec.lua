@@ -1,11 +1,12 @@
 local Pool = require(script.Parent.Pool)
 local obj = Vector3.new()
 local Manifest = require(script.Parent.Manifest)
+local t = require(script.Parent.core.t)
 
 return function()
 	describe("new", function()
-		local ty = typeof(obj)
-		local pool = Pool.new("testPool", ty)
+		local tFunction = t.Vector3
+		local pool = Pool.new("testPool", tFunction)
 
 		it("should return a new empty pool", function()
 			expect(pool).to.be.a("table")
@@ -22,12 +23,7 @@ return function()
 		end)
 
 		it("should be of the correct type", function()
-			expect(pool.underlyingType).to.equal(ty)
-		end)
-
-		it("should not have .underlyingType when the associated component is empty", function()
-			pool = Pool.new()
-			expect(pool.underlyingType).to.never.be.ok()
+			expect(pool.tFunction).to.equal(tFunction)
 		end)
 	end)
 
