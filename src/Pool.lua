@@ -11,7 +11,7 @@ function Pool.new(name, dataType)
 		name = name,
 		underlyingType = dataType,
 
-		onAssign = Signal.new(),
+		onAdd = Signal.new(),
 		onRemove = Signal.new(),
 		onUpdate = Signal.new(),
 

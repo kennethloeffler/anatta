@@ -292,7 +292,7 @@ function Manifest:add(entity, id, component)
 	local pool = self.pools[id]
 	local obj = pool:assign(entity, component)
 
-	pool.onAssign:dispatch(entity)
+	pool.onAdd:dispatch(entity)
 
 	return obj
 end
@@ -306,7 +306,7 @@ function Manifest:maybeAdd(entity, id, component)
 
 	local obj = pool:assign(entity, component)
 
-	pool.onAssign:dispatch(entity)
+	pool.onAdd:dispatch(entity)
 
 	return obj
 end
@@ -353,7 +353,7 @@ function Manifest:getOrAdd(entity, id, component)
 		return obj
 	else
 		obj = pool:assign(entity, component)
-		pool.onAssign:dispatch(entity)
+		pool.onAdd:dispatch(entity)
 
 		return obj
 	end
@@ -394,7 +394,7 @@ function Manifest:addOrReplace(entity, id, component)
 	end
 
 	local obj = pool:assign(entity, component)
-	pool.onAssign:dispatch(entity)
+	pool.onAdd:dispatch(entity)
 
 	return obj
 end
@@ -439,7 +439,7 @@ end
 
 ]]
 function Manifest:onAdded(id)
-	return self.pools[id].onAssign
+	return self.pools[id].onAdd
 end
 
 --[[

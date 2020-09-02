@@ -255,7 +255,7 @@ return function()
 			local manifest = context.manifest
 			local ranCallback
 
-			manifest.pools[context.testComponent].onAssign:connect(function()
+			manifest.pools[context.testComponent].onAdd:connect(function()
 				ranCallback = true
 			end)
 
@@ -309,7 +309,7 @@ return function()
 			local manifest = context.manifest
 			local ranCallback
 
-			manifest.pools[context.testComponent].onAssign:connect(function()
+			manifest.pools[context.testComponent].onAdd:connect(function()
 				ranCallback = true
 			end)
 
@@ -362,7 +362,7 @@ return function()
 			local manifest =  context.manifest
 			local ranCallback
 
-			manifest.pools[context.testComponent].onAssign:connect(function()
+			manifest.pools[context.testComponent].onAdd:connect(function()
 				ranCallback = true
 			end)
 
@@ -412,7 +412,7 @@ return function()
 			local manifest = context.manifest
 			local ranAddCallback
 
-			manifest.pools[context.testComponent].onAssign:connect(function()
+			manifest.pools[context.testComponent].onAdd:connect(function()
 				ranAddCallback = true
 			end)
 
@@ -511,7 +511,7 @@ return function()
 			local manifest = context.manifest
 
 			expect(manifest:onAdded(context.testComponent))
-				.to.equal(manifest.pools[context.testComponent].onAssign)
+				.to.equal(manifest.pools[context.testComponent].onAdd)
 		end)
 	end)
 

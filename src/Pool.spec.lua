@@ -16,7 +16,7 @@ return function()
 		end)
 
 		it("should have lifecycle events", function()
-			expect(pool.onAssign).to.be.ok()
+			expect(pool.onAdd).to.be.ok()
 			expect(pool.onRemove).to.be.ok()
 			expect(pool.onUpdate).to.be.ok()
 		end)
