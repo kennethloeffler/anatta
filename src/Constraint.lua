@@ -1,6 +1,5 @@
 local View = require(script.Parent.View)
 local Observer = require(script.Parent.Observer)
-local Pool = require(script.Parent.Pool)
 
 local NONE = {}
 

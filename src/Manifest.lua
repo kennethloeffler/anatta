@@ -10,6 +10,7 @@ local Constraint = require(script.Parent.Constraint)
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 local Identify = require(script.Parent.core.Identify)
+local t = require(script.Parent.core.t)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
@@ -28,6 +29,7 @@ function Manifest.new()
 		pools = {},
 		contexts = {},
 		ident = ident,
+		t = t
 	}, Manifest)
 end
 
@@ -52,10 +54,10 @@ end
 	manifest:add(manifest:create(), position, Vector3.new(2, 4, 16))
 
 ]]
-function Manifest:define(typeName, name)
+function Manifest:define(tFunction, name)
 	local id = self.ident:generate(name)
 
-	self.pools[id] = Pool.new(name, typeName)
+	self.pools[id] = Pool.new(name, tFunction)
 
 	return id
 end
@@ -292,7 +294,7 @@ function Manifest:add(entity, id, component)
 	local pool = self.pools[id]
 	local obj = pool:assign(entity, component)
 
-	pool.onAssign:dispatch(entity)
+	pool.onAdd:dispatch(entity)
 
 	return obj
 end
@@ -306,7 +308,7 @@ function Manifest:maybeAdd(entity, id, component)
 
 	local obj = pool:assign(entity, component)
 
-	pool.onAssign:dispatch(entity)
+	pool.onAdd:dispatch(entity)
 
 	return obj
 end
@@ -353,7 +355,7 @@ function Manifest:getOrAdd(entity, id, component)
 		return obj
 	else
 		obj = pool:assign(entity, component)
-		pool.onAssign:dispatch(entity)
+		pool.onAdd:dispatch(entity)
 
 		return obj
 	end
@@ -394,7 +396,7 @@ function Manifest:addOrReplace(entity, id, component)
 	end
 
 	local obj = pool:assign(entity, component)
-	pool.onAssign:dispatch(entity)
+	pool.onAdd:dispatch(entity)
 
 	return obj
 end
@@ -439,7 +441,7 @@ end
 
 ]]
 function Manifest:onAdded(id)
-	return self.pools[id].onAssign
+	return self.pools[id].onAdd
 end
 
 --[[

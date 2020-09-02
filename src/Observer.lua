@@ -58,7 +58,7 @@ function Observer:maybeAdd(obsPool, updated)
 
 			if not obsPool:has(entity) and val == numChanged then
 				obsPool:assign(entity)
-				obsPool.onAssign:dispatch(entity)
+				obsPool.onAdd:dispatch(entity)
 			end
 		end
 	end
@@ -78,7 +78,7 @@ function Observer:maybeAdd(obsPool, updated)
 
 		if not obsPool:has(entity) then
 			obsPool:assign(entity)
-			obsPool.onAssign:dispatch(entity)
+			obsPool.onAdd:dispatch(entity)
 		end
 	end
 end
