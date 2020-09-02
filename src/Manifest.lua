@@ -500,6 +500,12 @@ function Manifest:each(func)
 	end
 end
 
+function Manifest:raw(id)
+	local pool = self.pools[id]
+
+	return pool.dense, pool.objects
+end
+
 function Manifest:all(...)
 	return Constraint.new(self, { ... })
 end

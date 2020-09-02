@@ -35,6 +35,12 @@ return function(ecs)
 			return ecs:numEntities()
 		end,
 
+		raw = function(_, id)
+			assert(ecs.pools[id], ErrBadComponentId, id)
+
+			return ecs:raw(id)
+		end,
+
 		assign = function(_, entities, id, component, ...)
 			local pool = ecs.pools[id]
 
