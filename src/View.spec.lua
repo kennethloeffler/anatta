@@ -1,16 +1,15 @@
 local Constraint = require(script.Parent.Constraint)
 local Manifest = require(script.Parent.Manifest)
+local t = require(script.Parent.core.t)
 local View = require(script.Parent.View)
 
 return function()
 	local manifest = Manifest.new()
 
-	local Component1 = manifest:define("table", "Test1")
-	local Component2 = manifest:define("table", "Test2")
-	local Component3 = manifest:define("table", "Test3")
-	local Tag = manifest:define(nil, "tagComponent")
+	local Component1 = manifest:define(t.table, "Test1")
+	local Component2 = manifest:define(t.table, "Test2")
+	local Component3 = manifest:define(t.table, "Test3")
 
-	local TagPool = manifest:_getPool(Tag)
 	local Pool1 = manifest:_getPool(Component1)
 	local Pool2 = manifest:_getPool(Component2)
 	local Pool3 = manifest:_getPool(Component3)

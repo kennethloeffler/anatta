@@ -1,6 +1,6 @@
 local Constraint = require(script.Parent.Constraint)
 local Manifest = require(script.Parent.Manifest)
-local Observer = require(script.Parent.Observer)
+local t = require(script.Parent.core.t)
 
 return function()
 	describe("observer", function()
@@ -9,10 +9,10 @@ return function()
 
 			context.manifest = manifest
 
-			context.comp1 = manifest:define(nil, "test1")
-			context.comp2 = manifest:define(nil, "test2")
-			context.comp3 = manifest:define(nil, "test3")
-			context.comp4 = manifest:define(nil, "test4")
+			context.comp1 = manifest:define(t.none, "test1")
+			context.comp2 = manifest:define(t.none, "test2")
+			context.comp3 = manifest:define(t.none, "test3")
+			context.comp4 = manifest:define(t.none, "test4")
 
 			context.obsAll = Constraint.new(manifest, {context.comp1, context.comp2}):observer()
 			context.obsAllExcept = Constraint.new(
