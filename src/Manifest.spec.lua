@@ -287,11 +287,11 @@ return function()
 		it("should add a new component instance to the entity and return it", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local t = {}
-			local obj = manifest:add(entity, context.testComponent, t)
+			local component = {}
+			local obj = manifest:add(entity, context.testComponent, component)
 
 			expect(manifest.pools[context.testComponent]:has(entity)).to.be.ok()
-			expect(t).to.equal(obj)
+			expect(component).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function(context)
@@ -333,7 +333,8 @@ return function()
 		it("should return nil if the component already exists on the entity", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local obj = manifest.pools[context.testComponent]:assign(entity, {})
+
+			manifest.pools[context.testComponent]:assign(entity, {})
 
 			expect(manifest:maybeAdd(entity, context.testComponent)).to.equal(nil)
 		end)
@@ -341,11 +342,11 @@ return function()
 		it("should add a new component instance to the entity and return it if the component does not exist on the entity", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local t = {}
-			local obj = manifest:maybeAdd(entity, context.testComponent, t)
+			local component = {}
+			local obj = manifest:maybeAdd(entity, context.testComponent, component)
 
 			expect(manifest.pools[context.testComponent]:has(entity)).to.be.ok()
-			expect(t).to.equal(obj)
+			expect(component).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function(context)
@@ -579,13 +580,13 @@ return function()
 	describe("forEach", function()
 		it("should iterate over all non-destroyed entities", function(context)
 			local manifest = context.manifest
-			local t = {}
+			local entities = {}
 
 			for i = 1, 128 do
-				t[i] = manifest:create()
+				entities[i] = manifest:create()
 			end
 
-			for i, entity in ipairs(t) do
+			for i, entity in ipairs(entities) do
 				if i % 16 == 0 then
 					manifest:destroy(entity)
 				end
@@ -607,21 +608,21 @@ return function()
 	describe("numEntities", function()
 		it("should return the number of non-destroyed entities currently in the manifest", function(context)
 			local manifest = context.manifest
-			local t = {}
-			local num = 128
+			local entities = {}
+			local numEntities = 128
 
-			for i = 1, num do
+			for i = 1, numEntities do
 				t[i] = manifest:create()
 			end
 
-			for i, entity in ipairs(t) do
+			for i, entity in ipairs(entities) do
 				if i % 16 == 0 then
-					num = num - 1
+					numEntities = numEntities - 1
 					manifest:destroy(entity)
 				end
 			end
 
-			expect(manifest:numEntities()).to.equal(num)
+			expect(manifest:numEntities()).to.equal(numEntities)
 		end)
 	end)
 
