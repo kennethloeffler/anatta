@@ -23,16 +23,11 @@ return function()
 	end)
 
 	describe("define", function()
-		it("should generate a runtime identifier", function(context)
-			expect(context.testComponent).to.be.ok()
-			expect(typeof(context.testComponent)).to.equal("number")
-		end)
-
 		it("should create a valid component pool", function(context)
 			expect(context.manifest.pools[context.testComponent]).to.be.ok()
 		end)
 
-		it("should return the component id", function(context)
+		it("should generate and return the component id", function(context)
 			expect(context.testComponent).to.be.ok()
 			expect(context.testComponent).to.be.a("number")
 		end)
