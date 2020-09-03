@@ -39,6 +39,32 @@ return function()
 
 			expect(context.manifest:valid(entity)).to.equal(true)
 		end)
+
+		it("should recycle the ids of destroyed entities", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+			local entityId = bit32.band(entity, Constants.ENTITYID_MASK)
+
+			manifest:destroy(entity)
+
+			expect(bit32.band(manifest:create(), Constants.ENTITYID_MASK)).to.equal(entityId)
+		end)
+
+		it("should pop the ids of destroyed entities off of the free list", function(context)
+			local manifest = context.manifest
+			local e1 = manifest:create()
+			local e2 = manifest:create()
+
+			manifest:destroy(e1)
+			manifest:destroy(e2)
+			manifest:create()
+
+			expect(manifest.nextRecyclable).to.equal(bit32.band(e1, Constants.ENTITYID_MASK))
+
+			-- spooky implementation details...
+			expect(bit32.band(manifest.entities[manifest.nextRecyclable], Constants.ENTITYID_MASK))
+				.to.equal(Constants.NULL_ENTITYID)
+		end)
 	end)
 
 	describe("createFrom", function()
@@ -104,6 +130,27 @@ return function()
 			context.manifest:destroy(entity)
 
 			expect(context.manifest.pools[context.testComponent]:has(entity)).to.equal(nil)
+		end)
+
+		it("should increment the entity's version field", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+			local entityId = bit32.band(entity, Constants.ENTITYID_MASK)
+
+			manifest:destroy(entity)
+
+			expect(bit32.rshift(manifest.entities[entityId], Constants.ENTITYID_WIDTH)).to.equal(1)
+		end)
+
+		it("should push the entity's id onto the free list", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+			local entityId = bit32.band(entity, Constants.ENTITYID_MASK)
+
+			manifest:destroy(entity)
+
+			expect(manifest.nextRecyclable).to.equal(entityId)
+			expect(bit32.band(manifest.entities[entityId], Constants.ENTITYID_MASK)).to.equal(Constants.NULL_ENTITYID)
 		end)
 	end)
 
