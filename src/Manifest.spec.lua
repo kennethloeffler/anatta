@@ -23,16 +23,11 @@ return function()
 	end)
 
 	describe("define", function()
-		it("should generate a runtime identifier", function(context)
-			expect(context.testComponent).to.be.ok()
-			expect(typeof(context.testComponent)).to.equal("number")
-		end)
-
 		it("should create a valid component pool", function(context)
 			expect(context.manifest.pools[context.testComponent]).to.be.ok()
 		end)
 
-		it("should return the component id", function(context)
+		it("should generate and return the component id", function(context)
 			expect(context.testComponent).to.be.ok()
 			expect(context.testComponent).to.be.a("number")
 		end)
@@ -43,6 +38,32 @@ return function()
 			local entity = context.manifest:create()
 
 			expect(context.manifest:valid(entity)).to.equal(true)
+		end)
+
+		it("should recycle the ids of destroyed entities", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+			local entityId = bit32.band(entity, Constants.ENTITYID_MASK)
+
+			manifest:destroy(entity)
+
+			expect(bit32.band(manifest:create(), Constants.ENTITYID_MASK)).to.equal(entityId)
+		end)
+
+		it("should pop the ids of destroyed entities off of the free list", function(context)
+			local manifest = context.manifest
+			local e1 = manifest:create()
+			local e2 = manifest:create()
+
+			manifest:destroy(e1)
+			manifest:destroy(e2)
+			manifest:create()
+
+			expect(manifest.nextRecyclable).to.equal(bit32.band(e1, Constants.ENTITYID_MASK))
+
+			-- spooky implementation details...
+			expect(bit32.band(manifest.entities[manifest.nextRecyclable], Constants.ENTITYID_MASK))
+				.to.equal(Constants.NULL_ENTITYID)
 		end)
 	end)
 
@@ -109,6 +130,27 @@ return function()
 			context.manifest:destroy(entity)
 
 			expect(context.manifest.pools[context.testComponent]:has(entity)).to.equal(nil)
+		end)
+
+		it("should increment the entity's version field", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+			local entityId = bit32.band(entity, Constants.ENTITYID_MASK)
+
+			manifest:destroy(entity)
+
+			expect(bit32.rshift(manifest.entities[entityId], Constants.ENTITYID_WIDTH)).to.equal(1)
+		end)
+
+		it("should push the entity's id onto the free list", function(context)
+			local manifest = context.manifest
+			local entity = manifest:create()
+			local entityId = bit32.band(entity, Constants.ENTITYID_MASK)
+
+			manifest:destroy(entity)
+
+			expect(manifest.nextRecyclable).to.equal(entityId)
+			expect(bit32.band(manifest.entities[entityId], Constants.ENTITYID_MASK)).to.equal(Constants.NULL_ENTITYID)
 		end)
 	end)
 
@@ -245,11 +287,11 @@ return function()
 		it("should add a new component instance to the entity and return it", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local t = {}
-			local obj = manifest:add(entity, context.testComponent, t)
+			local component = {}
+			local obj = manifest:add(entity, context.testComponent, component)
 
 			expect(manifest.pools[context.testComponent]:has(entity)).to.be.ok()
-			expect(t).to.equal(obj)
+			expect(component).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function(context)
@@ -291,7 +333,8 @@ return function()
 		it("should return nil if the component already exists on the entity", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local obj = manifest.pools[context.testComponent]:assign(entity, {})
+
+			manifest.pools[context.testComponent]:assign(entity, {})
 
 			expect(manifest:maybeAdd(entity, context.testComponent)).to.equal(nil)
 		end)
@@ -299,11 +342,11 @@ return function()
 		it("should add a new component instance to the entity and return it if the component does not exist on the entity", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local t = {}
-			local obj = manifest:maybeAdd(entity, context.testComponent, t)
+			local component = {}
+			local obj = manifest:maybeAdd(entity, context.testComponent, component)
 
 			expect(manifest.pools[context.testComponent]:has(entity)).to.be.ok()
-			expect(t).to.equal(obj)
+			expect(component).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's assignment listeners", function(context)
@@ -537,13 +580,13 @@ return function()
 	describe("forEach", function()
 		it("should iterate over all non-destroyed entities", function(context)
 			local manifest = context.manifest
-			local t = {}
+			local entities = {}
 
 			for i = 1, 128 do
-				t[i] = manifest:create()
+				entities[i] = manifest:create()
 			end
 
-			for i, entity in ipairs(t) do
+			for i, entity in ipairs(entities) do
 				if i % 16 == 0 then
 					manifest:destroy(entity)
 				end
@@ -565,21 +608,21 @@ return function()
 	describe("numEntities", function()
 		it("should return the number of non-destroyed entities currently in the manifest", function(context)
 			local manifest = context.manifest
-			local t = {}
-			local num = 128
+			local entities = {}
+			local numEntities = 128
 
-			for i = 1, num do
+			for i = 1, numEntities do
 				t[i] = manifest:create()
 			end
 
-			for i, entity in ipairs(t) do
+			for i, entity in ipairs(entities) do
 				if i % 16 == 0 then
-					num = num - 1
+					numEntities = numEntities - 1
 					manifest:destroy(entity)
 				end
 			end
 
-			expect(manifest:numEntities()).to.equal(num)
+			expect(manifest:numEntities()).to.equal(numEntities)
 		end)
 	end)
 
