@@ -35,6 +35,12 @@ return function(ecs)
 			return ecs:numEntities()
 		end,
 
+		raw = function(_, id)
+			assert(ecs.pools[id], ErrBadComponentId, id)
+
+			return ecs:raw(id)
+		end,
+
 		assign = function(_, entities, id, component, ...)
 			local pool = ecs.pools[id]
 
@@ -106,20 +112,20 @@ return function(ecs)
 		end,
 
 		destroy = function(_, entity)
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 
 			return ecs:destroy(entity)
 		end,
 
 		valid = function(_, entity)
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 
 			return ecs:valid(entity)
 		end,
 
 		has = function(_, entity, ...)
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 
 			for i = 1, select("#", ...) do
@@ -130,7 +136,7 @@ return function(ecs)
 		end,
 
 		any = function(_, entity, ...)
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 
 			for i = 1, select("#", ...) do
@@ -143,7 +149,7 @@ return function(ecs)
 		get = function(_, entity, id)
 			local pool = ecs.pools[id]
 
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(pool:has(entity), ErrMissing, entity, pool.name)
@@ -152,7 +158,7 @@ return function(ecs)
 		end,
 
 		maybeGet = function(_, entity, id)
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(ecs.pools[id], ErrBadComponentId, id)
 
@@ -160,7 +166,7 @@ return function(ecs)
 		end,
 
 		multiGet = function(_, entity, output, ...)
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 
 			for i = 1, select("#", ...) do
@@ -176,7 +182,7 @@ return function(ecs)
 		add = function(_, entity, id, component)
 			local pool = ecs.pools[id]
 
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(not pool:has(entity), ErrAlreadyHas, entity, pool.name)
@@ -188,7 +194,7 @@ return function(ecs)
 		maybeAdd = function(_, entity, id, component)
 			local pool = ecs.pools[id]
 
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(componentTypeOk(pool, component))
@@ -214,7 +220,7 @@ return function(ecs)
 		getOrAdd = function(_, entity, id, component)
 			local pool = ecs.pools[id]
 
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 
@@ -224,7 +230,7 @@ return function(ecs)
 		replace = function(_, entity, id, component)
 			local pool = ecs.pools[id]
 
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(pool:has(entity), ErrMissing, entity, pool.name)
@@ -236,7 +242,7 @@ return function(ecs)
 		addOrReplace = function(_, entity, id, component)
 			local pool = ecs.pools[id]
 
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(componentTypeOk(pool, component))
@@ -247,7 +253,7 @@ return function(ecs)
 		remove = function(_, entity, id)
 			local pool = ecs.pools[id]
 
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 			assert(pool:has(entity), ErrMissing, entity, id)
@@ -258,7 +264,7 @@ return function(ecs)
 		maybeRemove = function(_, entity, id)
 			local pool = ecs.pools[id]
 
-			assert(t.number(entity), ErrBadArg, 1, "number")
+			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 
