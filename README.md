@@ -7,6 +7,7 @@ The entity component system (aka ECS, entity system) is an architectural pattern
 * [A Data-Driven Game Object System](https://www.gamedevs.org/uploads/data-driven-game-object-system.pdf)
 * [Evolve Your Hierarchy](http://cowboyprogramming.com/2007/01/05/evolve-your-heirachy/)
 * [Entity Systems are the future of MMOG development](http://t-machine.org/index.php/2007/09/03/entity-systems-are-the-future-of-mmog-development-part-1/)
+* [Data-oriented design book](https://www.dataorienteddesign.com/dodbook/)
 * [ECS back and forth](https://skypjack.github.io/2019-02-14-ecs-baf-part-1/)
 
 # Motivation
