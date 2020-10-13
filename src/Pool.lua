@@ -33,44 +33,42 @@ function Pool:has(entity)
 end
 
 function Pool:get(entity)
-	local idx = self:has(entity)
-
-	if idx then
-		return self.objects[idx]
-	end
+	return self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]]
 end
 
 function Pool:assign(entity, component)
 	self.size += 1
-	self.dense[self.size] = entity
-	self.sparse[bit32.band(entity, ENTITYID_MASK)] = self.size
 
-	if component then
-		self.objects[self.size] = component
+	local size = self.size
+	local entityId = bit32.band(entity, ENTITYID_MASK)
 
-		return component
-	end
+	self.size = size
+	self.dense[size] = entity
+	self.sparse[entityId] = size
+	self.objects[size] = component
+
+	return component
 end
 
 function Pool:destroy(entity)
-	local sparseIdx = bit32.band(entity, ENTITYID_MASK)
-	local denseIdx = self.sparse[sparseIdx]
-	local size = self.size
-
 	self.size -= 1
-	self.sparse[sparseIdx] = nil
 
-	if denseIdx < size then
-		local swapped = self.dense[size]
+	local prevSize = self.size + 1
+	local entityId = bit32.band(entity, ENTITYID_MASK)
+	local denseIdx = self.sparse[entityId]
+
+	self.sparse[entityId] = nil
+
+	if denseIdx < prevSize then
+		local swapped = self.dense[prevSize]
 
 		self.dense[denseIdx] = swapped
-		self.sparse[swapped] = denseIdx
-		self.objects[denseIdx] = self.objects[size]
+		self.sparse[bit32.band(swapped, ENTITYID_MASK)] = denseIdx
+		self.objects[denseIdx] = self.objects[prevSize]
 	else
 		self.dense[denseIdx] = nil
 		self.objects[denseIdx] = nil
 	end
-
 end
 
 return Pool

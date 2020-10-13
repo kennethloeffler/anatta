@@ -130,21 +130,25 @@ end
 ]]
 function Manifest:create()
 	if self.nextRecyclable == NULL_ENTITYID then
-		self.size += 1
-		self.entities[self.size] = self.size
 		-- no entityIds to recycle
+		local newEntity = self.size + 1
+		self.size = newEntity
+		self.entities[newEntity] = newEntity
 
-		return self.size
+		return newEntity
 	else
-		local node = self.entities[self.nextRecyclable]
-		local recycled = bit32.bor(
-			self.nextRecyclable,
+		-- there is at least one recyclable entityId; pop the free list
+		local entities = self.entities
+		local nextRecyclable = self.nextRecyclable
+		local node = entities[nextRecyclable]
+		local recycledEntity = bit32.bor(
+			nextRecyclable,
 			bit32.lshift(bit32.rshift(node, ENTITYID_WIDTH), ENTITYID_WIDTH))
 
-		self.entities[self.nextRecyclable] = recycled
+		entities[nextRecyclable] = recycledEntity
 		self.nextRecyclable = bit32.band(node, ENTITYID_MASK)
 
-		return recycled
+		return recycledEntity
 	end
 end
 
@@ -160,6 +164,7 @@ end
 ]]
 function Manifest:createFrom(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
+	local entities = self.entities
 	local existingEntityId = bit32.band(
 		self.entities[entityId] or NULL_ENTITYID,
 		ENTITYID_MASK
@@ -168,47 +173,50 @@ function Manifest:createFrom(entity)
 	if existingEntityId == NULL_ENTITYID then
 		-- the given identifier's entityId is out of range; create the entities in
 		-- between size and entityId and add them to the free list
+		local nextRecyclable = self.nextRecyclable
+
 		for id = self.size + 1, entityId - 1  do
-			self.entities[id] = self.nextRecyclable
-			self.nextRecyclable = id
+			entities[id] = nextRecyclable
+			nextRecyclable = id
 		end
 
-		self.entities[entityId] = entity
+		self.size = entityId
+		self.nextRecyclable = nextRecyclable
+		entities[entityId] = entity
 
 		return entity
 	elseif existingEntityId == entityId then
 		-- the entityId is in use; create a new entity
 		return self:create()
 	else
-		local curr = self.nextRecyclable
 		-- the entityId is in the free list; find it and remove it
+		local nextRecyclable = self.nextRecyclable
 
-		if curr == entityId then
-			self.nextRecyclable = bit32.band(
-				self.entities[entityId],
-				ENTITYID_MASK)
-			self.entities[entityId] = entity
+		if nextRecyclable == entityId then
 			-- entityId is at the head of the list; don't need to iterate, just need to
 			-- pop
+			self.nextRecyclable = bit32.band(entities[entityId], ENTITYID_MASK)
+			entities[entityId] = entity
 
 			return entity
 		end
 
-		local last
+		local lastRecyclable
 
-		while curr ~= entityId do
-			last = curr
-			curr = bit32.band(self.entities[curr], ENTITYID_MASK)
 		-- find the entityId in the free list
+		while nextRecyclable ~= entityId do
+			lastRecyclable = nextRecyclable
+			nextRecyclable = bit32.band(self.entities[nextRecyclable], ENTITYID_MASK)
 		end
 
-		self.entities[last] = bit32.bor(
-			bit32.band(self.entities[entityId], ENTITYID_MASK),
+		-- make the previous element point to the next
+		entities[lastRecyclable] = bit32.bor(
+			bit32.band(entities[entityId], ENTITYID_MASK),
 			bit32.lshift(
-				bit32.rshift(self.entities[last], ENTITYID_WIDTH),
+				bit32.rshift(entities[lastRecyclable], ENTITYID_WIDTH),
 				ENTITYID_WIDTH))
 
-		self.entities[entityId] = entity
+		entities[entityId] = entity
 
 		return entity
 	end

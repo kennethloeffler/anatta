@@ -1,3 +1,6 @@
+local Constants = require(script.Parent.Constants)
+
+local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NONE = {}
 
 local Multi = {}
@@ -26,12 +29,13 @@ function View.new(constraint)
 	constraint.componentPack = table.create(numRequired)
 
 	for i, id in ipairs(constraint.required) do
-		constraint.required[i] = manifest:_getPool(id)
+		constraint.required[i] = manifest:getPool(id)
 	end
 
 	for i, id in ipairs(constraint.forbidden) do
-		constraint.forbidden[i] = manifest:_getPool(id)
+		constraint.forbidden[i] = manifest:getPool(id)
 	end
+
 
 	return setmetatable(constraint, viewKind)
 end
@@ -49,7 +53,7 @@ local function selectShortestPool(required)
 end
 
 local function size(view)
-	return selectShortestPool(view.required)
+	return selectShortestPool(view.required).size
 end
 
 function Multi:each(func)
@@ -57,9 +61,10 @@ function Multi:each(func)
 	local componentPack = self.componentPack
 
 	for _, entity in ipairs(selectShortestPool(required).dense) do
+		local entityId = bit32.band(entity, ENTITYID_MASK)
 		local hasRequired = true
 		for i, pool in ipairs(required) do
-			local idx = pool.sparse[entity]
+			local idx = pool.sparse[entityId]
 
 			if not idx then
 				hasRequired = false
@@ -75,13 +80,66 @@ function Multi:each(func)
 	end
 end
 
+function Multi:mutEach(func)
+	local required = self.required
+	local componentPack = self.componentPack
+	local shortestPool = selectShortestPool(required)
+	local dense = shortestPool.dense
+
+	-- shortest pool is being completely consumed this iteration
+	for i = shortestPool.size, 1, -1 do
+		local hasRequired = true
+		local entity = dense[i]
+		local entityId = bit32.band(entity, ENTITYID_MASK)
+
+		for k, pool in ipairs(required) do
+			local idx = pool.sparse[entityId]
+
+			if not idx then
+				hasRequired = false
+				break
+			end
+
+			componentPack[k] = pool.objects[idx]
+		end
+
+		if hasRequired then
+			func(entity, unpack(componentPack))
+		end
+	end
+end
+
 function Multi:eachEntity(func)
 	local required = self.required
 
 	for _, entity in ipairs(selectShortestPool(required).dense) do
+		local entityId = bit32.band(entity, ENTITYID_MASK)
 		local hasRequired = true
-		for i, pool in ipairs(required) do
-			if not pool.sparse[entity] then
+		for _, pool in ipairs(required) do
+			if not pool.sparse[entityId] then
+				hasRequired = false
+				break
+			end
+		end
+
+		if hasRequired then
+			func(entity)
+		end
+	end
+end
+
+function Multi:mutEachEntity(func)
+	local required = self.required
+	local shortestPool = selectShortestPool(required)
+	local dense = shortestPool.dense
+
+	for i = shortestPool.size, 1, -1 do
+		local hasRequired = true
+		local entity = dense[i]
+		local entityId = bit32.band(entity, ENTITYID_MASK)
+
+		for _, pool in ipairs(required) do
+			if not pool.sparse[entityId] then
 				hasRequired = false
 				break
 			end
@@ -97,15 +155,35 @@ Multi.size = size
 
 function Single:each(func)
 	local pool = self.required[1]
+	local objects = pool.objects
 
 	for i, entity in ipairs(pool.dense) do
-		func(entity, pool.objects[i])
+		func(entity, objects[i])
+	end
+end
+
+function Single:mutEach(func)
+	local pool = self.required[1]
+	local objects = pool.objects
+	local dense = pool.dense
+
+	for i = pool.size, 1, -1 do
+		func(dense[i], objects[i])
 	end
 end
 
 function Single:eachEntity(func)
 	for _, entity in ipairs(self.required[1].dense) do
 		func(entity)
+	end
+end
+
+function Single:mutEachEntity(func)
+	local pool = self.required[1]
+	local dense = pool.dense
+
+	for i = pool.size, 1, -1 do
+		func(dense[i])
 	end
 end
 
@@ -121,7 +199,7 @@ function Single:consume(func)
 	end
 
 	for entity in pairs(sparse) do
-		sparse[entity] = nil
+		sparse[bit32.band(entity, ENTITYID_MASK)] = nil
 	end
 
 	table.move(NONE, 1, pool.size, 1, dense)
@@ -139,9 +217,10 @@ function MultiWithForbidden:each(func)
 	for _, entity in ipairs(selectShortestPool(required).dense) do
 		local hasForbidden = false
 		local hasRequired = true
+		local entityId = bit32.band(entity, ENTITYID_MASK)
 
-		for i, pool in ipairs(forbidden) do
-			if pool.sparse[entity] then
+		for _, pool in ipairs(forbidden) do
+			if pool.sparse[entityId] then
 				hasForbidden = true
 				break
 			end
@@ -152,7 +231,7 @@ function MultiWithForbidden:each(func)
 		end
 
 		for i, pool in ipairs(required) do
-			local idx = pool.sparse[entity]
+			local idx = pool.sparse[entityId]
 
 			if not idx then
 				hasRequired = false
@@ -168,17 +247,21 @@ function MultiWithForbidden:each(func)
 	end
 end
 
-function MultiWithForbidden:eachEntity(func)
+function MultiWithForbidden:mutEach(func)
 	local required = self.required
 	local forbidden = self.forbidden
 	local componentPack = self.componentPack
+	local shortestPool = selectShortestPool(required)
+	local dense = shortestPool.dense
 
-	for _, entity in ipairs(selectShortestPool(required).dense) do
+	for i = shortestPool.size, 1, -1 do
 		local hasForbidden = false
 		local hasRequired = true
+		local entity = dense[i]
+		local entityId = bit32.band(entity, ENTITYID_MASK)
 
-		for i, pool in ipairs(forbidden) do
-			if pool.sparse[entity] then
+		for _, pool in ipairs(forbidden) do
+			if pool.sparse[entityId] then
 				hasForbidden = true
 				break
 			end
@@ -188,19 +271,92 @@ function MultiWithForbidden:eachEntity(func)
 			continue
 		end
 
-		for i, pool in ipairs(required) do
-			local idx = pool.sparse[entity]
+		for k, pool in ipairs(required) do
+			local idx = pool.sparse[entityId]
 
 			if not idx then
 				hasRequired = false
 				break
 			end
 
-			componentPack[i] = pool.objects[idx]
+			componentPack[k] = pool.objects[idx]
 		end
 
 		if hasRequired then
 			func(entity, unpack(componentPack))
+		end
+	end
+end
+
+function MultiWithForbidden:eachEntity(func)
+	local required = self.required
+	local forbidden = self.forbidden
+
+	for _, entity in ipairs(selectShortestPool(required).dense) do
+		local hasForbidden = false
+		local hasRequired = true
+		local entityId = bit32.band(entity, ENTITYID_MASK)
+
+		for _, pool in ipairs(forbidden) do
+			if pool.sparse[entityId] then
+				hasForbidden = true
+				break
+			end
+		end
+
+		if hasForbidden then
+			continue
+		end
+
+		for _, pool in ipairs(required) do
+			local idx = pool.sparse[entityId]
+
+			if not idx then
+				hasRequired = false
+				break
+			end
+		end
+
+		if hasRequired then
+			func(entity)
+		end
+	end
+end
+
+function MultiWithForbidden:mutEachEntity(func)
+	local required = self.required
+	local forbidden = self.forbidden
+	local shortestPool = selectShortestPool(required)
+	local dense = shortestPool.dense
+
+	for i = shortestPool.size, 1, -1 do
+		local hasForbidden = false
+		local hasRequired = true
+		local entity = dense[i]
+		local entityId = bit32.band(entity, ENTITYID_MASK)
+
+		for _, pool in ipairs(forbidden) do
+			if pool.sparse[entityId] then
+				hasForbidden = true
+				break
+			end
+		end
+
+		if hasForbidden then
+			continue
+		end
+
+		for _, pool in ipairs(required) do
+			local idx = pool.sparse[entityId]
+
+			if not idx then
+				hasRequired = false
+				break
+			end
+		end
+
+		if hasRequired then
+			func(entity)
 		end
 	end
 end
@@ -213,9 +369,10 @@ function SingleWithForbidden:each(func)
 
 	for idx, entity in ipairs(self.required[1].dense) do
 		local hasForbidden = false
+		local entityId = bit32.band(entity, ENTITYID_MASK)
 
-		for i, pool in ipairs(forbidden) do
-			if pool.sparse[entity] then
+		for _, pool in ipairs(forbidden) do
+			if pool.sparse[entityId] then
 				hasForbidden = true
 				break
 			end
@@ -229,14 +386,66 @@ function SingleWithForbidden:each(func)
 	end
 end
 
+function SingleWithForbidden:mutEach(func)
+	local pool = self.required[1]
+	local objects = pool.objects
+	local dense = pool.dense
+	local forbidden = self.forbidden
+
+	for i = pool.size, 1, -1 do
+		local hasForbidden = false
+		local entity = dense[i]
+		local entityId = bit32.band(entity, ENTITYID_MASK)
+
+		for _, forbiddenPool in ipairs(forbidden) do
+			if forbiddenPool.sparse[entityId] then
+				hasForbidden = true
+				break
+			end
+		end
+
+		if hasForbidden then
+			continue
+		end
+
+		func(entity, objects[i])
+	end
+end
+
 function SingleWithForbidden:eachEntity(func)
 	local forbidden = self.forbidden
 
 	for _, entity in ipairs(self.required[1].dense) do
 		local hasForbidden = false
+		local entityId = bit32.band(entity, ENTITYID_MASK)
 
-		for i, pool in ipairs(forbidden) do
-			if pool.sparse[entity] then
+		for _, pool in ipairs(forbidden) do
+			if pool.sparse[entityId] then
+				hasForbidden = true
+				break
+			end
+		end
+
+		if hasForbidden then
+			continue
+		end
+
+		func(entity)
+	end
+end
+
+function SingleWithForbidden:mutEachEntity(func)
+	local pool = self.required[1]
+	local dense = pool.dense
+	local forbidden = self.forbidden
+
+	for i = pool.size, 1, -1 do
+		local hasForbidden = false
+		local entity = dense[i]
+		local entityId = bit32.band(entity, ENTITYID_MASK)
+
+		for _, forbiddenPool in ipairs(forbidden) do
+			if forbiddenPool.sparse[entityId] then
 				hasForbidden = true
 				break
 			end

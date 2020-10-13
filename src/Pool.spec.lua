@@ -1,12 +1,14 @@
 return function()
 	local Pool = require(script.Parent.Pool)
-	local obj = Vector3.new()
 	local Manifest = require(script.Parent.Manifest)
+	local obj = Vector3.new()
 	local t = require(script.Parent.core.TypeDef)
 
+	local ENTITYID_MASK = require(script.Parent.Constants).ENTITYID_MASK
+
 	describe("new", function()
-		local tFunction = t.Vector3
-		local pool = Pool.new("testPool", tFunction)
+		local typeDef = t.Vector3
+		local pool = Pool.new("testPool", typeDef)
 
 		it("should return a new empty pool", function()
 			expect(pool).to.be.a("table")
@@ -29,11 +31,10 @@ return function()
 	end)
 
 	describe("assign", function()
-		local manifest = Manifest.new()
-		local entity = manifest:create()
-		local pool = Pool.new("testPool", typeof(obj))
-
-		it("should correctly assign a component to an entity", function()
+		it("should add an element pool and return the passed component object", function()
+			local manifest = Manifest.new()
+			local entity = manifest:create()
+			local pool = Pool.new("testPool", typeof(obj))
 			local component = pool:assign(entity, obj)
 			local _, objInPool = next(pool.objects)
 
@@ -42,42 +43,72 @@ return function()
 		end)
 
 		it("should return nil when the associated component is empty", function()
-			pool = Pool.new()
-			expect(pool:assign(entity)).to.never.be.ok()
+			local manifest = Manifest.new()
+			local emptyTypedPool = Pool.new("i am of an empty type", t.none)
+
+			expect(emptyTypedPool:assign(manifest:create())).to.equal(nil)
+		end)
+
+		it("should construct the sparse array correctly", function()
+			local manifest = Manifest.new()
+			local pool = Pool.new("testPool", t.none)
+
+			for i = 1, 100 do
+				local entity = manifest:create()
+				-- destroy and recycle some so the test includes entities with
+				-- non-zero versions
+				if i % 2 == 0 then
+					for _ = 1, math.random(1, 20) do
+						manifest:destroy(entity)
+						entity = manifest:create()
+					end
+				end
+				pool:assign(entity)
+				expect(pool.dense[pool.sparse[bit32.band(entity, ENTITYID_MASK)]])
+					.to.equal(entity)
+			end
 		end)
 	end)
 
 	describe("get", function()
-		local pool = Pool.new("testPool", typeof(obj))
+		local pool = Pool.new("testPool", t.number)
 		local manifest = Manifest.new()
-		local entity = manifest:create()
 
-		pool:assign(entity, obj)
+		it("should return the component object if the entity has the component, nil otherwise", function()
+			local entity = manifest:create()
 
-		it("should correctly determine if an entity has a component", function()
-			expect(pool:get(entity)).to.be.ok()
-			expect(pool:get(manifest:create())).to.never.be.ok()
-		end)
+			pool:assign(entity, 0xF00F)
+			expect(pool:get(entity)).to.equal(0xF00F)
 
-		it("should return the correct object", function()
-			expect(pool:get(entity)).to.equal(obj)
+			-- and one with an incremented version
+			manifest:destroy(manifest:create())
+			entity = manifest:create()
+			pool:assign(entity, 0xDEAD)
+			expect(pool:get(entity)).to.equal(0xDEAD)
+
+			expect(pool:get(manifest:create())).to.equal(nil)
 		end)
 	end)
 
 	describe("destroy", function()
-		local pool = Pool.new("testPool", typeof(obj))
+		local pool = Pool.new("testPool", t.Vector3)
 		local manifest = Manifest.new()
 		local entity = manifest:create()
 
-		it("should correctly remove the component from the pool", function()
-			pool:assign(entity, obj)
+		it("it should remove an entity from the pool when there is only one element", function()
+			pool:assign(entity, Vector3.new())
 			pool:destroy(entity)
+			expect(pool.objects[pool.sparse[bit32.band(entity, ENTITYID_MASK)]]).to.never.be.ok()
+		end)
 
-			expect(pool.objects[pool.sparse[entity]]).to.never.be.ok()
+
+		it("should remove an entity from the pool and swap it for the ", function()
 		end)
 
 		it("should throw when the pool does not contain the component", function()
-			expect(pcall(Pool.destroy, pool, 0)).to.equal(false)
+			expect(function()
+				pool:destroy(manifest:create())
+			end).to.throw(false)
 		end)
 	end)
 end
