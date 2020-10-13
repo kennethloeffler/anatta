@@ -256,9 +256,23 @@ return function(ecs)
 			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
-			assert(pool:has(entity), ErrMissing, entity, id)
+			assert(pool:has(entity), ErrMissing, entity, pool.name)
 
 			return ecs:remove(entity, id)
+		end,
+
+		multiRemove = function(_, entity, ...)
+			assert(t.number(entity))
+			assert(ecs:valid(entity), ErrInvalid, entity)
+
+			for i = 1, select("#", ...)  do
+				local pool = ecs.pools[select(i, ...)]
+
+				assert(pool, ErrBadComponentId, select(i, ...))
+				assert(pool:has(entity), ErrMissing, entity, pool.name)
+			end
+
+			return ecs:multiRemove(entity, ...)
 		end,
 
 		maybeRemove = function(_, entity, id)

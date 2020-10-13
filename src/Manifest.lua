@@ -448,8 +448,21 @@ end
 
 --[[
 
-	If the entity has a component of the given type, remove it.  Otherwise, do
-	nothing.
+	Remove all the specified components from the entity.
+
+]]
+function Manifest:multiRemove(entity, ...)
+	for i = 1, select("#", ...) do
+		local pool = self.pools[select(i, ...)]
+
+		pool.onRemove:dispatch(entity, pool:get(entity))
+		pool:destroy(entity)
+	end
+end
+
+--[[
+
+	If the entity has the component, remove it.  Otherwise, do nothing.
 
 ]]
 function Manifest:maybeRemove(entity, id)
