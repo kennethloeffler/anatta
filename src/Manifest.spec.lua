@@ -551,11 +551,30 @@ return function()
 	end)
 
 	describe("onAdded", function()
-		it("should return the added signal for the specified component", function(context)
+		it("should return the added signal for one specified component", function(context)
 			local manifest = context.manifest
 
 			expect(manifest:onAdded(context.testComponent))
 				.to.equal(manifest.pools[context.testComponent].onAdd)
+		end)
+
+		it("should return a new signal for more than one specified component that fires once all have been added", function(context)
+			local manifest = context.manifest
+			local test1 = manifest:define("test1", t.none)
+			local test2 = manifest:define("test2", t.none)
+			local test3 = manifest:define("test3", t.none)
+			local fired = false
+			local e = manifest:create()
+
+			manifest:onAdded(test1, test2, test3):connect(function(entity)
+				expect(entity).to.equal(e)
+				fired = true
+			end)
+
+			manifest:add(e, test1)
+			manifest:add(e, test2)
+			manifest:add(e, test3)
+			expect(fired).equal(true)
 		end)
 	end)
 
@@ -566,6 +585,32 @@ return function()
 			expect(manifest:onRemoved(context.testComponent))
 				.to.equal(manifest.pools[context.testComponent].onRemove)
 		end)
+
+		it("should return a new signal for more than one specified component that fires after any have been removed from an entity that has all of them", function(context)
+			local manifest = context.manifest
+			local test1 = manifest:define("test1", t.none)
+			local test2 = manifest:define("test2", t.none)
+			local test3 = manifest:define("test3", t.none)
+			local fired = false
+			local e = manifest:create()
+
+			manifest:onRemoved(test1, test2, test3):connect(function(entity)
+				expect(entity).to.equal(e)
+				fired = true
+			end)
+
+			manifest:add(e, test1)
+			manifest:add(e, test2)
+			manifest:add(e, test3)
+			manifest:remove(e, test2)
+
+			expect(fired).to.equal(true)
+			fired = false
+
+			manifest:remove(e, test1)
+			expect(fired).to.equal(false)
+		end)
+
 	end)
 
 	describe("onUpdated", function()

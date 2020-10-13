@@ -10,6 +10,7 @@ local Constraint = require(script.Parent.Constraint)
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
 local Identity = require(script.Parent.core.Identity)
+local Signal = require(script.Parent.core.Signal)
 local TypeDef = require(script.Parent.core.TypeDef)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
@@ -480,22 +481,90 @@ end
 
 --[[
 
-	Return a signal which fires just after the component of the given type is
+	Return a signal that fires just after all components of the given types have been
 	added to an entity.
 
 ]]
-function Manifest:onAdded(id)
-	return self.pools[id].onAdd
+function Manifest:onAdded(...)
+	local ids = { ... }
+	local num = #ids
+
+	if num == 1 then
+		return self.pools[select(1, ...)].onAdd
+	end
+
+	local signal = Signal.new()
+	local pools = table.create(num)
+	local connections = table.create(num)
+	local packed = table.create(num)
+
+	for i, id in ipairs(ids) do
+		pools[i] = self.pools[id]
+	end
+
+	for i, pool in ipairs(pools) do
+		connections[i] = pool.onAdd:connect(function(entity)
+			for k, checkedPool in ipairs(pools) do
+				local idx = checkedPool:has(entity)
+				if not idx then
+					return
+				end
+				packed[k] = checkedPool.objects[idx]
+			end
+
+			signal:dispatch(entity, unpack(packed))
+		end)
+	end
+
+	return signal, function()
+		for _,  connection in ipairs(connections) do
+			connection()
+		end
+	end
 end
 
 --[[
 
-	Return a signal which fires whenever a component of the given type is
-	removed from an entity.
+	Return a signal that fires just after a component of any of the given types have been
+	removed from an entity that has all of them.
 
 ]]
-function Manifest:onRemoved(id)
-	return self.pools[id].onRemove
+function Manifest:onRemoved(...)
+	local ids = { ... }
+	local num = #ids
+
+	if num == 1 then
+		return self.pools[select(1, ...)].onRemove
+	end
+
+	local signal = Signal.new()
+	local pools = table.create(num)
+	local connections = table.create(num)
+	local packed = table.create(num)
+
+	for i, id in ipairs(ids) do
+		pools[i] = self.pools[id]
+	end
+
+	for i, pool in ipairs(pools) do
+		connections[i] = pool.onRemove:connect(function(entity)
+			for k, checkedPool in ipairs(pools) do
+				local idx = checkedPool:has(entity)
+				if not idx then
+					return
+				end
+				packed[k] = checkedPool.objects[idx]
+			end
+
+			signal:dispatch(entity, unpack(packed))
+		end)
+	end
+
+	return signal, function()
+		for _,  connection in ipairs(connections) do
+			connection()
+		end
+	end
 end
 
 --[[
