@@ -175,7 +175,7 @@ function Manifest:destroy(entity)
 
 	for _, pool in ipairs(self.pools) do
 		if pool:has(entity) then
-			pool.onRemove:dispatch(entity)
+			pool.onRemove:dispatch(entity, pool:get(entity))
 			pool:destroy(entity)
 		end
 	end
@@ -312,11 +312,11 @@ end
 ]]
 function Manifest:add(entity, id, component)
 	local pool = self.pools[id]
-	local obj = pool:assign(entity, component)
 
-	pool.onAdd:dispatch(entity)
+	pool:assign(entity, component)
+	pool.onAdd:dispatch(entity, component)
 
-	return obj
+	return component
 end
 
 function Manifest:maybeAdd(entity, id, component)
@@ -326,11 +326,10 @@ function Manifest:maybeAdd(entity, id, component)
 		return
 	end
 
-	local obj = pool:assign(entity, component)
+	pool:assign(entity, component)
+	pool.onAdd:dispatch(entity, component)
 
-	pool.onAdd:dispatch(entity)
-
-	return obj
+	return component
 end
 
 function Manifest:multiAdd(entity, ...)
@@ -374,10 +373,10 @@ function Manifest:getOrAdd(entity, id, component)
 	if exists then
 		return obj
 	else
-		obj = pool:assign(entity, component)
-		pool.onAdd:dispatch(entity)
+		pool:assign(entity, component)
+		pool.onAdd:dispatch(entity, component)
 
-		return obj
+		return component
 	end
 end
 
@@ -391,8 +390,8 @@ end
 function Manifest:replace(entity, id, component)
 	local pool = self.pools[id]
 
+	pool.onUpdate:dispatch(entity, component)
 	pool.objects[pool:has(entity)] = component
-	pool.onUpdate:dispatch(entity)
 
 	return component
 end
@@ -409,16 +408,16 @@ function Manifest:addOrReplace(entity, id, component)
 	local index = pool:has(entity)
 
 	if index then
+		pool.onUpdate:dispatch(entity, component)
 		pool.objects[index] = component
-		pool.onUpdate:dispatch(entity)
 
 		return component
 	end
 
-	local obj = pool:assign(entity, component)
-	pool.onAdd:dispatch(entity)
+	pool:assign(entity, component)
+	pool.onAdd:dispatch(entity, component)
 
-	return obj
+	return component
 end
 
 --[[
@@ -431,7 +430,7 @@ end
 function Manifest:remove(entity, id)
 	local pool = self.pools[id]
 
-	pool.onRemove:dispatch(entity)
+	pool.onRemove:dispatch(entity, pool:get(entity))
 	pool:destroy(entity)
 end
 
@@ -445,7 +444,7 @@ function Manifest:maybeRemove(entity, id)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
-		pool.onRemove:dispatch(entity)
+		pool.onRemove:dispatch(entity, pool:get(entity))
 		pool:destroy(entity)
 
 		return true
