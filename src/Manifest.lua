@@ -609,23 +609,19 @@ end
 	Inject a context variable into the manifest.
 
 ]]
-function Manifest:context(context, value)
-	if value then
-		assert(self.contexts[context] == nil, ("context %s already set")
-			:format(context))
-
-		self.contexts[context] = value
-	end
-
-	return self.contexts[context]
+function Manifest:inject(context, value)
+	self.contexts[context] = value
+	return value
 end
 
-function Manifest:poolSize(id)
-	return self.pools[id].size
-end
+--[[
 
-function Manifest:_getPool(id)
-	return self.pools[id]
+	Get a context variable from the manifest.
+
+]]
+function Manifest:context(context)
+	local var = self.contexts[context]
+	return var
 end
 
 return Manifest
