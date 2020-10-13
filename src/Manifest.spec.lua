@@ -31,6 +31,30 @@ return function()
 			expect(context.testComponent).to.be.ok()
 			expect(context.testComponent).to.be.a("number")
 		end)
+
+		it("should attach removal signal listeners to destroy instance types or members", function(context)
+			local manifest = context.manifest
+
+			local instanceType = manifest:define("myInstance", t.instanceOf("Script"))
+			local entity = manifest:create()
+			local instance = manifest.pools[instanceType]:assign(entity, Instance.new("Script"))
+
+			manifest.pools[instanceType].onRemove:dispatch(entity, instance)
+			expect(function()
+				instance.Parent = workspace
+			end).to.throw()
+
+			local interfaceWithInstanceType = manifest:define("myInterface",
+				t.interface { instanceField = t.Instance })
+			entity = manifest:create()
+			instance = manifest.pools[interfaceWithInstanceType]:assign(entity,
+				{ instanceField = Instance.new("Part") })
+
+			manifest.pools[interfaceWithInstanceType].onRemove:dispatch(entity, instance)
+			expect(function()
+				instance.instanceField.Parent = workspace
+			end).to.throw()
+		end)
 	end)
 
 	describe("create", function()
@@ -277,10 +301,27 @@ return function()
 			local entity = manifest:create()
 			local obj = {}
 
-			manifest:add(entity, context.testComponent, obj)
+			manifest.pools[context.testComponent]:assign(entity, obj)
 			expect(manifest:maybeGet(entity, context.testComponent)).to.equal(obj)
 		end)
 
+	end)
+
+	describe("multiGet", function()
+		it("should return the specified components on the entity in order", function(context)
+			local manifest = context.manifest
+			local testComponent = context.testComponent
+			local testComponent2 = manifest:define("test2", t.table)
+			local testComponent3 = manifest:define("test3", t.table)
+			local entity = manifest:create()
+			local component1 = {}
+			local component2 = {}
+			local component3 = {}
+
+			manifest.pools[testComponent]:assign(entity, component1)
+			manifest.pools[testComponent2]:assign(entity, component2)
+			manifest.pools[testComponent3]:assign(entity, component3)
+		end)
 	end)
 
 	describe("add", function()
@@ -294,7 +335,7 @@ return function()
 			expect(component).to.equal(obj)
 		end)
 
-		it("should dispatch the component pool's assignment listeners", function(context)
+		it("should dispatch the component pool's assignment signal", function(context)
 			local manifest = context.manifest
 			local ranCallback
 
@@ -349,7 +390,7 @@ return function()
 			expect(component).to.equal(obj)
 		end)
 
-		it("should dispatch the component pool's assignment listeners", function(context)
+		it("should dispatch the component pool's assignment signal", function(context)
 			local manifest = context.manifest
 			local ranCallback
 
@@ -384,6 +425,25 @@ return function()
 		end)
 
 	end)
+	describe("multiAdd", function()
+		it("should add all of the specified components to the entity then return the entity", function(context)
+			local manifest = context.manifest
+			local testComponent = context.testComponent
+			local testComponent2 = manifest:define("test2", t.table)
+			local testComponent3 = manifest:define("test3", t.table)
+			local component1 = {}
+			local component2 = {}
+			local component3 = {}
+			local entity = manifest:multiAdd(manifest:create(),
+				testComponent, component1,
+				testComponent2, component2,
+				testComponent3, component3)
+
+			expect(manifest.pools[testComponent]:get(entity, component1)).to.equal(component1)
+			expect(manifest.pools[testComponent2]:get(entity, component2)).to.equal(component2)
+			expect(manifest.pools[testComponent3]:get(entity, component3)).to.equal(component3)
+		end)
+	end)
 
 	describe("getOrAdd", function()
 		it("should add and return the component if the entity doesn't have it", function(context)
@@ -402,7 +462,7 @@ return function()
 			expect(manifest:getOrAdd(entity, context.testComponent, {})).to.equal(obj)
 		end)
 
-		it("should dispatch the component pool's added listeners", function(context)
+		it("should dispatch the component pool's added signal", function(context)
 			local manifest =  context.manifest
 			local ranCallback
 
@@ -426,7 +486,7 @@ return function()
 			expect(manifest.pools[context.testComponent]:get(entity)).to.equal(obj)
 		end)
 
-		it("should dispatch the component pool's update listeners", function(context)
+		it("should dispatch the component pool's update signal", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
 			local ranCallback
@@ -452,7 +512,7 @@ return function()
 			expect(manifest.pools[context.testComponent]:get(entity)).to.equal(added)
 		end)
 
-		it("should dispatch the component pool's added listeners", function(context)
+		it("should dispatch the component pool's added signal", function(context)
 			local manifest = context.manifest
 			local ranAddCallback
 
@@ -473,7 +533,7 @@ return function()
 			expect(manifest.pools[context.testComponent]:get(entity)).to.equal(replaced)
 		end)
 
-		it("should dispatch the component pool's replacement listeners", function(context)
+		it("should dispatch the component pool's replacement signal", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
 			local ranReplaceCallback = false
@@ -500,7 +560,7 @@ return function()
 			expect(manifest.pools[context.testComponent]:has(entity)).to.equal(nil)
 		end)
 
-		it("should dispatch the component pool's removed listeners", function(context)
+		it("should dispatch the component pool's removed signal", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
 			local ranCallback
@@ -513,6 +573,50 @@ return function()
 			manifest:remove(entity, context.testComponent)
 
 			expect(ranCallback).to.equal(true)
+		end)
+	end)
+
+	describe("multiRemove", function()
+		it("should remove all of the specified components from the entity and dispatch each components' removal signals", function(context)
+			local manifest = context.manifest
+			local testComponent = context.testComponent
+			local testComponent2 = manifest:define("test2", t.table)
+			local testComponent3 = manifest:define("test3", t.table)
+			local entity = manifest:create()
+
+			local component1 = manifest.pools[testComponent]:assign(entity, {})
+			local component2 = manifest.pools[testComponent2]:assign(entity, {})
+			local component3 = manifest.pools[testComponent3]:assign(entity, {})
+			local component1ok = false
+			local component2ok = false
+			local component3ok = false
+
+			manifest.pools[testComponent].onRemove:connect(function(e, component)
+				expect(e).to.equal(entity)
+				expect(component).to.equal(component1)
+				component1ok = true
+			end)
+
+			manifest.pools[testComponent2].onRemove:connect(function(e, component)
+				expect(e).to.equal(entity)
+				expect(component).to.equal(component2)
+				component2ok = true
+			end)
+
+			manifest.pools[testComponent3].onRemove:connect(function(e, component)
+				expect(e).to.equal(entity)
+				expect(component).to.equal(component3)
+				component3ok = true
+			end)
+
+			manifest:multiRemove(entity, testComponent, testComponent2, testComponent3)
+
+			expect(component1ok).to.equal(true)
+			expect(component2ok).to.equal(true)
+			expect(component3ok).to.equal(true)
+			expect(manifest.pools[testComponent]:has(entity)).to.equal(nil)
+			expect(manifest.pools[testComponent2]:has(entity)).to.equal(nil)
+			expect(manifest.pools[testComponent3]:has(entity)).to.equal(nil)
 		end)
 	end)
 
@@ -534,7 +638,7 @@ return function()
 			expect(manifest.pools[context.testComponent]:has(entity)).to.equal(nil)
 		end)
 
-		it("should dispatch the component pool's removed listeners", function(context)
+		it("should dispatch the component pool's removed signal", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
 			local ranCallback
@@ -653,11 +757,11 @@ return function()
 	describe("numEntities", function()
 		it("should return the number of non-destroyed entities currently in the manifest", function(context)
 			local manifest = context.manifest
-			local entities = {}
 			local numEntities = 128
+			local entities = table.create(numEntities)
 
 			for i = 1, numEntities do
-				t[i] = manifest:create()
+				entities[i] = manifest:create()
 			end
 
 			for i, entity in ipairs(entities) do
@@ -675,7 +779,7 @@ return function()
 		it("should return the pool for the specified component type", function(context)
 			local manifest = context.manifest
 
-			expect(manifest:_getPool(context.testComponent))
+			expect(manifest:getPool(context.testComponent))
 				.to.equal(manifest.pools[context.testComponent])
 		end)
 	end)
