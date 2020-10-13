@@ -9,8 +9,8 @@
 local Constraint = require(script.Parent.Constraint)
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
-local Identify = require(script.Parent.core.Identify)
 local t = require(script.Parent.core.t)
+local Identity = require(script.Parent.core.Identity)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
@@ -20,7 +20,7 @@ local Manifest = {}
 Manifest.__index = Manifest
 
 function Manifest.new()
-	local ident = Identify.new()
+	local ident = Identity.new()
 
 	return setmetatable({
 		size = 0,
