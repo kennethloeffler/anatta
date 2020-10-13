@@ -35,6 +35,46 @@ function Manifest.new()
 	}, Manifest)
 end
 
+local function loadDefinitions(module, manifest)
+	local definitions = require(module)(TypeDef, manifest)
+
+	for name, definition in pairs(definitions) do
+		manifest:define(name, definition.type, definition.constructor)
+	end
+end
+
+function Manifest:load(projectRoot)
+	local components = projectRoot:FindFirstChild("Components")
+		or projectRoot:FindFirstChild("components")
+	local prefabs = projectRoot:FindFirstChild("Prefab")
+		or projectRoot:FindFirstChild("Prefabs")
+		or projectRoot:FindFirstChild("prefabs")
+
+	assert(components, string.format("no component folder found in %s", projectRoot:GetFullName()))
+
+	self.ident:tryLoad(projectRoot)
+
+	if components:IsA("ModuleScript") then
+		loadDefinitions(components, self)
+	end
+
+	for _, instance in ipairs(components:GetDescendants()) do
+		if instance:IsA("ModuleScript") then
+			loadDefinitions(instance, self)
+		end
+	end
+
+	for _, instance in ipairs(prefabs:GetDescendants()) do
+		if instance:IsA("ModuleScript") then
+			local result = require(instance)
+
+			if type(result.init) == "function" then
+				result.init(self)
+			end
+		end
+	end
+end
+
 function Manifest:T(name)
 	local id = self.ident:named(name)
 
