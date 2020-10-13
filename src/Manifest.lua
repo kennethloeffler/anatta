@@ -342,22 +342,6 @@ function Manifest:multiAdd(entity, ...)
 	return entity
 end
 
-function Manifest:assign(entities, id, component, ...)
-	if component and type(component) == "function" then
-		for _, entity in ipairs(entities) do
-			self:add(entity, id, component(...))
-		end
-	elseif component then
-		for _, entity in ipairs(entities) do
-			self:add(entity, id, component)
-		end
-	else
-		for _, entity in ipairs(entities) do
-			self:remove(entity, id)
-		end
-	end
-end
-
 --[[
 
 	If the entity has a component of the given type, return the component
