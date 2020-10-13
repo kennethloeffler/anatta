@@ -6,10 +6,10 @@ local ENTITYID_MASK = Constants.ENTITYID_MASK
 local Pool = {}
 Pool.__index = Pool
 
-function Pool.new(name, tFunction)
+function Pool.new(name, typeDef)
 	return setmetatable({
 		name = name,
-		tFunction = tFunction,
+		typeDef = typeDef,
 
 		onAdd = Signal.new(),
 		onRemove = Signal.new(),

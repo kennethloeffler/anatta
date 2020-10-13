@@ -1,9 +1,9 @@
-local Pool = require(script.Parent.Pool)
-local obj = Vector3.new()
-local Manifest = require(script.Parent.Manifest)
-local t = require(script.Parent.core.t)
-
 return function()
+	local Pool = require(script.Parent.Pool)
+	local obj = Vector3.new()
+	local Manifest = require(script.Parent.Manifest)
+	local t = require(script.Parent.core.TypeDef)
+
 	describe("new", function()
 		local tFunction = t.Vector3
 		local pool = Pool.new("testPool", tFunction)
@@ -23,7 +23,8 @@ return function()
 		end)
 
 		it("should be of the correct type", function()
-			expect(pool.tFunction).to.equal(tFunction)
+			expect(pool.typeDef).to.be.a("table")
+			expect(pool.typeDef.type).to.equal("Vector3")
 		end)
 	end)
 

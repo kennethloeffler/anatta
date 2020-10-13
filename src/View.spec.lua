@@ -1,18 +1,18 @@
-local Constraint = require(script.Parent.Constraint)
-local Manifest = require(script.Parent.Manifest)
-local t = require(script.Parent.core.t)
-local View = require(script.Parent.View)
-
 return function()
+	local Constraint = require(script.Parent.Constraint)
+	local Manifest = require(script.Parent.Manifest)
+	local View = require(script.Parent.View)
+
 	local manifest = Manifest.new()
+	local t = manifest.t
 
-	local Component1 = manifest:define(t.table, "Test1")
-	local Component2 = manifest:define(t.table, "Test2")
-	local Component3 = manifest:define(t.table, "Test3")
+	local Component1 = manifest:define("Test1", t.table)
+	local Component2 = manifest:define("Test2", t.table)
+	local Component3 = manifest:define("Test3", t.table)
 
-	local Pool1 = manifest:_getPool(Component1)
-	local Pool2 = manifest:_getPool(Component2)
-	local Pool3 = manifest:_getPool(Component3)
+	local Pool1 = manifest:getPool(Component1)
+	local Pool2 = manifest:getPool(Component2)
+	local Pool3 = manifest:getPool(Component3)
 
 	for i = 1, 100 do
 		local entity = manifest:create()
@@ -64,206 +64,214 @@ return function()
 		end)
 	end)
 
-	describe("each (multi-component)", function()
-		local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
-		local entitiesToIterate = {}
+	describe("Multi", function()
+		describe("each", function()
+			local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
+			local entitiesToIterate = {}
 
-		it("should iterate all entities with at least the specified components", function()
-			for _, entity in ipairs(Pool3.dense) do
-				if Pool1:has(entity) and Pool2:has(entity) then
-					entitiesToIterate[entity] = true
+			it("should iterate all entities with at least the specified components", function()
+				for _, entity in ipairs(Pool3.dense) do
+					if Pool1:has(entity) and Pool2:has(entity) then
+						entitiesToIterate[entity] = true
+					end
 				end
-			end
 
-			view:each(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
+				view:each(function(entity)
+					expect(entitiesToIterate[entity]).to.be.ok()
+				end)
+			end)
+
+			it("should pass component instances in the order given at the view's construction", function()
+				entitiesToIterate = {}
+
+				for _, entity in ipairs(Pool3.dense) do
+					if Pool1:has(entity) and Pool2:has(entity) then
+						entitiesToIterate[entity] = true
+					end
+				end
+
+				view:each(function(entity, first, second, third)
+					expect(entitiesToIterate[entity]).to.be.ok()
+
+					expect(manifest:get(entity, Component1)).to.be.ok()
+					expect(manifest:get(entity, Component2)).to.be.ok()
+					expect(manifest:get(entity, Component3)).to.be.ok()
+
+					expect(first).to.equal(manifest:get(entity, Component1))
+					expect(second).to.equal(manifest:get(entity, Component2))
+					expect(third).to.equal(manifest:get(entity, Component3))
+				end)
 			end)
 		end)
 
-		it("should pass component instances in the order given at the view's construction", function()
-			entitiesToIterate = {}
+		describe("eachEntity", function()
+			local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
+			local entitiesToIterate = {}
 
-			for _, entity in ipairs(Pool3.dense) do
-				if Pool1:has(entity) and Pool2:has(entity) then
-					entitiesToIterate[entity] = true
+			it("should iterate all entities with at least the specified components", function()
+				for _, entity in ipairs(Pool3.dense) do
+					if Pool1:has(entity) and Pool2:has(entity) then
+						entitiesToIterate[entity] = true
+					end
 				end
-			end
 
-			view:each(function(entity, first, second, third)
-				expect(entitiesToIterate[entity]).to.be.ok()
-
-				expect(manifest:get(entity, Component1)).to.be.ok()
-				expect(manifest:get(entity, Component2)).to.be.ok()
-				expect(manifest:get(entity, Component3)).to.be.ok()
-
-				expect(first).to.equal(manifest:get(entity, Component1))
-				expect(second).to.equal(manifest:get(entity, Component2))
-				expect(third).to.equal(manifest:get(entity, Component3))
+				view:each(function(entity)
+					expect(entitiesToIterate[entity]).to.be.ok()
+				end)
 			end)
 		end)
 	end)
 
-	describe("eachEntity (multi-component)", function()
-		local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
-		local entitiesToIterate = {}
+	describe("Single", function()
+		describe("each", function()
+			local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
+			local entitiesToIterate = {}
 
-		it("should iterate all entities with at least the specified components", function()
-			for _, entity in ipairs(Pool3.dense) do
-				if Pool1:has(entity) and Pool2:has(entity) then
+			it("should iterate all the entities with at least the specified component", function()
+				for _, entity in ipairs(Pool1.dense) do
 					entitiesToIterate[entity] = true
 				end
-			end
 
-			view:each(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
+				view:each(function(entity)
+					expect(entitiesToIterate[entity]).to.be.ok()
+				end)
+			end)
+
+			it("should pass the correct component instance", function()
+				entitiesToIterate = {}
+
+				for _, entity in ipairs(Pool1.dense) do
+					entitiesToIterate[entity] = true
+				end
+
+				view:each(function(entity, component)
+					expect(entitiesToIterate[entity]).to.be.ok()
+					expect(manifest:has(entity, Component1)).to.be.ok()
+					expect(manifest:get(entity, Component1)).to.equal(component)
+				end)
+			end)
+		end)
+
+		describe("eachEntity", function()
+			local view = View.new(Constraint.new(manifest, {Component1}))
+			local entitiesToIterate = {}
+
+			it("should iterate all the entities with at least the specified component", function()
+				for _, entity in ipairs(Pool1.dense) do
+					entitiesToIterate[entity] = true
+				end
+
+				view:eachEntity(function(entity)
+					expect(entitiesToIterate[entity]).to.be.ok()
+				end)
 			end)
 		end)
 	end)
 
-	describe("each (single-component)", function()
-		local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
-		local entitiesToIterate = {}
+	describe("MultiWithExcluded", function()
+		describe("each", function()
+			local view = View.new(Constraint.new(manifest, {Component2, Component1}, {Component3}))
+			local entitiesToIterate = {}
 
-		it("should iterate all the entities with at least the specified component", function()
-			for _, entity in ipairs(Pool1.dense) do
-				entitiesToIterate[entity] = true
-			end
+			it("should iterate all the entities with at least the required components and none of the forbidden components", function()
+				for _, entity in ipairs(Pool2.dense) do
+					if Pool1:has(entity) and not Pool3:has(entity) then
+						entitiesToIterate[entity] = true
+					end
+				end
 
-			view:each(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
+				view:each(function(entity)
+					expect(entitiesToIterate[entity]).to.be.ok()
+				end)
+			end)
+
+			it("should pass component instances in the order given at the view's construction", function()
+				entitiesToIterate = {}
+
+				for _, entity in ipairs(Pool2.dense) do
+					if Pool1:has(entity) and not Pool3:has(entity) then
+						entitiesToIterate[entity] = true
+					end
+				end
+
+				view:each(function(entity, component2, component1)
+					expect(entitiesToIterate[entity]).to.be.ok()
+
+					expect(manifest:get(entity, Component1)).to.be.ok()
+					expect(manifest:get(entity, Component2)).to.be.ok()
+
+					expect(component1).to.equal(manifest:get(entity, Component1))
+					expect(component2).to.equal(manifest:get(entity, Component2))
+				end)
 			end)
 		end)
 
-		it("should pass the correct component instance", function()
-			entitiesToIterate = {}
+		describe("eachEntity", function()
+			local view = View.new(Constraint.new(manifest, {Component1, Component2}, {Component3}))
+			local entitiesToIterate = {}
 
-			for _, entity in ipairs(Pool1.dense) do
-				entitiesToIterate[entity] = true
-			end
+			it("should iterate all the entities with at least the required components and none of the forbidden components", function()
+				for _, entity in ipairs(Pool2.dense) do
+					if Pool1:has(entity) and not Pool3:has(entity) then
+						entitiesToIterate[entity] = true
+					end
+				end
 
-			view:each(function(entity, component)
-				expect(entitiesToIterate[entity]).to.be.ok()
-				expect(manifest:has(entity, Component1)).to.be.ok()
-				expect(manifest:get(entity, Component1)).to.equal(component)
+				view:each(function(entity)
+					expect(entitiesToIterate[entity]).to.be.ok()
+				end)
 			end)
 		end)
 	end)
 
-	describe("eachEntity (single-component)", function()
-		local view = View.new(Constraint.new(manifest, {Component1}))
-		local entitiesToIterate = {}
+	describe("SingleWithExcluded", function()
+		describe("each", function()
+			local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
+			local entitiesToIterate = {}
 
-		it("should iterate all the entities with at least the specified component", function()
-			for _, entity in ipairs(Pool1.dense) do
-				entitiesToIterate[entity] = true
-			end
-
-			view:eachEntity(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
-			end)
-		end)
-	end)
-
-	describe("each (multi-component with exlcusion list)", function()
-		local view = View.new(Constraint.new(manifest, {Component2, Component1}, {Component3}))
-		local entitiesToIterate = {}
-
-		it("should iterate all the entities with at least the required components and none of the forbidden components", function()
-			for _, entity in ipairs(Pool2.dense) do
-				if Pool1:has(entity) and not Pool3:has(entity) then
-					entitiesToIterate[entity] = true
+			it("should iterate all the entities with at least the required component and none of the forbidden components", function()
+				for _, entity in ipairs(Pool1.dense) do
+					if not Pool2:has(entity) and not Pool3:has(entity) then
+						entitiesToIterate[entity] = true
+					end
 				end
-			end
 
-			view:each(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
+				view:each(function(entity)
+					expect(entitiesToIterate[entity]).to.be.ok()
+				end)
 			end)
-		end)
 
-		it("should pass component instances in the order given at the view's construction", function()
-			entitiesToIterate = {}
+			it("should pass the correct component instance", function()
+				entitiesToIterate = {}
 
-			for _, entity in ipairs(Pool2.dense) do
-				if Pool1:has(entity) and not Pool3:has(entity) then
-					entitiesToIterate[entity] = true
+				for _, entity in ipairs(Pool1.dense) do
+					if not Pool2:has(entity) and not Pool3:has(entity) then
+						entitiesToIterate[entity] = true
+					end
 				end
-			end
 
-			view:each(function(entity, component2, component1)
-				expect(entitiesToIterate[entity]).to.be.ok()
-
-				expect(manifest:get(entity, Component1)).to.be.ok()
-				expect(manifest:get(entity, Component2)).to.be.ok()
-
-				expect(component1).to.equal(manifest:get(entity, Component1))
-				expect(component2).to.equal(manifest:get(entity, Component2))
-			end)
-		end)
-	end)
-
-	describe("eachEntity (multi-component with exclusion list)", function()
-		local view = View.new(Constraint.new(manifest, {Component1, Component2}, {Component3}))
-		local entitiesToIterate = {}
-
-		it("should iterate all the entities with at least the required components and none of the forbidden components", function()
-			for _, entity in ipairs(Pool2.dense) do
-				if Pool1:has(entity) and not Pool3:has(entity) then
-					entitiesToIterate[entity] = true
-				end
-			end
-
-			view:each(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
-			end)
-		end)
-	end)
-
-	describe("each (single-component with exclusion list)", function()
-		local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
-		local entitiesToIterate = {}
-
-		it("should iterate all the entities with at least the required component and none of the forbidden components", function()
-			for _, entity in ipairs(Pool1.dense) do
-				if not Pool2:has(entity) and not Pool3:has(entity) then
-					entitiesToIterate[entity] = true
-				end
-			end
-
-			view:each(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
+				view:each(function(entity, component)
+					expect(entitiesToIterate[entity]).to.be.ok()
+					expect(manifest:has(entity, Component1)).to.be.ok()
+					expect(manifest:get(entity, Component1)).to.equal(component)
+				end)
 			end)
 		end)
 
-		it("should pass the correct component instance", function()
-			entitiesToIterate = {}
+		describe("eachEntity", function()
+			local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
+			local entitiesToIterate = {}
 
-			for _, entity in ipairs(Pool1.dense) do
-				if not Pool2:has(entity) and not Pool3:has(entity) then
-					entitiesToIterate[entity] = true
+			it("should iterate all the entities with at least the required component and none of the forbidden components", function()
+				for _, entity in ipairs(Pool1.dense) do
+					if not Pool2:has(entity) and not Pool3:has(entity) then
+						entitiesToIterate[entity] = true
+					end
 				end
-			end
 
-			view:each(function(entity, component)
-				expect(entitiesToIterate[entity]).to.be.ok()
-				expect(manifest:has(entity, Component1)).to.be.ok()
-				expect(manifest:get(entity, Component1)).to.equal(component)
-			end)
-		end)
-	end)
-
-	describe("eachEntity (single-component with exclusion list)", function()
-		local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
-		local entitiesToIterate = {}
-
-		it("should iterate all the entities with at least the required component and none of the forbidden components", function()
-			for _, entity in ipairs(Pool1.dense) do
-				if not Pool2:has(entity) and not Pool3:has(entity) then
-					entitiesToIterate[entity] = true
-				end
-			end
-
-			view:eachEntity(function(entity)
-				expect(entitiesToIterate[entity]).to.be.ok()
+				view:eachEntity(function(entity)
+					expect(entitiesToIterate[entity]).to.be.ok()
+				end)
 			end)
 		end)
 	end)

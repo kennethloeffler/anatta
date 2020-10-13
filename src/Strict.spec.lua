@@ -1,13 +1,12 @@
-local Manifest = require(script.Parent.Manifest)
-local Strict = require(script.Parent.Strict)
-local t = require(script.Parent.core.t)
-
 return function()
+	local Manifest = require(script.Parent.Manifest)
+	local Strict = require(script.Parent.Strict)
+
 	beforeEach(function(context)
 		local manifest = Manifest.new()
 
 		context.manifest = Strict(manifest)
-		context.testComponent = manifest:define(t.table, "test")
+		context.testComponent = manifest:define("test", manifest.t.table)
 	end)
 
 	describe("assign", function()

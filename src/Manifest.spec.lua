@@ -1,13 +1,13 @@
-local Constants = require(script.Parent.Constants)
-local Manifest = require(script.Parent.Manifest)
-local t = require(script.Parent.core.t)
-
 return function()
+	local Constants = require(script.Parent.Constants)
+	local Manifest = require(script.Parent.Manifest)
+	local t = require(script.Parent.core.TypeDef)
+
 	beforeEach(function(context)
 		local manifest = Manifest.new()
 
 		context.manifest = manifest
-		context.testComponent = manifest:define(t.table, "test")
+		context.testComponent = manifest:define("test", t.table)
 	end)
 
 	describe("new", function()
@@ -188,9 +188,9 @@ return function()
 
 			context.types = {
 				[context.testComponent] = true,
-				[manifest:define(t.none, "test1")] = true,
-				[manifest:define(t.none, "test2")] = true,
-				[manifest:define(t.none, "test3")] = true
+				[manifest:define("test1", t.none)] = true,
+				[manifest:define("test2", t.none)] = true,
+				[manifest:define("test3", t.none)] = true
 			}
 		end)
 
@@ -217,7 +217,7 @@ return function()
 		it("should return false if the entity does not have the components", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local testComponent2 = manifest:define(t.none, "testComponent2")
+			local testComponent2 = manifest:define("testComponent2", t.none)
 
 			expect(manifest:has(entity, context.testComponent, testComponent2)).to.equal(false)
 		end)
@@ -225,7 +225,7 @@ return function()
 		it("should return true if the entity has the components", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local testComponent2 = manifest:define(t.none, "testComponent2")
+			local testComponent2 = manifest:define("testComponent2", t.none)
 
 			manifest.pools[context.testComponent]:assign(entity)
 			manifest.pools[testComponent2]:assign(entity)
@@ -237,7 +237,7 @@ return function()
 		it("should return false if the entity does not have any of the components", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local testComponent2 = manifest:define(t.none, "testComponent2")
+			local testComponent2 = manifest:define("testComponent2", t.none)
 
 			expect(manifest:any(entity, context.testComponent, testComponent2)).to.equal(false)
 		end)
@@ -245,7 +245,7 @@ return function()
 		it("should return true if the entity has any of the components", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local testComponent2 = manifest:define(t.none, "testComponent2")
+			local testComponent2 = manifest:define("testComponent2", t.none)
 
 			manifest.pools[testComponent2]:assign(entity)
 
@@ -320,7 +320,7 @@ return function()
 		it("should correctly handle tag components", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local tag = manifest:define(t.none, "tag")
+			local tag = manifest:define("tag", t.none)
 
 			manifest:add(entity, tag)
 
@@ -375,7 +375,7 @@ return function()
 		it("should correctly handle tag components", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local tag = manifest:define(t.none, "tag")
+			local tag = manifest:define("tag", t.none)
 
 			manifest:maybeAdd(entity, tag)
 

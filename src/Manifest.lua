@@ -9,8 +9,8 @@
 local Constraint = require(script.Parent.Constraint)
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
-local t = require(script.Parent.core.t)
 local Identity = require(script.Parent.core.Identity)
+local TypeDef = require(script.Parent.core.TypeDef)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
@@ -25,18 +25,19 @@ function Manifest.new()
 	return setmetatable({
 		size = 0,
 		nextRecyclable = NULL_ENTITYID,
+		null = NULL_ENTITYID,
 		entities = {},
 		pools = {},
 		contexts = {},
 		ident = ident,
-		t = t
+		t = TypeDef
 	}, Manifest)
 end
 
 function Manifest:T(name)
 	local id = self.ident:named(name)
 
-	return id, self:context(id)
+	return id, self.contexts[string.format("constructor_%s", id)]
 end
 
 --[[
@@ -54,12 +55,31 @@ end
 	manifest:add(manifest:create(), position, Vector3.new(2, 4, 16))
 
 ]]
-function Manifest:define(tFunction, name)
-	local id = self.ident:generate(name)
+function Manifest:define(name, typeDef, constructor)
+	local id = self.ident.lookup[name] or self.ident:generate(name)
+	local pool = Pool.new(name, typeDef)
+	local type = typeDef.type
 
-	self.pools[id] = Pool.new(name, tFunction)
+	if constructor then
+		self:inject(string.format("constructor_%s", id), constructor)
+	end
 
-	return id
+	if type == "Instance" or type == "instance" or type == "instanceOf" or type == "instanceIsA" then
+		pool.onRemove:connect(function(entity)
+			pool:get(entity):Destroy()
+		end)
+	elseif next(typeDef.instanceFields) then
+		pool.onRemove:connect(function(entity)
+			local component = pool:get(entity)
+
+			for fieldName in pairs(typeDef.instanceFields) do
+				component[fieldName]:Destroy()
+			end
+		end)
+	end
+
+	self.pools[id] = pool
+	return id, constructor
 end
 
 --[[
