@@ -42,9 +42,9 @@ end
 
 --[[
 
-	Register a component type and return its handle.
+	Register a component type and return its identifier.
 
-	Handles may be retrieved again via manifest:T:
+	Identifiers may be retrieved via manifest:T:
 
 	-- someplace...
 	manifest:define("Vector3", "position")
@@ -84,13 +84,14 @@ end
 
 --[[
 
-	Return a new valid entity identifier.
+	Return a new valid entity.
 
 ]]
 function Manifest:create()
 	if self.nextRecyclable == NULL_ENTITYID then
 		self.size += 1
 		self.entities[self.size] = self.size
+		-- no entityIds to recycle
 
 		return self.size
 	else
@@ -111,9 +112,9 @@ end
 	If possible, return a new valid entity identifier equal to the given entity
 	identifier.
 
-	An identifier equal to the given identifier is returned if and only if the
-	given identifier's id part is not in use by the manifest.  Otherwise, a new
-	identifier created via Manifest:create() is returned.
+	An identifier equal to the given identifier is returned if and only if the given
+	identifier's id part is not in use by the manifest.  Otherwise, a new identifier
+	created via Manifest:create() is returned.
 
 ]]
 function Manifest:createFrom(entity)
@@ -124,6 +125,8 @@ function Manifest:createFrom(entity)
 	)
 
 	if existingEntityId == NULL_ENTITYID then
+		-- the given identifier's entityId is out of range; create the entities in
+		-- between size and entityId and add them to the free list
 		for id = self.size + 1, entityId - 1  do
 			self.entities[id] = self.nextRecyclable
 			self.nextRecyclable = id
@@ -133,15 +136,19 @@ function Manifest:createFrom(entity)
 
 		return entity
 	elseif existingEntityId == entityId then
+		-- the entityId is in use; create a new entity
 		return self:create()
 	else
 		local curr = self.nextRecyclable
+		-- the entityId is in the free list; find it and remove it
 
 		if curr == entityId then
 			self.nextRecyclable = bit32.band(
 				self.entities[entityId],
 				ENTITYID_MASK)
 			self.entities[entityId] = entity
+			-- entityId is at the head of the list; don't need to iterate, just need to
+			-- pop
 
 			return entity
 		end
@@ -151,6 +158,7 @@ function Manifest:createFrom(entity)
 		while curr ~= entityId do
 			last = curr
 			curr = bit32.band(self.entities[curr], ENTITYID_MASK)
+		-- find the entityId in the free list
 		end
 
 		self.entities[last] = bit32.bor(
@@ -180,8 +188,8 @@ function Manifest:destroy(entity)
 		end
 	end
 
-	-- push this id onto the stack so that it can be recycled, and increment
-	-- the identifier's version to avoid possible collision
+	-- push this id onto the free list so that it can be recycled, and increment the
+	-- identifier's version to avoid possible collision
 	self.entities[entityId] = bit32.bor(
 		self.nextRecyclable,
 		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH))
@@ -191,8 +199,8 @@ end
 
 --[[
 
-	If the entity identifier corresponds to a valid entity, return true.
-	Otherwise, return false.
+	If the entity identifier corresponds to a valid entity, return true.  Otherwise,
+	return false.
 
 ]]
 function Manifest:valid(entity)
@@ -204,8 +212,7 @@ end
 
 --[[
 
-	If the entity has no assigned components, return true.  Otherwise, return
-	false.
+	If the entity has no assigned components, return true.  Otherwise, return false.
 
 ]]
 function Manifest:stub(entity)
@@ -220,9 +227,9 @@ end
 
 --[[
 
-	Pass all the component type handles in use to the given function.
+	Pass all the component type identifiers in use to the given function.
 
-	If an entity is given, pass only the handles of which the entity has a
+	If an entity is given, pass only the component ids of which the entity has a
 	component.
 
 ]]
@@ -242,8 +249,8 @@ end
 
 --[[
 
-	If the entity has a component of all of the given types, return true.
-	Otherwise, return false.
+	If the entity has a component of all of the given types, return true.  Otherwise,
+	return false.
 
 ]]
 function Manifest:has(entity, ...)
@@ -258,8 +265,8 @@ end
 
 --[[
 
-	If the entity has a component of any of the given types, return true.
-	Otherwise, return false.
+	If the entity has a component of any of the given types, return true.  Otherwise,
+	return false.
 
 ]]
 function Manifest:any(entity, ...)
@@ -274,14 +281,20 @@ end
 
 --[[
 
-	If the entity has a component of the given type, return the component
-	instance.  Otherwise, return nil.
+	Get and return a component on the entity.
+
+	Strict will throw if the entity does not have a component of the given type.
 
 ]]
 function Manifest:get(entity, id)
 	return self.pools[id]:get(entity)
 end
 
+--[[
+
+	If the entity has the component, return the component.  Otherwise, do nothing.
+
+]]
 function Manifest:maybeGet(entity, id)
 	local pool = self.pools[id]
 
@@ -290,6 +303,11 @@ function Manifest:maybeGet(entity, id)
 	end
 end
 
+--[[
+
+	Get and return all of the components of the given types on the entity.
+
+]]
 function Manifest:multiGet(entity, output, ...)
 	for i = 1, select("#", ...) do
 		local id = select(i, ...)
@@ -302,12 +320,10 @@ end
 
 --[[
 
-	Add the given component to the entity and return the new component
-	instance.
+	Add the component to the entity and return the component.
 
-	An entity may only have one component from each type at a time. Adding a
-	component to an entity that already has a component of the same type is
-	undefined.
+	An entity may only have one component of each type at a time.  Strict will throw upon
+	an attempt to add multiple components of the same type to an entity.
 
 ]]
 function Manifest:add(entity, id, component)
@@ -319,6 +335,12 @@ function Manifest:add(entity, id, component)
 	return component
 end
 
+--[[
+
+	If the entity does not have the component, add it and return the component.
+	Otherwise, do nothing.
+
+]]
 function Manifest:maybeAdd(entity, id, component)
 	local pool = self.pools[id]
 
@@ -332,6 +354,11 @@ function Manifest:maybeAdd(entity, id, component)
 	return component
 end
 
+--[[
+
+	Add the given components to the entity and return the entity.
+
+]]
 function Manifest:multiAdd(entity, ...)
 	local num = select("#", ...)
 
@@ -344,9 +371,8 @@ end
 
 --[[
 
-	If the entity has a component of the given type, return the component
-	instance.  Otherwise, add the given component to the entity and return the
-	new component.
+	If the entity has the component, get and return the component.  Otherwise, add the
+	component to the entity and return the component.
 
 ]]
 function Manifest:getOrAdd(entity, id, component)
@@ -366,9 +392,10 @@ end
 
 --[[
 
-	Replace the entity's component of the given type with the given component.
+	Replace the component on the entity with the given component.
 
-	Replacing a component that the entity does not have is undefined.
+	Strict will throw upon an attempt to replacing a component that the entity does not
+	have.
 
 ]]
 function Manifest:replace(entity, id, component)
@@ -382,9 +409,9 @@ end
 
 --[[
 
-	If the entity has a component of the given type, replace it with the given
-	component and return the new component instance. Otherwise, add the given
-	component to the entity and return the new component instance.
+	If the entity has the component, replace it with the given component and return the
+	new component.  Otherwise, add the component to the entity and return the new
+	component.
 
 ]]
 function Manifest:addOrReplace(entity, id, component)
@@ -406,9 +433,10 @@ end
 
 --[[
 
-	Remove a component of the given type from the entity.
+	Remove the component from the entity.
 
-	Removing a component which the entity does not have is undefined.
+	Strict will throw upon an attempt to remove a component which the entity does not
+	have.
 
 ]]
 function Manifest:remove(entity, id)
@@ -459,8 +487,7 @@ end
 
 --[[
 
-	Return a signal which fires whenever a component of the given type is
-	changed in some way.
+	Return a signal that fires just after a component of the given type has been updated.
 
 ]]
 function Manifest:onUpdated(id)
@@ -503,20 +530,63 @@ function Manifest:each(func)
 	end
 end
 
+--[[
+
+	Return the bare structures used to keep track of entities and their components: a
+	list of entities and a list of their corresponding components, both sorted the
+	same way.
+
+]]
 function Manifest:raw(id)
 	local pool = self.pools[id]
-
 	return pool.dense, pool.objects
 end
 
+--[[
+
+	Return the number of entities with the specified component.
+
+]]
+function Manifest:getSize(id)
+	return self.pools[id].size
+end
+
+--[[
+
+	Return the Pool object being used to manage the specified component.
+
+]]
+function Manifest:getPool(id)
+	return self.pools[id]
+end
+
+
+--[[
+
+	Return a constraint requiring that all the specified components be present on an
+	entity.
+
+]]
 function Manifest:all(...)
 	return Constraint.new(self, { ... })
 end
 
+--[[
+
+	Return a constraint requiring that none of the specified components be present on an
+	entity.
+
+]]
 function Manifest:except(...)
 	return Constraint.new(self, nil, { ... })
 end
 
+--[[
+
+	Return a constraint requiring that all the specified components both exist and have
+	been updated on an entity.
+
+]]
 function Manifest:updated(...)
 	return Constraint.new(self, nil, nil, { ... })
 end
