@@ -46,9 +46,6 @@ end
 function Manifest:load(projectRoot)
 	local components = projectRoot:FindFirstChild("Components")
 		or projectRoot:FindFirstChild("components")
-	local prefabs = projectRoot:FindFirstChild("Prefab")
-		or projectRoot:FindFirstChild("Prefabs")
-		or projectRoot:FindFirstChild("prefabs")
 
 	assert(components, string.format("no component folder found in %s", projectRoot:GetFullName()))
 
@@ -61,16 +58,6 @@ function Manifest:load(projectRoot)
 	for _, instance in ipairs(components:GetDescendants()) do
 		if instance:IsA("ModuleScript") then
 			loadDefinitions(instance, self)
-		end
-	end
-
-	for _, instance in ipairs(prefabs:GetDescendants()) do
-		if instance:IsA("ModuleScript") then
-			local result = require(instance)
-
-			if type(result.init) == "function" then
-				result.init(self)
-			end
 		end
 	end
 end
