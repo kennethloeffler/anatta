@@ -18,25 +18,25 @@ function Observer.new(constraint, name)
 
 	for i, id in ipairs(constraint.required) do
 		constraint.required[i] = manifest:getPool(id)
-		manifest:onAdded(id):connect(constraint:maybeAdd(pool, updated))
-		manifest:onRemoved(id):connect(constraint:maybeRemove(pool, updated))
+		manifest:onAdded(id):connect(constraint:tryAdd(pool, updated))
+		manifest:onRemoved(id):connect(constraint:tryRemove(pool, updated))
 	end
 
 	for i, id in ipairs(constraint.forbidden) do
 		constraint.forbidden[i] = manifest:getPool(id)
-		manifest:onRemoved(id):connect(constraint:maybeAdd(pool, updated))
-		manifest:onAdded(id):connect(constraint:maybeRemove(pool, updated))
+		manifest:onRemoved(id):connect(constraint:tryAdd(pool, updated))
+		manifest:onAdded(id):connect(constraint:tryRemove(pool, updated))
 	end
 
 	for _, id in ipairs(constraint.changed) do
-		manifest:onUpdated(id):connect(constraint:maybeAdd(pool, updated, true))
-		manifest:onRemoved(id):connect(constraint:maybeRemove(pool, updated))
+		manifest:onUpdated(id):connect(constraint:tryAdd(pool, updated, true))
+		manifest:onRemoved(id):connect(constraint:tryRemove(pool, updated))
 	end
 
 	return obsId
 end
 
-function Observer:maybeAdd(obsPool, updated, isUpdateSignal)
+function Observer:tryAdd(obsPool, updated, isUpdateSignal)
 	local required = self.required
 	local forbidden = self.forbidden
 	local numChanged = #self.changed
@@ -90,7 +90,7 @@ function Observer:maybeAdd(obsPool, updated, isUpdateSignal)
 	end
 end
 
-function Observer:maybeRemove(obsPool, updated)
+function Observer:tryRemove(obsPool, updated)
 	local numChanged = #self.changed
 
 	if numChanged > 0 then

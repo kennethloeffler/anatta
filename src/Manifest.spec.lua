@@ -339,7 +339,7 @@ return function()
 		end)
 	end)
 
-	describe("maybeGet", function()
+	describe("tryGet", function()
 		it("should return nil if the entity does not have the component", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
@@ -424,7 +424,7 @@ return function()
 		end)
 	end)
 
-	describe("maybeAdd", function()
+	describe("tryAdd", function()
 		it("should return nil if the component already exists on the entity", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
@@ -472,7 +472,7 @@ return function()
 			local entity = manifest:create()
 			local tag = manifest:define("tag", t.none)
 
-			manifest:maybeAdd(entity, tag)
+			manifest:tryAdd(entity, tag)
 
 			expect(manifest.pools[tag]:has(entity)).to.be.ok()
 			expect(manifest.pools[tag]:get(entity)).to.equal(nil)
@@ -673,7 +673,7 @@ return function()
 		end)
 	end)
 
-	describe("maybeRemove", function()
+	describe("tryRemove", function()
 		it("should return false if the component does not exist on the entity", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()

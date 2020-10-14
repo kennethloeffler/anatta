@@ -164,12 +164,12 @@ return function(ecs)
 			return ecs:get(entity, id)
 		end,
 
-		maybeGet = function(_, entity, id)
+		tryGet = function(_, entity, id)
 			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(ecs.pools[id], ErrBadComponentId, id)
 
-			return ecs:maybeGet(entity, id)
+			return ecs:tryGet(entity, id)
 		end,
 
 		multiGet = function(_, entity, output, ...)
@@ -198,7 +198,7 @@ return function(ecs)
 			return ecs:add(entity, id, component)
 		end,
 
-		maybeAdd = function(_, entity, id, component)
+		tryAdd = function(_, entity, id, component)
 			local pool = ecs.pools[id]
 
 			assert(t.number(entity))
@@ -206,7 +206,7 @@ return function(ecs)
 			assert(pool, ErrBadComponentId, id)
 			assert(componentTypeOk(pool, component))
 
-			return ecs:maybeAdd(entity, id, component)
+			return ecs:tryAdd(entity, id, component)
 		end,
 
 		multiAdd = function(_, entity, ...)
@@ -282,14 +282,14 @@ return function(ecs)
 			return ecs:multiRemove(entity, ...)
 		end,
 
-		maybeRemove = function(_, entity, id)
+		tryRemove = function(_, entity, id)
 			local pool = ecs.pools[id]
 
 			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 
-			return ecs:maybeRemove(entity, id)
+			return ecs:tryRemove(entity, id)
 		end,
 
 		onAdded = function(_, ...)

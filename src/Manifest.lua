@@ -331,7 +331,7 @@ end
 	If the entity has the component, return the component.  Otherwise, do nothing.
 
 ]]
-function Manifest:maybeGet(entity, id)
+function Manifest:tryGet(entity, id)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
@@ -377,7 +377,7 @@ end
 	Otherwise, do nothing.
 
 ]]
-function Manifest:maybeAdd(entity, id, component)
+function Manifest:tryAdd(entity, id, component)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
@@ -501,7 +501,7 @@ end
 	If the entity has the component, remove it.  Otherwise, do nothing.
 
 ]]
-function Manifest:maybeRemove(entity, id)
+function Manifest:tryRemove(entity, id)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
