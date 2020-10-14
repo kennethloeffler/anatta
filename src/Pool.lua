@@ -22,14 +22,8 @@ function Pool.new(name, typeDef)
 	}, Pool)
 end
 
-function Pool:__tostring()
-	return self.name
-end
-
 function Pool:has(entity)
-	local idx = self.sparse[bit32.band(entity, ENTITYID_MASK)]
-
-	return (idx and idx <= self.size) and idx
+	return self.sparse[bit32.band(entity, ENTITYID_MASK)]
 end
 
 function Pool:get(entity)
@@ -42,10 +36,9 @@ function Pool:assign(entity, component)
 	local size = self.size
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 
-	self.size = size
 	self.dense[size] = entity
-	self.sparse[entityId] = size
 	self.objects[size] = component
+	self.sparse[entityId] = size
 
 	return component
 end
