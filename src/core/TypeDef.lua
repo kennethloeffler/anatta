@@ -2,68 +2,14 @@ local t = require(script.Parent.t)
 
 local TypeDef = {}
 
-local interface
-local instance
-local higherOrder
+local noop = function() end
 
-local noneFunc = function() end
-
-local typeDefType = t.strictInterface {
-	type = t.string,
-	check = t.callback,
-	instanceFields = t.table,
-	fields = t.table,
-}
-
-local function checkInterface(typeDef, checkTable)
-	for name, fieldTypeDef in pairs(checkTable) do
-		checkTable[name] = fieldTypeDef.check
-		typeDef.fields[name] = fieldTypeDef
-
-		if instance[fieldTypeDef.type] or fieldTypeDef.type == "Instance" then
-			typeDef.instanceFields[name] = true
-		end
-	end
-
-	return t[typeDef.type](checkTable)
-end
-
-local function getCheck(typeDef, ...)
-	local type = typeDef.type
-
-	if interface[type] then
-		return checkInterface(typeDef, ...)
-	elseif instance[type] then
-		return t[type](...)
-	elseif higherOrder[type] then
-		local checks = table.create(select("#", ...))
-
-		for i = 1, select("#", ...) do
-			if typeDefType(select(i, ...)) then
-				checks[i] = select(i, ...).check
-			else
-				checks[i] = select(i, ...)
-			end
-		end
-
-		return t[type](unpack(checks))
-	else
-		return t[type]
-	end
-end
-
-instance = {
-	instance = true,
-	instanceOf = true,
-	instanceIsA = true,
-}
-
-interface = {
+local interface = {
 	interface = true,
 	strictInterface = true,
 }
 
-higherOrder = {
+local higherOrder = {
 	array = true,
 	strictArray = true,
 	keys = true,
@@ -89,12 +35,62 @@ higherOrder = {
 	wrap = true,
 	strict = true,
 	children = true,
+	instanceOf = true,
+	instanceIsA = true,
 }
+
+local typeDefType = t.strictInterface {
+	type = t.string,
+	check = t.callback,
+	instanceFields = t.table,
+	fields = t.table,
+}
+
+local function checkInterface(typeDef, checkTable)
+	for name, fieldTypeDef in pairs(checkTable) do
+		local fieldType = fieldTypeDef.type
+
+		checkTable[name] = fieldTypeDef.check
+		typeDef.fields[name] = fieldTypeDef
+
+		if fieldType == "instance"
+			or fieldType == "Instance"
+			or fieldType == "instanceOf"
+			or fieldType == "instanceIsA"
+		then
+			typeDef.instanceFields[name] = true
+		end
+	end
+
+	return t[typeDef.type](checkTable)
+end
+
+local function getCheck(typeDef, ...)
+	local type = typeDef.type
+
+	if interface[type] then
+		return checkInterface(typeDef, ...)
+	elseif higherOrder[type] then
+		local checks = table.create(select("#", ...))
+
+		for i = 1, select("#", ...) do
+			if typeDefType(select(i, ...)) then
+				checks[i] = select(i, ...).check
+			else
+				checks[i] = select(i, ...)
+			end
+		end
+
+		return t[type](unpack(checks))
+	else
+		return t[type]
+	end
+end
 
 local function newTypeDef(type, ...)
 	local typeDef = {
 		type = type,
-		check = noneFunc,
+		check = noop,
 		instanceFields = {},
 		fields = {},
 	}
@@ -105,7 +101,7 @@ local function newTypeDef(type, ...)
 end
 
 for type in pairs(t) do
-	if not instance[type] and not higherOrder[type] and not interface[type] then
+	if higherOrder[type] == nil and interface[type] == nil then
 		TypeDef[type] = newTypeDef(type)
 	else
 		TypeDef[type] = function(...)
