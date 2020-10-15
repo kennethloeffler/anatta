@@ -779,7 +779,7 @@ return function()
 		end)
 	end)
 
-	describe("forEach", function()
+	describe("each", function()
 		it("should iterate over all non-destroyed entities", function(context)
 			local manifest = context.manifest
 			local entities = {}
@@ -828,12 +828,55 @@ return function()
 		end)
 	end)
 
+	describe("raw", function()
+		it("should return the pool's internal structures", function(context)
+			local manifest = context.manifest
+			local dense, objects = manifest:raw(context.instanceComponent)
+			local pool = manifest.pools[context.instanceComponent]
+
+			expect(dense).to.equal(pool.dense)
+			expect(objects).to.equal(pool.objects)
+		end)
+	end)
+
+	describe("getSize", function()
+		it("should return the number of elements in the pool", function(context)
+			local manifest = context.manifest
+			local pool = manifest.pools[context.primitiveComponent]
+
+			for i = 1, 10 do
+				pool:assign(i, 0)
+			end
+
+			expect(manifest:getSize(context.primitiveComponent)).to.equal(10)
+		end)
+	end)
+
 	describe("getPool", function()
 		it("should return the pool for the specified component type", function(context)
 			local manifest = context.manifest
 
 			expect(manifest:getPool(context.primitiveComponent))
 				.to.equal(manifest.pools[context.primitiveComponent])
+		end)
+	end)
+
+	describe("inject", function()
+		it("should inject a value", function(context)
+			local v = {}
+
+			expect(context.manifest:inject("test", v)).to.equal(v)
+			expect(context.manifest.contexts.test).to.equal(v)
+		end)
+	end)
+
+	describe("context", function()
+		it("should return an injected value", function(context)
+			local v = {}
+
+			context.manifest:inject("test", v)
+
+			expect(context.manifest:context("test")).to.equal(v)
 		end)
 	end)
 end

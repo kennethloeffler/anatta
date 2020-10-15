@@ -20,6 +20,14 @@ local NULL_ENTITYID = Constants.NULL_ENTITYID
 local Manifest = {}
 Manifest.__index = Manifest
 
+local function loadDefinitions(module, manifest)
+	local definitions = require(module)(TypeDef, manifest)
+
+	for name, definition in pairs(definitions) do
+		manifest:define(name, definition.type, definition.constructor)
+	end
+end
+
 function Manifest.new()
 	local ident = Identity.new()
 
@@ -33,14 +41,6 @@ function Manifest.new()
 		ident = ident,
 		t = TypeDef
 	}, Manifest)
-end
-
-local function loadDefinitions(module, manifest)
-	local definitions = require(module)(TypeDef, manifest)
-
-	for name, definition in pairs(definitions) do
-		manifest:define(name, definition.type, definition.constructor)
-	end
 end
 
 function Manifest:load(projectRoot)
