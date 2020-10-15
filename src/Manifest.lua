@@ -88,7 +88,7 @@ function Manifest:define(name, typeDef, constructor)
 	local pool = Pool.new(name, typeDef)
 	local type = typeDef.type
 
-	if constructor then
+	if constructor ~= nil then
 		self:inject(string.format("constructor_%s", id), constructor)
 	end
 
@@ -96,7 +96,7 @@ function Manifest:define(name, typeDef, constructor)
 		pool.onRemove:connect(function(entity)
 			pool:get(entity):Destroy()
 		end)
-	elseif next(typeDef.instanceFields) then
+	elseif next(typeDef.instanceFields) ~= nil then
 		pool.onRemove:connect(function(entity)
 			local component = pool:get(entity)
 
@@ -154,8 +154,7 @@ function Manifest:createFrom(entity)
 	local entities = self.entities
 	local existingEntityId = bit32.band(
 		self.entities[entityId] or NULL_ENTITYID,
-		ENTITYID_MASK
-	)
+		ENTITYID_MASK)
 
 	if existingEntityId == NULL_ENTITYID then
 		-- the given identifier's entityId is out of range; create the entities in
@@ -242,8 +241,7 @@ end
 function Manifest:valid(entity)
 	local id = bit32.band(entity, ENTITYID_MASK)
 
-	return (id <= self.size and id ~= NULL_ENTITYID) and
-		self.entities[id] == entity
+	return (id <= self.size and id ~= NULL_ENTITYID) and self.entities[id] == entity
 end
 
 --[[
@@ -270,7 +268,7 @@ end
 
 ]]
 function Manifest:visit(func, entity)
-	if entity then
+	if entity ~= nil then
 		for id, pool in ipairs(self.pools) do
 			if pool:has(entity) then
 				func(id)
@@ -413,11 +411,10 @@ end
 ]]
 function Manifest:getOrAdd(entity, id, component)
 	local pool = self.pools[id]
-	local exists = pool:has(entity)
-	local obj = pool:get(entity)
+	local idx = pool:has(entity)
 
-	if exists then
-		return obj
+	if idx then
+		return pool.objects[idx]
 	else
 		pool:assign(entity, component)
 		pool.onAdd:dispatch(entity, component)
@@ -452,11 +449,11 @@ end
 ]]
 function Manifest:addOrReplace(entity, id, component)
 	local pool = self.pools[id]
-	local index = pool:has(entity)
+	local idx = pool:has(entity)
 
-	if index then
+	if idx then
 		pool.onUpdate:dispatch(entity, component)
-		pool.objects[index] = component
+		pool.objects[idx] = component
 
 		return component
 	end
@@ -541,9 +538,11 @@ function Manifest:onAdded(...)
 		connections[i] = pool.onAdd:connect(function(entity)
 			for k, checkedPool in ipairs(pools) do
 				local idx = checkedPool:has(entity)
+
 				if not idx then
 					return
 				end
+
 				packed[k] = checkedPool.objects[idx]
 			end
 
@@ -585,9 +584,11 @@ function Manifest:onRemoved(...)
 		connections[i] = pool.onRemove:connect(function(entity)
 			for k, checkedPool in ipairs(pools) do
 				local idx = checkedPool:has(entity)
+
 				if not idx then
 					return
 				end
+
 				packed[k] = checkedPool.objects[idx]
 			end
 

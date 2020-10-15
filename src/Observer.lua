@@ -46,22 +46,22 @@ function Observer:tryAdd(obsPool, updated, isUpdateSignal)
 			local entityId = bit32.band(entity, ENTITYID_MASK)
 
 			for _, pool in ipairs(forbidden) do
-				if pool.sparse[entityId] then
+				if pool.sparse[entityId] ~= nil then
 					return
 				end
 			end
 
 			for _, pool in ipairs(required) do
-				if not pool.sparse[entityId] then
+				if pool.sparse[entityId] == nil then
 					return
 				end
 			end
 
 			if isUpdateSignal then
-				updated[entity] = (updated[entity] or 0) + 1
+				updated[entityId] = (updated[entityId] or 0) + 1
 			end
 
-			if not obsPool.sparse[entityId] and updated[entity] == numChanged then
+			if obsPool.sparse[entityId] == nil and updated[entityId] == numChanged then
 				obsPool:assign(entity)
 				obsPool.onAdd:dispatch(entity)
 			end
@@ -72,18 +72,18 @@ function Observer:tryAdd(obsPool, updated, isUpdateSignal)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, pool in ipairs(forbidden) do
-			if pool.sparse[entityId] then
+			if pool.sparse[entityId] ~= nil then
 				return
 			end
 		end
 
 		for _, pool in ipairs(required) do
-			if not pool.sparse[entityId] then
+			if pool.sparse[entityId] == nil then
 				return
 			end
 		end
 
-		if not obsPool.sparse[entityId] then
+		if obsPool.sparse[entityId] == nil then
 			obsPool:assign(entity)
 			obsPool.onAdd:dispatch(entity)
 		end
@@ -95,17 +95,19 @@ function Observer:tryRemove(obsPool, updated)
 
 	if numChanged > 0 then
 		return function(entity)
-			if updated[entity] then
+			local entityId = bit32.band(entity, ENTITYID_MASK)
+
+			if updated[entityId] ~= nil then
 				local val = updated[entity] - 1
 
 				if val == 0 then
-					updated[entity] = nil
+					updated[entityId] = nil
 				else
-					updated[entity] = val
+					updated[entityId] = val
 				end
 			end
 
-			if obsPool:has(entity) then
+			if obsPool.sparse[entityId] ~= nil then
 				obsPool.onRemove:dispatch(entity)
 				obsPool:destroy(entity)
 			end
@@ -113,7 +115,7 @@ function Observer:tryRemove(obsPool, updated)
 	end
 
 	return function(entity)
-		if obsPool:has(entity) then
+		if obsPool.sparse[bit32.band(entity, ENTITYID_MASK)] ~= nil then
 			obsPool.onRemove:dispatch(entity)
 			obsPool:destroy(entity)
 		end

@@ -63,10 +63,11 @@ function Multi:each(func)
 	for _, entity in ipairs(selectShortestPool(required).dense) do
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 		local hasRequired = true
+
 		for i, pool in ipairs(required) do
 			local idx = pool.sparse[entityId]
 
-			if not idx then
+			if idx == nil then
 				hasRequired = false
 				break
 			end
@@ -95,7 +96,7 @@ function Multi:mutEach(func)
 		for k, pool in ipairs(required) do
 			local idx = pool.sparse[entityId]
 
-			if not idx then
+			if idx == nil then
 				hasRequired = false
 				break
 			end
@@ -115,8 +116,9 @@ function Multi:eachEntity(func)
 	for _, entity in ipairs(selectShortestPool(required).dense) do
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 		local hasRequired = true
+
 		for _, pool in ipairs(required) do
-			if not pool.sparse[entityId] then
+			if pool.sparse[entityId] == nil then
 				hasRequired = false
 				break
 			end
@@ -139,7 +141,7 @@ function Multi:mutEachEntity(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, pool in ipairs(required) do
-			if not pool.sparse[entityId] then
+			if pool.sparse[entityId] == nil then
 				hasRequired = false
 				break
 			end
@@ -195,11 +197,12 @@ function Single:consume(func)
 	if func then
 		for _, entity in ipairs(dense) do
 			func(entity)
+			sparse[bit32.band(entity, ENTITYID_MASK)] = nil
 		end
-	end
-
-	for entity in pairs(sparse) do
-		sparse[bit32.band(entity, ENTITYID_MASK)] = nil
+	else
+		for entity in pairs(sparse) do
+			sparse[bit32.band(entity, ENTITYID_MASK)] = nil
+		end
 	end
 
 	table.move(NONE, 1, pool.size, 1, dense)
@@ -220,7 +223,7 @@ function MultiWithForbidden:each(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, pool in ipairs(forbidden) do
-			if pool.sparse[entityId] then
+			if pool.sparse[entityId] ~= nil then
 				hasForbidden = true
 				break
 			end
@@ -233,7 +236,7 @@ function MultiWithForbidden:each(func)
 		for i, pool in ipairs(required) do
 			local idx = pool.sparse[entityId]
 
-			if not idx then
+			if idx == nil then
 				hasRequired = false
 				break
 			end
@@ -261,7 +264,7 @@ function MultiWithForbidden:mutEach(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, pool in ipairs(forbidden) do
-			if pool.sparse[entityId] then
+			if pool.sparse[entityId] ~= nil then
 				hasForbidden = true
 				break
 			end
@@ -274,7 +277,7 @@ function MultiWithForbidden:mutEach(func)
 		for k, pool in ipairs(required) do
 			local idx = pool.sparse[entityId]
 
-			if not idx then
+			if idx == nil then
 				hasRequired = false
 				break
 			end
@@ -298,7 +301,7 @@ function MultiWithForbidden:eachEntity(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, pool in ipairs(forbidden) do
-			if pool.sparse[entityId] then
+			if pool.sparse[entityId] ~= nil then
 				hasForbidden = true
 				break
 			end
@@ -309,9 +312,7 @@ function MultiWithForbidden:eachEntity(func)
 		end
 
 		for _, pool in ipairs(required) do
-			local idx = pool.sparse[entityId]
-
-			if not idx then
+			if pool.sparse[entityId] == nil then
 				hasRequired = false
 				break
 			end
@@ -336,7 +337,7 @@ function MultiWithForbidden:mutEachEntity(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, pool in ipairs(forbidden) do
-			if pool.sparse[entityId] then
+			if pool.sparse[entityId] ~= nil then
 				hasForbidden = true
 				break
 			end
@@ -347,9 +348,7 @@ function MultiWithForbidden:mutEachEntity(func)
 		end
 
 		for _, pool in ipairs(required) do
-			local idx = pool.sparse[entityId]
-
-			if not idx then
+			if pool.sparse[entityId] == nil then
 				hasRequired = false
 				break
 			end
@@ -372,7 +371,7 @@ function SingleWithForbidden:each(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, pool in ipairs(forbidden) do
-			if pool.sparse[entityId] then
+			if pool.sparse[entityId] ~= nil then
 				hasForbidden = true
 				break
 			end
@@ -398,7 +397,7 @@ function SingleWithForbidden:mutEach(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, forbiddenPool in ipairs(forbidden) do
-			if forbiddenPool.sparse[entityId] then
+			if forbiddenPool.sparse[entityId] ~= nil then
 				hasForbidden = true
 				break
 			end
@@ -420,7 +419,7 @@ function SingleWithForbidden:eachEntity(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, pool in ipairs(forbidden) do
-			if pool.sparse[entityId] then
+			if pool.sparse[entityId] ~= nil then
 				hasForbidden = true
 				break
 			end
@@ -445,7 +444,7 @@ function SingleWithForbidden:mutEachEntity(func)
 		local entityId = bit32.band(entity, ENTITYID_MASK)
 
 		for _, forbiddenPool in ipairs(forbidden) do
-			if forbiddenPool.sparse[entityId] then
+			if forbiddenPool.sparse[entityId] ~= nil then
 				hasForbidden = true
 				break
 			end
