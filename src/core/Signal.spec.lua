@@ -1,6 +1,6 @@
-local Signal = require(script.Parent.Signal)
-
 return function()
+	local Signal = require(script.Parent.Signal)
+
 	describe("new", function()
 		it("should create a new signal object", function()
 			local sig = Signal.new()

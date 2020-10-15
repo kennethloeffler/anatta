@@ -1,14 +1,13 @@
 local t = require(script.Parent.core.t)
 
 local ErrAlreadyHas = "entity %08X already has a %s"
-local ErrBadArg = "bad argument #%s (expected %s, got %s)"
 local ErrBadComponentId = "invalid component identifier: %s"
 local ErrBadComponentType = "bad type for %s: %s"
 local ErrInvalid = "entity %08X either does not exist or it has been destroyed"
 local ErrMissing = "entity %08X does not have a %s"
 
 local function componentTypeOk(pool, component)
-	local typeOk, msg = pool.tFunction(component)
+	local typeOk, msg = pool.typeDef.check(component)
 
 	return typeOk, not typeOk and string.format(ErrBadComponentType, pool.name, msg)
 end
@@ -27,8 +26,16 @@ return function(ecs)
 			return ecs:T(name)
 		end,
 
-		context = function(_, context, value)
-			return ecs:context(context, value)
+		load = function(_, projectRoot)
+			return ecs:load(projectRoot)
+		end,
+
+		context = function(_, context)
+			return ecs:context(context)
+		end,
+
+		inject = function(_, context, value)
+			return ecs:inject(context, value)
 		end,
 
 		numEntities = function()
@@ -73,8 +80,8 @@ return function(ecs)
 			return ecs:createFrom(entity)
 		end,
 
-		define = function(_, typeName, name)
-			return ecs:define(typeName, name)
+		define = function(_, name, tFunction, createFunction)
+			return ecs:define(name, tFunction, createFunction)
 		end,
 
 		new = function()
@@ -157,12 +164,12 @@ return function(ecs)
 			return ecs:get(entity, id)
 		end,
 
-		maybeGet = function(_, entity, id)
+		tryGet = function(_, entity, id)
 			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(ecs.pools[id], ErrBadComponentId, id)
 
-			return ecs:maybeGet(entity, id)
+			return ecs:tryGet(entity, id)
 		end,
 
 		multiGet = function(_, entity, output, ...)
@@ -191,7 +198,7 @@ return function(ecs)
 			return ecs:add(entity, id, component)
 		end,
 
-		maybeAdd = function(_, entity, id, component)
+		tryAdd = function(_, entity, id, component)
 			local pool = ecs.pools[id]
 
 			assert(t.number(entity))
@@ -199,7 +206,7 @@ return function(ecs)
 			assert(pool, ErrBadComponentId, id)
 			assert(componentTypeOk(pool, component))
 
-			return ecs:maybeAdd(entity, id, component)
+			return ecs:tryAdd(entity, id, component)
 		end,
 
 		multiAdd = function(_, entity, ...)
@@ -256,35 +263,49 @@ return function(ecs)
 			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
-			assert(pool:has(entity), ErrMissing, entity, id)
+			assert(pool:has(entity), ErrMissing, entity, pool.name)
 
 			return ecs:remove(entity, id)
 		end,
 
-		maybeRemove = function(_, entity, id)
+		multiRemove = function(_, entity, ...)
+			assert(t.number(entity))
+			assert(ecs:valid(entity), ErrInvalid, entity)
+
+			for i = 1, select("#", ...)  do
+				local pool = ecs.pools[select(i, ...)]
+
+				assert(pool, ErrBadComponentId, select(i, ...))
+				assert(pool:has(entity), ErrMissing, entity, pool.name)
+			end
+
+			return ecs:multiRemove(entity, ...)
+		end,
+
+		tryRemove = function(_, entity, id)
 			local pool = ecs.pools[id]
 
 			assert(t.number(entity))
 			assert(ecs:valid(entity), ErrInvalid, entity)
 			assert(pool, ErrBadComponentId, id)
 
-			return ecs:maybeRemove(entity, id)
+			return ecs:tryRemove(entity, id)
 		end,
 
-		onAdded = function(_, id)
-			local pool = ecs.pools[id]
+		onAdded = function(_, ...)
+			for i = 1, select("#", ...)  do
+				assert(ecs.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
+			end
 
-			assert(pool, ErrBadComponentId, id)
-
-			return ecs:onAdded(id)
+			return ecs:onAdded(...)
 		end,
 
-		onRemoved = function(_, id)
-			local pool = ecs.pools[id]
+		onRemoved = function(_, ...)
+			for i = 1, select("#", ...)  do
+				assert(ecs.pools[select(i, ...)], ErrBadComponentId, select(i, ...))
+			end
 
-			assert(pool, ErrBadComponentId, id)
-
-			return ecs:onRemoved(id)
+			return ecs:onRemoved(...)
 		end,
 
 		onUpdated = function(_, id)
@@ -301,10 +322,10 @@ return function(ecs)
 			return ecs:poolSize(id)
 		end,
 
-		_getPool = function(_, id)
+		getPool = function(_, id)
 			assert(ecs.pools[id], ErrBadComponentId, id)
 
-			return ecs:_getPool(id)
+			return ecs:getPool(id)
 		end
 	}
 

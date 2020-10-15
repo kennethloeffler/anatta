@@ -6,10 +6,10 @@ local ENTITYID_MASK = Constants.ENTITYID_MASK
 local Pool = {}
 Pool.__index = Pool
 
-function Pool.new(name, tFunction)
+function Pool.new(name, typeDef)
 	return setmetatable({
 		name = name,
-		tFunction = tFunction,
+		typeDef = typeDef,
 
 		onAdd = Signal.new(),
 		onRemove = Signal.new(),
@@ -22,55 +22,46 @@ function Pool.new(name, tFunction)
 	}, Pool)
 end
 
-function Pool:__tostring()
-	return self.name
-end
-
 function Pool:has(entity)
-	local idx = self.sparse[bit32.band(entity, ENTITYID_MASK)]
-
-	return (idx and idx <= self.size) and idx
+	return self.sparse[bit32.band(entity, ENTITYID_MASK)]
 end
 
 function Pool:get(entity)
-	local idx = self:has(entity)
-
-	if idx then
-		return self.objects[idx]
-	end
+	return self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]]
 end
 
 function Pool:assign(entity, component)
 	self.size += 1
-	self.dense[self.size] = entity
-	self.sparse[bit32.band(entity, ENTITYID_MASK)] = self.size
 
-	if component then
-		self.objects[self.size] = component
+	local size = self.size
+	local entityId = bit32.band(entity, ENTITYID_MASK)
 
-		return component
-	end
+	self.dense[size] = entity
+	self.objects[size] = component
+	self.sparse[entityId] = size
+
+	return component
 end
 
 function Pool:destroy(entity)
-	local sparseIdx = bit32.band(entity, ENTITYID_MASK)
-	local denseIdx = self.sparse[sparseIdx]
-	local size = self.size
-
 	self.size -= 1
-	self.sparse[sparseIdx] = nil
 
-	if denseIdx < size then
-		local swapped = self.dense[size]
+	local prevSize = self.size + 1
+	local entityId = bit32.band(entity, ENTITYID_MASK)
+	local denseIdx = self.sparse[entityId]
+
+	self.sparse[entityId] = nil
+
+	if denseIdx < prevSize then
+		local swapped = self.dense[prevSize]
 
 		self.dense[denseIdx] = swapped
-		self.sparse[swapped] = denseIdx
-		self.objects[denseIdx] = self.objects[size]
+		self.sparse[bit32.band(swapped, ENTITYID_MASK)] = denseIdx
+		self.objects[denseIdx] = self.objects[prevSize]
 	else
 		self.dense[denseIdx] = nil
 		self.objects[denseIdx] = nil
 	end
-
 end
 
 return Pool

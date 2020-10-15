@@ -1,18 +1,18 @@
-local Constraint = require(script.Parent.Constraint)
-local Manifest = require(script.Parent.Manifest)
-local t = require(script.Parent.core.t)
-
 return function()
+	local Constraint = require(script.Parent.Constraint)
+	local Manifest = require(script.Parent.Manifest)
+	local t = require(script.Parent.core.TypeDef)
+
 	describe("observer", function()
 		beforeEach(function(context)
 			local manifest = Manifest.new()
 
 			context.manifest = manifest
 
-			context.comp1 = manifest:define(t.none, "test1")
-			context.comp2 = manifest:define(t.none, "test2")
-			context.comp3 = manifest:define(t.none, "test3")
-			context.comp4 = manifest:define(t.none, "test4")
+			context.comp1 = manifest:define("test1", t.none)
+			context.comp2 = manifest:define("test2", t.none)
+			context.comp3 = manifest:define("test3", t.none)
+			context.comp4 = manifest:define("test4", t.none)
 
 			context.obsAll = Constraint.new(manifest, {context.comp1, context.comp2}):observer()
 			context.obsAllExcept = Constraint.new(

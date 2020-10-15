@@ -9,8 +9,9 @@
 local Constraint = require(script.Parent.Constraint)
 local Constants = require(script.Parent.Constants)
 local Pool = require(script.Parent.Pool)
-local Identify = require(script.Parent.core.Identify)
-local t = require(script.Parent.core.t)
+local Identity = require(script.Parent.core.Identity)
+local Signal = require(script.Parent.core.Signal)
+local TypeDef = require(script.Parent.core.TypeDef)
 
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local ENTITYID_MASK = Constants.ENTITYID_MASK
@@ -19,31 +20,59 @@ local NULL_ENTITYID = Constants.NULL_ENTITYID
 local Manifest = {}
 Manifest.__index = Manifest
 
+local function loadDefinitions(module, manifest)
+	local definitions = require(module)(TypeDef, manifest)
+
+	for name, definition in pairs(definitions) do
+		manifest:define(name, definition.type, definition.constructor)
+	end
+end
+
 function Manifest.new()
-	local ident = Identify.new()
+	local ident = Identity.new()
 
 	return setmetatable({
 		size = 0,
 		nextRecyclable = NULL_ENTITYID,
+		null = NULL_ENTITYID,
 		entities = {},
 		pools = {},
 		contexts = {},
 		ident = ident,
-		t = t
+		t = TypeDef
 	}, Manifest)
+end
+
+function Manifest:load(projectRoot)
+	local components = projectRoot:FindFirstChild("Components")
+		or projectRoot:FindFirstChild("components")
+
+	assert(components, string.format("no component folder found in %s", projectRoot:GetFullName()))
+
+	self.ident:tryLoad(projectRoot)
+
+	if components:IsA("ModuleScript") then
+		loadDefinitions(components, self)
+	end
+
+	for _, instance in ipairs(components:GetDescendants()) do
+		if instance:IsA("ModuleScript") then
+			loadDefinitions(instance, self)
+		end
+	end
 end
 
 function Manifest:T(name)
 	local id = self.ident:named(name)
 
-	return id, self:context(id)
+	return id, self.contexts[string.format("constructor_%s", id)]
 end
 
 --[[
 
-	Register a component type and return its handle.
+	Register a component type and return its identifier.
 
-	Handles may be retrieved again via manifest:T:
+	Identifiers may be retrieved via manifest:T:
 
 	-- someplace...
 	manifest:define("Vector3", "position")
@@ -54,35 +83,59 @@ end
 	manifest:add(manifest:create(), position, Vector3.new(2, 4, 16))
 
 ]]
-function Manifest:define(tFunction, name)
-	local id = self.ident:generate(name)
+function Manifest:define(name, typeDef, constructor)
+	local id = self.ident.lookup[name] or self.ident:generate(name)
+	local pool = Pool.new(name, typeDef)
+	local type = typeDef.type
 
-	self.pools[id] = Pool.new(name, tFunction)
+	if constructor ~= nil then
+		self:inject(string.format("constructor_%s", id), constructor)
+	end
 
-	return id
+	if type == "Instance" or type == "instance" or type == "instanceOf" or type == "instanceIsA" then
+		pool.onRemove:connect(function(entity)
+			pool:get(entity):Destroy()
+		end)
+	elseif next(typeDef.instanceFields) ~= nil then
+		pool.onRemove:connect(function(entity)
+			local component = pool:get(entity)
+
+			for fieldName in pairs(typeDef.instanceFields) do
+				component[fieldName]:Destroy()
+			end
+		end)
+	end
+
+	self.pools[id] = pool
+	return id, constructor
 end
 
 --[[
 
-	Return a new valid entity identifier.
+	Return a new valid entity.
 
 ]]
 function Manifest:create()
 	if self.nextRecyclable == NULL_ENTITYID then
-		self.size += 1
-		self.entities[self.size] = self.size
+		-- no entityIds to recycle
+		local newEntity = self.size + 1
+		self.size = newEntity
+		self.entities[newEntity] = newEntity
 
-		return self.size
+		return newEntity
 	else
-		local node = self.entities[self.nextRecyclable]
-		local recycled = bit32.bor(
-			self.nextRecyclable,
+		-- there is at least one recyclable entityId; pop the free list
+		local entities = self.entities
+		local nextRecyclable = self.nextRecyclable
+		local node = entities[nextRecyclable]
+		local recycledEntity = bit32.bor(
+			nextRecyclable,
 			bit32.lshift(bit32.rshift(node, ENTITYID_WIDTH), ENTITYID_WIDTH))
 
-		self.entities[self.nextRecyclable] = recycled
+		entities[nextRecyclable] = recycledEntity
 		self.nextRecyclable = bit32.band(node, ENTITYID_MASK)
 
-		return recycled
+		return recycledEntity
 	end
 end
 
@@ -91,55 +144,65 @@ end
 	If possible, return a new valid entity identifier equal to the given entity
 	identifier.
 
-	An identifier equal to the given identifier is returned if and only if the
-	given identifier's id part is not in use by the manifest.  Otherwise, a new
-	identifier created via Manifest:create() is returned.
+	An identifier equal to the given identifier is returned if and only if the given
+	identifier's id part is not in use by the manifest.  Otherwise, a new identifier
+	created via Manifest:create() is returned.
 
 ]]
 function Manifest:createFrom(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
+	local entities = self.entities
 	local existingEntityId = bit32.band(
 		self.entities[entityId] or NULL_ENTITYID,
-		ENTITYID_MASK
-	)
+		ENTITYID_MASK)
 
 	if existingEntityId == NULL_ENTITYID then
+		-- the given identifier's entityId is out of range; create the entities in
+		-- between size and entityId and add them to the free list
+		local nextRecyclable = self.nextRecyclable
+
 		for id = self.size + 1, entityId - 1  do
-			self.entities[id] = self.nextRecyclable
-			self.nextRecyclable = id
+			entities[id] = nextRecyclable
+			nextRecyclable = id
 		end
 
-		self.entities[entityId] = entity
+		self.size = entityId
+		self.nextRecyclable = nextRecyclable
+		entities[entityId] = entity
 
 		return entity
 	elseif existingEntityId == entityId then
+		-- the entityId is in use; create a new entity
 		return self:create()
 	else
-		local curr = self.nextRecyclable
+		-- the entityId is in the free list; find it and remove it
+		local nextRecyclable = self.nextRecyclable
 
-		if curr == entityId then
-			self.nextRecyclable = bit32.band(
-				self.entities[entityId],
-				ENTITYID_MASK)
-			self.entities[entityId] = entity
+		if nextRecyclable == entityId then
+			-- entityId is at the head of the list; don't need to iterate, just need to
+			-- pop
+			self.nextRecyclable = bit32.band(entities[entityId], ENTITYID_MASK)
+			entities[entityId] = entity
 
 			return entity
 		end
 
-		local last
+		local lastRecyclable
 
-		while curr ~= entityId do
-			last = curr
-			curr = bit32.band(self.entities[curr], ENTITYID_MASK)
+		-- find the entityId in the free list
+		while nextRecyclable ~= entityId do
+			lastRecyclable = nextRecyclable
+			nextRecyclable = bit32.band(self.entities[nextRecyclable], ENTITYID_MASK)
 		end
 
-		self.entities[last] = bit32.bor(
-			bit32.band(self.entities[entityId], ENTITYID_MASK),
+		-- make the previous element point to the next
+		entities[lastRecyclable] = bit32.bor(
+			bit32.band(entities[entityId], ENTITYID_MASK),
 			bit32.lshift(
-				bit32.rshift(self.entities[last], ENTITYID_WIDTH),
+				bit32.rshift(entities[lastRecyclable], ENTITYID_WIDTH),
 				ENTITYID_WIDTH))
 
-		self.entities[entityId] = entity
+		entities[entityId] = entity
 
 		return entity
 	end
@@ -155,13 +218,13 @@ function Manifest:destroy(entity)
 
 	for _, pool in ipairs(self.pools) do
 		if pool:has(entity) then
-			pool.onRemove:dispatch(entity)
+			pool.onRemove:dispatch(entity, pool:get(entity))
 			pool:destroy(entity)
 		end
 	end
 
-	-- push this id onto the stack so that it can be recycled, and increment
-	-- the identifier's version to avoid possible collision
+	-- push this id onto the free list so that it can be recycled, and increment the
+	-- identifier's version to avoid possible collision
 	self.entities[entityId] = bit32.bor(
 		self.nextRecyclable,
 		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH))
@@ -171,21 +234,19 @@ end
 
 --[[
 
-	If the entity identifier corresponds to a valid entity, return true.
-	Otherwise, return false.
+	If the entity identifier corresponds to a valid entity, return true.  Otherwise,
+	return false.
 
 ]]
 function Manifest:valid(entity)
 	local id = bit32.band(entity, ENTITYID_MASK)
 
-	return (id <= self.size and id ~= NULL_ENTITYID) and
-		self.entities[id] == entity
+	return (id <= self.size and id ~= NULL_ENTITYID) and self.entities[id] == entity
 end
 
 --[[
 
-	If the entity has no assigned components, return true.  Otherwise, return
-	false.
+	If the entity has no assigned components, return true.  Otherwise, return false.
 
 ]]
 function Manifest:stub(entity)
@@ -200,14 +261,14 @@ end
 
 --[[
 
-	Pass all the component type handles in use to the given function.
+	Pass all the component type identifiers in use to the given function.
 
-	If an entity is given, pass only the handles of which the entity has a
+	If an entity is given, pass only the component ids of which the entity has a
 	component.
 
 ]]
 function Manifest:visit(func, entity)
-	if entity then
+	if entity ~= nil then
 		for id, pool in ipairs(self.pools) do
 			if pool:has(entity) then
 				func(id)
@@ -222,8 +283,8 @@ end
 
 --[[
 
-	If the entity has a component of all of the given types, return true.
-	Otherwise, return false.
+	If the entity has a component of all of the given types, return true.  Otherwise,
+	return false.
 
 ]]
 function Manifest:has(entity, ...)
@@ -238,8 +299,8 @@ end
 
 --[[
 
-	If the entity has a component of any of the given types, return true.
-	Otherwise, return false.
+	If the entity has a component of any of the given types, return true.  Otherwise,
+	return false.
 
 ]]
 function Manifest:any(entity, ...)
@@ -254,15 +315,21 @@ end
 
 --[[
 
-	If the entity has a component of the given type, return the component
-	instance.  Otherwise, return nil.
+	Get and return a component on the entity.
+
+	Strict will throw if the entity does not have a component of the given type.
 
 ]]
 function Manifest:get(entity, id)
 	return self.pools[id]:get(entity)
 end
 
-function Manifest:maybeGet(entity, id)
+--[[
+
+	If the entity has the component, return the component.  Otherwise, do nothing.
+
+]]
+function Manifest:tryGet(entity, id)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
@@ -270,6 +337,11 @@ function Manifest:maybeGet(entity, id)
 	end
 end
 
+--[[
+
+	Get and return all of the components of the given types on the entity.
+
+]]
 function Manifest:multiGet(entity, output, ...)
 	for i = 1, select("#", ...) do
 		local id = select(i, ...)
@@ -282,37 +354,45 @@ end
 
 --[[
 
-	Add the given component to the entity and return the new component
-	instance.
+	Add the component to the entity and return the component.
 
-	An entity may only have one component from each type at a time. Adding a
-	component to an entity that already has a component of the same type is
-	undefined.
+	An entity may only have one component of each type at a time.  Strict will throw upon
+	an attempt to add multiple components of the same type to an entity.
 
 ]]
 function Manifest:add(entity, id, component)
 	local pool = self.pools[id]
-	local obj = pool:assign(entity, component)
 
-	pool.onAdd:dispatch(entity)
+	pool:assign(entity, component)
+	pool.onAdd:dispatch(entity, component)
 
-	return obj
+	return component
 end
 
-function Manifest:maybeAdd(entity, id, component)
+--[[
+
+	If the entity does not have the component, add it and return the component.
+	Otherwise, do nothing.
+
+]]
+function Manifest:tryAdd(entity, id, component)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
 		return
 	end
 
-	local obj = pool:assign(entity, component)
+	pool:assign(entity, component)
+	pool.onAdd:dispatch(entity, component)
 
-	pool.onAdd:dispatch(entity)
-
-	return obj
+	return component
 end
 
+--[[
+
+	Add the given components to the entity and return the entity.
+
+]]
 function Manifest:multiAdd(entity, ...)
 	local num = select("#", ...)
 
@@ -323,109 +403,106 @@ function Manifest:multiAdd(entity, ...)
 	return entity
 end
 
-function Manifest:assign(entities, id, component, ...)
-	if component and type(component) == "function" then
-		for _, entity in ipairs(entities) do
-			self:add(entity, id, component(...))
-		end
-	elseif component then
-		for _, entity in ipairs(entities) do
-			self:add(entity, id, component)
-		end
-	else
-		for _, entity in ipairs(entities) do
-			self:remove(entity, id)
-		end
-	end
-end
-
 --[[
 
-	If the entity has a component of the given type, return the component
-	instance.  Otherwise, add the given component to the entity and return the
-	new component.
+	If the entity has the component, get and return the component.  Otherwise, add the
+	component to the entity and return the component.
 
 ]]
 function Manifest:getOrAdd(entity, id, component)
 	local pool = self.pools[id]
-	local exists = pool:has(entity)
-	local obj = pool:get(entity)
+	local idx = pool:has(entity)
 
-	if exists then
-		return obj
+	if idx then
+		return pool.objects[idx]
 	else
-		obj = pool:assign(entity, component)
-		pool.onAdd:dispatch(entity)
+		pool:assign(entity, component)
+		pool.onAdd:dispatch(entity, component)
 
-		return obj
+		return component
 	end
 end
 
 --[[
 
-	Replace the entity's component of the given type with the given component.
+	Replace the component on the entity with the given component.
 
-	Replacing a component that the entity does not have is undefined.
+	Strict will throw upon an attempt to replacing a component that the entity does not
+	have.
 
 ]]
 function Manifest:replace(entity, id, component)
 	local pool = self.pools[id]
 
+	pool.onUpdate:dispatch(entity, component)
 	pool.objects[pool:has(entity)] = component
-	pool.onUpdate:dispatch(entity)
 
 	return component
 end
 
 --[[
 
-	If the entity has a component of the given type, replace it with the given
-	component and return the new component instance. Otherwise, add the given
-	component to the entity and return the new component instance.
+	If the entity has the component, replace it with the given component and return the
+	new component.  Otherwise, add the component to the entity and return the new
+	component.
 
 ]]
 function Manifest:addOrReplace(entity, id, component)
 	local pool = self.pools[id]
-	local index = pool:has(entity)
+	local idx = pool:has(entity)
 
-	if index then
-		pool.objects[index] = component
-		pool.onUpdate:dispatch(entity)
+	if idx then
+		pool.onUpdate:dispatch(entity, component)
+		pool.objects[idx] = component
 
 		return component
 	end
 
-	local obj = pool:assign(entity, component)
-	pool.onAdd:dispatch(entity)
+	pool:assign(entity, component)
+	pool.onAdd:dispatch(entity, component)
 
-	return obj
+	return component
 end
 
 --[[
 
-	Remove a component of the given type from the entity.
+	Remove the component from the entity.
 
-	Removing a component which the entity does not have is undefined.
+	Strict will throw upon an attempt to remove a component which the entity does not
+	have.
 
 ]]
 function Manifest:remove(entity, id)
 	local pool = self.pools[id]
 
-	pool.onRemove:dispatch(entity)
+	pool.onRemove:dispatch(entity, pool:get(entity))
 	pool:destroy(entity)
 end
 
 --[[
 
-	If the entity has a component of the given type, remove it.  Otherwise, do
-	nothing.
+	Remove all the specified components from the entity.
 
 ]]
-function Manifest:maybeRemove(entity, id)
+function Manifest:multiRemove(entity, ...)
+	for i = 1, select("#", ...) do
+		local pool = self.pools[select(i, ...)]
+
+		pool.onRemove:dispatch(entity, pool:get(entity))
+		pool:destroy(entity)
+	end
+end
+
+--[[
+
+	If the entity has the component, remove it.  Otherwise, do nothing.
+
+]]
+function Manifest:tryRemove(entity, id)
 	local pool = self.pools[id]
 
 	if pool:has(entity) then
-		pool.onRemove:dispatch(entity)
+		pool.onRemove:dispatch(entity, pool:get(entity))
 		pool:destroy(entity)
 
 		return true
@@ -436,28 +513,99 @@ end
 
 --[[
 
-	Return a signal which fires just after the component of the given type is
+	Return a signal that fires just after all components of the given types have been
 	added to an entity.
 
 ]]
-function Manifest:onAdded(id)
-	return self.pools[id].onAdd
+function Manifest:onAdded(...)
+	local ids = { ... }
+	local num = #ids
+
+	if num == 1 then
+		return self.pools[select(1, ...)].onAdd
+	end
+
+	local signal = Signal.new()
+	local pools = table.create(num)
+	local connections = table.create(num)
+	local packed = table.create(num)
+
+	for i, id in ipairs(ids) do
+		pools[i] = self.pools[id]
+	end
+
+	for i, pool in ipairs(pools) do
+		connections[i] = pool.onAdd:connect(function(entity)
+			for k, checkedPool in ipairs(pools) do
+				local idx = checkedPool:has(entity)
+
+				if not idx then
+					return
+				end
+
+				packed[k] = checkedPool.objects[idx]
+			end
+
+			signal:dispatch(entity, unpack(packed))
+		end)
+	end
+
+	return signal, function()
+		for _,  connection in ipairs(connections) do
+			connection()
+		end
+	end
 end
 
 --[[
 
-	Return a signal which fires whenever a component of the given type is
-	removed from an entity.
+	Return a signal that fires just after a component of any of the given types have been
+	removed from an entity that has all of them.
 
 ]]
-function Manifest:onRemoved(id)
-	return self.pools[id].onRemove
+function Manifest:onRemoved(...)
+	local ids = { ... }
+	local num = #ids
+
+	if num == 1 then
+		return self.pools[select(1, ...)].onRemove
+	end
+
+	local signal = Signal.new()
+	local pools = table.create(num)
+	local connections = table.create(num)
+	local packed = table.create(num)
+
+	for i, id in ipairs(ids) do
+		pools[i] = self.pools[id]
+	end
+
+	for i, pool in ipairs(pools) do
+		connections[i] = pool.onRemove:connect(function(entity)
+			for k, checkedPool in ipairs(pools) do
+				local idx = checkedPool:has(entity)
+
+				if not idx then
+					return
+				end
+
+				packed[k] = checkedPool.objects[idx]
+			end
+
+			signal:dispatch(entity, unpack(packed))
+		end)
+	end
+
+	return signal, function()
+		for _,  connection in ipairs(connections) do
+			connection()
+		end
+	end
 end
 
 --[[
 
-	Return a signal which fires whenever a component of the given type is
-	changed in some way.
+	Return a signal that fires just after a component of the given type has been updated.
 
 ]]
 function Manifest:onUpdated(id)
@@ -500,20 +648,63 @@ function Manifest:each(func)
 	end
 end
 
+--[[
+
+	Return the bare structures used to keep track of entities and their components: a
+	list of entities and a list of their corresponding components, both sorted the
+	same way.
+
+]]
 function Manifest:raw(id)
 	local pool = self.pools[id]
-
 	return pool.dense, pool.objects
 end
 
+--[[
+
+	Return the number of entities with the specified component.
+
+]]
+function Manifest:getSize(id)
+	return self.pools[id].size
+end
+
+--[[
+
+	Return the Pool object being used to manage the specified component.
+
+]]
+function Manifest:getPool(id)
+	return self.pools[id]
+end
+
+
+--[[
+
+	Return a constraint requiring that all the specified components be present on an
+	entity.
+
+]]
 function Manifest:all(...)
 	return Constraint.new(self, { ... })
 end
 
+--[[
+
+	Return a constraint requiring that none of the specified components be present on an
+	entity.
+
+]]
 function Manifest:except(...)
 	return Constraint.new(self, nil, { ... })
 end
 
+--[[
+
+	Return a constraint requiring that all the specified components both exist and have
+	been updated on an entity.
+
+]]
 function Manifest:updated(...)
 	return Constraint.new(self, nil, nil, { ... })
 end
@@ -523,23 +714,19 @@ end
 	Inject a context variable into the manifest.
 
 ]]
-function Manifest:context(context, value)
-	if value then
-		assert(self.contexts[context] == nil, ("context %s already set")
-			:format(context))
-
-		self.contexts[context] = value
-	end
-
-	return self.contexts[context]
+function Manifest:inject(context, value)
+	self.contexts[context] = value
+	return value
 end
 
-function Manifest:poolSize(id)
-	return self.pools[id].size
-end
+--[[
 
-function Manifest:_getPool(id)
-	return self.pools[id]
+	Get a context variable from the manifest.
+
+]]
+function Manifest:context(context)
+	local var = self.contexts[context]
+	return var
 end
 
 return Manifest

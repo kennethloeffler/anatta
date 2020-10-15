@@ -41,6 +41,8 @@ function Signal:connect(callback)
 	end
 end
 
+Signal.Connect = Signal.connect
+
 --[[
 
  Call all of the connected functions
@@ -60,5 +62,7 @@ function Signal:dispatch(...)
 		end
 	end
 end
+
+Signal.Fire = Signal.dispatch
 
 return Signal
