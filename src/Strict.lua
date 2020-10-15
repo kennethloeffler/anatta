@@ -316,10 +316,10 @@ return function(ecs)
 			return ecs:onUpdated(id)
 		end,
 
-		poolSize = function(_, id)
+		getSize = function(_, id)
 			assert(ecs.pools[id], ErrBadComponentId, id)
 
-			return ecs:poolSize(id)
+			return ecs:getSize(id)
 		end,
 
 		getPool = function(_, id)
