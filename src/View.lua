@@ -18,7 +18,6 @@ SingleWithForbidden.__index = SingleWithForbidden
 local View = {}
 
 function View.new(constraint)
-	local manifest = constraint.manifest
 	local numRequired = #constraint.required
 	local numForbidden = #constraint.forbidden
 
@@ -27,15 +26,6 @@ function View.new(constraint)
 		or (numForbidden > 0 and MultiWithForbidden or Multi)
 
 	constraint.componentPack = table.create(numRequired)
-
-	for i, id in ipairs(constraint.required) do
-		constraint.required[i] = manifest:getPool(id)
-	end
-
-	for i, id in ipairs(constraint.forbidden) do
-		constraint.forbidden[i] = manifest:getPool(id)
-	end
-
 
 	return setmetatable(constraint, viewKind)
 end

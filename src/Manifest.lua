@@ -687,7 +687,7 @@ end
 
 ]]
 function Manifest:all(...)
-	return Constraint.new(self, { ... })
+	return Constraint.new(self):all(...)
 end
 
 --[[
@@ -697,7 +697,7 @@ end
 
 ]]
 function Manifest:except(...)
-	return Constraint.new(self, nil, { ... })
+	return Constraint.new(self):except(...)
 end
 
 --[[
@@ -707,7 +707,7 @@ end
 
 ]]
 function Manifest:updated(...)
-	return Constraint.new(self, nil, nil, { ... })
+	return Constraint.new(self):updated(...)
 end
 
 --[[
