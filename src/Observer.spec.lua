@@ -1,7 +1,9 @@
 return function()
 	local Constraint = require(script.Parent.Constraint)
+	local Core = require(script.Parent.Core)
 	local Manifest = require(script.Parent.Manifest)
-	local t = require(script.Parent.core.TypeDef)
+
+	local t = Core.TypeDef
 
 	describe("observer", function()
 		beforeEach(function(context)

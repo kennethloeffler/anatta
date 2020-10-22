@@ -1,4 +1,4 @@
-local t = require(script.Parent.core.t)
+local t = require(script.Parent.Core.t)
 
 local ErrAlreadyHas = "entity %08X already has a %s"
 local ErrBadComponentId = "invalid component identifier: %s"

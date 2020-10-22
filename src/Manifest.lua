@@ -2,19 +2,19 @@
 
 	Manifest.lua
 
-	TODO: luau types
-
 ]]
 
 local Constraint = require(script.Parent.Constraint)
-local Constants = require(script.Parent.Constants)
+local Core = require(script.Parent.Core)
 local Pool = require(script.Parent.Pool)
-local Identity = require(script.Parent.core.Identity)
-local Signal = require(script.Parent.core.Signal)
-local TypeDef = require(script.Parent.core.TypeDef)
 
-local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
+local Constants = Core.Constants
+local Identity = Core.Identity
+local Signal = Core.Signal
+local TypeDef = Core.TypeDef
+
 local ENTITYID_MASK = Constants.ENTITYID_MASK
+local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local NULL_ENTITYID = Constants.NULL_ENTITYID
 
 local Manifest = {}
@@ -32,13 +32,14 @@ function Manifest.new()
 	local ident = Identity.new()
 
 	return setmetatable({
-		size = 0,
-		nextRecyclable = NULL_ENTITYID,
-		null = NULL_ENTITYID,
-		entities = {},
-		pools = {},
 		contexts = {},
+		entities = {},
 		ident = ident,
+		nextRecyclable = NULL_ENTITYID,
+		none = Constants.NONE,
+		nullEntity = NULL_ENTITYID,
+		pools = {},
+		size = 0,
 		t = TypeDef
 	}, Manifest)
 end
