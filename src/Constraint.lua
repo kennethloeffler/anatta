@@ -14,11 +14,16 @@ local function selectPools(manifest, ...)
 	for i = 1, num do
 		pools[i] = manifest:getPool(select(i, ...))
 	end
+
+	return pools
 end
 
 function Constraint.new(manifest)
 	return setmetatable({
 		manifest = manifest,
+		required = NONE,
+		forbidden = NONE,
+		changed = NONE,
 		componentPack = NONE
 	}, Constraint)
 end

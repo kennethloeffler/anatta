@@ -63,7 +63,7 @@ local function tryAddOnUpdatedSignal(obsPool, required, forbidden, numChanged, u
 			and hasRequiredAndNoForbidden(entityId, required, forbidden)
 		then
 			obsPool:assign(entity)
-			obsPool:dispatch(entity)
+			obsPool.onAdd:dispatch(entity)
 		end
 	end
 end
@@ -115,9 +115,7 @@ function Observer.new(constraint, name)
 		and tryRemoveHasUpdated(obsPool, updatedEntities)
 		or tryRemove(obsPool)
 
-	if name ~= nil then
-		manifest.pools[obsId] = obsPool
-	end
+	manifest.pools[obsId] = obsPool
 
 	for _, pool in ipairs(required) do
 		pool.onAdd:connect(add)

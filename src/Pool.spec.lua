@@ -1,5 +1,5 @@
 return function()
-	local Constants = require(script.Parent.Constants)
+	local Constants = require(script.Parent.Core).Constants
 	local Pool = require(script.Parent.Pool)
 
 	local ENTITYID_MASK = Constants.ENTITYID_MASK

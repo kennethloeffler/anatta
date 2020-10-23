@@ -16,16 +16,13 @@ return function()
 			context.comp3 = manifest:define("test3", t.none)
 			context.comp4 = manifest:define("test4", t.none)
 
-			context.obsAll = Constraint.new(manifest, {context.comp1, context.comp2}):observer()
-			context.obsAllExcept = Constraint.new(
-				manifest,
-				{context.comp1, context.comp2},
-				{context.comp3, context.comp4}):observer()
-			context.obsUpdated = Constraint.new(
-				manifest,
-				nil,
-				nil,
-				{context.comp1, context.comp2}):observer()
+			context.obsAll = Constraint.new(manifest):all(context.comp1, context.comp2):observer()
+
+			context.obsAllExcept = Constraint.new(manifest):all(context.comp1, context.comp2)
+				:except(context.comp3, context.comp4):observer()
+
+			context.obsUpdated = Constraint.new(manifest):updated(context.comp1, context.comp2)
+				:observer()
 		end)
 
 		describe("all", function()

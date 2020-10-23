@@ -32,14 +32,14 @@ return function()
 
 	describe("new", function()
 		it("should construct a single-component view when there is one required component and no forbidden components", function()
-			local view = View.new(Constraint.new(manifest, {Component1}))
+			local view = View.new(Constraint.new(manifest):all(Component1))
 
 			expect(getmetatable(view)).to.equal(View._singleMt)
 			expect(view.required[1]).to.equal(Pool1)
 		end)
 
 		it("should construct a single-component view with exclusion list when there is one required component and one or more forbidden components", function()
-			local view = View.new(Constraint.new(manifest, {Component1}, {Component3}))
+			local view = View.new(Constraint.new(manifest):all(Component1):except(Component3))
 
 			expect(getmetatable(view)).to.equal(View._singleWithExclMt)
 			expect(view.required[1]).to.equal(Pool1)
@@ -47,7 +47,7 @@ return function()
 		end)
 
 		it("should construct a multi-component view when there are multiple required components and no forbidden components", function()
-			local view = View.new(Constraint.new(manifest, {Component1, Component2}))
+			local view = View.new(Constraint.new(manifest):all(Component1, Component2))
 
 			expect(getmetatable(view)).to.equal(View._multiMt)
 			expect(view.required[1]).to.equal(Pool1)
@@ -55,7 +55,7 @@ return function()
 		end)
 
 		it("should construct a multi-component view with exclusion list when there are multiple required components and one or more forbidden components", function()
-			local view = View.new(Constraint.new(manifest, {Component1, Component2}, {Component3}))
+			local view = View.new(Constraint.new(manifest):all(Component1, Component2):except(Component3))
 
 			expect(getmetatable(view)).to.equal(View._multiWithExclMt)
 			expect(view.required[1]).to.equal(Pool1)
@@ -66,7 +66,7 @@ return function()
 
 	describe("Multi", function()
 		describe("each", function()
-			local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
+			local view = View.new(Constraint.new(manifest):all(Component1, Component2, Component3))
 			local entitiesToIterate = {}
 
 			it("should iterate all entities with at least the specified components", function()
@@ -105,7 +105,7 @@ return function()
 		end)
 
 		describe("eachEntity", function()
-			local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
+			local view = View.new(Constraint.new(manifest):all(Component1, Component2, Component3))
 			local entitiesToIterate = {}
 
 			it("should iterate all entities with at least the specified components", function()
@@ -124,7 +124,7 @@ return function()
 
 	describe("Single", function()
 		describe("each", function()
-			local view = View.new(Constraint.new(manifest, {Component1, Component2, Component3}))
+			local view = View.new(Constraint.new(manifest):all(Component1, Component2, Component3))
 			local entitiesToIterate = {}
 
 			it("should iterate all the entities with at least the specified component", function()
@@ -153,7 +153,7 @@ return function()
 		end)
 
 		describe("eachEntity", function()
-			local view = View.new(Constraint.new(manifest, {Component1}))
+			local view = View.new(Constraint.new(manifest):all(Component1))
 			local entitiesToIterate = {}
 
 			it("should iterate all the entities with at least the specified component", function()
@@ -170,7 +170,7 @@ return function()
 
 	describe("MultiWithExcluded", function()
 		describe("each", function()
-			local view = View.new(Constraint.new(manifest, {Component2, Component1}, {Component3}))
+			local view = View.new(Constraint.new(manifest):all(Component2, Component1):except(Component3))
 			local entitiesToIterate = {}
 
 			it("should iterate all the entities with at least the required components and none of the forbidden components", function()
@@ -207,7 +207,7 @@ return function()
 		end)
 
 		describe("eachEntity", function()
-			local view = View.new(Constraint.new(manifest, {Component1, Component2}, {Component3}))
+			local view = View.new(Constraint.new(manifest):all(Component1, Component2):except(Component3))
 			local entitiesToIterate = {}
 
 			it("should iterate all the entities with at least the required components and none of the forbidden components", function()
@@ -226,7 +226,7 @@ return function()
 
 	describe("SingleWithExcluded", function()
 		describe("each", function()
-			local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
+			local view = View.new(Constraint.new(manifest):all(Component1):except(Component3, Component2))
 			local entitiesToIterate = {}
 
 			it("should iterate all the entities with at least the required component and none of the forbidden components", function()
@@ -259,7 +259,7 @@ return function()
 		end)
 
 		describe("eachEntity", function()
-			local view = View.new(Constraint.new(manifest, {Component1}, {Component3, Component2}))
+			local view = View.new(Constraint.new(manifest):all(Component1):except(Component3, Component2))
 			local entitiesToIterate = {}
 
 			it("should iterate all the entities with at least the required component and none of the forbidden components", function()
