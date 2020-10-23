@@ -129,7 +129,8 @@ function Manifest:create()
 		local node = entities[nextRecyclable]
 		local recycledEntity = bit32.bor(
 			nextRecyclable,
-			bit32.lshift(bit32.rshift(node, ENTITYID_WIDTH), ENTITYID_WIDTH))
+			bit32.lshift(bit32.rshift(node, ENTITYID_WIDTH), ENTITYID_WIDTH)
+		)
 
 		entities[nextRecyclable] = recycledEntity
 		self.nextRecyclable = bit32.band(node, ENTITYID_MASK)
@@ -153,7 +154,8 @@ function Manifest:createFrom(entity)
 	local entities = self.entities
 	local existingEntityId = bit32.band(
 		self.entities[entityId] or NULL_ENTITYID,
-		ENTITYID_MASK)
+		ENTITYID_MASK
+	)
 
 	if existingEntityId == NULL_ENTITYID then
 		-- the given identifier's entityId is out of range; create the entities in
@@ -197,9 +199,8 @@ function Manifest:createFrom(entity)
 		-- make the previous element point to the next
 		entities[lastRecyclable] = bit32.bor(
 			bit32.band(entities[entityId], ENTITYID_MASK),
-			bit32.lshift(
-				bit32.rshift(entities[lastRecyclable], ENTITYID_WIDTH),
-				ENTITYID_WIDTH))
+			bit32.lshift(bit32.rshift(entities[lastRecyclable], ENTITYID_WIDTH), ENTITYID_WIDTH)
+		)
 
 		entities[entityId] = entity
 
@@ -225,8 +226,8 @@ function Manifest:destroy(entity)
 	-- push this id onto the free list so that it can be recycled, and increment the
 	-- identifier's version to avoid possible collision
 	self.entities[entityId] = bit32.bor(
-		self.nextRecyclable,
-		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH))
+		self.nextRecyclable, bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH)
+	)
 
 	self.nextRecyclable = entityId
 end
