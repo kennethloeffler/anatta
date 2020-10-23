@@ -1,7 +1,4 @@
-local Constants = require(script.Parent.Constants)
 local t = require(script.Parent.t)
-
-local NONE = Constants.NONE
 
 local Interface = {
 	interface = true,
