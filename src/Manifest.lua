@@ -2,19 +2,19 @@
 
 	Manifest.lua
 
-	TODO: luau types
-
 ]]
 
 local Constraint = require(script.Parent.Constraint)
-local Constants = require(script.Parent.Constants)
+local Core = require(script.Parent.Core)
 local Pool = require(script.Parent.Pool)
-local Identity = require(script.Parent.core.Identity)
-local Signal = require(script.Parent.core.Signal)
-local TypeDef = require(script.Parent.core.TypeDef)
 
-local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
+local Constants = Core.Constants
+local Identity = Core.Identity
+local Signal = Core.Signal
+local TypeDef = Core.TypeDef
+
 local ENTITYID_MASK = Constants.ENTITYID_MASK
+local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local NULL_ENTITYID = Constants.NULL_ENTITYID
 
 local Manifest = {}
@@ -32,13 +32,14 @@ function Manifest.new()
 	local ident = Identity.new()
 
 	return setmetatable({
-		size = 0,
-		nextRecyclable = NULL_ENTITYID,
-		null = NULL_ENTITYID,
-		entities = {},
-		pools = {},
 		contexts = {},
+		entities = {},
 		ident = ident,
+		nextRecyclable = NULL_ENTITYID,
+		none = Constants.NONE,
+		nullEntity = NULL_ENTITYID,
+		pools = {},
+		size = 0,
 		t = TypeDef
 	}, Manifest)
 end
@@ -93,15 +94,13 @@ function Manifest:define(name, typeDef, constructor)
 	end
 
 	if type == "Instance" or type == "instance" or type == "instanceOf" or type == "instanceIsA" then
-		pool.onRemove:connect(function(entity)
-			pool:get(entity):Destroy()
+		pool.onRemove:connect(function(_, instance)
+			instance:Destroy()
 		end)
 	elseif next(typeDef.instanceFields) ~= nil then
-		pool.onRemove:connect(function(entity)
-			local component = pool:get(entity)
-
+		pool.onRemove:connect(function(_, interface)
 			for fieldName in pairs(typeDef.instanceFields) do
-				component[fieldName]:Destroy()
+				interface[fieldName]:Destroy()
 			end
 		end)
 	end
@@ -130,7 +129,8 @@ function Manifest:create()
 		local node = entities[nextRecyclable]
 		local recycledEntity = bit32.bor(
 			nextRecyclable,
-			bit32.lshift(bit32.rshift(node, ENTITYID_WIDTH), ENTITYID_WIDTH))
+			bit32.lshift(bit32.rshift(node, ENTITYID_WIDTH), ENTITYID_WIDTH)
+		)
 
 		entities[nextRecyclable] = recycledEntity
 		self.nextRecyclable = bit32.band(node, ENTITYID_MASK)
@@ -154,7 +154,8 @@ function Manifest:createFrom(entity)
 	local entities = self.entities
 	local existingEntityId = bit32.band(
 		self.entities[entityId] or NULL_ENTITYID,
-		ENTITYID_MASK)
+		ENTITYID_MASK
+	)
 
 	if existingEntityId == NULL_ENTITYID then
 		-- the given identifier's entityId is out of range; create the entities in
@@ -198,9 +199,8 @@ function Manifest:createFrom(entity)
 		-- make the previous element point to the next
 		entities[lastRecyclable] = bit32.bor(
 			bit32.band(entities[entityId], ENTITYID_MASK),
-			bit32.lshift(
-				bit32.rshift(entities[lastRecyclable], ENTITYID_WIDTH),
-				ENTITYID_WIDTH))
+			bit32.lshift(bit32.rshift(entities[lastRecyclable], ENTITYID_WIDTH), ENTITYID_WIDTH)
+		)
 
 		entities[entityId] = entity
 
@@ -226,8 +226,8 @@ function Manifest:destroy(entity)
 	-- push this id onto the free list so that it can be recycled, and increment the
 	-- identifier's version to avoid possible collision
 	self.entities[entityId] = bit32.bor(
-		self.nextRecyclable,
-		bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH))
+		self.nextRecyclable, bit32.lshift(bit32.rshift(entity, ENTITYID_WIDTH) + 1, ENTITYID_WIDTH)
+	)
 
 	self.nextRecyclable = entityId
 end
@@ -686,7 +686,7 @@ end
 
 ]]
 function Manifest:all(...)
-	return Constraint.new(self, { ... })
+	return Constraint.new(self):all(...)
 end
 
 --[[
@@ -696,7 +696,7 @@ end
 
 ]]
 function Manifest:except(...)
-	return Constraint.new(self, nil, { ... })
+	return Constraint.new(self):except(...)
 end
 
 --[[
@@ -706,7 +706,7 @@ end
 
 ]]
 function Manifest:updated(...)
-	return Constraint.new(self, nil, nil, { ... })
+	return Constraint.new(self):updated(...)
 end
 
 --[[

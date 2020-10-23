@@ -1,8 +1,10 @@
 return function()
-	local Constants = require(script.Parent.Constants)
+	local Core = require(script.Parent.Core)
 	local Manifest = require(script.Parent.Manifest)
 	local Pool = require(script.Parent.Pool)
-	local t = require(script.Parent.core.TypeDef)
+
+	local Constants = Core.Constants
+	local t = Core.TypeDef
 
 	local ENTITYID_MASK = Constants.ENTITYID_MASK
 	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
@@ -41,7 +43,7 @@ return function()
 			expect(getmetatable(manifest)).to.equal(Manifest)
 			expect(manifest.size).to.equal(0)
 			expect(manifest.nextRecyclable).to.equal(NULL_ENTITYID)
-			expect(manifest.null).to.equal(NULL_ENTITYID)
+			expect(manifest.nullEntity).to.equal(NULL_ENTITYID)
 			expect(manifest.entities).to.be.a("table")
 			expect(next(manifest.entities)).to.equal(nil)
 			expect(manifest.pools).to.be.a("table")

@@ -1,36 +1,47 @@
+local Constants = require(script.Parent.Core).Constants
 local View = require(script.Parent.View)
 local Observer = require(script.Parent.Observer)
 
-local NONE = {}
+local NONE = Constants.NONE
 
 local Constraint = {}
 Constraint.__index = Constraint
 
-function Constraint.new(manifest, required, forbidden, changed)
-	return setmetatable({
-		required = required or NONE,
-		forbidden = forbidden or NONE,
-		changed = changed or NONE,
+local function selectPools(manifest, ...)
+	local num = select("#", ...)
+	local pools = table.create(num)
 
+	for i = 1, num do
+		pools[i] = manifest:getPool(select(i, ...))
+	end
+
+	return pools
+end
+
+function Constraint.new(manifest)
+	return setmetatable({
 		manifest = manifest,
+		required = NONE,
+		forbidden = NONE,
+		changed = NONE,
 		componentPack = NONE
 	}, Constraint)
 end
 
 function Constraint:all(...)
-	self.required = { ... }
+	self.required = selectPools(self.manifest, ...)
 
 	return self
 end
 
 function Constraint:except(...)
-	self.forbidden = { ... }
+	self.forbidden = selectPools(self.manifest, ...)
 
 	return self
 end
 
 function Constraint:updated(...)
-	self.changed = { ... }
+	self.changed = selectPools(self.manifest, ...)
 
 	return self
 end

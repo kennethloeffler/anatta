@@ -1,7 +1,7 @@
-local Constants = require(script.Parent.Constants)
+local Constants = require(script.Parent.Core).Constants
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
-local NONE = {}
+local NONE = Constants.NONE
 
 local Multi = {}
 Multi.__index = Multi
@@ -18,24 +18,14 @@ SingleWithForbidden.__index = SingleWithForbidden
 local View = {}
 
 function View.new(constraint)
-	local manifest = constraint.manifest
-	local numRequired = #constraint.required
-	local numForbidden = #constraint.forbidden
-
+	local required = constraint.required
+	local forbidden = constraint.forbidden
+	local numRequired = #required
 	local viewKind = numRequired == 1
-		and (numForbidden > 0 and SingleWithForbidden or Single)
-		or (numForbidden > 0 and MultiWithForbidden or Multi)
+		and (forbidden ~= NONE and SingleWithForbidden or Single)
+		or (forbidden ~= NONE and MultiWithForbidden or Multi)
 
 	constraint.componentPack = table.create(numRequired)
-
-	for i, id in ipairs(constraint.required) do
-		constraint.required[i] = manifest:getPool(id)
-	end
-
-	for i, id in ipairs(constraint.forbidden) do
-		constraint.forbidden[i] = manifest:getPool(id)
-	end
-
 
 	return setmetatable(constraint, viewKind)
 end

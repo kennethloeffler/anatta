@@ -1,5 +1,7 @@
-local Constants = require(script.Parent.Constants)
-local Signal = require(script.Parent.core.Signal)
+local Core = require(script.Parent.Core)
+
+local Constants = Core.Constants
+local Signal = Core.Signal
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 

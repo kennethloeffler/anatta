@@ -1,7 +1,9 @@
 return function()
 	local Constraint = require(script.Parent.Constraint)
+	local Core = require(script.Parent.Core)
 	local Manifest = require(script.Parent.Manifest)
-	local t = require(script.Parent.core.TypeDef)
+
+	local t = Core.TypeDef
 
 	describe("observer", function()
 		beforeEach(function(context)
@@ -14,16 +16,16 @@ return function()
 			context.comp3 = manifest:define("test3", t.none)
 			context.comp4 = manifest:define("test4", t.none)
 
-			context.obsAll = Constraint.new(manifest, {context.comp1, context.comp2}):observer()
-			context.obsAllExcept = Constraint.new(
-				manifest,
-				{context.comp1, context.comp2},
-				{context.comp3, context.comp4}):observer()
-			context.obsUpdated = Constraint.new(
-				manifest,
-				nil,
-				nil,
-				{context.comp1, context.comp2}):observer()
+			context.obsAll = Constraint.new(manifest):all(context.comp1, context.comp2):observer()
+
+			context.obsAllExcept = Constraint.new(manifest):all(context.comp1, context.comp2)
+				:except(context.comp3, context.comp4):observer()
+
+			context.obsUpdated = Constraint.new(manifest):updated(context.comp1, context.comp2)
+				:observer()
+
+			context.obsAllUpdated = Constraint.new(manifest):all(context.comp1, context.comp2)
+				:updated(context.comp3, context.comp4):observer()
 		end)
 
 		describe("all", function()
@@ -105,6 +107,42 @@ return function()
 
 				context.manifest:remove(entity, context.comp1)
 				expect(context.manifest:has(entity, context.obsUpdated)).to.equal(false)
+			end)
+		end)
+
+		describe("all updated", function()
+			it("should capture entities with all the required components and all the updated components", function(context)
+				local entity = context.manifest:create()
+
+				context.manifest:add(entity, context.comp1)
+				context.manifest:add(entity, context.comp2)
+
+				expect(context.manifest:has(entity, context.obsAllUpdated)).to.equal(false)
+
+				context.manifest:add(entity, context.comp3)
+				context.manifest:add(entity, context.comp4)
+
+				expect(context.manifest:has(entity, context.obsAllUpdated)).to.equal(false)
+
+				context.manifest:replace(entity, context.comp3)
+				context.manifest:replace(entity, context.comp4)
+
+				expect(context.manifest:has(entity, context.obsAllUpdated)).to.equal(true)
+			end)
+
+			it("should cull entities that lose any of the components", function(context)
+				local entity = context.manifest:create()
+
+				context.manifest:add(entity, context.comp1)
+				context.manifest:add(entity, context.comp2)
+				context.manifest:add(entity, context.comp3)
+				context.manifest:add(entity, context.comp4)
+				context.manifest:replace(entity, context.comp3)
+				context.manifest:replace(entity, context.comp4)
+
+				context.manifest:remove(entity, context.comp4)
+
+				expect(context.manifest:has(entity, context.obsAllUpdated)).to.equal(false)
 			end)
 		end)
 	end)

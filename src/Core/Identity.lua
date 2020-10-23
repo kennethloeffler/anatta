@@ -35,6 +35,7 @@ function Identity:tryLoad(target)
 	end
 
 	local lookup = HttpService:JSONDecode(stringValue.Value)
+
 	if not next(lookup) then
 		warn(errString)
 		return
