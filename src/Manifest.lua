@@ -94,15 +94,13 @@ function Manifest:define(name, typeDef, constructor)
 	end
 
 	if type == "Instance" or type == "instance" or type == "instanceOf" or type == "instanceIsA" then
-		pool.onRemove:connect(function(entity)
-			pool:get(entity):Destroy()
+		pool.onRemove:connect(function(_, instance)
+			instance:Destroy()
 		end)
 	elseif next(typeDef.instanceFields) ~= nil then
-		pool.onRemove:connect(function(entity)
-			local component = pool:get(entity)
-
+		pool.onRemove:connect(function(_, interface)
 			for fieldName in pairs(typeDef.instanceFields) do
-				component[fieldName]:Destroy()
+				interface[fieldName]:Destroy()
 			end
 		end)
 	end
