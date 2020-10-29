@@ -80,8 +80,12 @@ return function(ecs)
 			return ecs:createFrom(entity)
 		end,
 
-		define = function(_, name, tFunction, createFunction)
-			return ecs:define(name, tFunction, createFunction)
+		define = function(_, params)
+			return ecs:define {
+				name = params.name,
+				type = params.type,
+				new = params.new
+			}
 		end,
 
 		new = function()
@@ -322,13 +326,17 @@ return function(ecs)
 			return ecs:getSize(id)
 		end,
 
-		getPool = function(_, id)
+		getPools = function(_, id)
 			assert(ecs.pools[id], ErrBadComponentId, id)
 
-			return ecs:getPool(id)
+			return ecs:getPools(id)
 		end
 	}
 
 	strict.__index = strict
-	return setmetatable({ t = ecs.t }, strict)
+	return setmetatable({
+		none = ecs.none,
+		nullEntity = ecs.nullEntity,
+		t = ecs.t,
+	}, strict)
 end

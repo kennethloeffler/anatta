@@ -38,7 +38,7 @@ local HigherOrder = {
 local Noop = function() end
 
 local t_TypeDef = t.strictInterface {
-	type = t.string,
+	typeName = t.string,
 	check = t.callback,
 	instanceFields = t.table,
 	fields = t.table,
@@ -48,7 +48,7 @@ local TypeDef = {}
 
 local function checkInterface(typeDef, checkTable)
 	for name, fieldTypeDef in pairs(checkTable) do
-		local fieldType = fieldTypeDef.type
+		local fieldType = fieldTypeDef.typeName
 
 		checkTable[name] = fieldTypeDef.check
 		typeDef.fields[name] = fieldTypeDef
@@ -62,15 +62,15 @@ local function checkInterface(typeDef, checkTable)
 		end
 	end
 
-	return t[typeDef.type](checkTable)
+	return t[typeDef.typeName](checkTable)
 end
 
 local function getCheck(typeDef, ...)
-	local type = typeDef.type
+	local typeName = typeDef.typeName
 
-	if Interface[type] then
+	if Interface[typeName] then
 		return checkInterface(typeDef, ...)
-	elseif HigherOrder[type] then
+	elseif HigherOrder[typeName] then
 		local checks = table.create(select("#", ...))
 
 		for i = 1, select("#", ...) do
@@ -81,15 +81,15 @@ local function getCheck(typeDef, ...)
 			end
 		end
 
-		return t[type](unpack(checks))
+		return t[typeName](unpack(checks))
 	else
-		return t[type]
+		return t[typeName]
 	end
 end
 
-local function newTypeDef(type, ...)
+local function newTypeDef(typeName, ...)
 	local typeDef = {
-		type = type,
+		typeName = typeName,
 		check = Noop,
 		instanceFields = {},
 		fields = {},
@@ -100,12 +100,12 @@ local function newTypeDef(type, ...)
 	return typeDef
 end
 
-for type in pairs(t) do
-	if HigherOrder[type] == nil and Interface[type] == nil then
-		TypeDef[type] = newTypeDef(type)
+for typeName in pairs(t) do
+	if HigherOrder[typeName] == nil and Interface[typeName] == nil then
+		TypeDef[typeName] = newTypeDef(typeName)
 	else
-		TypeDef[type] = function(...)
-			return newTypeDef(type, ...)
+		TypeDef[typeName] = function(...)
+			return newTypeDef(typeName, ...)
 		end
 	end
 end

@@ -6,13 +6,22 @@ return function()
 	local manifest = Manifest.new()
 	local t = manifest.t
 
-	local Component1 = manifest:define("Test1", t.table)
-	local Component2 = manifest:define("Test2", t.table)
-	local Component3 = manifest:define("Test3", t.table)
+	local Component1 = manifest:define {
+		name = "Test1",
+		type = t.table
+	}
+	local Component2 = manifest:define {
+		name = "Test2",
+		type = t.table
+	}
+	local Component3 = manifest:define {
+		name = "Test3",
+		type = t.table
+	}
 
-	local Pool1 = manifest:getPool(Component1)
-	local Pool2 = manifest:getPool(Component2)
-	local Pool3 = manifest:getPool(Component3)
+	local Pool1 = manifest:getPools(Component1)[1]
+	local Pool2 = manifest:getPools(Component2)[1]
+	local Pool3 = manifest:getPools(Component3)[1]
 
 	for i = 1, 100 do
 		local entity = manifest:create()

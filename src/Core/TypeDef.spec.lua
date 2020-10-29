@@ -3,7 +3,7 @@ return function()
 
 	local function ensure(typeDef)
 		expect(typeDef).to.be.a("table")
-		expect(typeDef.type).to.be.a("string")
+		expect(typeDef.typeName).to.be.a("string")
 		expect(typeDef.check).to.be.a("function")
 		expect(typeDef.instanceFields).to.be.a("table")
 		expect(typeDef.fields).to.be.a("table")

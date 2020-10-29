@@ -6,7 +6,10 @@ return function()
 		local manifest = Manifest.new()
 
 		context.manifest = Strict(manifest)
-		context.testComponent = manifest:define("test", manifest.t.table)
+		context.testComponent = manifest:define {
+			name = "test",
+			type = manifest.t.table
+		}
 	end)
 
 	describe("assign", function()
