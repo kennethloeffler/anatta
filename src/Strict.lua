@@ -334,5 +334,9 @@ return function(ecs)
 	}
 
 	strict.__index = strict
-	return setmetatable({ t = ecs.t }, strict)
+	return setmetatable({
+		none = ecs.none,
+		nullEntity = ecs.nullEntity,
+		t = ecs.t,
+	}, strict)
 end

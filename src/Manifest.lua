@@ -49,8 +49,11 @@ end
 function Manifest:load(projectRoot)
 	local components = projectRoot:FindFirstChild("Components")
 		or projectRoot:FindFirstChild("components")
+	local systems = projectRoot:FindFirstChild("Systems")
+		or projectRoot:FindFirstChild("systems")
 
 	assert(components, string.format("no component folder found in %s", projectRoot:GetFullName()))
+	assert(systems, string.format("no system folder found in %s", projectRoot:GetFullName()))
 
 	self.componentIds:tryLoad(projectRoot)
 
@@ -61,6 +64,12 @@ function Manifest:load(projectRoot)
 	for _, instance in ipairs(components:GetDescendants()) do
 		if instance:IsA("ModuleScript") then
 			loadDefinitions(instance, self)
+		end
+	end
+
+	for _, instance in ipairs(systems:GetDescendants()) do
+		if instance:IsA("ModuleScript") then
+			require(instance)
 		end
 	end
 end
