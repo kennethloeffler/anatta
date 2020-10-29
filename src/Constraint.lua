@@ -7,17 +7,6 @@ local NONE = Constants.NONE
 local Constraint = {}
 Constraint.__index = Constraint
 
-local function selectPools(manifest, ...)
-	local num = select("#", ...)
-	local pools = table.create(num)
-
-	for i = 1, num do
-		pools[i] = manifest:getPool(select(i, ...))
-	end
-
-	return pools
-end
-
 function Constraint.new(manifest)
 	return setmetatable({
 		manifest = manifest,
@@ -29,19 +18,19 @@ function Constraint.new(manifest)
 end
 
 function Constraint:all(...)
-	self.required = selectPools(self.manifest, ...)
+	self.required = self.manifest:getPools(...)
 
 	return self
 end
 
 function Constraint:except(...)
-	self.forbidden = selectPools(self.manifest, ...)
+	self.forbidden = self.manifest:getPools(...)
 
 	return self
 end
 
 function Constraint:updated(...)
-	self.changed = selectPools(self.manifest, ...)
+	self.changed = self.manifest:getPools(...)
 
 	return self
 end

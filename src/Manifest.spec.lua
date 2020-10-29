@@ -26,9 +26,19 @@ return function()
 
 	beforeEach(function(context)
 		local manifest = Manifest.new()
-		local interfaceComponent = manifest:define("interface", t.interface { instance = t.instance })
-		local instanceComponent = manifest:define("instance", t.Instance, instanceConstructor)
-		local primitiveComponent = manifest:define("primitive", t.number)
+		local interfaceComponent = manifest:define {
+			name = "interface",
+			type = t.interface { instance = t.instance }
+		}
+		local instanceComponent = manifest:define {
+			name = "instance",
+			type = t.Instance,
+			new = instanceConstructor
+		}
+		local primitiveComponent = manifest:define {
+			name = "primitive",
+			type = t.number
+		}
 
 		context.manifest = manifest
 		context.interfaceComponent = interfaceComponent
@@ -62,12 +72,14 @@ return function()
 			expect(getmetatable(pool)).to.equal(Pool)
 		end)
 
-		it("should generate and return the component id", function(context)
-			expect(context.primitiveComponent).to.be.a("number")
+		it("should generate and return the definition", function(context)
+			expect(context.primitiveComponent).to.be.a("table")
+			expect(context.primitiveComponent.type).to.be.a("table")
+			expect(context.primitiveComponent.name).to.equal("primitive")
 		end)
 
-		it("should inject constructors", function(context)
-			expect(context.manifest.contexts["constructor_" .. context.instanceComponent]).to.equal(instanceConstructor)
+		it("should inject the definition", function(context)
+			expect(context.manifest.contexts[context.instanceComponent.name]).to.equal(context.instanceComponent)
 		end)
 
 		it("should attach removal signal listeners to destroy instance types or members", function(context)
@@ -262,27 +274,39 @@ return function()
 	end)
 
 	describe("visit", function()
-		it("should return the component identifiers managed by the manifest", function(context)
-			local num = 0
+		it("should return all component definitions managed by the manifest", function(context)
+			local componentDefs = {}
 
-			context.manifest:visit(function(componentId)
-				expect(context.manifest.pools[componentId]).to.be.ok()
-				num += 1
+			for componentDef in pairs(context.manifest.pools) do
+				componentDefs[componentDef] = componentDef
+			end
+
+			context.manifest:visit(function(componentDef)
+				expect(componentDefs[componentDef]).to.equal(componentDef)
+				componentDefs[componentDef] = nil
 			end)
 
-			expect(num).to.equal(#context.manifest.pools)
+			expect(next(componentDefs)).to.equal(nil)
 		end)
 
-		it("if passed an entity, should return the component ids which it has", function(context)
+		it("if passed an entity, should return the component definitions of which it has", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
+
+			local componentDefs = {}
+
+			componentDefs[context.primitiveComponent] = context.primitiveComponent
+			componentDefs[context.instanceComponent] = context.instanceComponent
 
 			manifest.pools[context.primitiveComponent]:assign(entity, 10)
 			manifest.pools[context.instanceComponent]:assign(entity, Instance.new("Hole"))
 
-			manifest:visit(function(componentId)
-				expect(manifest.pools[componentId]:has(entity)).to.be.ok()
+			manifest:visit(function(componentDef)
+				expect(componentDefs[componentDef]).to.equal(componentDef)
+				componentDefs[componentDef] = nil
 			end, entity)
+
+			expect(next(componentDefs)).to.equal(nil)
 		end)
 	end)
 
@@ -417,7 +441,10 @@ return function()
 		it("should correctly handle tag components", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local tag = manifest:define("tag", t.none)
+			local tag = manifest:define {
+				name = "tag",
+				type = t.none
+			}
 
 			manifest:add(entity, tag)
 
@@ -472,7 +499,10 @@ return function()
 		it("should correctly handle tag components", function(context)
 			local manifest = context.manifest
 			local entity = manifest:create()
-			local tag = manifest:define("tag", t.none)
+			local tag = manifest:define {
+				name = "tag",
+				type = t.none
+			}
 
 			manifest:tryAdd(entity, tag)
 
@@ -719,9 +749,17 @@ return function()
 
 		it("should return a new signal for more than one specified component that fires once all have been added", function(context)
 			local manifest = context.manifest
-			local test1 = manifest:define("test1", t.none)
-			local test2 = manifest:define("test2", t.none)
-			local test3 = manifest:define("test3", t.none)
+			local test1 = manifest:define {
+				name = "test1",
+				type = t.none
+			}
+			local test2 = manifest:define {
+				name = "test2", type = t.none
+			}
+			local test3 = manifest:define {
+				name = "test3",
+				type = t.none
+			}
 			local fired = false
 			local e = manifest:create()
 
@@ -747,9 +785,18 @@ return function()
 
 		it("should return a new signal for more than one specified component that fires after any have been removed from an entity that has all of them", function(context)
 			local manifest = context.manifest
-			local test1 = manifest:define("test1", t.none)
-			local test2 = manifest:define("test2", t.none)
-			local test3 = manifest:define("test3", t.none)
+			local test1 = manifest:define {
+				name = "test1",
+				type = t.none
+			}
+			local test2 = manifest:define {
+				name = "test2",
+				type = t.none
+			}
+			local test3 = manifest:define {
+				name = "test3",
+				type = t.none
+			}
 			local fired = false
 			local e = manifest:create()
 
@@ -854,11 +901,11 @@ return function()
 		end)
 	end)
 
-	describe("getPool", function()
-		it("should return the pool for the specified component type", function(context)
+	describe("getPools", function()
+		it("should return the pools for the specified component types", function(context)
 			local manifest = context.manifest
 
-			expect(manifest:getPool(context.primitiveComponent))
+			expect(manifest:getPools(context.primitiveComponent)[1])
 				.to.equal(manifest.pools[context.primitiveComponent])
 		end)
 	end)

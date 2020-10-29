@@ -11,10 +11,22 @@ return function()
 
 			context.manifest = manifest
 
-			context.comp1 = manifest:define("test1", t.none)
-			context.comp2 = manifest:define("test2", t.none)
-			context.comp3 = manifest:define("test3", t.none)
-			context.comp4 = manifest:define("test4", t.none)
+			context.comp1 = manifest:define {
+				name = "test1",
+				type = t.none
+			}
+			context.comp2 = manifest:define {
+				name = "test2",
+				type = t.none
+			}
+			context.comp3 = manifest:define {
+				name = "test3",
+				type = t.none
+			}
+			context.comp4 = manifest:define {
+				name = "test4",
+				type = t.none
+			}
 
 			context.obsAll = Constraint.new(manifest):all(context.comp1, context.comp2):observer()
 

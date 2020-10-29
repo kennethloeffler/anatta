@@ -8,7 +8,5 @@ return function(params)
 	local manifest = strict ~= false and Strict(Manifest.new(projectRoot))
 		or Manifest.new(projectRoot)
 
-	manifest:load(projectRoot)
-
 	return manifest
 end
