@@ -250,9 +250,7 @@ end
 
 ]]
 function Manifest:valid(entity)
-	local id = bit32.band(entity, ENTITYID_MASK)
-
-	return (id <= self.size and id ~= NULL_ENTITYID) and self.entities[id] == entity
+	return self.entities[bit32.band(entity, ENTITYID_MASK)] == entity
 end
 
 --[[
