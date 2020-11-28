@@ -50,7 +50,7 @@ return function()
 			expect(#sig.callbacks).to.equal(0)
 		end)
 
-		itFOCUS("should not mess up an ongoing dispatch", function()
+		it("should not mess up an ongoing dispatch", function()
 			local sig = Signal.new()
 			local first = false
 			local second = false
