@@ -49,5 +49,30 @@ return function()
 
 			expect(#sig.callbacks).to.equal(0)
 		end)
+
+		itFOCUS("should not mess up an ongoing dispatch", function()
+			local sig = Signal.new()
+			local first = false
+			local second = false
+			local third = false
+			local disconnect
+
+			disconnect = sig:connect(function()
+				first = true
+				disconnect()
+			end)
+
+			sig:connect(function()
+				second = true
+			end)
+
+			sig:connect(function()
+				third = true
+			end)
+
+			sig:dispatch()
+
+			expect(first and second and third).to.equal(true)
+		end)
 	end)
 end

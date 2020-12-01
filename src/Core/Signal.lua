@@ -1,13 +1,6 @@
--- teensy weensy signal implementation, take it or leave it
-
 local Signal = {}
 Signal.__index = Signal
 
---[[
-
- Construct and return new signal object
-
-]]
 function Signal.new()
 	return setmetatable({
 		callbacks = {},
@@ -15,11 +8,6 @@ function Signal.new()
 	}, Signal)
 end
 
---[[
-
- Add a function to be called whenever Signal::Dispatch is called
-
-]]
 function Signal:connect(callback)
 	local callbacks = self.callbacks
 
@@ -43,20 +31,12 @@ end
 
 Signal.Connect = Signal.connect
 
---[[
-
- Call all of the connected functions
-
- Function calls are guaranteed to be in the same order they were
- connected in.
-
-]]
 function Signal:dispatch(...)
 	local disconnected = self.disconnected
 
 	for _, callback in ipairs(self.callbacks) do
 		if not disconnected[callback] then
-			callback(...)
+			coroutine.wrap(callback)(...)
 		else
 			disconnected[callback] = nil
 		end
