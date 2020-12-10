@@ -19,6 +19,12 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Roblox place and model files
+*.rbxlx
+*.rbxl
+*.rbxmx
+*.rbxm
+
 roblox.toml
 
 # =========================
