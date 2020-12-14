@@ -127,9 +127,9 @@ function Plugin2:dockWidget(name, title, ...)
 		return self._pluginGuis[name]
 	end
 
-	local gui = RbxPlugin:CreateDockWidgetRbxPluginGui(name, DockWidgetPluginGuiInfo.new(...))
+	local gui = RbxPlugin:CreateDockWidgetPluginGui(name, DockWidgetPluginGuiInfo.new(...))
 
-	self._RbxPluginGuis[name] = gui
+	self._pluginGuis[name] = gui
 	gui.Name = name
 	gui.Title = title
 
@@ -137,12 +137,12 @@ function Plugin2:dockWidget(name, title, ...)
 end
 
 function Plugin2:action(params)
-     local actionId = params.actionId
-     local name = params.name
-     local tip = params.tip
-     local icon = params.icon
-     local allowBinding = params.allowBinding
-     local func = params.func
+	local actionId = params.actionId
+	local name = params.name
+	local tip = params.tip
+	local icon = params.icon
+	local allowBinding = params.allowBinding
+	local func = params.func
 
 	local existingAction = self._actions[actionId]
 
@@ -152,16 +152,16 @@ function Plugin2:action(params)
 		existingAction.connection = existingAction.action.Triggered:Connect(func)
 
 		return existingAction.action
-     end
+	end
 
-     local action = RbxPlugin:CreateRbxPluginAction(actionId, name, tip, icon, allowBinding)
+	local action = RbxPlugin:CreatePluginAction(actionId, name, tip, icon, allowBinding)
 
-     self._actions[actionId] = {
+	self._actions[actionId] = {
 		connection = action.Triggered:Connect(func),
 		action = action
 	}
 
-     return action
+	return action
 end
 
 function Plugin2:menu(id, title, icon)
@@ -216,7 +216,7 @@ function Plugin2.load()
 	local ok, result = pcall(require, main)
 
 	if not ok then
-		warn("RbxPlugin failed to load: " .. result)
+		warn("Plugin failed to load: " .. result)
 		return
 	end
 
