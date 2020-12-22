@@ -1,18 +1,15 @@
-local Core = require(script.Parent.Core)
-
-local Constants = Core.Constants
-local Signal = Core.Signal
+local Constants = require(script.Parent.Constants)
+local Signal = require(script.Parent.Signal)
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 
 local Pool = {}
 Pool.__index = Pool
 
-function Pool.new(name, typeDef, constructor)
+function Pool.new(name, typeDef)
 	return setmetatable({
 		name = name,
 		typeDef = typeDef,
-		new = constructor,
 
 		onAdd = Signal.new(),
 		onRemove = Signal.new(),
@@ -25,7 +22,7 @@ function Pool.new(name, typeDef, constructor)
 	}, Pool)
 end
 
-function Pool:has(entity)
+function Pool:contains(entity)
 	return self.sparse[bit32.band(entity, ENTITYID_MASK)]
 end
 
@@ -33,7 +30,7 @@ function Pool:get(entity)
 	return self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]]
 end
 
-function Pool:assign(entity, component)
+function Pool:insert(entity, component)
 	self.size += 1
 
 	local size = self.size
@@ -46,7 +43,7 @@ function Pool:assign(entity, component)
 	return component
 end
 
-function Pool:destroy(entity)
+function Pool:delete(entity)
 	self.size -= 1
 
 	local prevSize = self.size + 1
