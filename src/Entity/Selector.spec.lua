@@ -387,8 +387,8 @@ return function()
 				local testEntity = registry:create()
 				local called = false
 				local selector = Selector.new(registry, {
-					required = { "Test1", "Test2" },
-					updated = { "Test4" },
+					required = { "Test1" },
+					updated = { "Test2", "Test4" },
 					forbidden = { "Test3" }
 				})
 
@@ -411,15 +411,45 @@ return function()
 				expect(called).to.equal(false)
 
 				registry:replace(testEntity, "Test4", {})
+				registry:replace(testEntity, "Test2", {})
 				expect(called).to.equal(true)
 				expect(selector._pool:contains(testEntity)).to.be.ok()
 
 				called = false
 				registry:add(testEntity, "Test3", {})
 				expect(selector._pool:contains(testEntity)).to.never.be.ok()
+
 				registry:replace(testEntity, "Test4", {})
+				registry:replace(testEntity, "Test2", {})
 				expect(called).to.equal(false)
 				expect(selector._pool:contains(testEntity)).to.never.be.ok()
+			end)
+
+			it("should not fire twice when a component is updated twice", function(context)
+				local registry = context.registry
+				local called = false
+				local selector = Selector.new(registry, {
+					required = { "Test1", "Test2" },
+					updated = { "Test4" },
+				})
+
+				selector:connect()
+
+				selector:onAdded(function()
+					called = not called
+				end)
+
+				local testEntity = registry:create()
+
+				registry:multiAdd(testEntity,
+					"Test1", {},
+					"Test2", {},
+					"Test4", {}
+				)
+
+				registry:replace(testEntity, "Test4", {})
+				registry:replace(testEntity, "Test4", {})
+				expect(called).to.equal(true)
 			end)
 		end)
 	end)
@@ -487,7 +517,7 @@ return function()
 		end)
 
 		describe("updated + required + forbidden", function()
-			it("should call the callback when an entity with at least the required components, none of the forbidden components, and all of the updated components is added", function(context)
+			it("should call the callback when an entity with at least the required components, none of the forbidden components, and all of the updated components is untracked", function(context)
 				local registry = context.registry
 				local called = false
 				local testEntity = registry:create()
@@ -518,6 +548,30 @@ return function()
 				expect(selector._pool:contains(testEntity)).to.never.be.ok()
 				expect(called).to.equal(true)
 			end)
+		end)
+
+		it("should stop tracking updates on an entity after all updated components have been removed", function(context)
+			local registry = context.registry
+			local selector = Selector.new(registry, {
+				required = { "Test1", "Test2" },
+				forbidden = { "Test3" },
+				updated = { "Test4" }
+			})
+
+			selector:connect()
+
+			local testEntity = registry:create()
+
+			registry:multiAdd(testEntity,
+				"Test1", {},
+				"Test2", {},
+				"Test4", {}
+			)
+
+			registry:replace(testEntity, "Test4", {})
+			registry:remove(testEntity, "Test4")
+			expect(selector._pool:contains(testEntity)).to.never.be.ok()
+			expect(selector._updatesPerEntity[testEntity]).to.equal(nil)
 		end)
 	end)
 
