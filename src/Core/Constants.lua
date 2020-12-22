@@ -1,4 +1,4 @@
-local EntityIdWidth = 16
+local EntityIdWidth = 24
 
 return {
 	NONE = {},
