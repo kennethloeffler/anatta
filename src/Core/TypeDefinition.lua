@@ -1,4 +1,5 @@
-local t = require(script.Parent.t)
+local Types = require(script.Parent.Types)
+local t = require(script.Parent.Parent.t)
 
 local Interface = {
 	interface = true,
@@ -37,14 +38,7 @@ local HigherOrder = {
 
 local Noop = function() end
 
-local t_TypeDef = t.strictInterface {
-	typeName = t.string,
-	check = t.callback,
-	instanceFields = t.table,
-	fields = t.table,
-}
-
-local TypeDef = {}
+local TypeDefinition = {}
 
 local function checkInterface(typeDef, checkTable)
 	for name, fieldTypeDef in pairs(checkTable) do
@@ -74,7 +68,7 @@ local function getCheck(typeDef, ...)
 		local checks = table.create(select("#", ...))
 
 		for i = 1, select("#", ...) do
-			if t_TypeDef(select(i, ...)) then
+			if Types.typeDefinition(select(i, ...)) then
 				checks[i] = select(i, ...).check
 			else
 				checks[i] = select(i, ...)
@@ -87,7 +81,7 @@ local function getCheck(typeDef, ...)
 	end
 end
 
-local function newTypeDef(typeName, ...)
+local function newTypeDefinition(typeName, ...)
 	local typeDef = {
 		typeName = typeName,
 		check = Noop,
@@ -102,12 +96,12 @@ end
 
 for typeName in pairs(t) do
 	if HigherOrder[typeName] == nil and Interface[typeName] == nil then
-		TypeDef[typeName] = newTypeDef(typeName)
+		TypeDefinition[typeName] = newTypeDefinition(typeName)
 	else
-		TypeDef[typeName] = function(...)
-			return newTypeDef(typeName, ...)
+		TypeDefinition[typeName] = function(...)
+			return newTypeDefinition(typeName, ...)
 		end
 	end
 end
 
-return TypeDef
+return TypeDefinition
