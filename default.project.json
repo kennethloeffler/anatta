@@ -1,26 +1,9 @@
 {
   "name": "anatta",
   "tree": {
-    "$className": "DataModel",
-    "ServerStorage": {
-      "root": {
-        "$path": "plugin",
-        "anatta" : {
-          "$path": "src"
-        }
-      }
-    },
-    "TestService": {
-      "$className": "TestService",
-      "$properties": {
-        "ExecuteWithStudioRun": true
-      },
-      "AnattaTestRunner" : {
-        "$path": "TestRunner.server.lua"
-      },
-      "TestEZ": {
-        "$path": "vendor/testez/src"
-      }
+    "$path": "src",
+    "t" : {
+      "$path": "vendor/t"
     }
   }
 }

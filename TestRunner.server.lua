@@ -1,6 +1,9 @@
 local TestService = game:GetService("TestService")
-local ServerStorage = game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local TestEZ = require(TestService.TestEZ)
 
-TestEZ.TestBootstrap:run({ ServerStorage.root })
+TestEZ.TestBootstrap:run {
+	ReplicatedStorage:FindFirstChild("AnattaPlugin")
+		or ReplicatedStorage:FindFirstChild("anatta")
+}

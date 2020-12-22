@@ -1,0 +1,30 @@
+{
+  "name": "anatta",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "AnattaPlugin": {
+        "$className": "Folder",
+        "anatta": {
+          "$path": "./"
+        },
+        "plugin": {
+          "$path": "plugin"
+        }
+      }
+    },
+    "TestService": {
+      "$className": "TestService",
+      "$properties": {
+        "ExecuteWithStudioRun": true
+      },
+      "AnattaTestRunner": {
+        "$path": "TestRunner.server.lua"
+      },
+      "TestEZ": {
+        "$path": "vendor/testez"
+      }
+    }
+  }
+}
