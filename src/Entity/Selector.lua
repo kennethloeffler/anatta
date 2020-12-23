@@ -19,6 +19,10 @@ function Selector.new(registry, components)
 	assert(#updated <= 32, "Selectors may only track up to 32 updated components")
 
 	if not next(updated) and not next(forbidden) and #required == 1 then
+		-- The selector is tracking entities with just one required component. This is a
+		-- case we should optimize for. It does not require any additional state and
+		-- only amounts to iterating over one Pool's list(s) and connecting to one set
+		-- of signals.
 		return SingleSelector.new(registry._pools[required[1]])
 	end
 
