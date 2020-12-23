@@ -8,33 +8,33 @@ local Selector = {}
 Selector.__index = Selector
 
 function Selector.new(registry, components)
-	local required = components.required
-	local forbidden = components.forbidden
-	local updated = components.updated
+	local required = registry:getPools(unpack(components.required or NONE))
+	local forbidden = registry:getPools(unpack(components.forbidden or NONE))
+	local updated = registry:getPools(unpack(components.updated or NONE))
 
-	local numRequired = required and #required or 0
-	local numUpdated = updated and #updated or 0
+	assert(
+		next(required) or next(updated),
+		"Selectors must be given at least one required or updated component"
+	)
+	assert(#updated <= 32, "Selectors may only track up to 32 updated components")
 
-	assert(numUpdated <= 32, "Selectors only track up to 32 updated components")
-
-	if not updated and not forbidden and numRequired == 1 then
+	if not next(updated) and not next(forbidden) and #required == 1 then
 		return SingleSelector.new(registry._pools[required[1]])
 	end
 
 	local self = setmetatable({
-		_registry = registry,
 		_pool = Pool.new(),
+		_updatedSet = {},
+		_connections = table.create(2 * (#required + #updated + #forbidden)),
+		_packed = table.create(#required + #updated),
 
-		_required = required and registry:getPools(unpack(required)) or NONE,
-		_forbidden = forbidden and registry:getPools(unpack(forbidden)) or NONE,
-		_updated = updated and registry:getPools(unpack(updated)) or NONE,
+		_required = required,
+		_forbidden = forbidden,
+		_updated = updated,
 
-		_numRequired = numRequired,
-		_numUpdated = numUpdated,
-		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - numUpdated),
-
-		_packed = table.create(numRequired + numUpdated),
-		_updatesPerEntity = updated and {} or NONE,
+		_numRequired = #required,
+		_numUpdated = #updated,
+		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - #updated),
 	}, Selector)
 
 	return self
@@ -48,18 +48,19 @@ function Selector:entities(callback)
 	local pool = self._pool
 	local dense = pool.dense
 
-	if self._updated ~= NONE then
+	if next(self._updated) then
 		-- The selector is tracking updates. We don't want to process an update twice,
 		-- so we clear the selector's pool.
 		local sparse = pool.sparse
-		local updatedEntities = self._updatesPerEntity
+		local updatedSet = self._updatedSet
 
+		-- Callers are allowed to mutate the registry however they wish
 		for i = pool.size, 1, -1 do
 			local entity = dense[i]
 
 			callback(entity)
 
-			updatedEntities[entity] = nil
+			updatedSet[entity] = nil
 			sparse[entity] = nil
 			dense[i] = nil
 		end
@@ -78,8 +79,8 @@ end
 function Selector:each(callback)
 	local dense = self._pool.dense
 
-	if self._updated ~= NONE then
-		local updatedEntities = self._updatesPerEntity
+	if next(self._updated) then
+		local updatedSet = self._updatedSet
 		local sparse = self._pool.sparse
 
 		for i = self._pool.size, 1, -1 do
@@ -87,7 +88,7 @@ function Selector:each(callback)
 
 			dense[i] = nil
 			sparse[i] = nil
-			updatedEntities[entity] = nil
+			updatedSet[entity] = nil
 
 			self:_pack(entity)
 			callback(entity, unpack(self._packed))
@@ -122,7 +123,7 @@ end
 	to satisy them, it leaves the pool.
 ]]
 function Selector:connect()
-	local connections = {}
+	local connections = self._connections
 
 	for _, pool in ipairs(self._required) do
 		table.insert(connections, pool.onAdd:connect(self:_tryAdd()))
@@ -184,7 +185,7 @@ end
 	component predicates. Otherwise, returns false.
 ]]
 function Selector:_try(entity)
-	if (self._updatesPerEntity[entity] or 0) ~= self._allUpdatedSet then
+	if (self._updatedSet[entity] or 0) ~= self._allUpdatedSet then
 		return false
 	end
 
@@ -209,7 +210,7 @@ end
 	updated predicates. Otherwise, returns false.
 ]]
 function Selector:_tryPack(entity)
-	if (self._updatesPerEntity[entity] or 0) ~= self._allUpdatedSet then
+	if (self._updatedSet[entity] or 0) ~= self._allUpdatedSet then
 		return false
 	end
 
@@ -257,7 +258,7 @@ function Selector:_tryAddUpdated(offset)
 	local mask = bit32.lshift(1, offset)
 
 	return function(entity)
-		self._updatesPerEntity[entity] = bit32.bor(mask, self._updatesPerEntity[entity] or 0)
+		self._updatedSet[entity] = bit32.bor(mask, self._updatedSet[entity] or 0)
 
 		if not self._pool:contains(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
@@ -280,15 +281,15 @@ function Selector:_tryRemoveUpdated(offset)
 	local mask = bit32.bnot(bit32.lshift(1, offset))
 
 	return function(entity)
-		local updatesOnEntity = self._updatesPerEntity[entity]
+		local updates = self._updatedSet[entity]
 
-		if updatesOnEntity then
-			local updatesOnEntityWithUnset = bit32.band(updatesOnEntity, mask)
+		if updates then
+			local newUpdates = bit32.band(updates, mask)
 
-			if updatesOnEntityWithUnset == 0 then
-				self._updatesPerEntity[entity] = nil
+			if newUpdates == 0 then
+				self._updatedSet[entity] = nil
 			else
-				self._updatesPerEntity[entity] = updatesOnEntityWithUnset
+				self._updatedSet[entity] = newUpdates
 			end
 		end
 
