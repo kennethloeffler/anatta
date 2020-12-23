@@ -19,6 +19,10 @@ function Selector.new(registry, components)
 	assert(#updated <= 32, "Selectors may only track up to 32 updated components")
 
 	if not next(updated) and not next(forbidden) and #required == 1 then
+		-- The selector is tracking entities with just one required component. This is a
+		-- case we should optimize for. It does not require any additional state and
+		-- only amounts to iterating over one Pool's list(s) and connecting to one set
+		-- of signals.
 		return SingleSelector.new(registry._pools[required[1]])
 	end
 
@@ -41,8 +45,7 @@ function Selector.new(registry, components)
 end
 
 --[[
-	Applies the given callback to every tracked entity. For selectors tracking component
-	updates, drops all currently tracked entities from the selector.
+	Applies the callback to each tracked entity.
 ]]
 function Selector:entities(callback)
 	local pool = self._pool
@@ -74,7 +77,9 @@ function Selector:entities(callback)
 end
 
 --[[
-	Same as entities, but also passes required and updated components to the callback.
+	Applies the callback to each tracked entity and its components. Passes the entity
+	first, followed by its required components and updated components in the same order
+	they were given to the selector.
 ]]
 function Selector:each(callback)
 	local dense = self._pool.dense
@@ -104,14 +109,16 @@ function Selector:each(callback)
 end
 
 --[[
-	Calls the provided callback whenever the selector starts tracking an entity.
+	Applies the callback to an entity and component(s) just after the selector begins
+	tracking it.
 ]]
 function Selector:onAdded(callback)
 	return self._pool.onAdd:connect(callback)
 end
 
 --[[
-	Calls the provided callback whenever the selector stops tracking an entity.
+	Applies the callback to an entity and component(s) just before the selector stops
+	tracking it.
 ]]
 function Selector:onRemoved(callback)
 	return self._pool.onRemove:connect(callback)
