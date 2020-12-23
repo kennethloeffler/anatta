@@ -1,4 +1,5 @@
 return function()
+	local Pool = require(script.Parent.Parent.Core.Pool)
 	local Registry = require(script.Parent.Registry)
 	local Selector = require(script.Parent.Selector)
 	local SingleSelector = require(script.Parent.SingleSelector)
@@ -37,18 +38,18 @@ return function()
 	end)
 
 	describe("new", function()
-		it("should create a new Selector for when there anything other than one required component", function(context)
+		it("should create a new Selector when there is anything more than one required component", function(context)
 			local selector = Selector.new(context.registry, {
+				required = { "Test1", "Test2" }
 			})
 
 			expect(getmetatable(selector)).to.equal(Selector)
-			expect(selector._registry).to.equal(context.registry)
+
 			expect(selector._pool).to.be.ok()
-			expect(selector._required).to.be.a("table")
-			expect(selector._forbidden).to.be.a("table")
-			expect(selector._updated).to.be.a("table")
-			expect(selector._packed).to.be.a("table")
-			expect(selector._updatesPerEntity).to.be.a("table")
+			expect(getmetatable(selector._pool)).to.equal(Pool)
+
+			expect(selector._updatedSet).to.be.a("table")
+			expect(next(selector._updatedSet)).to.equal(nil)
 		end)
 
 		it("should create a new SingleSelector when there is exactly one required component and nothing else", function(context)
@@ -571,7 +572,7 @@ return function()
 			registry:replace(testEntity, "Test4", {})
 			registry:remove(testEntity, "Test4")
 			expect(selector._pool:contains(testEntity)).to.never.be.ok()
-			expect(selector._updatesPerEntity[testEntity]).to.equal(nil)
+			expect(selector._updatedSet[testEntity]).to.equal(nil)
 		end)
 	end)
 

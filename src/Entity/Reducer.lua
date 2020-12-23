@@ -8,20 +8,19 @@ local Reducer = {}
 Reducer.__index = Reducer
 
 function Reducer.new(registry, components)
-	local required = components.required
-	local forbidden = components.forbidden
-	local numRequired = #required
+	local required = registry:getPools(unpack(components.required or NONE))
+	local forbidden = registry:getPools(unpack(components.forbidden or NONE))
 
-	assert(required and numRequired >= 1, "Reducers must have at least one required component")
+	assert(next(required), "Reducers must have at least one required component")
 
-	if not forbidden and numRequired == 1 then
+	if not next(forbidden) and #required == 1 then
 		return SingleReducer.new(registry._pools[required[1]])
 	end
 
 	return setmetatable({
-		_required = registry:getPools(unpack(required)),
-		_forbidden = forbidden and registry:getPools(unpack(forbidden)) or NONE,
-		_packed = table.create(numRequired),
+		_required = required,
+		_forbidden = forbidden,
+		_packed = table.create(#required),
 	}, Reducer)
 end
 
