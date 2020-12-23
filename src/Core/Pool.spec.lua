@@ -1,5 +1,5 @@
 return function()
-	local Constants = require(script.Parent.Core).Constants
+	local Constants = require(script.Parent.Constants)
 	local Pool = require(script.Parent.Pool)
 
 	local ENTITYID_MASK = Constants.ENTITYID_MASK
@@ -15,7 +15,7 @@ return function()
 
 			if not pool.sparse[id] then
 				size += 1
-				pool:assign(bit32.bor(id, version))
+				pool:insert(bit32.bor(id, version))
 			end
 		end
 
@@ -40,12 +40,12 @@ return function()
 		end)
 	end)
 
-	describe("assign", function()
+	describe("insert", function()
 		it("should add an element and return the passed component object", function()
 			local pool = Pool.new()
 			local obj = {}
 			local val = 0xBADF00D
-			local component = pool:assign(val, obj)
+			local component = pool:insert(val, obj)
 			local _, objInPool = next(pool.objects)
 
 			expect(component).to.equal(obj)
@@ -66,12 +66,12 @@ return function()
 	describe("get", function()
 	end)
 
-	describe("destroy", function()
+	describe("delete", function()
 		it("should empty the pool when all elements are removed", function()
 			local pool, size = generate(Pool.new())
 
 			for i = size, 1, -1 do
-				pool:destroy(pool.dense[i])
+				pool:delete(pool.dense[i])
 			end
 
 			expect(next(pool.objects)).to.never.be.ok()
@@ -85,7 +85,7 @@ return function()
 			local last = pool.dense[size]
 			local toRemove = pool.dense[size - 50]
 
-			pool:destroy(toRemove)
+			pool:delete(toRemove)
 
 			expect(pool.dense[size - 50]).to.equal(last)
 		end)

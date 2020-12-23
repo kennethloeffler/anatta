@@ -1,12 +1,5 @@
-local Manifest = require(script.Manifest)
-local Strict = require(script.Strict)
+local Entity = require(script.Entity)
 
-return function(params)
-	local projectRoot = params.projectRoot
-	local strict = params.strict
-
-	local manifest = strict ~= false and Strict(Manifest.new(projectRoot))
-		or Manifest.new(projectRoot)
-
-	return manifest
-end
+return {
+	Entity,
+}

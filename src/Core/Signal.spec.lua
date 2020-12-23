@@ -2,12 +2,13 @@ return function()
 	local Signal = require(script.Parent.Signal)
 
 	describe("new", function()
-		it("should create a new signal object", function()
+		it("should create a new Signal", function()
 			local sig = Signal.new()
 
-			expect(sig.callbacks).to.be.ok()
-			expect(type(sig.callbacks)).to.equal("table")
-			expect(#sig.callbacks).to.equal(0)
+			expect(sig._callbacks).to.be.a("table")
+			expect(next(sig._callbacks)).to.equal(nil)
+			expect(sig._disconnected).to.be.a("table")
+			expect(next(sig._callbacks)).to.equal(nil)
 		end)
 	end)
 
@@ -19,7 +20,28 @@ return function()
 
 			sig:connect(callback)
 
-			expect(sig.callbacks[1]).to.equal(callback)
+			expect(sig._callbacks[1]).to.equal(callback)
+		end)
+
+		it("should not mess up an ongoing dispatch", function()
+			local sig = Signal.new()
+			local inner = false
+			local outer = false
+
+			sig:connect(function()
+				outer = true
+				sig:connect(function()
+					inner = true
+				end)
+			end)
+
+			sig:dispatch()
+			expect(outer).to.equal(true)
+			expect(inner).to.equal(false)
+
+			sig:dispatch()
+			expect(outer).to.equal(true)
+			expect(inner).to.equal(true)
 		end)
 	end)
 
@@ -47,7 +69,7 @@ return function()
 
 			disconnect()
 
-			expect(#sig.callbacks).to.equal(0)
+			expect(#sig._callbacks).to.equal(0)
 		end)
 
 		it("should not mess up an ongoing dispatch", function()
@@ -73,6 +95,24 @@ return function()
 			sig:dispatch()
 
 			expect(first and second and third).to.equal(true)
+		end)
+
+		it("should cause the callback to not be called during a dispatch", function()
+			local sig = Signal.new()
+			local never = false
+			local disconnect
+
+			sig:connect(function()
+				disconnect()
+			end)
+
+			disconnect = sig:connect(function()
+				never = true
+			end)
+
+			sig:dispatch()
+
+			expect(never).to.never.equal(true)
 		end)
 	end)
 end
