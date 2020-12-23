@@ -59,6 +59,51 @@ return function()
 
 			expect(getmetatable(selector)).to.equal(SingleSelector)
 		end)
+
+		it("should populate _required, _updated, and _forbidden", function(context)
+			local registry = context.registry
+			local selector = Selector.new(registry, {
+				required = { "Test1", "Test2" },
+				updated = { "Test3" },
+				forbidden = { "Test4" },
+			})
+
+			expect(selector._required[1]).to.equal(registry._pools.Test1)
+			expect(selector._required[2]).to.equal(registry._pools.Test2)
+			expect(selector._updated[1]).to.equal(registry._pools.Test3)
+			expect(selector._forbidden[1]).to.equal(registry._pools.Test4)
+		end)
+
+		it("should populate the full update bitset", function(context)
+			local registry = context.registry
+			local selector = Selector.new(registry, {
+				updated = { "Test1", "Test2", "Test3" },
+			})
+
+			expect(selector._allUpdatedSet).to.equal(bit32.rshift(0xFFFFFFFF, 29))
+		end)
+	end)
+
+	describe("connect", function()
+		it("should connect the selector to the component pools", function(context)
+			local registry = context.registry
+			local selector = Selector.new(registry, {
+				required = { "Test1" },
+				updated = { "Test2" },
+				forbidden = { "Test3" },
+			})
+
+			selector:connect()
+
+			expect(selector._required[1].onAdd._callbacks[1]).to.be.ok()
+			expect(selector._required[1].onRemove._callbacks[1]).to.be.ok()
+
+			expect(selector._forbidden[1].onRemove._callbacks[1]).to.be.ok()
+			expect(selector._forbidden[1].onAdd._callbacks[1]).to.be.ok()
+
+			expect(selector._updated[1].onUpdate._callbacks[1]).to.be.ok()
+			expect(selector._updated[1].onRemove._callbacks[1]).to.be.ok()
+		end)
 	end)
 
 	describe("entities", function()
