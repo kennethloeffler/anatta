@@ -63,9 +63,6 @@ return function()
 		end)
 	end)
 
-	describe("get", function()
-	end)
-
 	describe("delete", function()
 		it("should empty the pool when all elements are removed", function()
 			local pool, size = generate(Pool.new())

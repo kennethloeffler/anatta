@@ -40,9 +40,9 @@ function PureCollection:each(callback)
 	end
 end
 
-function PureCollection:_reduce(entity, ...)
+function PureCollection:_apply(entity, ...)
 	for i, pool in ipairs(self._required) do
-		pool.objects[pool.sparse[bit32.band(entity, ENTITYID_MASK)]] = select(i, ...)
+		pool:replace(entity, select(i, ...))
 	end
 end
 

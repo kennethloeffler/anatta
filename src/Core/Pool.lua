@@ -30,6 +30,10 @@ function Pool:get(entity)
 	return self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]]
 end
 
+function Pool:replace(entity, component)
+	self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]] = component
+end
+
 function Pool:insert(entity, component)
 	self.size += 1
 

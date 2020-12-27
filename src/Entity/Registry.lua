@@ -418,7 +418,7 @@ function Registry:replace(entity, name, object)
 	end
 
 	pool.onUpdate:dispatch(entity, object)
-	pool.objects[pool:getIndex(entity)] = object
+	pool:replace(entity, object)
 
 	return object
 end
