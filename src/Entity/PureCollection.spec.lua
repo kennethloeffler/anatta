@@ -1,6 +1,6 @@
 return function()
-	local Reducer = require(script.Parent.Reducer)
-	local SingleReducer = require(script.Parent.SingleReducer)
+	local PureCollection = require(script.Parent.PureCollection)
+	local SinglePureCollection = require(script.Parent.SinglePureCollection)
 	local Registry = require(script.Parent.Registry)
 	local t = require(script.Parent.Parent.Core.TypeDefinition)
 
@@ -37,21 +37,21 @@ return function()
 	end)
 
 	describe("new", function()
-		it("should create a new Reducer when there are  multiple components", function(context)
-			local reducer = Reducer.new(context.registry, {
+		it("should create a new PureCollection when there are  multiple components", function(context)
+			local collection = PureCollection.new(context.registry, {
 				required = { "Test1" },
 				forbidden = { "Test2" },
 			})
 
-			expect(getmetatable(reducer)).to.equal(Reducer)
+			expect(getmetatable(collection)).to.equal(PureCollection)
 		end)
 
-		it("should create a new SingleReducer when there is only one required component ", function(context)
-			local reducer = Reducer.new(context.registry, {
+		it("should create a new SinglePureCollection when there is only one required component ", function(context)
+			local collection = PureCollection.new(context.registry, {
 				required = { "Test1" },
 			})
 
-			expect(getmetatable(reducer)).to.equal(SingleReducer)
+			expect(getmetatable(collection)).to.equal(SinglePureCollection)
 		end)
 	end)
 
@@ -60,7 +60,7 @@ return function()
 			it("should iterate all and only the entities with at least the required components", function(context)
 				local toIterate = {}
 				local registry = context.registry
-				local reducer = Reducer.new(registry, {
+				local collection = PureCollection.new(registry, {
 					required = { "Test1", "Test2", "Test3" }
 				})
 
@@ -72,7 +72,7 @@ return function()
 					end
 				end
 
-				reducer:entities(function(entity)
+				collection:entities(function(entity)
 					expect(toIterate[entity]).to.equal(true)
 					toIterate[entity] = nil
 				end)
@@ -84,9 +84,9 @@ return function()
 		describe("required + forbidden", function()
 			it("should iterate all and only the entities with at least the required components and none of the forbidden components", function(context)
 				local registry = context.registry
-				local reducer = Reducer.new(registry, {
+				local collection = PureCollection.new(registry, {
 					required = { "Test1", "Test2" },
-					forbidden = { "Test3" } 
+					forbidden = { "Test3" }
 				})
 				local toIterate = {}
 
@@ -98,7 +98,7 @@ return function()
 					end
 				end
 
-				reducer:entities(function(entity)
+				collection:entities(function(entity)
 					expect(toIterate[entity]).to.equal(true)
 					toIterate[entity] = nil
 				end)
@@ -112,7 +112,7 @@ return function()
 		describe("required", function()
 			it("should iterate all and only the entities with at least the required components and pass their data", function(context)
 				local registry = context.registry
-				local reducer = Reducer.new(registry, {
+				local collection = PureCollection.new(registry, {
 					required = { "Test1", "Test2", "Test3" }
 				})
 				local toIterate = {}
@@ -125,7 +125,7 @@ return function()
 					end
 				end
 
-				reducer:each(function(entity, test1, test2, test3)
+				collection:each(function(entity, test1, test2, test3)
 					expect(toIterate[entity]).to.equal(true)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
 					expect(test2).to.equal(registry:get(entity, "Test2"))
@@ -140,14 +140,14 @@ return function()
 
 			it("should replace required components with ones returned by the callback", function(context)
 				local registry = context.registry
-				local reducer = Reducer.new(registry, {
+				local collection = PureCollection.new(registry, {
 					required = { "Test1", "Test2" }
 				})
 				local toIterate = {}
 
 				makeEntities(registry)
 
-				reducer:each(function(entity)
+				collection:each(function(entity)
 					local newTest1 = {}
 					local newTest2 = {}
 
@@ -156,7 +156,7 @@ return function()
 					return newTest1, newTest2
 				end)
 
-				reducer:each(function(entity, test1, test2)
+				collection:each(function(entity, test1, test2)
 					expect(test1).to.equal(toIterate[entity][1])
 					expect(test2).to.equal(toIterate[entity][2])
 				end)

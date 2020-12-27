@@ -1,30 +1,30 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
-local SingleReducer = require(script.Parent.SingleReducer)
+local SinglePureCollection = require(script.Parent.SinglePureCollection)
 
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NONE = Constants.NONE
 
-local Reducer = {}
-Reducer.__index = Reducer
+local PureCollection = {}
+PureCollection.__index = PureCollection
 
-function Reducer.new(registry, components)
+function PureCollection.new(registry, components)
 	local required = registry:getPools(unpack(components.required or NONE))
 	local forbidden = registry:getPools(unpack(components.forbidden or NONE))
 
-	assert(next(required), "Reducers must have at least one required component")
+	assert(next(required), "PureCollections must have at least one required component")
 
 	if not next(forbidden) and #required == 1 then
-		return SingleReducer.new(registry._pools[required[1]])
+		return SinglePureCollection.new(registry._pools[required[1]])
 	end
 
 	return setmetatable({
 		_required = required,
 		_forbidden = forbidden,
 		_packed = table.create(#required),
-	}, Reducer)
+	}, PureCollection)
 end
 
-function Reducer:entities(callback)
+function PureCollection:entities(callback)
 	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
 		if self:_try(entity) then
 			callback(entity)
@@ -32,7 +32,7 @@ function Reducer:entities(callback)
 	end
 end
 
-function Reducer:each(callback)
+function PureCollection:each(callback)
 	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
 		if self:_tryPack(entity) then
 			self:_reduce(entity, callback(entity, unpack(self._packed)))
@@ -40,7 +40,7 @@ function Reducer:each(callback)
 	end
 end
 
-function Reducer:_reduce(entity, ...)
+function PureCollection:_reduce(entity, ...)
 	for i, pool in ipairs(self._required) do
 		pool.objects[pool.sparse[bit32.band(entity, ENTITYID_MASK)]] = select(i, ...)
 	end
@@ -49,7 +49,7 @@ end
 --[[
 	Returns the required component pool with the least number of elements.
 ]]
-function Reducer:_getShortestRequiredPool()
+function PureCollection:_getShortestRequiredPool()
 	local size = math.huge
 	local selected
 
@@ -63,7 +63,7 @@ function Reducer:_getShortestRequiredPool()
 	return selected
 end
 
-function Reducer:_try(entity)
+function PureCollection:_try(entity)
 	for _, pool in ipairs(self._forbidden) do
 		if pool:contains(entity) then
 			return false
@@ -79,7 +79,7 @@ function Reducer:_try(entity)
 	return true
 end
 
-function Reducer:_tryPack(entity)
+function PureCollection:_tryPack(entity)
 	for _, pool in ipairs(self._forbidden) do
 		if pool:contains(entity) then
 			return false
@@ -99,4 +99,4 @@ function Reducer:_tryPack(entity)
 	return true
 end
 
-return Reducer
+return PureCollection
