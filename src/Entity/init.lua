@@ -1,9 +1,9 @@
-local Reducer = require(script.Reducer)
+local Collection = require(script.Collection)
+local PureCollection = require(script.PureCollection)
 local Registry = require(script.Registry)
-local Selector = require(script.Selector)
 
 return {
-	Reducer = Reducer,
+	Collection = Collection,
+	PureCollection = PureCollection,
 	Registry = Registry,
-	Selector = Selector,
 }

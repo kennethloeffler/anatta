@@ -1,40 +1,21 @@
 return function()
 	local Pool = require(script.Parent.Parent.Core.Pool)
-	local SingleReducer = require(script.Parent.SingleReducer)
+	local SinglePureCollection = require(script.Parent.SinglePureCollection)
 
 	describe("new", function()
-		it("should create a new SingleReducer from a pool", function()
+		it("should create a new SinglePureCollection from a pool", function()
 			local pool = Pool.new()
-			local reducer = SingleReducer.new(pool)
+			local collection = SinglePureCollection.new(pool)
 
-			expect(getmetatable(reducer)).to.equal(SingleReducer)
-			expect(reducer._pool).to.equal(pool)
-		end)
-	end)
-
-	describe("entities", function()
-		it("should iterate all and only the elements in the pool", function()
-			local pool = Pool.new()
-			local reducer = SingleReducer.new(pool)
-			local toIterate = {}
-
-			for i = 1, 100 do
-				pool:insert(i, i)
-				toIterate[i] = true
-			end
-
-			reducer:entities(function(entity)
-				toIterate[entity] = nil
-			end)
-
-			expect(next(toIterate)).to.never.be.ok()
+			expect(getmetatable(collection)).to.equal(SinglePureCollection)
+			expect(collection._pool).to.equal(pool)
 		end)
 	end)
 
 	describe("each", function()
 		it("should iterate all and only the elements in the pool and pass their data", function()
 			local pool = Pool.new()
-			local reducer = SingleReducer.new(pool)
+			local collection = SinglePureCollection.new(pool)
 			local toIterate = {}
 
 			for i = 1, 100 do
@@ -43,7 +24,7 @@ return function()
 				toIterate[i] = obj
 			end
 
-			reducer:each(function(entity, obj)
+			collection:each(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 				toIterate[entity] = nil
 
@@ -55,7 +36,7 @@ return function()
 
 		it("should replace the passed data with the returned data", function()
 			local pool = Pool.new()
-			local reducer = SingleReducer.new(pool)
+			local collection = SinglePureCollection.new(pool)
 			local toIterate = {}
 
 			for i = 1, 100 do
@@ -64,7 +45,7 @@ return function()
 				toIterate[i] = obj
 			end
 
-			reducer:each(function(entity, obj)
+			collection:each(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 
 				toIterate[entity] = {}
@@ -72,7 +53,7 @@ return function()
 				return toIterate[entity]
 			end)
 
-			reducer:each(function(entity, obj)
+			collection:each(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 			end)
 		end)

@@ -1,13 +1,13 @@
-local SingleSelector = {}
-SingleSelector.__index = SingleSelector
+local SingleCollection = {}
+SingleCollection.__index = SingleCollection
 
-function SingleSelector.new(pool)
+function SingleCollection.new(pool)
 	return  setmetatable({
 		_pool = pool
-	}, SingleSelector)
+	}, SingleCollection)
 end
 
-function SingleSelector:entities(callback)
+function SingleCollection:entities(callback)
 	local dense = self._pool.dense
 
 	for i = self._pool.size, 1, -1 do
@@ -15,7 +15,7 @@ function SingleSelector:entities(callback)
 	end
 end
 
-function SingleSelector:each(callback)
+function SingleCollection:each(callback)
 	local dense = self._pool.dense
 	local objects = self._pool.objects
 
@@ -24,12 +24,12 @@ function SingleSelector:each(callback)
 	end
 end
 
-function SingleSelector:onAdded(callback)
+function SingleCollection:onAdded(callback)
 	return self._pool.onAdd:connect(callback)
 end
 
-function SingleSelector:onRemoved(callback)
+function SingleCollection:onRemoved(callback)
 	return self._pool.onRemove:connect(callback)
 end
 
-return SingleSelector
+return SingleCollection

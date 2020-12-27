@@ -22,12 +22,16 @@ function Pool.new(name, typeDef)
 	}, Pool)
 end
 
-function Pool:contains(entity)
+function Pool:getIndex(entity)
 	return self.sparse[bit32.band(entity, ENTITYID_MASK)]
 end
 
 function Pool:get(entity)
 	return self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]]
+end
+
+function Pool:replace(entity, component)
+	self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]] = component
 end
 
 function Pool:insert(entity, component)

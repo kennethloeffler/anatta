@@ -162,7 +162,7 @@ function Registry:destroy(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 
 	for _, pool in pairs(self._pools) do
-		if pool:contains(entity) then
+		if pool:getIndex(entity) then
 			pool.onRemove:dispatch(entity, pool:get(entity))
 			pool:delete(entity)
 		end
@@ -200,7 +200,7 @@ function Registry:stub(entity)
 	end
 
 	for _, pool in pairs(self._pools) do
-		if pool:contains(entity) then
+		if pool:getIndex(entity) then
 			return false
 		end
 	end
@@ -220,7 +220,7 @@ function Registry:visit(func, entity)
 		end
 
 		for component, pool in pairs(self._pools) do
-			if pool:contains(entity) then
+			if pool:getIndex(entity) then
 				func(component)
 			end
 		end
@@ -245,7 +245,7 @@ function Registry:has(entity, ...)
 	end
 
 	for i = 1, select("#", ...) do
-		if not self._pools[select(i, ...)]:contains(entity) then
+		if not self._pools[select(i, ...)]:getIndex(entity) then
 			return false
 		end
 	end
@@ -267,7 +267,7 @@ function Registry:any(entity, ...)
 	end
 
 	for i = 1, select("#", ...) do
-		if self._pools[select(i, ...)]:contains(entity) then
+		if self._pools[select(i, ...)]:getIndex(entity) then
 			return true
 		end
 	end
@@ -286,7 +286,7 @@ function Registry:get(entity, name)
 	if DEBUG then
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
-		assert(pool:contains(entity), ErrMissingComponent:format(entity, name))
+		assert(pool:getIndex(entity), ErrMissingComponent:format(entity, name))
 	end
 
 	return self._pools[name]:get(entity)
@@ -303,7 +303,7 @@ function Registry:tryGet(entity, name)
 
 	end
 
-	if pool:contains(entity) then
+	if pool:getIndex(entity) then
 		return pool:get(entity)
 	end
 end
@@ -331,7 +331,7 @@ function Registry:add(entity, name, object)
 	if DEBUG then
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
-		assert(not pool:contains(entity), ErrAlreadyHasComponent:format(entity, name))
+		assert(not pool:getIndex(entity), ErrAlreadyHasComponent:format(entity, name))
 		assert(pool.typeDef.check(object))
 	end
 
@@ -354,7 +354,7 @@ function Registry:tryAdd(entity, name, object)
 		assert(pool.typeDef.check(object))
 	end
 
-	if pool:contains(entity) then
+	if pool:getIndex(entity) then
 		return
 	end
 
@@ -390,10 +390,10 @@ function Registry:getOrAdd(entity, name, object)
 		assert(pool.typeDef.check(object))
 	end
 
-	local idx = pool:contains(entity)
+	local denseIndex = pool:getIndex(entity)
 
-	if idx then
-		return pool.objects[idx]
+	if denseIndex then
+		return pool.objects[denseIndex]
 	else
 		pool:insert(entity, object)
 		pool.onAdd:dispatch(entity, object)
@@ -414,11 +414,11 @@ function Registry:replace(entity, name, object)
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
 		assert(pool.typeDef.check(object))
-		assert(pool:contains(entity), ErrMissingComponent:format(entity, name))
+		assert(pool:getIndex(entity), ErrMissingComponent:format(entity, name))
 	end
 
 	pool.onUpdate:dispatch(entity, object)
-	pool.objects[pool:contains(entity)] = object
+	pool:replace(entity, object)
 
 	return object
 end
@@ -437,11 +437,11 @@ function Registry:addOrReplace(entity, name, object)
 		assert(pool.typeDef.check(object))
 	end
 
-	local idx = pool:contains(entity)
+	local denseIndex = pool:getIndex(entity)
 
-	if idx then
+	if denseIndex then
 		pool.onUpdate:dispatch(entity, object)
-		pool.objects[idx] = object
+		pool.objects[denseIndex] = object
 
 		return object
 	end
@@ -464,7 +464,7 @@ function Registry:remove(entity, name)
 	if DEBUG then
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
-		assert(pool:contains(entity), ErrMissingComponent:format(entity, name))
+		assert(pool:getIndex(entity), ErrMissingComponent:format(entity, name))
 	end
 
 	pool.onRemove:dispatch(entity, pool:get(entity))
@@ -491,7 +491,7 @@ function Registry:tryRemove(entity, name)
 		assert(pool, ErrBadComponentName:format(name))
 	end
 
-	if pool:contains(entity) then
+	if pool:getIndex(entity) then
 		pool.onRemove:dispatch(entity, pool:get(entity))
 		pool:delete(entity)
 
