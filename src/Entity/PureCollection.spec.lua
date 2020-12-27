@@ -55,59 +55,6 @@ return function()
 		end)
 	end)
 
-	describe("entities", function()
-		describe("required", function()
-			it("should iterate all and only the entities with at least the required components", function(context)
-				local toIterate = {}
-				local registry = context.registry
-				local collection = PureCollection.new(registry, {
-					required = { "Test1", "Test2", "Test3" }
-				})
-
-				makeEntities(registry)
-
-				for _, entity in ipairs(registry._pools.Test1.dense) do
-					if registry:has(entity, "Test2") and registry:has(entity, "Test3") then
-						toIterate[entity] = true
-					end
-				end
-
-				collection:entities(function(entity)
-					expect(toIterate[entity]).to.equal(true)
-					toIterate[entity] = nil
-				end)
-
-				expect(next(toIterate)).to.equal(nil)
-			end)
-		end)
-
-		describe("required + forbidden", function()
-			it("should iterate all and only the entities with at least the required components and none of the forbidden components", function(context)
-				local registry = context.registry
-				local collection = PureCollection.new(registry, {
-					required = { "Test1", "Test2" },
-					forbidden = { "Test3" }
-				})
-				local toIterate = {}
-
-				makeEntities(registry)
-
-				for _, entity in ipairs(registry._pools.Test1.dense) do
-					if registry:has(entity, "Test2") and not registry:has(entity, "Test3") then
-						toIterate[entity] = true
-					end
-				end
-
-				collection:entities(function(entity)
-					expect(toIterate[entity]).to.equal(true)
-					toIterate[entity] = nil
-				end)
-
-				expect(next(toIterate)).to.equal(nil)
-			end)
-		end)
-	end)
-
 	describe("each", function()
 		describe("required", function()
 			it("should iterate all and only the entities with at least the required components and pass their data", function(context)

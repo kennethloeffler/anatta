@@ -1,7 +1,6 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
 local SinglePureCollection = require(script.Parent.SinglePureCollection)
 
-local ENTITYID_MASK = Constants.ENTITYID_MASK
 local NONE = Constants.NONE
 
 local PureCollection = {}
@@ -11,7 +10,7 @@ function PureCollection.new(registry, components)
 	local required = registry:getPools(unpack(components.required or NONE))
 	local forbidden = registry:getPools(unpack(components.forbidden or NONE))
 
-	assert(next(required), "PureCollections must have at least one required component")
+	assert(next(required), "A PureCollection needs at least one required component")
 
 	if not next(forbidden) and #required == 1 then
 		return SinglePureCollection.new(registry._pools[required[1]])
@@ -24,18 +23,10 @@ function PureCollection.new(registry, components)
 	}, PureCollection)
 end
 
-function PureCollection:entities(callback)
-	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
-		if self:_try(entity) then
-			callback(entity)
-		end
-	end
-end
-
 function PureCollection:each(callback)
 	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
 		if self:_tryPack(entity) then
-			self:_reduce(entity, callback(entity, unpack(self._packed)))
+			self:_apply(entity, callback(entity, unpack(self._packed)))
 		end
 	end
 end
@@ -61,22 +52,6 @@ function PureCollection:_getShortestRequiredPool()
 	end
 
 	return selected
-end
-
-function PureCollection:_try(entity)
-	for _, pool in ipairs(self._forbidden) do
-		if pool:contains(entity) then
-			return false
-		end
-	end
-
-	for _, pool in ipairs(self._required) do
-		if not pool:contains(entity) then
-			return false
-		end
-	end
-
-	return true
 end
 
 function PureCollection:_tryPack(entity)

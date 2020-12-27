@@ -7,12 +7,6 @@ function SinglePureCollection.new(pool)
 	}, SinglePureCollection)
 end
 
-function SinglePureCollection:entities(callback)
-	for _, entity in ipairs(self._pool.dense) do
-		callback(entity)
-	end
-end
-
 function SinglePureCollection:each(callback)
 	local objects = self._pool.objects
 
