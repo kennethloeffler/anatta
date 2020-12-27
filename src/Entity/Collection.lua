@@ -1,29 +1,29 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
 local Pool = require(script.Parent.Parent.Core.Pool)
-local SingleSelector = require(script.Parent.SingleSelector)
+local SingleCollection = require(script.Parent.SingleCollection)
 
 local NONE = Constants.NONE
 
-local Selector = {}
-Selector.__index = Selector
+local Collection = {}
+Collection.__index = Collection
 
-function Selector.new(registry, components)
+function Collection.new(registry, components)
 	local required = registry:getPools(unpack(components.required or NONE))
 	local forbidden = registry:getPools(unpack(components.forbidden or NONE))
 	local updated = registry:getPools(unpack(components.updated or NONE))
 
 	assert(
 		next(required) or next(updated),
-		"Selectors must be given at least one required or updated component"
+		"Collections must be given at least one required or updated component"
 	)
-	assert(#updated <= 32, "Selectors may only track up to 32 updated components")
+	assert(#updated <= 32, "Collections may only track up to 32 updated components")
 
 	if not next(updated) and not next(forbidden) and #required == 1 then
 		-- The selector is tracking entities with just one required component. This is a
 		-- case we should optimize for. It does not require any additional state and
 		-- only amounts to iterating over one Pool's list(s) and connecting to one set
 		-- of signals.
-		return SingleSelector.new(registry._pools[required[1]])
+		return SingleCollection.new(registry._pools[required[1]])
 	end
 
 	local self = setmetatable({
@@ -39,7 +39,7 @@ function Selector.new(registry, components)
 		_numRequired = #required,
 		_numUpdated = #updated,
 		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - #updated),
-	}, Selector)
+	}, Collection)
 
 	return self
 end
@@ -47,7 +47,7 @@ end
 --[[
 	Applies the callback to each tracked entity.
 ]]
-function Selector:entities(callback)
+function Collection:entities(callback)
 	local pool = self._pool
 	local dense = pool.dense
 
@@ -81,7 +81,7 @@ end
 	first, followed by its required components and updated components in the same order
 	they were given to the selector.
 ]]
-function Selector:each(callback)
+function Collection:each(callback)
 	local dense = self._pool.dense
 
 	if next(self._updated) then
@@ -112,7 +112,7 @@ end
 	Applies the callback to an entity and component(s) just after the selector begins
 	tracking it.
 ]]
-function Selector:onAdded(callback)
+function Collection:onAdded(callback)
 	return self._pool.onAdd:connect(callback)
 end
 
@@ -120,7 +120,7 @@ end
 	Applies the callback to an entity and component(s) just before the selector stops
 	tracking it.
 ]]
-function Selector:onRemoved(callback)
+function Collection:onRemoved(callback)
 	return self._pool.onRemove:connect(callback)
 end
 
@@ -129,7 +129,7 @@ end
 	the selector's predicates, it enters the selector's pool.  If the entity later fails
 	to satisy them, it leaves the pool.
 ]]
-function Selector:connect()
+function Collection:connect()
 	local connections = self._connections
 
 	for _, pool in ipairs(self._required) do
@@ -157,7 +157,7 @@ end
 --[[
 	Returns the required component pool with the least number of elements.
 ]]
-function Selector:_getShortestRequiredPool()
+function Collection:_getShortestRequiredPool()
 	local size = math.huge
 	local selected
 
@@ -175,7 +175,7 @@ end
 	Unconditionally fills the selector's _packed field with the entity's required and
 	updated component data.
 ]]
-function Selector:_pack(entity)
+function Collection:_pack(entity)
 	for i, pool in ipairs(self._required) do
 		self._packed[i] = pool:get(entity)
 	end
@@ -191,7 +191,7 @@ end
 	Returns true if the entity satisfies the selector's required, forbidden, and updated
 	component predicates. Otherwise, returns false.
 ]]
-function Selector:_try(entity)
+function Collection:_try(entity)
 	if (self._updatedSet[entity] or 0) ~= self._allUpdatedSet then
 		return false
 	end
@@ -216,7 +216,7 @@ end
 	updated component data if the entity fully satisfies the required, forbidden and
 	updated predicates. Otherwise, returns false.
 ]]
-function Selector:_tryPack(entity)
+function Collection:_tryPack(entity)
 	if (self._updatedSet[entity] or 0) ~= self._allUpdatedSet then
 		return false
 	end
@@ -252,7 +252,7 @@ function Selector:_tryPack(entity)
 	return true
 end
 
-function Selector:_tryAdd()
+function Collection:_tryAdd()
 	return function(entity)
 		if not self._pool:contains(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
@@ -261,7 +261,7 @@ function Selector:_tryAdd()
 	end
 end
 
-function Selector:_tryAddUpdated(offset)
+function Collection:_tryAddUpdated(offset)
 	local mask = bit32.lshift(1, offset)
 
 	return function(entity)
@@ -274,7 +274,7 @@ function Selector:_tryAddUpdated(offset)
 	end
 end
 
-function Selector:_tryRemove()
+function Collection:_tryRemove()
 	return function(entity)
 		if self._pool:contains(entity) then
 			self:_pack(entity)
@@ -284,7 +284,7 @@ function Selector:_tryRemove()
 	end
 end
 
-function Selector:_tryRemoveUpdated(offset)
+function Collection:_tryRemoveUpdated(offset)
 	local mask = bit32.bnot(bit32.lshift(1, offset))
 
 	return function(entity)
@@ -308,4 +308,4 @@ function Selector:_tryRemoveUpdated(offset)
 	end
 end
 
-return Selector
+return Collection
