@@ -81,13 +81,13 @@ end
 
 function PureCollection:_tryPack(entity)
 	for _, pool in ipairs(self._forbidden) do
-		if pool:contains(entity) then
+		if pool:getIndex(entity) then
 			return false
 		end
 	end
 
 	for i, pool in ipairs(self._required) do
-		local denseIndex = pool:contains(entity)
+		local denseIndex = pool:getIndex(entity)
 
 		if not denseIndex then
 			return false

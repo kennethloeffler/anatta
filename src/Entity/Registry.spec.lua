@@ -187,8 +187,8 @@ return function()
 
 			registry:destroy(entity)
 
-			expect(numberPool:contains(entity)).to.equal(nil)
-			expect(instancePool:contains(entity)).to.equal(nil)
+			expect(numberPool:getIndex(entity)).to.equal(nil)
+			expect(instancePool:getIndex(entity)).to.equal(nil)
 		end)
 
 		it("should increment the entity's version field", function(context)
@@ -468,7 +468,7 @@ return function()
 			local component = Instance.new("Script")
 			local obj = registry:add(entity, "instance", component)
 
-			expect(registry._pools.instance:contains(entity)).to.be.ok()
+			expect(registry._pools.instance:getIndex(entity)).to.be.ok()
 			expect(component).to.equal(obj)
 		end)
 
@@ -502,7 +502,7 @@ return function()
 			registry:define("tag", t.none)
 			registry:add(entity, "tag")
 
-			expect(registry._pools.tag:contains(entity)).to.be.ok()
+			expect(registry._pools.tag:getIndex(entity)).to.be.ok()
 			expect(registry._pools.tag:get(entity)).to.equal(nil)
 		end)
 
@@ -535,7 +535,7 @@ return function()
 			local component = Instance.new("Hole")
 			local obj = registry:tryAdd(entity, "instance", component)
 
-			expect(registry._pools.instance:contains(entity)).to.be.ok()
+			expect(registry._pools.instance:getIndex(entity)).to.be.ok()
 			expect(component).to.equal(obj)
 		end)
 
@@ -569,7 +569,7 @@ return function()
 			registry:define("tag", t.none)
 			registry:tryAdd(entity, "tag")
 
-			expect(registry._pools.tag:contains(entity)).to.be.ok()
+			expect(registry._pools.tag:getIndex(entity)).to.be.ok()
 			expect(registry._pools.tag:get(entity)).to.equal(nil)
 		end)
 
@@ -770,7 +770,7 @@ return function()
 			registry._pools.number:insert(entity, 12)
 			registry:remove(entity, "number")
 
-			expect(registry._pools.number:contains(entity)).to.equal(nil)
+			expect(registry._pools.number:getIndex(entity)).to.equal(nil)
 		end)
 
 		it("should dispatch the component pool's removed signal", function(context)
@@ -842,9 +842,9 @@ return function()
 			expect(component1ok).to.equal(true)
 			expect(component2ok).to.equal(true)
 			expect(component3ok).to.equal(true)
-			expect(registry._pools.number:contains(entity)).to.equal(nil)
-			expect(registry._pools.instance:contains(entity)).to.equal(nil)
-			expect(registry._pools.interface:contains(entity)).to.equal(nil)
+			expect(registry._pools.number:getIndex(entity)).to.equal(nil)
+			expect(registry._pools.instance:getIndex(entity)).to.equal(nil)
+			expect(registry._pools.interface:getIndex(entity)).to.equal(nil)
 		end)
 
 		it("should error if given an invalid entity", function(context)
@@ -882,7 +882,7 @@ return function()
 			registry._pools.number:insert(entity, 10)
 			expect(registry:tryRemove(entity, "number")).to.equal(true)
 
-			expect(registry._pools.number:contains(entity)).to.equal(nil)
+			expect(registry._pools.number:getIndex(entity)).to.equal(nil)
 		end)
 
 		it("should dispatch the component pool's removed signal", function(context)

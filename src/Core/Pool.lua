@@ -22,7 +22,7 @@ function Pool.new(name, typeDef)
 	}, Pool)
 end
 
-function Pool:contains(entity)
+function Pool:getIndex(entity)
 	return self.sparse[bit32.band(entity, ENTITYID_MASK)]
 end
 

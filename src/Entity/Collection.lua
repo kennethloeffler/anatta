@@ -222,13 +222,13 @@ function Collection:_tryPack(entity)
 	end
 
 	for _, pool in ipairs(self._forbidden) do
-		if pool:contains(entity) then
+		if pool:getIndex(entity) then
 			return false
 		end
 	end
 
 	for i, pool in ipairs(self._required) do
-		local denseIndex = pool:contains(entity)
+		local denseIndex = pool:getIndex(entity)
 
 		if not denseIndex then
 			return false
@@ -240,7 +240,7 @@ function Collection:_tryPack(entity)
 	local numRequired = self._numRequired
 
 	for i, pool in ipairs(self._updated) do
-		local denseIndex = pool:contains(entity)
+		local denseIndex = pool:getIndex(entity)
 
 		if not denseIndex then
 			return false
@@ -254,7 +254,7 @@ end
 
 function Collection:_tryAdd()
 	return function(entity)
-		if not self._pool:contains(entity) and self:_tryPack(entity) then
+		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
 			self._pool.onAdd:dispatch(entity, unpack(self._packed))
 		end
@@ -267,7 +267,7 @@ function Collection:_tryAddUpdated(offset)
 	return function(entity)
 		self._updatedSet[entity] = bit32.bor(mask, self._updatedSet[entity] or 0)
 
-		if not self._pool:contains(entity) and self:_tryPack(entity) then
+		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
 			self._pool.onAdd:dispatch(entity, unpack(self._packed))
 		end
@@ -276,7 +276,7 @@ end
 
 function Collection:_tryRemove()
 	return function(entity)
-		if self._pool:contains(entity) then
+		if self._pool:getIndex(entity) then
 			self:_pack(entity)
 			self._pool.onRemove:dispatch(entity, unpack(self._packed))
 			self._pool:delete(entity)
@@ -300,7 +300,7 @@ function Collection:_tryRemoveUpdated(offset)
 			end
 		end
 
-		if self._pool:contains(entity) then
+		if self._pool:getIndex(entity) then
 			self:_pack(entity)
 			self._pool.onRemove:dispatch(entity, unpack(self._packed))
 			self._pool:delete(entity)
