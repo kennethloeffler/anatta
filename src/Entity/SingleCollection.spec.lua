@@ -12,25 +12,6 @@ return function()
 		end)
 	end)
 
-	describe("entities", function()
-		it("should iterate the entire pool", function()
-			local pool = Pool.new()
-			local toIterate = {}
-			local collection = SingleCollection.new(pool)
-
-			for i = 1, 100 do
-				toIterate[i] = true
-				pool:insert(i)
-			end
-
-			collection:entities(function(entity)
-				toIterate[entity] = nil
-			end)
-
-			expect(next(toIterate)).to.equal(nil)
-		end)
-	end)
-
 	describe("each", function()
 		it("should iterate the entire pool and pass each element's data", function()
 			local pool = Pool.new()

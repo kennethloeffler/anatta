@@ -41,39 +41,24 @@ function Collection.new(registry, components)
 		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - #updated),
 	}, Collection)
 
-	return self
-end
+	local connections = self._connections
 
---[[
-	Applies the callback to each tracked entity.
-]]
-function Collection:entities(callback)
-	local pool = self._pool
-	local dense = pool.dense
-
-	if next(self._updated) then
-		-- The selector is tracking updates. We don't want to process an update twice,
-		-- so we clear the selector's pool.
-		local sparse = pool.sparse
-		local updatedSet = self._updatedSet
-
-		-- Callers are allowed to mutate the registry however they wish
-		for i = pool.size, 1, -1 do
-			local entity = dense[i]
-
-			callback(entity)
-
-			updatedSet[entity] = nil
-			sparse[entity] = nil
-			dense[i] = nil
-		end
-	else
-		-- The selector is not tracking updates, so we only have to pass each entity in
-		-- the pool.
-		for i = pool.size, 1, -1 do
-			callback(dense[i])
-		end
+	for _, pool in ipairs(required) do
+		table.insert(connections, pool.onAdd:connect(self:_tryAdd()))
+		table.insert(connections, pool.onRemove:connect(self:_tryRemove()))
 	end
+
+	for i, pool in ipairs(updated) do
+		table.insert(connections, pool.onUpdate:connect(self:_tryAddUpdated(i - 1)))
+		table.insert(connections, pool.onRemove:connect(self:_tryRemoveUpdated(i - 1)))
+	end
+
+	for _, pool in ipairs(forbidden) do
+		table.insert(connections, pool.onAdd:connect(self:_tryRemove()))
+		table.insert(connections, pool.onRemove:connect(self:_tryAdd()))
+	end
+
+	return self
 end
 
 --[[
@@ -125,36 +110,6 @@ function Collection:onRemoved(callback)
 end
 
 --[[
-	Connects the selector to the registry. Whenever an entity in the registry satisfies
-	the selector's predicates, it enters the selector's pool.  If the entity later fails
-	to satisy them, it leaves the pool.
-]]
-function Collection:connect()
-	local connections = self._connections
-
-	for _, pool in ipairs(self._required) do
-		table.insert(connections, pool.onAdd:connect(self:_tryAdd()))
-		table.insert(connections, pool.onRemove:connect(self:_tryRemove()))
-	end
-
-	for i, pool in ipairs(self._updated) do
-		table.insert(connections, pool.onUpdate:connect(self:_tryAddUpdated(i - 1)))
-		table.insert(connections, pool.onRemove:connect(self:_tryRemoveUpdated(i - 1)))
-	end
-
-	for _, pool in ipairs(self._forbidden) do
-		table.insert(connections, pool.onAdd:connect(self:_tryRemove()))
-		table.insert(connections, pool.onRemove:connect(self:_tryAdd()))
-	end
-
-	return function()
-		for _, disconnect in ipairs(connections) do
-			disconnect()
-		end
-	end
-end
-
---[[
 	Returns the required component pool with the least number of elements.
 ]]
 function Collection:_getShortestRequiredPool()
@@ -185,30 +140,6 @@ function Collection:_pack(entity)
 	for i, pool in ipairs(self._updated) do
 		self._packed[i + numRequired] = pool:get(entity)
 	end
-end
-
---[[
-	Returns true if the entity satisfies the selector's required, forbidden, and updated
-	component predicates. Otherwise, returns false.
-]]
-function Collection:_try(entity)
-	if (self._updatedSet[entity] or 0) ~= self._allUpdatedSet then
-		return false
-	end
-
-	for _, pool in ipairs(self._forbidden) do
-		if pool:contains(entity) then
-			return false
-		end
-	end
-
-	for _, pool in ipairs(self._required) do
-		if not pool:contains(entity) then
-			return false
-		end
-	end
-
-	return true
 end
 
 --[[
