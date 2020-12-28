@@ -19,7 +19,7 @@ anatta.__index = anatta
 
 anatta.t = t
 
-function anatta.new(initialState)
+function anatta.new()
 	local registry = Entity.Registry.new()
 
 	return setmetatable({
