@@ -16,7 +16,7 @@ local ErrInvalidEntity = "entity %08X either does not exist or it has been destr
 local ErrMissingComponent = "entity %08X does not have a %s"
 local ErrComponentNameTaken = "there is already a component named %s"
 
-local WarnEntityAlreadyExists = "creating a new entity because %08X's id (%08X) is already in use"
+local WarnEntityAlreadyExists = "creating a new entity because %08X's id is already in use"
 
 local Registry = {}
 Registry.__index = Registry
@@ -30,6 +30,11 @@ function Registry.new()
 	}, Registry)
 end
 
+--[[
+	Defines a component for the registry.  If the component's type is an Instance or an
+	interface with a top-level field that is an Instance, the registry automatically
+	calls Destroy when the component is removed.
+]]
 function Registry:define(name, typeDefinition)
 	assert(not self._pools[name], ErrComponentNameTaken:format(name))
 
@@ -57,7 +62,7 @@ function Registry:define(name, typeDefinition)
 end
 
 --[[
-	Returns a new valid entity.
+	Returns a new entity.
 ]]
 function Registry:create()
 	if self._nextRecyclable == NULL_ENTITYID then
@@ -85,14 +90,14 @@ function Registry:create()
 end
 
 --[[
-	Returns a new valid entity equal to the given entity if and only if the given entity
-	id is not in use by the store, otherwise returns a new entity created normally.
+	Returns a new entity equal to the given entity if and only if the given entity id is
+	not in use by the store, otherwise returns a new entity created normally.
 ]]
 function Registry:createFrom(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 	local entities = self._entities
 	local existingEntityId = bit32.band(
-		self._entities[entityId] or NULL_ENTITYID,
+		entities[entityId] or NULL_ENTITYID,
 		ENTITYID_MASK
 	)
 
@@ -112,11 +117,11 @@ function Registry:createFrom(entity)
 
 		return entity
 	elseif existingEntityId == entityId then
+		-- the entityId is in use; create a new entity normally
 		if DEBUG then
 			warn(WarnEntityAlreadyExists:format(entity, entityId))
 		end
 
-		-- the entityId is in use; create a new entity normally
 		return self:create()
 	else
 		-- the entityId is in the free list; find it and remove it
@@ -561,7 +566,8 @@ function Registry:count(name)
 end
 
 --[[
-	Returns the pools used to manage the specified components in a list.
+	Returns a list of pools used to manage the specified components in the same order as
+	the given tuple.
 ]]
 function Registry:getPools(...)
 	local n = select("#", ...)
