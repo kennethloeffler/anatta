@@ -63,7 +63,7 @@ return function()
 			end).to.throw()
 		end)
 
-		it("should attach removal signal listeners to automatically destroy instance types/members", function(context)
+		it("should attach listeners to destroy instance types/members on removal", function(context)
 			local registry = context.registry
 			local instancePool = registry._pools.instance
 			local interfacePool = registry._pools.interface
@@ -101,30 +101,32 @@ return function()
 
 		it("should recycle the ids of destroyed entities", function(context)
 			local registry = context.registry
-			local num = 50
-			local destroyedIds = table.create(num)
+			local maxDestroyed = 50
+			local destroyed = table.create(maxDestroyed)
 
 			for i, entity in ipairs(makeEntities(registry, 100)) do
 				if i % 2 == 0 then
-					-- fill the table in reverse order so it will be in the same
-					-- order that the ids will be recycled in
-					destroyedIds[num] = bit32.band(entity, ENTITYID_MASK)
+					-- We fill the table in reverse order because the free list is fifo
+					destroyed[maxDestroyed] = bit32.band(entity, ENTITYID_MASK)
 					registry:destroy(entity)
-					num -= 1
+					maxDestroyed -= 1
 
 					expect(registry._nextRecyclable).to.equal(bit32.band(entity, ENTITYID_MASK))
 				end
 			end
 
-			for i, destroyedId in ipairs(destroyedIds) do
-				local nextRecyclable = destroyedIds[i + 1] and destroyedIds[i + 1] or NULL_ENTITYID
+			for i, destroyedEntity in ipairs(destroyed) do
+				local nextRecyclable = destroyed[i + 1] and destroyed[i + 1] or NULL_ENTITYID
 
-				expect(bit32.band(registry:create(), ENTITYID_MASK)).to.equal(destroyedId)
+				expect(bit32.band(registry:create(), ENTITYID_MASK)).to.equal(destroyedEntity)
 				expect(registry._nextRecyclable).to.equal(nextRecyclable)
 
-				if i < 50 then
+				if nextRecyclable ~= NULL_ENTITYID then
+					-- If we are not at the end of the free list, then the recyclable
+					-- id's element in ._entities should point to the next recyclable
+					-- id.
 					expect(bit32.band(registry._entities[nextRecyclable], ENTITYID_MASK))
-						.to.equal(destroyedIds[i + 2] or NULL_ENTITYID)
+						.to.equal(destroyed[i + 2] or NULL_ENTITYID)
 				end
 			end
 		end)
@@ -148,27 +150,42 @@ return function()
 			expect(registry:createFrom(entity)).to.equal(entity)
 		end)
 
-		it("should properly remove an entity from the stack of recyclable entities", function(context)
+		it("should remove entities from the stack of recyclable entities", function(context)
 			local registry = context.registry
 
 			makeEntities(registry, 100)
 
+			-- We need to make sure createFrom correctly removes ids from the middle of
+			-- the free list. First we populate it with some ids:
+			-- 64, 32, 16, 4, 2
 			registry:destroy(2)
 			registry:destroy(4)
 			registry:destroy(16)
 			registry:destroy(32)
 			registry:destroy(64)
 
+			-- Next we create entity 16, which is in the middle of the free
+			-- list. After this operation, the free list should look like this:
+			-- 64, 32, 4, 2
 			expect(registry:createFrom(16)).to.equal(16)
+
+			-- Now we create entity 64 with an arbitrary version. The free list should
+			-- now look like this:
+			-- 32, 4, 2
 			expect(registry:createFrom(bit32.bor(64, bit32.lshift(16, ENTITYID_WIDTH))))
 				.to.equal(bit32.bor(64, bit32.lshift(16, ENTITYID_WIDTH)))
+
+			-- ...
+			-- 32, 2
 			expect(registry:createFrom(4)).to.equal(4)
 
+			-- Finally we do a couple normal :creates to make sure the free list is in
+			-- the proper state
 			expect(bit32.band(registry:create(), ENTITYID_MASK)).to.equal(32)
 			expect(bit32.band(registry:create(), ENTITYID_MASK)).to.equal(2)
 		end)
 
-		it("should return a brand new entity identifier when the entity id is in use", function(context)
+		it("should return a new entity identifier when the entity id is in use", function(context)
 			local entity = makeEntities(context.registry, 100)[60]
 
 			expect(context.registry:createFrom(entity)).to.equal(context.registry._size)
@@ -963,7 +980,7 @@ return function()
 	end)
 
 	describe("raw", function()
-		it("should return the pool's internal structures", function(context)
+		it("should return the pool's .dense and .objects fields", function(context)
 			local registry = context.registry
 			local dense, objects = registry:raw("instance")
 			local pool = registry._pools.instance
