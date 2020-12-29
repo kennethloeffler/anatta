@@ -60,6 +60,7 @@ function Registry:define(name, typeDefinition)
 	local typeName = typeDefinition.typeName
 	local pool = Pool.new(name, typeDefinition)
 
+	print(typeName)
 	if
 		typeName == "Instance"
 		or typeName == "instance"
@@ -69,10 +70,24 @@ function Registry:define(name, typeDefinition)
 		pool.onRemove:connect(function(_, instance)
 			instance:Destroy()
 		end)
-	elseif next(typeDefinition.instanceFields) ~= nil then
+	elseif typeName == "RBXScriptConnection" then
+		pool.onRemove:connect(function(_, connection)
+			connection:Disconnect()
+		end)
+	end
+
+	if next(typeDefinition.instanceFields) ~= nil then
 		pool.onRemove:connect(function(_, interface)
 			for fieldName in pairs(typeDefinition.instanceFields) do
 				interface[fieldName]:Destroy()
+			end
+		end)
+	end
+
+	if next(typeDefinition.connectionFields) ~= nil then
+		pool.onRemove:connect(function(_, interface)
+			for fieldName in pairs(typeDefinition.connectionFields) do
+				interface[fieldName]:Disconnect()
 			end
 		end)
 	end
