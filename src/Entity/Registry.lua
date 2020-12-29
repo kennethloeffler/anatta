@@ -60,7 +60,6 @@ function Registry:define(name, typeDefinition)
 	local typeName = typeDefinition.typeName
 	local pool = Pool.new(name, typeDefinition)
 
-	print(typeName)
 	if
 		typeName == "Instance"
 		or typeName == "instance"
