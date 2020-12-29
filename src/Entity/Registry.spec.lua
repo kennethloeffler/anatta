@@ -3,7 +3,6 @@ return function()
 	local Registry = require(script.Parent.Registry)
 	local t = require(script.Parent.Parent.Core.TypeDefinition)
 
-	local ENTITYID_MASK = Constants.ENTITYID_MASK
 	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 	local NULL_ENTITYID = Constants.NULL_ENTITYID
 
@@ -107,25 +106,25 @@ return function()
 			for i, entity in ipairs(makeEntities(registry, 100)) do
 				if i % 2 == 0 then
 					-- We fill the table in reverse order because the free list is fifo
-					destroyed[maxDestroyed] = bit32.band(entity, ENTITYID_MASK)
+					destroyed[maxDestroyed] = Registry.getId(entity)
 					registry:destroy(entity)
 					maxDestroyed -= 1
 
-					expect(registry._nextRecyclable).to.equal(bit32.band(entity, ENTITYID_MASK))
+					expect(registry._nextRecyclable).to.equal(Registry.getId(entity))
 				end
 			end
 
 			for i, destroyedEntity in ipairs(destroyed) do
 				local nextRecyclable = destroyed[i + 1] and destroyed[i + 1] or NULL_ENTITYID
 
-				expect(bit32.band(registry:create(), ENTITYID_MASK)).to.equal(destroyedEntity)
+				expect(Registry.getId(registry:create())).to.equal(destroyedEntity)
 				expect(registry._nextRecyclable).to.equal(nextRecyclable)
 
 				if nextRecyclable ~= NULL_ENTITYID then
 					-- If we are not at the end of the free list, then the recyclable
 					-- id's element in ._entities should point to the next recyclable
 					-- id.
-					expect(bit32.band(registry._entities[nextRecyclable], ENTITYID_MASK))
+					expect(Registry.getId(registry._entities[nextRecyclable]))
 						.to.equal(destroyed[i + 2] or NULL_ENTITYID)
 				end
 			end
@@ -167,22 +166,33 @@ return function()
 			-- Next we create entity 16, which is in the middle of the free
 			-- list. After this operation, the free list should look like this:
 			-- 64, 32, 4, 2
-			expect(registry:createFrom(16)).to.equal(16)
+			local e16 = registry:createFrom(16)
+			expect(Registry.getId(e16)).to.equal(16)
+			expect(Registry.getVersion(e16)).to.equal(0)
 
 			-- Now we create entity 64 with an arbitrary version. The free list should
 			-- now look like this:
 			-- 32, 4, 2
-			expect(registry:createFrom(bit32.bor(64, bit32.lshift(16, ENTITYID_WIDTH))))
-				.to.equal(bit32.bor(64, bit32.lshift(16, ENTITYID_WIDTH)))
+			local version = 16
+			local entity = registry:createFrom(bit32.bor(64, bit32.lshift(version, ENTITYID_WIDTH)))
+			expect(Registry.getId(entity)).to.equal(64)
+			expect(Registry.getVersion(entity)).to.equal(16)
 
 			-- ...
 			-- 32, 2
-			expect(registry:createFrom(4)).to.equal(4)
+			local e4 = registry:createFrom(4)
+			expect(Registry.getId(e4)).to.equal(4)
+			expect(Registry.getVersion(e4)).to.equal(0)
 
 			-- Finally we do a couple normal :creates to make sure the free list is in
 			-- the proper state
-			expect(bit32.band(registry:create(), ENTITYID_MASK)).to.equal(32)
-			expect(bit32.band(registry:create(), ENTITYID_MASK)).to.equal(2)
+			local e32 = registry:create()
+			expect(Registry.getId(e32)).to.equal(32)
+			expect(Registry.getVersion(e32)).to.equal(1)
+
+			local e2 = registry:create()
+			expect(Registry.getId(e2)).to.equal(2)
+			expect(Registry.getVersion(e2)).to.equal(1)
 		end)
 
 		it("should return a new entity identifier when the entity id is in use", function(context)
@@ -211,7 +221,7 @@ return function()
 		it("should increment the entity's version field", function(context)
 			local registry = context.registry
 			local entity = registry:create()
-			local entityId = bit32.band(entity, ENTITYID_MASK)
+			local entityId = Registry.getId(entity)
 			local expectedVersion = 123
 
 			registry:destroy(entity)
@@ -220,18 +230,18 @@ return function()
 				registry:destroy(registry:create())
 			end
 
-			expect(bit32.rshift(registry._entities[entityId], ENTITYID_WIDTH)).to.equal(expectedVersion)
+			expect(Registry.getVersion(registry._entities[entityId])).to.equal(expectedVersion)
 		end)
 
 		it("should push the entity's id onto the free list", function(context)
 			local registry = context.registry
 			local entity = registry:create()
-			local entityId = bit32.band(entity, ENTITYID_MASK)
+			local entityId = Registry.getId(entity)
 
 			registry:destroy(entity)
 
 			expect(registry._nextRecyclable).to.equal(entityId)
-			expect(bit32.band(registry._entities[entityId], ENTITYID_MASK)).to.equal(NULL_ENTITYID)
+			expect(Registry.getId(registry._entities[entityId])).to.equal(NULL_ENTITYID)
 		end)
 
 		it("should error when given an invalid entity", function(context)
@@ -951,9 +961,9 @@ return function()
 			registry:create()
 
 			registry:each(function(entity)
-				local id = bit32.band(entity, ENTITYID_MASK)
+				local entityId = Registry.getId(entity)
 
-				expect(id).to.equal(bit32.band(registry._entities[id], ENTITYID_MASK))
+				expect(entityId).to.equal(Registry.getId(registry._entities[entityId]))
 			end)
 		end)
 	end)

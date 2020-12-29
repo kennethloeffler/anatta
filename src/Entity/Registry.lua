@@ -31,6 +31,25 @@ function Registry.new()
 end
 
 --[[
+	Returns an integer equal to the first ENTITYID_WIDTH bits of the entity.  The
+	equality
+
+	registry._entities[id] == entity
+
+	generally holds if the entity is valid.
+]]
+function Registry.getId(entity)
+	return bit32.band(entity, ENTITYID_MASK)
+end
+
+--[[
+	Returns an integer equal the last (32 - ENTITYID_WIDTH) bits of the entity.
+]]
+function Registry.getVersion(entity)
+	return bit32.rshift(entity, ENTITYID_WIDTH)
+end
+
+--[[
 	Defines a component for the registry.  If the component's type is an Instance or an
 	interface with a top-level field that is an Instance, the registry automatically
 	calls Destroy when the component is removed.
