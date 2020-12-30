@@ -84,6 +84,29 @@ return function()
 				interface.instance.Parent = workspace
 			end).to.throw()
 		end)
+
+		it("should attach listeners to disconnect RBXScriptConnection types/members on removal", function(context)
+			local registry = context.registry
+
+			registry:define("connection", t.RBXScriptConnection)
+			registry:define("connectionInterface", t.interface({ connection = t.RBXScriptConnection }))
+
+			local connectionPool = registry._pools.connection
+			local interfacePool = registry._pools.connectionInterface
+
+			local bindable = Instance.new("BindableEvent")
+			local entity = registry:create()
+			local connection = bindable.Event:Connect(function()
+			end)
+
+			connectionPool.onRemove:dispatch(entity, connection)
+			expect(connection.Connected).to.equal(false)
+
+			local interface = { connection = connection }
+
+			interfacePool.onRemove:dispatch(entity, interface)
+			expect(interface.connection.Connected).to.equal(false)
+		end)
 	end)
 
 	describe("create", function()

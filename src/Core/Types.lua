@@ -5,6 +5,7 @@ return {
 		typeName = t.string,
 		check = t.callback,
 		instanceFields = t.table,
+		connectionFields = t.table,
 		fields = t.table,
 	},
 

@@ -53,6 +53,8 @@ local function checkInterface(typeDef, checkTable)
 			or fieldType == "instanceIsA"
 		then
 			typeDef.instanceFields[name] = true
+		elseif fieldType == "RBXScriptConnection" then
+			typeDef.connectionFields[name] = true
 		end
 	end
 
@@ -86,6 +88,7 @@ local function newTypeDefinition(typeName, ...)
 		typeName = typeName,
 		check = Noop,
 		instanceFields = {},
+		connectionFields = {},
 		fields = {},
 	}
 
