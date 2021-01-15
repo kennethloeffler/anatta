@@ -66,17 +66,17 @@ function Registry:define(name, typeDefinition)
 		or typeName == "instanceOf"
 		or typeName == "instanceIsA"
 	then
-		pool.onRemove:connect(function(_, instance)
+		pool.onRemoved:connect(function(_, instance)
 			instance:Destroy()
 		end)
 	elseif typeName == "RBXScriptConnection" then
-		pool.onRemove:connect(function(_, connection)
+		pool.onRemoved:connect(function(_, connection)
 			connection:Disconnect()
 		end)
 	end
 
 	if next(typeDefinition.instanceFields) ~= nil then
-		pool.onRemove:connect(function(_, interface)
+		pool.onRemoved:connect(function(_, interface)
 			for fieldName in pairs(typeDefinition.instanceFields) do
 				interface[fieldName]:Destroy()
 			end
@@ -84,7 +84,7 @@ function Registry:define(name, typeDefinition)
 	end
 
 	if next(typeDefinition.connectionFields) ~= nil then
-		pool.onRemove:connect(function(_, interface)
+		pool.onRemoved:connect(function(_, interface)
 			for fieldName in pairs(typeDefinition.connectionFields) do
 				interface[fieldName]:Disconnect()
 			end
@@ -201,7 +201,7 @@ function Registry:destroy(entity)
 
 	for _, pool in pairs(self._pools) do
 		if pool:getIndex(entity) then
-			pool.onRemove:dispatch(entity, pool:get(entity))
+			pool.onRemoved:dispatch(entity, pool:get(entity))
 			pool:delete(entity)
 		end
 	end
@@ -374,7 +374,7 @@ function Registry:add(entity, name, object)
 	end
 
 	pool:insert(entity, object)
-	pool.onAdd:dispatch(entity, object)
+	pool.onAdded:dispatch(entity, object)
 
 	return object
 end
@@ -397,7 +397,7 @@ function Registry:tryAdd(entity, name, object)
 	end
 
 	pool:insert(entity, object)
-	pool.onAdd:dispatch(entity, object)
+	pool.onAdded:dispatch(entity, object)
 
 	return object
 end
@@ -434,7 +434,7 @@ function Registry:getOrAdd(entity, name, object)
 		return pool.objects[denseIndex]
 	else
 		pool:insert(entity, object)
-		pool.onAdd:dispatch(entity, object)
+		pool.onAdded:dispatch(entity, object)
 
 		return object
 	end
@@ -455,7 +455,7 @@ function Registry:replace(entity, name, object)
 		assert(pool:getIndex(entity), ErrMissingComponent:format(entity, name))
 	end
 
-	pool.onUpdate:dispatch(entity, object)
+	pool.onUpdated:dispatch(entity, object)
 	pool:replace(entity, object)
 
 	return object
@@ -478,14 +478,14 @@ function Registry:addOrReplace(entity, name, object)
 	local denseIndex = pool:getIndex(entity)
 
 	if denseIndex then
-		pool.onUpdate:dispatch(entity, object)
+		pool.onUpdated:dispatch(entity, object)
 		pool.objects[denseIndex] = object
 
 		return object
 	end
 
 	pool:insert(entity, object)
-	pool.onAdd:dispatch(entity, object)
+	pool.onAdded:dispatch(entity, object)
 
 	return object
 end
@@ -505,7 +505,7 @@ function Registry:remove(entity, name)
 		assert(pool:getIndex(entity), ErrMissingComponent:format(entity, name))
 	end
 
-	pool.onRemove:dispatch(entity, pool:get(entity))
+	pool.onRemoved:dispatch(entity, pool:get(entity))
 	pool:delete(entity)
 end
 
@@ -530,7 +530,7 @@ function Registry:tryRemove(entity, name)
 	end
 
 	if pool:getIndex(entity) then
-		pool.onRemove:dispatch(entity, pool:get(entity))
+		pool.onRemoved:dispatch(entity, pool:get(entity))
 		pool:delete(entity)
 
 		return true

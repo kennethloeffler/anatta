@@ -41,21 +41,20 @@ function Collection.new(registry, components)
 		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - #updated),
 	}, Collection)
 
-	local connections = self._connections
 
 	for _, pool in ipairs(required) do
-		table.insert(connections, pool.onAdd:connect(self:_tryAdd()))
-		table.insert(connections, pool.onRemove:connect(self:_tryRemove()))
+		table.insert(connections, pool.onAdded:connect(self:_tryAdd()))
+		table.insert(connections, pool.onRemoved:connect(self:_tryRemove()))
 	end
 
 	for i, pool in ipairs(updated) do
-		table.insert(connections, pool.onUpdate:connect(self:_tryAddUpdated(i - 1)))
-		table.insert(connections, pool.onRemove:connect(self:_tryRemoveUpdated(i - 1)))
+		table.insert(connections, pool.onUpdated:connect(self:_tryAddUpdated(i - 1)))
+		table.insert(connections, pool.onRemoved:connect(self:_tryRemoveUpdated(i - 1)))
 	end
 
 	for _, pool in ipairs(forbidden) do
-		table.insert(connections, pool.onAdd:connect(self:_tryRemove()))
-		table.insert(connections, pool.onRemove:connect(self:_tryAdd()))
+		table.insert(connections, pool.onAdded:connect(self:_tryRemove()))
+		table.insert(connections, pool.onRemoved:connect(self:_tryAdd()))
 	end
 
 	return self
@@ -187,7 +186,7 @@ function Collection:_tryAdd()
 	return function(entity)
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
-			self._pool.onAdd:dispatch(entity, unpack(self._packed))
+			self._pool.onAdded:dispatch(entity, unpack(self._packed))
 		end
 	end
 end
@@ -200,7 +199,7 @@ function Collection:_tryAddUpdated(offset)
 
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
-			self._pool.onAdd:dispatch(entity, unpack(self._packed))
+			self._pool.onAdded:dispatch(entity, unpack(self._packed))
 		end
 	end
 end
@@ -209,7 +208,7 @@ function Collection:_tryRemove()
 	return function(entity)
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
-			self._pool.onRemove:dispatch(entity, unpack(self._packed))
+			self._pool.onRemoved:dispatch(entity, unpack(self._packed))
 			self._pool:delete(entity)
 		end
 	end
@@ -233,7 +232,7 @@ function Collection:_tryRemoveUpdated(offset)
 
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
-			self._pool.onRemove:dispatch(entity, unpack(self._packed))
+			self._pool.onRemoved:dispatch(entity, unpack(self._packed))
 			self._pool:delete(entity)
 		end
 	end

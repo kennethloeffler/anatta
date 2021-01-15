@@ -93,14 +93,14 @@ return function()
 				forbidden = { "Test3" },
 			})
 
-			expect(collection._required[1].onAdd._callbacks[1]).to.be.ok()
-			expect(collection._required[1].onRemove._callbacks[1]).to.be.ok()
+			expect(collection._required[1].onAdded._callbacks[1]).to.be.ok()
+			expect(collection._required[1].onRemoved._callbacks[1]).to.be.ok()
 
-			expect(collection._forbidden[1].onRemove._callbacks[1]).to.be.ok()
-			expect(collection._forbidden[1].onAdd._callbacks[1]).to.be.ok()
+			expect(collection._forbidden[1].onRemoved._callbacks[1]).to.be.ok()
+			expect(collection._forbidden[1].onAdded._callbacks[1]).to.be.ok()
 
-			expect(collection._updated[1].onUpdate._callbacks[1]).to.be.ok()
-			expect(collection._updated[1].onRemove._callbacks[1]).to.be.ok()
+			expect(collection._updated[1].onUpdated._callbacks[1]).to.be.ok()
+			expect(collection._updated[1].onRemoved._callbacks[1]).to.be.ok()
 		end)
 	end)
 
