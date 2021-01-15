@@ -70,7 +70,7 @@ return function()
 			local entity = registry:create()
 			local instance = instancePool:insert(entity, Instance.new("Part"))
 
-			instancePool.onRemove:dispatch(entity, instance)
+			instancePool.onRemoved:dispatch(entity, instance)
 
 			expect(function()
 				instance.Parent = workspace
@@ -78,7 +78,7 @@ return function()
 
 			local interface = interfacePool:insert(entity, { instance = Instance.new("Script") })
 
-			interfacePool.onRemove:dispatch(entity, interface)
+			interfacePool.onRemoved:dispatch(entity, interface)
 
 			expect(function()
 				interface.instance.Parent = workspace
@@ -99,12 +99,12 @@ return function()
 			local connection = bindable.Event:Connect(function()
 			end)
 
-			connectionPool.onRemove:dispatch(entity, connection)
+			connectionPool.onRemoved:dispatch(entity, connection)
 			expect(connection.Connected).to.equal(false)
 
 			local interface = { connection = connection }
 
-			interfacePool.onRemove:dispatch(entity, interface)
+			interfacePool.onRemoved:dispatch(entity, interface)
 			expect(interface.connection.Connected).to.equal(false)
 		end)
 	end)
@@ -526,7 +526,7 @@ return function()
 			local registry = context.registry
 			local ranCallback
 
-			registry._pools.instance.onAdd:connect(function()
+			registry._pools.instance.onAdded:connect(function()
 				ranCallback = true
 			end)
 
@@ -593,7 +593,7 @@ return function()
 			local registry = context.registry
 			local ranCallback
 
-			registry._pools.number.onAdd:connect(function()
+			registry._pools.number.onAdded:connect(function()
 				ranCallback = true
 			end)
 
@@ -687,7 +687,7 @@ return function()
 			local registry =  context.registry
 			local ranCallback
 
-			registry._pools.number.onAdd:connect(function()
+			registry._pools.number.onAdded:connect(function()
 				ranCallback = true
 			end)
 
@@ -724,7 +724,7 @@ return function()
 			local entity = registry:create()
 			local ranCallback
 
-			registry._pools.number.onUpdate:connect(function()
+			registry._pools.number.onUpdated:connect(function()
 				ranCallback = true
 			end)
 
@@ -767,7 +767,7 @@ return function()
 			local registry = context.registry
 			local ranAddCallback
 
-			registry._pools.instance.onAdd:connect(function()
+			registry._pools.instance.onAdded:connect(function()
 				ranAddCallback = true
 			end)
 
@@ -789,7 +789,7 @@ return function()
 			local entity = registry:create()
 			local ranReplaceCallback = false
 
-			registry._pools.instance.onUpdate:connect(function()
+			registry._pools.instance.onUpdated:connect(function()
 				ranReplaceCallback = true
 			end)
 
@@ -828,7 +828,7 @@ return function()
 			local entity = registry:create()
 			local ranCallback
 
-			registry._pools.number.onRemove:connect(function()
+			registry._pools.number.onRemoved:connect(function()
 				ranCallback = true
 			end)
 
@@ -869,19 +869,19 @@ return function()
 			local component2ok = false
 			local component3ok = false
 
-			registry._pools.number.onRemove:connect(function(e, component)
+			registry._pools.number.onRemoved:connect(function(e, component)
 				expect(e).to.equal(entity)
 				expect(component).to.equal(component1)
 				component1ok = true
 			end)
 
-			registry._pools.instance.onRemove:connect(function(e, component)
+			registry._pools.instance.onRemoved:connect(function(e, component)
 				expect(e).to.equal(entity)
 				expect(component).to.equal(component2)
 				component2ok = true
 			end)
 
-			registry._pools.interface.onRemove:connect(function(e, component)
+			registry._pools.interface.onRemoved:connect(function(e, component)
 				expect(e).to.equal(entity)
 				expect(component).to.equal(component3)
 				component3ok = true
@@ -940,7 +940,7 @@ return function()
 			local entity = registry:create()
 			local ranCallback
 
-			registry._pools.number.onRemove:connect(function()
+			registry._pools.number.onRemoved:connect(function()
 				ranCallback = true
 			end)
 

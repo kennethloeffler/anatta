@@ -13,7 +13,7 @@ function PureCollection.new(registry, components)
 	assert(next(required), "A PureCollection needs at least one required component")
 
 	if not next(forbidden) and #required == 1 then
-		return SinglePureCollection.new(registry._pools[required[1]])
+		return SinglePureCollection.new(required[1])
 	end
 
 	return setmetatable({

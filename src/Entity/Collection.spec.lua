@@ -93,14 +93,14 @@ return function()
 				forbidden = { "Test3" },
 			})
 
-			expect(collection._required[1].onAdd._callbacks[1]).to.be.ok()
-			expect(collection._required[1].onRemove._callbacks[1]).to.be.ok()
+			expect(collection._required[1].onAdded._callbacks[1]).to.be.ok()
+			expect(collection._required[1].onRemoved._callbacks[1]).to.be.ok()
 
-			expect(collection._forbidden[1].onRemove._callbacks[1]).to.be.ok()
-			expect(collection._forbidden[1].onAdd._callbacks[1]).to.be.ok()
+			expect(collection._forbidden[1].onRemoved._callbacks[1]).to.be.ok()
+			expect(collection._forbidden[1].onAdded._callbacks[1]).to.be.ok()
 
-			expect(collection._updated[1].onUpdate._callbacks[1]).to.be.ok()
-			expect(collection._updated[1].onRemove._callbacks[1]).to.be.ok()
+			expect(collection._updated[1].onUpdated._callbacks[1]).to.be.ok()
+			expect(collection._updated[1].onRemoved._callbacks[1]).to.be.ok()
 		end)
 	end)
 
@@ -243,7 +243,7 @@ return function()
 					required = { "Test1", "Test2", "Test3" }
 				})
 
-				collection:onAdded(function(entity, test1, test2, test3)
+				collection.onAdded:connect(function(entity, test1, test2, test3)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -272,7 +272,7 @@ return function()
 					forbidden = { "Test3" }
 				})
 
-				collection:onAdded(function(entity, test1, test2)
+				collection.onAdded:connect(function(entity, test1, test2)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -305,7 +305,7 @@ return function()
 					forbidden = { "Test3" }
 				})
 
-				collection:onAdded(function(entity, test1, test2, test4)
+				collection.onAdded:connect(function(entity, test1, test2, test4)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -344,8 +344,8 @@ return function()
 					updated = { "Test4" },
 				})
 
-				collection:onAdded(function()
-					called = not called
+				collection.onAdded:connect(function()
+					called = true
 				end)
 
 				local testEntity = registry:create()
@@ -373,7 +373,7 @@ return function()
 					required = { "Test1", "Test2", "Test3" }
 				})
 
-				collection:onRemoved(function(entity, test1, test2, test3)
+				collection.onRemoved:connect(function(entity, test1, test2, test3)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -403,7 +403,7 @@ return function()
 					forbidden = { "Test3" }
 				})
 
-				collection:onRemoved(function(entity, test1, test2)
+				collection.onRemoved:connect(function(entity, test1, test2)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -432,7 +432,7 @@ return function()
 					updated = { "Test4" }
 				})
 
-				collection:onRemoved(function(entity, test1, test2, test4)
+				collection.onRemoved:connect(function(entity, test1, test2, test4)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))

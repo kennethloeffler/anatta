@@ -19,17 +19,21 @@ function Collection.new(registry, components)
 	assert(#updated <= 32, "Collections may only track up to 32 updated components")
 
 	if not next(updated) and not next(forbidden) and #required == 1 then
-		-- The selector is tracking entities with just one required component. This is a
-		-- case we should optimize for. It does not require any additional state and
-		-- only amounts to iterating over one Pool's list(s) and connecting to one set
-		-- of signals.
-		return SingleCollection.new(registry._pools[required[1]])
+		-- The collection is tracking entities with just one required component. This is
+		-- a case we should optimize for. It does not require any additional state and
+		-- amounts to an iteration over one Pool and connecting to one set of signals.
+		return SingleCollection.new(required[1])
 	end
 
+	local collectionPool = Pool.new()
+	local connections = table.create(2 * (#required + #updated + #forbidden))
 	local self = setmetatable({
-		_pool = Pool.new(),
+		onAdded = collectionPool.onAdded,
+		onRemoved = collectionPool.onRemoved,
+
+		_pool = collectionPool,
 		_updatedSet = {},
-		_connections = table.create(2 * (#required + #updated + #forbidden)),
+		_connections = connections,
 		_packed = table.create(#required + #updated),
 
 		_required = required,
@@ -41,21 +45,20 @@ function Collection.new(registry, components)
 		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - #updated),
 	}, Collection)
 
-	local connections = self._connections
 
 	for _, pool in ipairs(required) do
-		table.insert(connections, pool.onAdd:connect(self:_tryAdd()))
-		table.insert(connections, pool.onRemove:connect(self:_tryRemove()))
+		table.insert(connections, pool.onAdded:connect(self:_tryAdd()))
+		table.insert(connections, pool.onRemoved:connect(self:_tryRemove()))
 	end
 
 	for i, pool in ipairs(updated) do
-		table.insert(connections, pool.onUpdate:connect(self:_tryAddUpdated(i - 1)))
-		table.insert(connections, pool.onRemove:connect(self:_tryRemoveUpdated(i - 1)))
+		table.insert(connections, pool.onUpdated:connect(self:_tryAddUpdated(i - 1)))
+		table.insert(connections, pool.onRemoved:connect(self:_tryRemoveUpdated(i - 1)))
 	end
 
 	for _, pool in ipairs(forbidden) do
-		table.insert(connections, pool.onAdd:connect(self:_tryRemove()))
-		table.insert(connections, pool.onRemove:connect(self:_tryAdd()))
+		table.insert(connections, pool.onAdded:connect(self:_tryRemove()))
+		table.insert(connections, pool.onRemoved:connect(self:_tryAdd()))
 	end
 
 	return self
@@ -91,22 +94,6 @@ function Collection:each(callback)
 			callback(entity, unpack(self._packed))
 		end
 	end
-end
-
---[[
-	Applies the callback to an entity and component(s) just after the selector begins
-	tracking it.
-]]
-function Collection:onAdded(callback)
-	return self._pool.onAdd:connect(callback)
-end
-
---[[
-	Applies the callback to an entity and component(s) just before the selector stops
-	tracking it.
-]]
-function Collection:onRemoved(callback)
-	return self._pool.onRemove:connect(callback)
 end
 
 --[[
@@ -187,7 +174,7 @@ function Collection:_tryAdd()
 	return function(entity)
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
-			self._pool.onAdd:dispatch(entity, unpack(self._packed))
+			self._pool.onAdded:dispatch(entity, unpack(self._packed))
 		end
 	end
 end
@@ -200,7 +187,7 @@ function Collection:_tryAddUpdated(offset)
 
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
-			self._pool.onAdd:dispatch(entity, unpack(self._packed))
+			self._pool.onAdded:dispatch(entity, unpack(self._packed))
 		end
 	end
 end
@@ -209,7 +196,7 @@ function Collection:_tryRemove()
 	return function(entity)
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
-			self._pool.onRemove:dispatch(entity, unpack(self._packed))
+			self._pool.onRemoved:dispatch(entity, unpack(self._packed))
 			self._pool:delete(entity)
 		end
 	end
@@ -233,7 +220,7 @@ function Collection:_tryRemoveUpdated(offset)
 
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
-			self._pool.onRemove:dispatch(entity, unpack(self._packed))
+			self._pool.onRemoved:dispatch(entity, unpack(self._packed))
 			self._pool:delete(entity)
 		end
 	end

@@ -11,9 +11,9 @@ function Pool.new(name, typeDef)
 		name = name,
 		typeDef = typeDef,
 
-		onAdd = Signal.new(),
-		onRemove = Signal.new(),
-		onUpdate = Signal.new(),
+		onAdded = Signal.new(),
+		onRemoved = Signal.new(),
+		onUpdated = Signal.new(),
 
 		size = 0,
 		sparse = {},
