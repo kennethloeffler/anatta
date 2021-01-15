@@ -1,7 +1,7 @@
 return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
 	local Registry = require(script.Parent.Registry)
-	local t = require(script.Parent.Parent.Core.TypeDefinition)
+	local t = require(script.Parent.Parent.t)
 
 	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 	local NULL_ENTITYID = Constants.NULL_ENTITYID
@@ -43,12 +43,12 @@ return function()
 	describe("define", function()
 		it("should define a new component type", function()
 			local registry = Registry.new()
-			local typeDef = t.table
+			local typeCheck = t.table
 
-			registry:define("Test", typeDef)
+			registry:define("Test", typeCheck)
 
 			expect(registry._pools.Test).to.be.ok()
-			expect(registry._pools.Test.typeDef).to.equal(typeDef)
+			expect(registry._pools.Test.typeCheck).to.equal(typeCheck)
 			expect(registry._pools.Test.name).to.equal("Test")
 		end)
 
@@ -60,52 +60,6 @@ return function()
 			expect(function()
 				registry:define("Test", t.none)
 			end).to.throw()
-		end)
-
-		it("should attach listeners to destroy instance types/members on removal", function(context)
-			local registry = context.registry
-			local instancePool = registry._pools.instance
-			local interfacePool = registry._pools.interface
-
-			local entity = registry:create()
-			local instance = instancePool:insert(entity, Instance.new("Part"))
-
-			instancePool.onRemoved:dispatch(entity, instance)
-
-			expect(function()
-				instance.Parent = workspace
-			end).to.throw()
-
-			local interface = interfacePool:insert(entity, { instance = Instance.new("Script") })
-
-			interfacePool.onRemoved:dispatch(entity, interface)
-
-			expect(function()
-				interface.instance.Parent = workspace
-			end).to.throw()
-		end)
-
-		it("should attach listeners to disconnect RBXScriptConnection types/members on removal", function(context)
-			local registry = context.registry
-
-			registry:define("connection", t.RBXScriptConnection)
-			registry:define("connectionInterface", t.interface({ connection = t.RBXScriptConnection }))
-
-			local connectionPool = registry._pools.connection
-			local interfacePool = registry._pools.connectionInterface
-
-			local bindable = Instance.new("BindableEvent")
-			local entity = registry:create()
-			local connection = bindable.Event:Connect(function()
-			end)
-
-			connectionPool.onRemoved:dispatch(entity, connection)
-			expect(connection.Connected).to.equal(false)
-
-			local interface = { connection = connection }
-
-			interfacePool.onRemoved:dispatch(entity, interface)
-			expect(interface.connection.Connected).to.equal(false)
 		end)
 	end)
 

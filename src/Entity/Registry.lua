@@ -54,44 +54,10 @@ end
 	interface with a top-level field that is an Instance, the registry automatically
 	calls Destroy when the component is removed.
 ]]
-function Registry:define(name, typeDefinition)
-	assert(not self._pools[name], ErrComponentNameTaken:format(name))
+function Registry:define(componentName, typeCheck)
+	assert(not self._pools[componentName], ErrComponentNameTaken:format(componentName))
 
-	local typeName = typeDefinition.typeName
-	local pool = Pool.new(name, typeDefinition)
-
-	if
-		typeName == "Instance"
-		or typeName == "instance"
-		or typeName == "instanceOf"
-		or typeName == "instanceIsA"
-	then
-		pool.onRemoved:connect(function(_, instance)
-			instance:Destroy()
-		end)
-	elseif typeName == "RBXScriptConnection" then
-		pool.onRemoved:connect(function(_, connection)
-			connection:Disconnect()
-		end)
-	end
-
-	if next(typeDefinition.instanceFields) ~= nil then
-		pool.onRemoved:connect(function(_, interface)
-			for fieldName in pairs(typeDefinition.instanceFields) do
-				interface[fieldName]:Destroy()
-			end
-		end)
-	end
-
-	if next(typeDefinition.connectionFields) ~= nil then
-		pool.onRemoved:connect(function(_, interface)
-			for fieldName in pairs(typeDefinition.connectionFields) do
-				interface[fieldName]:Disconnect()
-			end
-		end)
-	end
-
-	self._pools[name] = pool
+	self._pools[componentName] = Pool.new(componentName, typeCheck)
 end
 
 --[[
@@ -370,7 +336,7 @@ function Registry:add(entity, name, object)
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
 		assert(not pool:getIndex(entity), ErrAlreadyHasComponent:format(entity, name))
-		assert(pool.typeDef.check(object))
+		assert(pool.typeCheck(object))
 	end
 
 	pool:insert(entity, object)
@@ -389,7 +355,7 @@ function Registry:tryAdd(entity, name, object)
 	if DEBUG then
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
-		assert(pool.typeDef.check(object))
+		assert(pool.typeCheck(object))
 	end
 
 	if pool:getIndex(entity) then
@@ -425,7 +391,7 @@ function Registry:getOrAdd(entity, name, object)
 	if DEBUG then
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
-		assert(pool.typeDef.check(object))
+		assert(pool.typeCheck(object))
 	end
 
 	local denseIndex = pool:getIndex(entity)
@@ -451,7 +417,7 @@ function Registry:replace(entity, name, object)
 	if DEBUG then
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
-		assert(pool.typeDef.check(object))
+		assert(pool.typeCheck(object))
 		assert(pool:getIndex(entity), ErrMissingComponent:format(entity, name))
 	end
 
@@ -472,7 +438,7 @@ function Registry:addOrReplace(entity, name, object)
 	if DEBUG then
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
-		assert(pool.typeDef.check(object))
+		assert(pool.typeCheck(object))
 	end
 
 	local denseIndex = pool:getIndex(entity)

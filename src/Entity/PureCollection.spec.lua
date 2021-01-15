@@ -2,7 +2,7 @@ return function()
 	local PureCollection = require(script.Parent.PureCollection)
 	local SinglePureCollection = require(script.Parent.SinglePureCollection)
 	local Registry = require(script.Parent.Registry)
-	local t = require(script.Parent.Parent.Core.TypeDefinition)
+	local t = require(script.Parent.Parent.t)
 
 	local function makeEntities(registry)
 		for i = 1, 100 do
