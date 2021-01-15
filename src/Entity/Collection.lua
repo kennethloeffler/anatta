@@ -19,17 +19,21 @@ function Collection.new(registry, components)
 	assert(#updated <= 32, "Collections may only track up to 32 updated components")
 
 	if not next(updated) and not next(forbidden) and #required == 1 then
-		-- The selector is tracking entities with just one required component. This is a
-		-- case we should optimize for. It does not require any additional state and
-		-- only amounts to iterating over one Pool's list(s) and connecting to one set
-		-- of signals.
-		return SingleCollection.new(registry._pools[required[1]])
+		-- The collection is tracking entities with just one required component. This is
+		-- a case we should optimize for. It does not require any additional state and
+		-- amounts to an iteration over one Pool and connecting to one set of signals.
+		return SingleCollection.new(required[1])
 	end
 
+	local collectionPool = Pool.new()
+	local connections = table.create(2 * (#required + #updated + #forbidden))
 	local self = setmetatable({
-		_pool = Pool.new(),
+		onAdded = collectionPool.onAdded,
+		onRemoved = collectionPool.onRemoved,
+
+		_pool = collectionPool,
 		_updatedSet = {},
-		_connections = table.create(2 * (#required + #updated + #forbidden)),
+		_connections = connections,
 		_packed = table.create(#required + #updated),
 
 		_required = required,
@@ -90,22 +94,6 @@ function Collection:each(callback)
 			callback(entity, unpack(self._packed))
 		end
 	end
-end
-
---[[
-	Applies the callback to an entity and component(s) just after the selector begins
-	tracking it.
-]]
-function Collection:onAdded(callback)
-	return self._pool.onAdd:connect(callback)
-end
-
---[[
-	Applies the callback to an entity and component(s) just before the selector stops
-	tracking it.
-]]
-function Collection:onRemoved(callback)
-	return self._pool.onRemove:connect(callback)
 end
 
 --[[

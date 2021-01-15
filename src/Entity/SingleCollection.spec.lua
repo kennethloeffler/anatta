@@ -7,8 +7,10 @@ return function()
 			local pool = Pool.new()
 			local collection = SingleCollection.new(pool)
 
-			expect(collection._pool).to.equal(pool)
 			expect(getmetatable(collection)).to.equal(SingleCollection)
+			expect(collection.onAdded).to.equal(pool.onAdded)
+			expect(collection.onRemoved).to.equal(pool.onRemoved)
+			expect(collection._pool).to.equal(pool)
 		end)
 	end)
 
@@ -29,36 +31,6 @@ return function()
 			end)
 
 			expect(next(toIterate)).to.equal(nil)
-		end)
-	end)
-
-	describe("onAdded", function()
-		it("should connect the callback to the pool's added signal", function()
-			local pool = Pool.new()
-			local collection = SingleCollection.new(pool)
-			local called = false
-
-			collection:onAdded(function()
-				called = true
-			end)
-
-			collection._pool.onAdd:dispatch()
-			expect(called).to.equal(true)
-		end)
-	end)
-
-	describe("onRemoved", function()
-		it("should connect the callback to the pool's removed signal", function()
-			local pool = Pool.new()
-			local collection = SingleCollection.new(pool)
-			local called = false
-
-			collection:onRemoved(function()
-				called = true
-			end)
-
-			collection._pool.onRemove:dispatch()
-			expect(called).to.equal(true)
 		end)
 	end)
 end
