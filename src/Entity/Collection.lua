@@ -67,7 +67,7 @@ end
 --[[
 	Applies the callback to each tracked entity and its components. Passes the entity
 	first, followed by its required components and updated components in the same order
-	they were given to the selector.
+	they were given to the collection.
 ]]
 function Collection:each(callback)
 	local dense = self._pool.dense
@@ -114,7 +114,7 @@ function Collection:_getShortestRequiredPool()
 end
 
 --[[
-	Unconditionally fills the selector's _packed field with the entity's required and
+	Unconditionally fills the collection's _packed field with the entity's required and
 	updated component data.
 ]]
 function Collection:_pack(entity)
@@ -130,7 +130,7 @@ function Collection:_pack(entity)
 end
 
 --[[
-	Returns true and fills the selector's _packed field with entity's required and
+	Returns true and fills the collection's _packed field with entity's required and
 	updated component data if the entity fully satisfies the required, forbidden and
 	updated predicates. Otherwise, returns false.
 ]]
