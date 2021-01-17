@@ -405,36 +405,6 @@ return function()
 		end)
 	end)
 
-	describe("tryGet", function()
-		it("should return nil if the entity does not have the component", function(context)
-			local registry = context.registry
-			local entity = registry:create()
-
-			expect(registry:tryGet(entity, "number")).to.never.be.ok()
-		end)
-
-		it("should return the component instance if the entity has the component", function(context)
-			local registry = context.registry
-			local entity = registry:create()
-			local obj = { instance = Instance.new("Hole") }
-
-			registry._pools.interface:insert(entity, obj)
-			expect(registry:tryGet(entity, "interface")).to.equal(obj)
-		end)
-
-		it("should error if given an invalid entity", function(context)
-			expect(function()
-				context.registry:tryGet(0, "number")
-			end).to.throw()
-		end)
-
-		it("should error if given an invalid component name", function(context)
-			expect(function()
-				context.registry:tryGet(context.registry:create(), "")
-			end).to.throw()
-		end)
-	end)
-
 	describe("multiGet", function()
 		it("should return the specified components on the entity in order", function(context)
 			local registry = context.registry

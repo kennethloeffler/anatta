@@ -297,22 +297,6 @@ function Registry:get(entity, name)
 end
 
 --[[
-	If the entity has the component, returns the component.  Otherwise, does nothing.
-]]
-function Registry:tryGet(entity, name)
-	local pool = self._pools[name]
-
-	if DEBUG then
-		assert(self:valid(entity), ErrInvalidEntity:format(entity))
-
-	end
-
-	if pool:getIndex(entity) then
-		return pool:get(entity)
-	end
-end
-
---[[
 	Returns all components of the given types on the entity.
 ]]
 function Registry:multiGet(entity, output, ...)
