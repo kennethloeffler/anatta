@@ -5,6 +5,7 @@ return function()
 
 	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 	local NULL_ENTITYID = Constants.NULL_ENTITYID
+	local NONE = Constants.NONE
 
 	local function makeEntities(registry, num)
 		local entities = table.create(num)
@@ -386,10 +387,9 @@ return function()
 			expect(registry:get(entity, "instance")).to.equal(obj)
 		end)
 
-		it("should error if the entity does not have the component", function(context)
-			expect(function()
-				context.registry:get(context.registry:create(), "number")
-			end).to.throw()
+		it("should return NONE if the entity does not have the component", function(context)
+			local registry = context.registry
+			expect(registry:get(registry:create(), "number")).to.equal(NONE)
 		end)
 
 		it("should error if given an invalid entity", function(context)

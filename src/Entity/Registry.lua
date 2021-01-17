@@ -7,6 +7,7 @@ local Pool = require(script.Parent.Parent.Core.Pool)
 local DEBUG = Constants.DEBUG
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
+local NONE = Constants.NONE
 local NULL_ENTITYID = Constants.NULL_ENTITYID
 
 local ErrBadEntityType = "entity must be a number (got %s)"
@@ -23,6 +24,8 @@ Registry.__index = Registry
 
 function Registry.new()
 	return setmetatable({
+		none = Constants.NONE,
+
 		_entities = {},
 		_pools = {},
 		_nextRecyclable = NULL_ENTITYID,
@@ -290,10 +293,9 @@ function Registry:get(entity, name)
 	if DEBUG then
 		assert(self:valid(entity), ErrInvalidEntity:format(entity))
 		assert(pool, ErrBadComponentName:format(name))
-		assert(pool:getIndex(entity), ErrMissingComponent:format(entity, name))
 	end
 
-	return self._pools[name]:get(entity)
+	return self._pools[name]:get(entity) or NONE
 end
 
 --[[
