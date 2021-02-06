@@ -1,9 +1,9 @@
 local Collection = require(script.Collection)
-local PureCollection = require(script.PureCollection)
+local ImmutableCollection = require(script.ImmutableCollection)
 local Registry = require(script.Registry)
 
 return {
 	Collection = Collection,
-	PureCollection = PureCollection,
+	ImmutableCollection = ImmutableCollection,
 	Registry = Registry,
 }

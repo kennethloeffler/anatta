@@ -1,6 +1,6 @@
 return function()
-	local PureCollection = require(script.Parent.PureCollection)
-	local SinglePureCollection = require(script.Parent.SinglePureCollection)
+	local ImmutableCollection = require(script.Parent.ImmutableCollection)
+	local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
 	local Registry = require(script.Parent.Registry)
 	local t = require(script.Parent.Parent.t)
 
@@ -37,49 +37,51 @@ return function()
 	end)
 
 	describe("new", function()
-		it("should create a new PureCollection when there are  multiple components", function(context)
-			local collection = PureCollection.new(context.registry, {
-				required = { "Test1" },
-				forbidden = { "Test2" },
+		it("should create a new ImmutableCollection when there are  multiple components", function(context)
+			local collection = ImmutableCollection.new(context.registry, {
+				all = { "Test1" },
+				never = { "Test2" },
 			})
 
-			expect(getmetatable(collection)).to.equal(PureCollection)
+			expect(getmetatable(collection)).to.equal(ImmutableCollection)
 		end)
 
-		it("should create a new SinglePureCollection when there is only one required component ", function(context)
-			local collection = PureCollection.new(context.registry, {
-				required = { "Test1" },
+		it("should create a new SingleImmutableCollection when there is only one required component ", function(context)
+			local collection = ImmutableCollection.new(context.registry, {
+				all = { "Test1" },
 			})
 
-			expect(getmetatable(collection)).to.equal(SinglePureCollection)
+			expect(getmetatable(collection)).to.equal(SingleImmutableCollection)
 		end)
 	end)
 
 	describe("each", function()
-		describe("required", function()
-			it("should iterate all and only the entities with at least the required components and pass their data", function(context)
+		describe("all", function()
+			it("should iterate all and only the entities with at least the required components and pass them plus any optional ones", function(context)
 				local registry = context.registry
-				local collection = PureCollection.new(registry, {
-					required = { "Test1", "Test2", "Test3" }
-				})
 				local toIterate = {}
+				local collection = ImmutableCollection.new(registry, {
+					all = { "Test1", "Test2" },
+					any = { "Test3", "Test4" }
+				})
 
 				makeEntities(registry)
 
 				for _, entity in ipairs(registry._pools.Test1.dense) do
-					if registry:has(entity, "Test2") and registry:has(entity, "Test3") then
+					if registry:has(entity, "Test2") then
 						toIterate[entity] = true
 					end
 				end
 
-				collection:each(function(entity, test1, test2, test3)
+				collection:each(function(entity, test1, test2, test3, test4)
 					expect(toIterate[entity]).to.equal(true)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
 					expect(test2).to.equal(registry:get(entity, "Test2"))
 					expect(test3).to.equal(registry:get(entity, "Test3"))
+					expect(test4).to.equal(registry:get(entity, "Test4"))
 					toIterate[entity] = nil
 
-					return test1, test2, test3
+					return test1, test2, test3, test4
 				end)
 
 				expect(next(toIterate)).to.equal(nil)
@@ -87,8 +89,8 @@ return function()
 
 			it("should replace required components with ones returned by the callback", function(context)
 				local registry = context.registry
-				local collection = PureCollection.new(registry, {
-					required = { "Test1", "Test2" }
+				local collection = ImmutableCollection.new(registry, {
+					all = { "Test1", "Test2" }
 				})
 				local toIterate = {}
 

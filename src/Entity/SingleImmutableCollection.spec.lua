@@ -1,13 +1,13 @@
 return function()
 	local Pool = require(script.Parent.Parent.Core.Pool)
-	local SinglePureCollection = require(script.Parent.SinglePureCollection)
+	local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
 
 	describe("new", function()
-		it("should create a new SinglePureCollection from a pool", function()
+		it("should create a new SingleImmutableCollection from a pool", function()
 			local pool = Pool.new()
-			local collection = SinglePureCollection.new(pool)
+			local collection = SingleImmutableCollection.new(pool)
 
-			expect(getmetatable(collection)).to.equal(SinglePureCollection)
+			expect(getmetatable(collection)).to.equal(SingleImmutableCollection)
 			expect(collection._pool).to.equal(pool)
 		end)
 	end)
@@ -15,7 +15,7 @@ return function()
 	describe("each", function()
 		it("should iterate all and only the elements in the pool and pass their data", function()
 			local pool = Pool.new()
-			local collection = SinglePureCollection.new(pool)
+			local collection = SingleImmutableCollection.new(pool)
 			local toIterate = {}
 
 			for i = 1, 100 do
@@ -36,7 +36,7 @@ return function()
 
 		it("should replace the passed data with the returned data", function()
 			local pool = Pool.new()
-			local collection = SinglePureCollection.new(pool)
+			local collection = SingleImmutableCollection.new(pool)
 			local toIterate = {}
 
 			for i = 1, 100 do
