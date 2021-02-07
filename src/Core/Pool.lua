@@ -31,7 +31,14 @@ function Pool:get(entity)
 end
 
 function Pool:replace(entity, component)
-	self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]] = component
+	local index = self.sparse[bit32.band(entity, ENTITYID_MASK)]
+
+	if self.objects[index] ~= component then
+		self.objects[index] = component
+		return true
+	end
+
+	return false
 end
 
 function Pool:insert(entity, component)
