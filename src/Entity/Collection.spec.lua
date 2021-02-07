@@ -40,7 +40,7 @@ return function()
 	describe("new", function()
 		it("should create a new Collection when there is anything more than one required component", function(context)
 			local collection = Collection.new(context.registry, {
-				required = { "Test1", "Test2" }
+				all = { "Test1", "Test2" }
 			})
 
 			expect(getmetatable(collection)).to.equal(Collection)
@@ -54,7 +54,7 @@ return function()
 
 		it("should create a new SingleCollection when there is exactly one required component and nothing else", function(context)
 			local collection = Collection.new(context.registry, {
-				required = { "Test1" }
+				all = { "Test1" }
 			})
 
 			expect(getmetatable(collection)).to.equal(SingleCollection)
@@ -63,9 +63,9 @@ return function()
 		it("should populate _required, _updated, and _forbidden", function(context)
 			local registry = context.registry
 			local collection = Collection.new(registry, {
-				required = { "Test1", "Test2" },
+				all = { "Test1", "Test2" },
 				updated = { "Test3" },
-				forbidden = { "Test4" },
+				never = { "Test4" },
 			})
 
 			expect(collection._required[1]).to.equal(registry._pools.Test1)
@@ -74,7 +74,7 @@ return function()
 			expect(collection._forbidden[1]).to.equal(registry._pools.Test4)
 		end)
 
-		it("should populate the full update bitset", function(context)
+		it("should correctly instantiate the full update bitset", function(context)
 			local registry = context.registry
 			local collection = Collection.new(registry, {
 				updated = { "Test1", "Test2", "Test3" },
@@ -88,9 +88,9 @@ return function()
 		it("should connect the collection to the component pools", function(context)
 			local registry = context.registry
 			local collection = Collection.new(registry, {
-				required = { "Test1" },
+				all = { "Test1" },
 				updated = { "Test2" },
-				forbidden = { "Test3" },
+				never = { "Test3" },
 			})
 
 			expect(collection._required[1].onAdded._callbacks[1]).to.be.ok()
@@ -110,7 +110,7 @@ return function()
 				local toIterate = {}
 				local registry = context.registry
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2", "Test3" }
+					all = { "Test1", "Test2", "Test3" }
 				})
 
 				makeEntities(registry)
@@ -133,13 +133,50 @@ return function()
 			end)
 		end)
 
+		describe("required + optional", function()
+			it("should iterate all the entities with at least the required components and any of the optional components", function(context)
+				local toIterate = {}
+				local registry = context.registry
+
+				registry:define("Test5", t.none)
+
+				local collection = Collection.new(registry, {
+					all = { "Test1", "Test2", },
+					any = { "Test5", "Test4", },
+				})
+
+				makeEntities(registry)
+
+				registry:each(function(entity)
+					registry:add(entity, "Test5")
+				end)
+
+				for _, entity in ipairs(registry._pools.Test1.dense) do
+					if registry:has(entity, "Test2") then
+						toIterate[entity] = true
+					end
+				end
+
+				collection:each(function(entity, test1, test2, test5, test4)
+					expect(toIterate[entity]).to.equal(true)
+					toIterate[entity] = nil
+
+					expect(test1).to.equal(registry:get(entity, "Test1"))
+					expect(test2).to.equal(registry:get(entity, "Test2"))
+
+					-- tag components should always be none
+					expect(test5).to.equal(registry.none)
+				end)
+			end)
+		end)
+
 		describe("required + forbidden", function()
 			it("should iterate all and only the entities with at least the required components and none of the forbidden components and pass their data", function(context)
 				local toIterate = {}
 				local registry = context.registry
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2" },
-					forbidden = { "Test3" }
+					all = { "Test1", "Test2" },
+					never = { "Test3" }
 				})
 
 				makeEntities(registry)
@@ -166,8 +203,8 @@ return function()
 				local registry = context.registry
 				local toIterate = {}
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2" },
-					forbidden = { "Test4" },
+					all = { "Test1", "Test2" },
+					never = { "Test4" },
 					updated = { "Test3" }
 				})
 
@@ -210,7 +247,7 @@ return function()
 				local toIterate = {}
 				local registry = context.registry
 				local collection = Collection.new(registry, {
-					required = { "Test1" },
+					all = { "Test1" },
 					updated = { "Test2" }
 				})
 
@@ -240,7 +277,7 @@ return function()
 				local called = false
 				local testEntity = registry:create()
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2", "Test3" }
+					all = { "Test1", "Test2", "Test3" }
 				})
 
 				collection.onAdded:connect(function(entity, test1, test2, test3)
@@ -268,8 +305,8 @@ return function()
 				local called = false
 				local testEntity = registry:create()
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2" },
-					forbidden = { "Test3" }
+					all = { "Test1", "Test2" },
+					never = { "Test3" }
 				})
 
 				collection.onAdded:connect(function(entity, test1, test2)
@@ -300,9 +337,9 @@ return function()
 				local testEntity = registry:create()
 				local called = false
 				local collection = Collection.new(registry, {
-					required = { "Test1" },
+					all = { "Test1" },
 					updated = { "Test2", "Test4" },
-					forbidden = { "Test3" }
+					never = { "Test3" }
 				})
 
 				collection.onAdded:connect(function(entity, test1, test2, test4)
@@ -340,7 +377,7 @@ return function()
 				local registry = context.registry
 				local called = false
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2" },
+					all = { "Test1", "Test2" },
 					updated = { "Test4" },
 				})
 
@@ -361,6 +398,37 @@ return function()
 				expect(called).to.equal(true)
 			end)
 		end)
+
+		describe("required + optional", function()
+			it("should call the callback when an entity with at least the required components and any of the optional components is added", function(context)
+				local registry = context.registry
+				local called = false
+				local testEntity = registry:create()
+				local collection = Collection.new(registry, {
+					all = { "Test1", "Test2" },
+					any = { "Test3", "Test4" }
+				})
+
+				collection.onAdded:connect(function(entity, test1, test2, test3, test4)
+					called = true
+					expect(entity).to.equal(testEntity)
+					expect(test1).to.equal(registry:get(entity, "Test1"))
+					expect(test2).to.equal(registry:get(entity, "Test2"))
+					expect(test3).to.equal(registry:get(entity, "Test3"))
+					expect(test4).to.equal(registry:get(entity, "Test4"))
+				end)
+
+				registry:multiAdd(testEntity,
+					"Test1", {},
+					"Test2", {},
+					"Test3", {},
+					"Test4", {}
+				)
+
+				expect(called).to.equal(true)
+				expect(collection._pool:getIndex(testEntity)).to.be.ok()
+			end)
+		end)
 	end)
 
 	describe("onRemoved", function()
@@ -370,7 +438,7 @@ return function()
 				local called = false
 				local testEntity = registry:create()
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2", "Test3" }
+					all = { "Test1", "Test2", "Test3" }
 				})
 
 				collection.onRemoved:connect(function(entity, test1, test2, test3)
@@ -399,8 +467,8 @@ return function()
 				local called = false
 				local testEntity = registry:create()
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2" },
-					forbidden = { "Test3" }
+					all = { "Test1", "Test2" },
+					never = { "Test3" }
 				})
 
 				collection.onRemoved:connect(function(entity, test1, test2)
@@ -427,8 +495,8 @@ return function()
 				local called = false
 				local testEntity = registry:create()
 				local collection = Collection.new(registry, {
-					required = { "Test1", "Test2" },
-					forbidden = { "Test3" },
+					all = { "Test1", "Test2" },
+					never = { "Test3" },
 					updated = { "Test4" }
 				})
 
@@ -456,8 +524,8 @@ return function()
 		it("should stop tracking updates on an entity after all updated components have been removed", function(context)
 			local registry = context.registry
 			local collection = Collection.new(registry, {
-				required = { "Test1", "Test2" },
-				forbidden = { "Test3" },
+				all = { "Test1", "Test2" },
+				never = { "Test3" },
 				updated = { "Test4" }
 			})
 
@@ -479,7 +547,7 @@ return function()
 	describe("_getShortestRequiredPool", function()
 		it("should select the pool with the least number of components in it", function(context)
 			local collection = Collection.new(context.registry, {
-				required = { "Test1", "Test4" }
+				all = { "Test1", "Test4" }
 			})
 
 			makeEntities(context.registry)
@@ -491,7 +559,7 @@ return function()
 	describe("_pack", function()
 		it("should pack the required and updated components of the entity into _packed", function(context)
 			local collection = Collection.new(context.registry, {
-				required = { "Test2", "Test3" },
+				all = { "Test2", "Test3" },
 				updated = { "Test3", "Test4" }
 			})
 			local entity = context.registry:multiAdd(context.registry:create(),
@@ -511,27 +579,30 @@ return function()
 	end)
 
 	describe("_tryPack", function()
-		it("should pack the required components and return true if the entity has all of them", function(context)
+		it("should pack required and optional components and return true if the entity has all of them", function(context)
 			local registry = context.registry
 			local collection = Collection.new(registry, {
-				required = { "Test1", "Test2" },
-				forbidden = { "Test3" }
+				all = { "Test1", "Test2" },
+				any = { "Test4" },
+				never = { "Test3" }
 			})
 			local entity = registry:multiAdd(registry:create(),
 				"Test1", {},
-				"Test2", {}
+				"Test2", {},
+				"Test4", {}
 			)
 
 			expect(collection:_tryPack(entity)).to.equal(true)
 
 			expect(collection._packed[1]).to.equal(registry:get(entity, "Test1"))
 			expect(collection._packed[2]).to.equal(registry:get(entity, "Test2"))
-			expect(collection._packed[3]).to.equal(nil)
+			expect(collection._packed[3]).to.equal(registry:get(entity, "Test4"))
 
 			expect(collection:_tryPack(registry:multiAdd(registry:create(),
 				"Test1", {},
 				"Test2", {},
-				"Test3", {}
+				"Test3", {},
+				"Test4", {}
 			))).to.equal(false)
 		end)
 	end)

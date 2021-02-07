@@ -1,6 +1,7 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleCollection = require(script.Parent.SingleCollection)
+local util = require(script.Parent.Parent.util)
 
 local NONE = Constants.NONE
 
@@ -8,26 +9,37 @@ local Collection = {}
 Collection.__index = Collection
 
 function Collection.new(registry, components)
-	local required = registry:getPools(unpack(components.required or NONE))
-	local forbidden = registry:getPools(unpack(components.forbidden or NONE))
+	local required = registry:getPools(unpack(components.all or NONE))
+	local forbidden = registry:getPools(unpack(components.never or NONE))
 	local updated = registry:getPools(unpack(components.updated or NONE))
+	local optional = registry:getPools(unpack(components.any or NONE))
 
-	assert(
-		next(required) or next(updated),
-		"Collections must be given at least one required or updated component"
+	util.assertAtCallSite(
+		next(required) or next(updated) or next(optional),
+		"Collections must be given at least one required, updated, or optional component"
 	)
-	assert(#updated <= 32, "Collections may only track up to 32 updated components")
+	util.assertAtCallSite(
+		#updated <= 32,
+		"Collections may only track up to 32 updated components"
+	)
 
-	if not next(updated) and not next(forbidden) and #required == 1 then
+	if
+		not next(updated)
+		and not next(forbidden)
+		and not next(optional)
+		and #required == 1
+	then
 		-- The collection is tracking entities with just one required component. This is
 		-- a case we should optimize for. It does not require any additional state and
-		-- amounts to an iteration over one Pool and connecting to one set of signals.
-		return SingleCollection.new(required[1])
+		-- amounts to an iterating over one pool and connecting to one set of signals.
+		return SingleCollection.new(unpack(required))
 	end
 
 	local collectionPool = Pool.new()
 	local connections = table.create(2 * (#required + #updated + #forbidden))
+
 	local self = setmetatable({
+		none = NONE,
 		onAdded = collectionPool.onAdded,
 		onRemoved = collectionPool.onRemoved,
 
@@ -39,6 +51,7 @@ function Collection.new(registry, components)
 		_required = required,
 		_forbidden = forbidden,
 		_updated = updated,
+		_optional = optional,
 
 		_numRequired = #required,
 		_numUpdated = #updated,
@@ -66,8 +79,8 @@ end
 
 --[[
 	Applies the callback to each tracked entity and its components. Passes the entity
-	first, followed by its required components and updated components in the same order
-	they were given to the collection.
+	first, followed by its required, updated, and optional components (in that order),
+	each in the same order they were given to the collection.
 ]]
 function Collection:each(callback)
 	local dense = self._pool.dense
@@ -97,6 +110,15 @@ function Collection:each(callback)
 end
 
 --[[
+	Disconnects the collection from the registry, causing it to stop tracking changes.
+]]
+function Collection:disconnect()
+	for _, disconnect in ipairs(self._connections) do
+		disconnect()
+	end
+end
+
+--[[
 	Returns the required component pool with the least number of elements.
 ]]
 function Collection:_getShortestRequiredPool()
@@ -114,27 +136,41 @@ function Collection:_getShortestRequiredPool()
 end
 
 --[[
-	Unconditionally fills the collection's _packed field with the entity's required and
-	updated component data.
+	Unconditionally fills the collection's _packed field with the entity's required,
+	updated, and optional components.
 ]]
 function Collection:_pack(entity)
+	local numUpdated = self._numUpdated
+	local numRequired = self._numRequired
+	local packed = self._packed
+
 	for i, pool in ipairs(self._required) do
-		self._packed[i] = pool:get(entity)
+		packed[i] = pool:get(entity)
 	end
 
-	local numRequired = self._numRequired
-
 	for i, pool in ipairs(self._updated) do
-		self._packed[i + numRequired] = pool:get(entity)
+		packed[i + numRequired] = pool:get(entity)
+	end
+
+	for i, pool in ipairs(self._optional) do
+		local denseIndex = pool:getIndex(entity)
+
+		if denseIndex then
+			packed[i + numRequired + numUpdated] = pool.objects[denseIndex] or NONE
+		else
+			packed[i + numRequired + numUpdated] = NONE
+		end
 	end
 end
 
 --[[
-	Returns true and fills the collection's _packed field with entity's required and
-	updated component data if the entity fully satisfies the required, forbidden and
-	updated predicates. Otherwise, returns false.
+	Returns true and fills the collection's _packed field with entity's required,
+	updated, and optional components if the entity fully satisfies the required,
+	forbidden and updated predicates. Otherwise, returns false.
 ]]
 function Collection:_tryPack(entity)
+	local packed = self._packed
+
 	if (self._updatedSet[entity] or 0) ~= self._allUpdatedSet then
 		return false
 	end
@@ -152,10 +188,11 @@ function Collection:_tryPack(entity)
 			return false
 		end
 
-		self._packed[i] = pool.objects[denseIndex]
+		packed[i] = pool.objects[denseIndex]
 	end
 
 	local numRequired = self._numRequired
+	local numUpdated = self._numUpdated
 
 	for i, pool in ipairs(self._updated) do
 		local denseIndex = pool:getIndex(entity)
@@ -164,7 +201,17 @@ function Collection:_tryPack(entity)
 			return false
 		end
 
-		self._packed[numRequired + i] = pool.objects[denseIndex]
+		packed[numRequired + i] = pool.objects[denseIndex]
+	end
+
+	for i, pool in ipairs(self._optional) do
+		local denseIndex = pool:getIndex(entity)
+
+		if denseIndex then
+			packed[numRequired + numUpdated + i] = pool.objects[denseIndex] or NONE
+		else
+			packed[numRequired + numUpdated + i] = NONE
+		end
 	end
 
 	return true
