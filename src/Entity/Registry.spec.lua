@@ -2,10 +2,11 @@ return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
 	local Registry = require(script.Parent.Registry)
 	local t = require(script.Parent.Parent.t)
+	local util = require(script.Parent.Parent.util)
 
 	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 	local NULL_ENTITYID = Constants.NULL_ENTITYID
-	local NONE = Constants.NONE
+	local None = util.createSymbol("None")
 
 	local function makeEntities(registry, num)
 		local entities = table.create(num)
@@ -387,9 +388,9 @@ return function()
 			expect(registry:get(entity, "instance")).to.equal(obj)
 		end)
 
-		it("should return NONE if the entity does not have the component", function(context)
+		it("should return None if the entity does not have the component", function(context)
 			local registry = context.registry
-			expect(registry:get(registry:create(), "number")).to.equal(NONE)
+			expect(registry:get(registry:create(), "number")).to.equal(None)
 		end)
 
 		it("should error if given an invalid entity", function(context)

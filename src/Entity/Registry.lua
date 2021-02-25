@@ -3,11 +3,13 @@
 ]]
 local Constants = require(script.Parent.Parent.Core.Constants)
 local Pool = require(script.Parent.Parent.Core.Pool)
+local util = require(script.Parent.Parent.util)
+
+local assertAtCallSite = util.assertAtCallSite
 
 local DEBUG = Constants.DEBUG
 local ENTITYID_MASK = Constants.ENTITYID_MASK
 local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
-local NONE = Constants.NONE
 local NULL_ENTITYID = Constants.NULL_ENTITYID
 
 local ErrBadEntityType = "entity must be a number (got %s)"
@@ -17,24 +19,26 @@ local ErrInvalidEntity = "entity %08X either does not exist or it has been destr
 local ErrMissingComponent = "entity %08X does not have a %s"
 local ErrComponentNameTaken = "there is already a component named %s"
 
-local WarnEntityAlreadyExists = "creating a new entity because %08X's id is already in use"
+local WarnEntityAlreadyExists = "creating a new entity (%08X) because %08X's id is already in use"
+
+local None = util.createSymbol("None")
 
 local Registry = {}
 Registry.__index = Registry
 
 function Registry.new()
 	return setmetatable({
-		none = Constants.NONE,
+		none = None,
 
 		_entities = {},
 		_pools = {},
-		_nextRecyclable = NULL_ENTITYID,
+		_nextRecyclableEntityId = NULL_ENTITYID,
 		_size = 0,
 	}, Registry)
 end
 
 --[[
-	Returns an integer equal to the first ENTITYID_WIDTH bits of the entity.  The
+	Returns an integer equal to the first ENTITYID_WIDTH bits of the entity. The
 	equality
 
 	registry._entities[id] == entity

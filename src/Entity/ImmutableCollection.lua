@@ -1,16 +1,15 @@
-local Constants = require(script.Parent.Parent.Core.Constants)
 local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
 local util = require(script.Parent.Parent.util)
 
-local NONE = Constants.NONE
+local None = util.createSymbol("None")
 
 local ImmutableCollection = {}
 ImmutableCollection.__index = ImmutableCollection
 
 function ImmutableCollection.new(registry, components)
-	local required = registry:getPools(unpack(components.all or NONE))
-	local forbidden = registry:getPools(unpack(components.never or NONE))
-	local optional = registry:getPools(unpack(components.any or NONE))
+	local required = registry:getPools(unpack(components.all or None))
+	local forbidden = registry:getPools(unpack(components.never or None))
+	local optional = registry:getPools(unpack(components.any or None))
 
 	util.assertAtCallSite(
 		next(required),
@@ -22,7 +21,7 @@ function ImmutableCollection.new(registry, components)
 	end
 
 	return setmetatable({
-		none = NONE,
+		none = None,
 
 		_required = required,
 		_forbidden = forbidden,
@@ -95,9 +94,9 @@ function ImmutableCollection:_tryPack(entity)
 		local denseIndex = pool:getIndex(entity)
 
 		if denseIndex then
-			packed[numRequired + i] = pool.objects[denseIndex] or NONE
+			packed[numRequired + i] = pool.objects[denseIndex] or None
 		else
-			packed[numRequired + i] = NONE
+			packed[numRequired + i] = None
 		end
 	end
 

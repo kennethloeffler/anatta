@@ -1,18 +1,17 @@
-local Constants = require(script.Parent.Parent.Core.Constants)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleCollection = require(script.Parent.SingleCollection)
 local util = require(script.Parent.Parent.util)
 
-local NONE = Constants.NONE
+local None = util.createSymbol("None")
 
 local Collection = {}
 Collection.__index = Collection
 
 function Collection.new(registry, components)
-	local required = registry:getPools(unpack(components.all or NONE))
-	local forbidden = registry:getPools(unpack(components.never or NONE))
-	local updated = registry:getPools(unpack(components.updated or NONE))
-	local optional = registry:getPools(unpack(components.any or NONE))
+	local required = registry:getPools(unpack(components.all or None))
+	local forbidden = registry:getPools(unpack(components.never or None))
+	local updated = registry:getPools(unpack(components.updated or None))
+	local optional = registry:getPools(unpack(components.any or None))
 
 	util.assertAtCallSite(
 		next(required) or next(updated) or next(optional),
@@ -39,7 +38,7 @@ function Collection.new(registry, components)
 	local connections = table.create(2 * (#required + #updated + #forbidden))
 
 	local self = setmetatable({
-		none = NONE,
+		none = None,
 		onAdded = collectionPool.onAdded,
 		onRemoved = collectionPool.onRemoved,
 
@@ -156,9 +155,9 @@ function Collection:_pack(entity)
 		local denseIndex = pool:getIndex(entity)
 
 		if denseIndex then
-			packed[i + numRequired + numUpdated] = pool.objects[denseIndex] or NONE
+			packed[i + numRequired + numUpdated] = pool.objects[denseIndex] or None
 		else
-			packed[i + numRequired + numUpdated] = NONE
+			packed[i + numRequired + numUpdated] = None
 		end
 	end
 end
@@ -208,9 +207,9 @@ function Collection:_tryPack(entity)
 		local denseIndex = pool:getIndex(entity)
 
 		if denseIndex then
-			packed[numRequired + numUpdated + i] = pool.objects[denseIndex] or NONE
+			packed[numRequired + numUpdated + i] = pool.objects[denseIndex] or None
 		else
-			packed[numRequired + numUpdated + i] = NONE
+			packed[numRequired + numUpdated + i] = None
 		end
 	end
 

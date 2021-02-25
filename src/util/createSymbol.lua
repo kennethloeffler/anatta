@@ -13,10 +13,18 @@ function Symbol:__tostring()
 end
 
 return function(symbolName)
-	local symbol = AllSymbols[symbolName]
-		or setmetatable({
-			_symbolName = symbolName
-		}, Symbol)
+	assert(
+		type(symbolName) == "string",
+		("bad argument #1: expected string, got %s"):format(type(symbolName))
+	)
+
+	if AllSymbols[symbolName] then
+		return AllSymbols[symbolName]
+	end
+
+	local symbol = setmetatable({
+		_symbolName = symbolName
+	}, Symbol)
 
 	AllSymbols[symbolName] = symbol
 
