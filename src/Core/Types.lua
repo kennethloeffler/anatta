@@ -1,31 +1,35 @@
 local t = require(script.Parent.Parent.t)
 
 return {
-	typeDefinition = t.strictInterface {
-		typeName = t.string,
-		check = t.callback,
-		instanceFields = t.table,
-		connectionFields = t.table,
-		fields = t.table,
+	pureSystem = t.strictInterface {
+		isPure = t.literal(true),
+
+		definitions = t.optional(t.map(t.string, t.callback)),
+
+		collection = t.strictInterface {
+			required = t.optional(t.array(t.string)),
+			forbidden = t.optional(t.array(t.string)),
+		},
+
+		onLoaded = t.optional(t.callback),
+		onUnloaded = t.optional(t.callback),
+
+		onAdded = t.optional(t.callback),
+		onRemoved = t.optional(t.callback),
 	},
-
 	system = t.strictInterface {
-		pure = t.optional(t.boolean),
+		definitions = t.map(t.string, t.callback),
 
-		components = t.interface {
+		collection = t.strictInterface {
 			required = t.optional(t.array(t.string)),
 			forbidden = t.optional(t.array(t.string)),
 			updated = t.optional(t.array(t.string)),
 		},
 
-		init = t.optional(t.callback),
-		onUnload = t.optional(t.callback),
+		onLoaded = t.optional(t.callback),
+		onUnloaded = t.optional(t.callback),
 
 		onAdded = t.optional(t.callback),
 		onRemoved = t.optional(t.callback),
-
-		stepped = t.optional(t.callback),
-		heartbeat = t.optional(t.callback),
-		renderStepped = t.optional(t.callback),
 	},
 }

@@ -34,7 +34,7 @@ return function()
 
 			expect(getmetatable(registry)).to.equal(Registry)
 			expect(registry._size).to.equal(0)
-			expect(registry._nextRecyclable).to.equal(NULL_ENTITYID)
+			expect(registry._nextRecyclableEntityId).to.equal(NULL_ENTITYID)
 			expect(registry._entities).to.be.a("table")
 			expect(next(registry._entities)).to.equal(nil)
 			expect(registry._pools).to.be.a("table")
@@ -89,21 +89,21 @@ return function()
 					registry:destroy(entity)
 					maxDestroyed -= 1
 
-					expect(registry._nextRecyclable).to.equal(Registry.getId(entity))
+					expect(registry._nextRecyclableEntityId).to.equal(Registry.getId(entity))
 				end
 			end
 
 			for i, destroyedEntity in ipairs(destroyed) do
-				local nextRecyclable = destroyed[i + 1] and destroyed[i + 1] or NULL_ENTITYID
+				local nextRecyclableEntityId = destroyed[i + 1] and destroyed[i + 1] or NULL_ENTITYID
 
 				expect(Registry.getId(registry:create())).to.equal(destroyedEntity)
-				expect(registry._nextRecyclable).to.equal(nextRecyclable)
+				expect(registry._nextRecyclableEntityId).to.equal(nextRecyclableEntityId)
 
-				if nextRecyclable ~= NULL_ENTITYID then
+				if nextRecyclableEntityId ~= NULL_ENTITYID then
 					-- If we are not at the end of the free list, then the recyclable
 					-- id's element in ._entities should point to the next recyclable
 					-- id.
-					expect(Registry.getId(registry._entities[nextRecyclable]))
+					expect(Registry.getId(registry._entities[nextRecyclableEntityId]))
 						.to.equal(destroyed[i + 2] or NULL_ENTITYID)
 				end
 			end
@@ -219,7 +219,7 @@ return function()
 
 			registry:destroy(entity)
 
-			expect(registry._nextRecyclable).to.equal(entityId)
+			expect(registry._nextRecyclableEntityId).to.equal(entityId)
 			expect(Registry.getId(registry._entities[entityId])).to.equal(NULL_ENTITYID)
 		end)
 

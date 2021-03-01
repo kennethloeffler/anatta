@@ -40,6 +40,15 @@ return function()
 		end)
 	end)
 
+	describe("getIndex", function()
+	end)
+
+	describe("get", function()
+	end)
+
+	describe("replace", function()
+	end)
+
 	describe("insert", function()
 		it("should add an element and return the passed component object", function()
 			local pool = Pool.new()
