@@ -12,27 +12,20 @@ function Anatta.new()
 	}, Anatta)
 end
 
-function Anatta:loadFrom(container)
-	local systems = {}
+function Anatta:defineComponents(definitions)
+	for componentName, typeCheck in pairs(definitions) do
+		self._registry:define(componentName, typeCheck)
+	end
+end
 
+function Anatta:loadSystemsFrom(container)
 	for _, moduleScript in pairs(container:GetDescendants()) do
 		if
 			moduleScript:IsA("ModuleScript")
 			and not moduleScript.Name:match("%.spec$")
 		then
-			local system = require(moduleScript)
-			local definitions = system.definitions
-
-			for componentName, typeCheck in pairs(definitions) do
-				self._registry:define(componentName, typeCheck)
-			end
-
-			table.insert(systems, moduleScript)
+			self:_load(moduleScript)
 		end
-	end
-
-	for _, moduleScript in ipairs(systems) do
-		self:_load(moduleScript)
 	end
 end
 
