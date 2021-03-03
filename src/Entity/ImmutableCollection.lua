@@ -1,15 +1,15 @@
 local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
 local util = require(script.Parent.Parent.util)
 
-local None = util.createSymbol("None")
+local Empty = {}
 
 local ImmutableCollection = {}
 ImmutableCollection.__index = ImmutableCollection
 
 function ImmutableCollection.new(registry, components)
-	local required = registry:getPools(unpack(components.all or None))
-	local forbidden = registry:getPools(unpack(components.never or None))
-	local optional = registry:getPools(unpack(components.any or None))
+	local required = registry:getPools(unpack(components.all or Empty))
+	local forbidden = registry:getPools(unpack(components.never or Empty))
+	local optional = registry:getPools(unpack(components.any or Empty))
 
 	util.assertAtCallSite(
 		next(required),
@@ -21,8 +21,6 @@ function ImmutableCollection.new(registry, components)
 	end
 
 	return setmetatable({
-		none = None,
-
 		_required = required,
 		_forbidden = forbidden,
 		_optional = optional,
@@ -32,9 +30,12 @@ function ImmutableCollection.new(registry, components)
 end
 
 function ImmutableCollection:each(callback)
+	local packed = self._packed
+	local numPacked = self._numPacked
+
 	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
 		if self:_tryPack(entity) then
-			self:_apply(entity, callback(entity, unpack(self._packed)))
+			self:_apply(entity, callback(entity, unpack(packed, 1, numPacked)))
 		end
 	end
 end
@@ -44,9 +45,9 @@ function ImmutableCollection:_apply(entity, ...)
 		local component = select(i, ...)
 
 		if pool:replace(entity, component) then
-			-- !!! Beware: if a listener to this signal adds or removes any elements
-			-- !!! from the pool selected by _selectShortestPool, the iteration will
-			-- !!! terminate!
+			-- !!! Beware: if a listener of this signal adds or removes any
+			-- !!! elements from the pool selected by _selectShortestPool, the
+			-- !!! iteration will terminate!
 			pool.onUpdated:dispatch(entity, component)
 		end
 	end
@@ -79,25 +80,19 @@ function ImmutableCollection:_tryPack(entity)
 	end
 
 	for i, pool in ipairs(self._required) do
-		local denseIndex = pool:getIndex(entity)
+		local component = pool:get(entity)
 
-		if not denseIndex then
+		if not component then
 			return false
 		end
 
-		packed[i] = pool.objects[denseIndex]
+		packed[i] = component
 	end
 
 	local numRequired = self._numRequired
 
 	for i, pool in ipairs(self._optional) do
-		local denseIndex = pool:getIndex(entity)
-
-		if denseIndex then
-			packed[numRequired + i] = pool.objects[denseIndex] or None
-		else
-			packed[numRequired + i] = None
-		end
+		packed[numRequired + i] = pool:get(entity)
 	end
 
 	return true

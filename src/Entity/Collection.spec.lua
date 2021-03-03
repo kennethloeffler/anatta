@@ -164,8 +164,7 @@ return function()
 					expect(test1).to.equal(registry:get(entity, "Test1"))
 					expect(test2).to.equal(registry:get(entity, "Test2"))
 
-					-- tag components should always be none
-					expect(test5).to.equal(registry.none)
+					expect(test5).to.equal(nil)
 				end)
 			end)
 		end)
@@ -541,18 +540,6 @@ return function()
 			registry:remove(testEntity, "Test4")
 			expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
 			expect(collection._updatedSet[testEntity]).to.equal(nil)
-		end)
-	end)
-
-	describe("_getShortestRequiredPool", function()
-		it("should select the pool with the least number of components in it", function(context)
-			local collection = Collection.new(context.registry, {
-				all = { "Test1", "Test4" }
-			})
-
-			makeEntities(context.registry)
-
-			expect(collection:_getShortestRequiredPool()).to.equal(context.registry._pools.Test4)
 		end)
 	end)
 

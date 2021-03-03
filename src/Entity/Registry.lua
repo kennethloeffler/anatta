@@ -21,15 +21,11 @@ local ErrComponentNameTaken = "there is already a component named %s"
 
 local WarnEntityAlreadyExists = "creating a new entity (%08X) because %08X's id is already in use"
 
-local None = util.createSymbol("None")
-
 local Registry = {}
 Registry.__index = Registry
 
 function Registry.new()
 	return setmetatable({
-		none = None,
-
 		_entities = {},
 		_pools = {},
 		_nextRecyclableEntityId = NULL_ENTITYID,
@@ -313,7 +309,7 @@ function Registry:get(entity, componentName)
 		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
 	end
 
-	return self._pools[componentName]:get(entity) or None
+	return self._pools[componentName]:get(entity)
 end
 
 --[[

@@ -2,21 +2,22 @@ local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleCollection = require(script.Parent.SingleCollection)
 local util = require(script.Parent.Parent.util)
 
-local None = util.createSymbol("None")
+local Empty = {}
 
 local Collection = {}
 Collection.__index = Collection
 
 function Collection.new(registry, components)
-	local required = registry:getPools(unpack(components.all or None))
-	local forbidden = registry:getPools(unpack(components.never or None))
-	local updated = registry:getPools(unpack(components.updated or None))
-	local optional = registry:getPools(unpack(components.any or None))
+	local required = registry:getPools(unpack(components.all or Empty))
+	local forbidden = registry:getPools(unpack(components.never or Empty))
+	local updated = registry:getPools(unpack(components.updated or Empty))
+	local optional = registry:getPools(unpack(components.any or Empty))
 
 	util.assertAtCallSite(
 		next(required) or next(updated) or next(optional),
 		"Collections must be given at least one required, updated, or optional component"
 	)
+
 	util.assertAtCallSite(
 		#updated <= 32,
 		"Collections may only track up to 32 updated components"
@@ -28,9 +29,10 @@ function Collection.new(registry, components)
 		and not next(optional)
 		and #required == 1
 	then
-		-- The collection is tracking entities with just one required component. This is
-		-- a case we should optimize for. It does not require any additional state and
-		-- amounts to an iterating over one pool and connecting to one set of signals.
+		-- The collection is tracking entities with just one required
+		-- component. This is a case we should optimize for. It does not require
+		-- any additional state and amounts to an iterating over one pool and
+		-- connecting to one set of signals.
 		return SingleCollection.new(unpack(required))
 	end
 
@@ -38,14 +40,14 @@ function Collection.new(registry, components)
 	local connections = table.create(2 * (#required + #updated + #forbidden))
 
 	local self = setmetatable({
-		none = None,
 		onAdded = collectionPool.onAdded,
 		onRemoved = collectionPool.onRemoved,
 
 		_pool = collectionPool,
 		_updatedSet = {},
 		_connections = connections,
-		_packed = table.create(#required + #updated),
+		_numPacked = #required + #updated + #optional,
+		_packed = table.create(#required + #updated + #optional),
 
 		_required = required,
 		_forbidden = forbidden,
@@ -83,28 +85,20 @@ end
 ]]
 function Collection:each(callback)
 	local dense = self._pool.dense
+	local sparse = self._pool.sparse
+	local packed = self._packed
+	local numPacked = self._numPacked
+	local updatedSet = self._updatedSet
 
-	if next(self._updated) then
-		local updatedSet = self._updatedSet
-		local sparse = self._pool.sparse
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
 
-		for i = self._pool.size, 1, -1 do
-			local entity = dense[i]
+		dense[i] = nil
+		sparse[i] = nil
+		updatedSet[entity] = nil
 
-			dense[i] = nil
-			sparse[i] = nil
-			updatedSet[entity] = nil
-
-			self:_pack(entity)
-			callback(entity, unpack(self._packed))
-		end
-	else
-		for i = self._pool.size, 1, -1 do
-			local entity = dense[i]
-
-			self:_pack(entity)
-			callback(entity, unpack(self._packed))
-		end
+		self:_pack(entity)
+		callback(entity, unpack(packed, 1, numPacked))
 	end
 end
 
@@ -115,23 +109,6 @@ function Collection:disconnect()
 	for _, connection in ipairs(self._connections) do
 		connection:disconnect()
 	end
-end
-
---[[
-	Returns the required component pool with the least number of elements.
-]]
-function Collection:_getShortestRequiredPool()
-	local size = math.huge
-	local selected
-
-	for _, pool in ipairs(self._required) do
-		if pool.size < size then
-			size = pool.size
-			selected = pool
-		end
-	end
-
-	return selected
 end
 
 --[[
@@ -152,13 +129,7 @@ function Collection:_pack(entity)
 	end
 
 	for i, pool in ipairs(self._optional) do
-		local denseIndex = pool:getIndex(entity)
-
-		if denseIndex then
-			packed[i + numRequired + numUpdated] = pool.objects[denseIndex] or None
-		else
-			packed[i + numRequired + numUpdated] = None
-		end
+		packed[i + numRequired + numUpdated] = pool:get(entity)
 	end
 end
 
@@ -181,36 +152,30 @@ function Collection:_tryPack(entity)
 	end
 
 	for i, pool in ipairs(self._required) do
-		local denseIndex = pool:getIndex(entity)
+		local component = pool:get(entity)
 
-		if not denseIndex then
+		if not component then
 			return false
 		end
 
-		packed[i] = pool.objects[denseIndex]
+		packed[i] = component
 	end
 
 	local numRequired = self._numRequired
 	local numUpdated = self._numUpdated
 
 	for i, pool in ipairs(self._updated) do
-		local denseIndex = pool:getIndex(entity)
+		local component = pool:get(entity)
 
-		if not denseIndex then
+		if not component then
 			return false
 		end
 
-		packed[numRequired + i] = pool.objects[denseIndex]
+		packed[numRequired + i] = component
 	end
 
 	for i, pool in ipairs(self._optional) do
-		local denseIndex = pool:getIndex(entity)
-
-		if denseIndex then
-			packed[numRequired + numUpdated + i] = pool.objects[denseIndex] or None
-		else
-			packed[numRequired + numUpdated + i] = None
-		end
+		packed[numRequired + numUpdated + i] = pool:get(entity)
 	end
 
 	return true
@@ -220,7 +185,7 @@ function Collection:_tryAdd()
 	return function(entity)
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
-			self._pool.onAdded:dispatch(entity, unpack(self._packed))
+			self._pool.onAdded:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 		end
 	end
 end
@@ -233,7 +198,7 @@ function Collection:_tryAddUpdated(offset)
 
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
-			self._pool.onAdded:dispatch(entity, unpack(self._packed))
+			self._pool.onAdded:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 		end
 	end
 end
@@ -242,7 +207,7 @@ function Collection:_tryRemove()
 	return function(entity)
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
-			self._pool.onRemoved:dispatch(entity, unpack(self._packed))
+			self._pool.onRemoved:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 			self._pool:delete(entity)
 		end
 	end
@@ -266,7 +231,7 @@ function Collection:_tryRemoveUpdated(offset)
 
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
-			self._pool.onRemoved:dispatch(entity, unpack(self._packed))
+			self._pool.onRemoved:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 			self._pool:delete(entity)
 		end
 	end
