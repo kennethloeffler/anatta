@@ -23,7 +23,7 @@ return function()
 			expect(sig._callbacks[1]).to.equal(callback)
 		end)
 
-		it("should not mess up an ongoing dispatch", function()
+		it("should not invalidate an ongoing dispatch", function()
 			local sig = Signal.new()
 			local inner = false
 			local outer = false
@@ -65,23 +65,23 @@ return function()
 		it("should remove a callback from .callbacks", function()
 			local sig = Signal.new()
 			local callback = function() end
-			local disconnect = sig:connect(callback)
+			local connection = sig:connect(callback)
 
-			disconnect()
+			connection:disconnect()
 
 			expect(#sig._callbacks).to.equal(0)
 		end)
 
-		it("should not mess up an ongoing dispatch", function()
+		it("should not invalidate an ongoing dispatch", function()
 			local sig = Signal.new()
 			local first = false
 			local second = false
 			local third = false
-			local disconnect
+			local connection
 
-			disconnect = sig:connect(function()
+			connection = sig:connect(function()
 				first = true
-				disconnect()
+				connection:disconnect()
 			end)
 
 			sig:connect(function()
@@ -100,13 +100,13 @@ return function()
 		it("should cause the callback to not be called during a dispatch", function()
 			local sig = Signal.new()
 			local never = false
-			local disconnect
+			local connection
 
 			sig:connect(function()
-				disconnect()
+				connection:disconnect()
 			end)
 
-			disconnect = sig:connect(function()
+			connection = sig:connect(function()
 				never = true
 			end)
 

@@ -112,8 +112,8 @@ end
 	Disconnects the collection from the registry, causing it to stop tracking changes.
 ]]
 function Collection:disconnect()
-	for _, disconnect in ipairs(self._connections) do
-		disconnect()
+	for _, connection in ipairs(self._connections) do
+		connection:disconnect()
 	end
 end
 

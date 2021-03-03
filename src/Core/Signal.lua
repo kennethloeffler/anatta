@@ -23,7 +23,7 @@ function Signal:connect(callback)
 
 	self._callbacks = append(self._callbacks, callback)
 
-	return function()
+	local function disconnect()
 		local newList = {}
 		local i = 0
 
@@ -37,6 +37,11 @@ function Signal:connect(callback)
 		self._disconnected[callback] = true
 		self._callbacks = newList
 	end
+
+	return {
+		disconnect = disconnect,
+		Disconnect = disconnect,
+	}
 end
 
 Signal.Connect = Signal.connect
