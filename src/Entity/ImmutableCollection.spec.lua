@@ -2,6 +2,7 @@ return function()
 	local ImmutableCollection = require(script.Parent.ImmutableCollection)
 	local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
 	local Registry = require(script.Parent.Registry)
+	local Matcher = require(script.Parent.Matcher)
 	local t = require(script.Parent.Parent.t)
 
 	local function makeEntities(registry)
@@ -38,18 +39,17 @@ return function()
 
 	describe("new", function()
 		it("should create a new ImmutableCollection when there are  multiple components", function(context)
-			local collection = ImmutableCollection.new(context.registry, {
-				all = { "Test1" },
-				never = { "Test2" },
-			})
+			local collection = ImmutableCollection.new(
+				Matcher.new(context.registry):all("Test1"):except("Test2")
+			)
 
 			expect(getmetatable(collection)).to.equal(ImmutableCollection)
 		end)
 
 		it("should create a new SingleImmutableCollection when there is only one required component ", function(context)
-			local collection = ImmutableCollection.new(context.registry, {
-				all = { "Test1" },
-			})
+			local collection = ImmutableCollection.new(
+				Matcher.new(context.registry):all("Test1")
+			)
 
 			expect(getmetatable(collection)).to.equal(SingleImmutableCollection)
 		end)
@@ -60,10 +60,10 @@ return function()
 			it("should iterate all and only the entities with at least the required components and pass them plus any optional ones", function(context)
 				local registry = context.registry
 				local toIterate = {}
-				local collection = ImmutableCollection.new(registry, {
-					all = { "Test1", "Test2" },
-					any = { "Test3", "Test4" }
-				})
+				local collection = ImmutableCollection.new(
+					Matcher.new(registry)
+					:all("Test1", "Test2"):any("Test3", "Test4")
+				)
 
 				makeEntities(registry)
 
@@ -89,9 +89,9 @@ return function()
 
 			it("should replace required components with ones returned by the callback", function(context)
 				local registry = context.registry
-				local collection = ImmutableCollection.new(registry, {
-					all = { "Test1", "Test2" }
-				})
+				local collection = ImmutableCollection.new(
+					Matcher.new(registry):all("Test1", "Test2")
+				)
 				local toIterate = {}
 
 				makeEntities(registry)

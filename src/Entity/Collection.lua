@@ -2,75 +2,71 @@ local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleCollection = require(script.Parent.SingleCollection)
 local util = require(script.Parent.Parent.util)
 
-local Empty = {}
-
 local Collection = {}
 Collection.__index = Collection
 
-function Collection.new(registry, components)
-	local required = registry:getPools(unpack(components.all or Empty))
-	local forbidden = registry:getPools(unpack(components.never or Empty))
-	local updated = registry:getPools(unpack(components.updated or Empty))
-	local optional = registry:getPools(unpack(components.any or Empty))
+function Collection.new(matcher)
+	local numForbidden = matcher._numForbidden
+	local numOptional = matcher._numOptional
+	local numRequired = matcher._numRequired
+	local numUpdated = matcher._numUpdated
 
 	util.assertAtCallSite(
-		next(required) or next(updated) or next(optional),
-		"Collections must be given at least one required, updated, or optional component"
+		numRequired > 0 or numUpdated > 0,
+		"Collections must be given at least one required or updated component"
 	)
 
 	util.assertAtCallSite(
-		#updated <= 32,
+		numUpdated <= 32,
 		"Collections may only track up to 32 updated components"
 	)
 
 	if
-		not next(updated)
-		and not next(forbidden)
-		and not next(optional)
-		and #required == 1
+		numRequired == 1
+		and numUpdated == 0
+		and numForbidden == 0
+		and numOptional == 0
 	then
-		-- The collection is tracking entities with just one required
-		-- component. This is a case we should optimize for. It does not require
-		-- any additional state and amounts to an iterating over one pool and
-		-- connecting to one set of signals.
-		return SingleCollection.new(unpack(required))
+		return SingleCollection.new(unpack(matcher._required))
 	end
 
 	local collectionPool = Pool.new()
-	local connections = table.create(2 * (#required + #updated + #forbidden))
+	local connections = table.create(
+		2 * (numRequired + numUpdated + numForbidden)
+	)
 
 	local self = setmetatable({
 		onAdded = collectionPool.onAdded,
 		onRemoved = collectionPool.onRemoved,
 
 		_pool = collectionPool,
+		_matcher = matcher,
 		_updatedSet = {},
 		_connections = connections,
-		_numPacked = #required + #updated + #optional,
-		_packed = table.create(#required + #updated + #optional),
+		_numPacked = numRequired + numUpdated + numOptional,
+		_packed = table.create(numRequired + numUpdated + numOptional),
+		_required = matcher._required,
+		_forbidden = matcher._forbidden,
+		_updated = matcher._updated,
+		_optional = matcher._optional,
 
-		_required = required,
-		_forbidden = forbidden,
-		_updated = updated,
-		_optional = optional,
-
-		_numRequired = #required,
-		_numUpdated = #updated,
-		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - #updated),
+		_numRequired = numRequired,
+		_numUpdated = numUpdated,
+		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - numUpdated),
 	}, Collection)
 
 
-	for _, pool in ipairs(required) do
+	for _, pool in ipairs(matcher._required) do
 		table.insert(connections, pool.onAdded:connect(self:_tryAdd()))
 		table.insert(connections, pool.onRemoved:connect(self:_tryRemove()))
 	end
 
-	for i, pool in ipairs(updated) do
+	for i, pool in ipairs(matcher._updated) do
 		table.insert(connections, pool.onUpdated:connect(self:_tryAddUpdated(i - 1)))
 		table.insert(connections, pool.onRemoved:connect(self:_tryRemoveUpdated(i - 1)))
 	end
 
-	for _, pool in ipairs(forbidden) do
+	for _, pool in ipairs(matcher._forbidden) do
 		table.insert(connections, pool.onAdded:connect(self:_tryRemove()))
 		table.insert(connections, pool.onRemoved:connect(self:_tryAdd()))
 	end
@@ -79,9 +75,9 @@ function Collection.new(registry, components)
 end
 
 --[[
-	Applies the callback to each tracked entity and its components. Passes the entity
-	first, followed by its required, updated, and optional components (in that order),
-	each in the same order they were given to the collection.
+	Applies the callback to each tracked entity and its components. Passes the
+	entity first, followed by its required, updated, and optional components (in
+	that order).
 ]]
 function Collection:each(callback)
 	local dense = self._pool.dense

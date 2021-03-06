@@ -1,31 +1,30 @@
 local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
 local util = require(script.Parent.Parent.util)
 
-local Empty = {}
-
 local ImmutableCollection = {}
 ImmutableCollection.__index = ImmutableCollection
 
-function ImmutableCollection.new(registry, components)
-	local required = registry:getPools(unpack(components.all or Empty))
-	local forbidden = registry:getPools(unpack(components.never or Empty))
-	local optional = registry:getPools(unpack(components.any or Empty))
+function ImmutableCollection.new(matcher)
+	local numRequired = matcher._numRequired
+	local numForbidden = matcher._numForbidden
+	local numOptional = matcher._numOptional
 
 	util.assertAtCallSite(
-		next(required),
-		"A pure collection needs at least one required component"
+		numRequired > 0,
+		"An immutable collection needs at least one required component"
 	)
 
-	if not next(forbidden) and not next(optional) and #required == 1 then
-		return SingleImmutableCollection.new(unpack(required))
+	if numForbidden == 0 and numOptional == 0 and numRequired == 1 then
+		return SingleImmutableCollection.new(unpack(matcher._required))
 	end
 
 	return setmetatable({
-		_required = required,
-		_forbidden = forbidden,
-		_optional = optional,
-		_packed = table.create(#required + #optional),
-		_numRequired = #required,
+		_required = matcher._required,
+		_forbidden = matcher._forbidden,
+		_optional = matcher._optional,
+		_packed = table.create(numRequired + numOptional),
+		_numPacked = numRequired + numOptional,
+		_numRequired = numRequired,
 	}, ImmutableCollection)
 end
 
