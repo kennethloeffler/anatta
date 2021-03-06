@@ -10,7 +10,7 @@ Anatta is a library for dealing with the problem of state in Roblox games. It im
 
 * An entity is a numeric ID representing a logical game object: a door, monster, level, status effect, whatever!
 
-* A component is plain data associated with one entity. It shouldn't contain functions or have methods. In Roblox, this requirement can be relaxed to accommodate `Instance`-typed components and members (among others).
+* A component is a named piece of data associated with one entity. It shouldn't contain functions or have methods. In Roblox, this requirement should be relaxed to accommodate `Instance`-typed components and members (among others) .
 
 * The registry stores entities and their components. It provides methods to create and destroy entities, and get, set, update, or test for any component or set of components on an entity.
 
@@ -19,6 +19,7 @@ Anatta is a library for dealing with the problem of state in Roblox games. It im
 		* A pure system:
 			* only has access to its collection;
 			* is expected to return only new or unchanged components when processing each entity;
+			* can never add or destroy entities or components;
 			* cannot track updated components;
 			* cannot listen for entities entering or leaving its collection.
 		* An impure system:
