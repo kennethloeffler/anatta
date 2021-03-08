@@ -12,8 +12,8 @@ function Collection.new(matcher)
 	local numUpdated = matcher._numUpdated
 
 	util.assertAtCallSite(
-		numRequired > 0 or numUpdated > 0,
-		"Collections must be given at least one required or updated component"
+		numRequired > 0 or numUpdated > 0 or numOptional > 0,
+		"Collections must be given at least one required, updated, or optional component"
 	)
 
 	util.assertAtCallSite(
