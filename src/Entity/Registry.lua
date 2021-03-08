@@ -510,7 +510,7 @@ end
 --[[
 	Returns the number of entities currently in use.
 ]]
-function Registry:numEntities()
+function Registry:countEntities()
 	local curr = self._nextRecyclableEntityId
 	local num = self._size
 

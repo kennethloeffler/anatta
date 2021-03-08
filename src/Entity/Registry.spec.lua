@@ -914,24 +914,24 @@ return function()
 		end)
 	end)
 
-	describe("numEntities", function()
+	describe("countEntities", function()
 		it("should return the number of non-destroyed entities currently in the registry", function(context)
 			local registry = context.registry
-			local numEntities = 128
-			local entities = table.create(numEntities)
+			local count = 128
+			local entities = table.create(count)
 
-			for i = 1, numEntities do
+			for i = 1, count do
 				entities[i] = registry:create()
 			end
 
 			for i, entity in ipairs(entities) do
 				if i % 16 == 0 then
-					numEntities = numEntities - 1
+					count = count - 1
 					registry:destroy(entity)
 				end
 			end
 
-			expect(registry:numEntities()).to.equal(numEntities)
+			expect(registry:countEntities()).to.equal(count)
 		end)
 	end)
 
