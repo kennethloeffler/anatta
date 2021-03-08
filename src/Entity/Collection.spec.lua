@@ -282,11 +282,11 @@ return function()
 					expect(test3).to.equal(registry:get(entity, "Test3"))
 				end)
 
-				registry:multiAdd(testEntity,
-					"Test1", {},
-					"Test2", {},
-					"Test3", {}
-				)
+				registry:multiAdd(testEntity, {
+					Test1 = {},
+					Test2 = {},
+					Test3 = {}
+				})
 
 				expect(called).to.equal(true)
 				expect(collection._pool:getIndex(testEntity)).to.be.ok()
@@ -309,10 +309,10 @@ return function()
 					expect(test2).to.equal(registry:get(entity, "Test2"))
 				end)
 
-				registry:multiAdd(testEntity,
-					"Test1", {},
-					"Test2", {}
-				)
+				registry:multiAdd(testEntity, {
+					Test1 = {},
+					Test2 = {}
+				})
 
 				expect(called).to.equal(true)
 				expect(collection._pool:getIndex(testEntity)).to.be.ok()
@@ -342,11 +342,11 @@ return function()
 					expect(test4).to.equal(registry:get(entity, "Test4"))
 				end)
 
-				registry:multiAdd(testEntity,
-					"Test1", {},
-					"Test2", {},
-					"Test4", {}
-				)
+				registry:multiAdd(testEntity, {
+					Test1 = {},
+					Test2 = {},
+					Test4 = {}
+				})
 
 				expect(called).to.equal(false)
 
@@ -378,11 +378,11 @@ return function()
 
 				local testEntity = registry:create()
 
-				registry:multiAdd(testEntity,
-					"Test1", {},
-					"Test2", {},
-					"Test4", {}
-				)
+				registry:multiAdd(testEntity, {
+					Test1 = {},
+					Test2 = {},
+					Test4 = {}
+				})
 
 				registry:replace(testEntity, "Test4", {})
 				registry:replace(testEntity, "Test4", {})
@@ -409,12 +409,12 @@ return function()
 					expect(test4).to.equal(registry:get(entity, "Test4"))
 				end)
 
-				registry:multiAdd(testEntity,
-					"Test1", {},
-					"Test2", {},
-					"Test3", {},
-					"Test4", {}
-				)
+				registry:multiAdd(testEntity, {
+					Test1 = {},
+					Test2 = {},
+					Test3 = {},
+					Test4 = {}
+				})
 
 				expect(called).to.equal(true)
 				expect(collection._pool:getIndex(testEntity)).to.be.ok()
@@ -440,11 +440,11 @@ return function()
 					expect(test3).to.equal(registry:get(entity, "Test3"))
 				end)
 
-				registry:multiAdd(testEntity,
-					"Test1", {},
-					"Test2", {},
-					"Test3", {}
-				)
+				registry:multiAdd(testEntity, {
+					Test1 = {},
+					Test2 = {},
+					Test3 = {}
+				})
 
 				registry:remove(testEntity, "Test2")
 				expect(called).to.equal(true)
@@ -468,10 +468,10 @@ return function()
 					expect(test2).to.equal(registry:get(entity, "Test2"))
 				end)
 
-				registry:multiAdd(testEntity,
-					"Test1", {},
-					"Test2", {}
-				)
+				registry:multiAdd(testEntity, {
+					Test1 = {},
+					Test2 = {}
+				})
 
 				registry:add(testEntity, "Test3", {})
 				expect(called).to.equal(true)
@@ -497,11 +497,11 @@ return function()
 					expect(test4).to.equal(registry:get(entity, "Test4"))
 				end)
 
-				registry:multiAdd(testEntity,
-					"Test1", {},
-					"Test2", {},
-					"Test4", {}
-				)
+				registry:multiAdd(testEntity, {
+					Test1 = {},
+					Test2 = {},
+					Test4 = {}
+				})
 
 				registry:replace(testEntity, "Test4", {})
 				registry:remove(testEntity, "Test2", {})
@@ -519,11 +519,11 @@ return function()
 
 			local testEntity = registry:create()
 
-			registry:multiAdd(testEntity,
-				"Test1", {},
-				"Test2", {},
-				"Test4", {}
-			)
+			registry:multiAdd(testEntity, {
+				Test1 = {},
+				Test2 = {},
+				Test4 = {}
+			})
 
 			registry:replace(testEntity, "Test4", {})
 			registry:remove(testEntity, "Test4")
@@ -539,12 +539,12 @@ return function()
 				:all("Test2", "Test3"):updated("Test3", "Test4")
 			)
 
-			local entity = context.registry:multiAdd(context.registry:create(),
-				"Test1", {},
-				"Test2", {},
-				"Test3", {},
-				"Test4", {}
-			)
+			local entity = context.registry:multiAdd(context.registry:create(), {
+				Test1 = {},
+				Test2 = {},
+				Test3 = {},
+				Test4 = {}
+			})
 
 			collection:_pack(entity)
 
@@ -563,11 +563,11 @@ return function()
 				:all("Test1", "Test2"):any("Test4"):except("Test3")
 			)
 
-			local entity = registry:multiAdd(registry:create(),
-				"Test1", {},
-				"Test2", {},
-				"Test4", {}
-			)
+			local entity = registry:multiAdd(registry:create(), {
+				Test1 = {},
+				Test2 = {},
+				Test4 = {}
+			})
 
 			expect(collection:_tryPack(entity)).to.equal(true)
 
@@ -575,12 +575,12 @@ return function()
 			expect(collection._packed[2]).to.equal(registry:get(entity, "Test2"))
 			expect(collection._packed[3]).to.equal(registry:get(entity, "Test4"))
 
-			expect(collection:_tryPack(registry:multiAdd(registry:create(),
-				"Test1", {},
-				"Test2", {},
-				"Test3", {},
-				"Test4", {}
-			))).to.equal(false)
+			expect(collection:_tryPack(registry:multiAdd(registry:create(), {
+				Test1 = {},
+				Test2 = {},
+				Test3 = {},
+				Test4 = {}
+			}))).to.equal(false)
 		end)
 	end)
 end

@@ -347,6 +347,13 @@ function Registry:add(entity, componentName, object)
 	return object
 end
 
+function Registry:multiAdd(entity, componentMap)
+	for componentName, object in pairs(componentMap) do
+		self:add(entity, componentName, object)
+	end
+
+	return entity
+end
 --[[
 	If the entity does not have the component, adds and returns the component.
 	Otherwise, does nothing.
@@ -368,19 +375,6 @@ function Registry:tryAdd(entity, componentName, object)
 	pool.onAdded:dispatch(entity, object)
 
 	return object
-end
-
---[[
-	Adds the given components to the entity and returns the entity.
-]]
-function Registry:multiAdd(entity, ...)
-	local num = select("#", ...)
-
-	for i = 1, num, 2 do
-		self:add(entity, select(i, ...), select(i + 1, ...))
-	end
-
-	return entity
 end
 
 --[[

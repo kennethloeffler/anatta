@@ -2,7 +2,6 @@ return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
 	local Registry = require(script.Parent.Registry)
 	local t = require(script.Parent.Parent.t)
-	local util = require(script.Parent.Parent.util)
 
 	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 	local NULL_ENTITYID = Constants.NULL_ENTITYID
@@ -409,14 +408,13 @@ return function()
 		it("should return the specified components on the entity in order", function(context)
 			local registry = context.registry
 			local entity = registry:create()
-			local tab = table.create(2)
 			local component1 = { instance = Instance.new("Script") }
 			local component2 = 10
 
 			registry._pools.instance:insert(entity, component1)
 			registry._pools.number:insert(entity, component2)
 
-			local instance, number = registry:multiGet(entity, tab, "instance", "number")
+			local instance, number = registry:multiGet(entity, {}, "instance", "number")
 
 			expect(instance).to.equal(component1)
 			expect(number).to.equal(component2)
@@ -568,10 +566,11 @@ return function()
 			local pool1 = registry._pools.instance
 			local pool2 = registry._pools.interface
 			local pool3 = registry._pools.number
-			local entity = registry:multiAdd(registry:create(),
-				"instance", component1,
-				"interface", component2,
-				"number", component3)
+			local entity = registry:multiAdd(registry:create(), {
+				instance = component1,
+				interface = component2,
+				number = component3,
+			})
 
 			expect(pool1:get(entity)).to.equal(component1)
 			expect(pool2:get(entity)).to.equal(component2)
@@ -580,13 +579,13 @@ return function()
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:multiAdd(0, "number", 0)
+				context.registry:multiAdd(0, { number = 0 })
 			end).to.throw()
 		end)
 
 		it("should error if given an invalid component name", function(context)
 			expect(function()
-				context.registry:multiAdd(context.registry:create(), "")
+				context.registry:multiAdd(context.registry:create(), { dkfjdkfj = 0 })
 			end).to.throw()
 		end)
 	end)
