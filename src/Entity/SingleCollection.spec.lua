@@ -8,9 +8,9 @@ return function()
 			local collection = SingleCollection.new(pool)
 
 			expect(getmetatable(collection)).to.equal(SingleCollection)
-			expect(collection.onAdded).to.equal(pool.onAdded)
-			expect(collection.onRemoved).to.equal(pool.onRemoved)
-			expect(collection._pool).to.equal(pool)
+			expect(collection.added).to.equal(pool.added)
+			expect(collection.removed).to.equal(pool.removed)
+			expect(collection._componentPool).to.equal(pool)
 		end)
 	end)
 

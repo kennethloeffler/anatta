@@ -47,7 +47,7 @@ function ImmutableCollection:_apply(entity, ...)
 			-- !!! Beware: if a listener of this signal adds or removes any
 			-- !!! elements from the pool selected by _selectShortestPool, the
 			-- !!! iteration will terminate!
-			pool.onUpdated:dispatch(entity, component)
+			pool.updated:dispatch(entity, component)
 		end
 	end
 end

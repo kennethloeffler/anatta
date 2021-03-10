@@ -178,7 +178,7 @@ function Registry:destroy(entity)
 
 	for _, pool in pairs(self._pools) do
 		if pool:getIndex(entity) then
-			pool.onRemoved:dispatch(entity, pool:get(entity))
+			pool.removed:dispatch(entity, pool:get(entity))
 			pool:delete(entity)
 		end
 	end
@@ -342,7 +342,7 @@ function Registry:add(entity, componentName, object)
 	end
 
 	pool:insert(entity, object)
-	pool.onAdded:dispatch(entity, object)
+	pool.added:dispatch(entity, object)
 
 	return object
 end
@@ -372,7 +372,7 @@ function Registry:tryAdd(entity, componentName, object)
 	end
 
 	pool:insert(entity, object)
-	pool.onAdded:dispatch(entity, object)
+	pool.added:dispatch(entity, object)
 
 	return object
 end
@@ -396,7 +396,7 @@ function Registry:getOrAdd(entity, componentName, object)
 		return pool.objects[denseIndex]
 	else
 		pool:insert(entity, object)
-		pool.onAdded:dispatch(entity, object)
+		pool.added:dispatch(entity, object)
 
 		return object
 	end
@@ -421,7 +421,7 @@ function Registry:replace(entity, componentName, object)
 	end
 
 	if pool:replace(entity, object) then
-		pool.onUpdated:dispatch(entity, object)
+		pool.updated:dispatch(entity, object)
 	end
 
 	return object
@@ -444,12 +444,12 @@ function Registry:addOrReplace(entity, componentName, object)
 	local denseIndex = pool:getIndex(entity)
 
 	if denseIndex and pool:replace(entity, object) then
-		pool.onUpdated:dispatch(entity, object)
+		pool.updated:dispatch(entity, object)
 		return object
 	end
 
 	pool:insert(entity, object)
-	pool.onAdded:dispatch(entity, object)
+	pool.added:dispatch(entity, object)
 
 	return object
 end
@@ -472,7 +472,7 @@ function Registry:remove(entity, componentName)
 		)
 	end
 
-	pool.onRemoved:dispatch(entity, pool:get(entity))
+	pool.removed:dispatch(entity, pool:get(entity))
 	pool:delete(entity)
 end
 
@@ -497,7 +497,7 @@ function Registry:tryRemove(entity, componentName)
 	end
 
 	if pool:getIndex(entity) then
-		pool.onRemoved:dispatch(entity, pool:get(entity))
+		pool.removed:dispatch(entity, pool:get(entity))
 		pool:delete(entity)
 
 		return true

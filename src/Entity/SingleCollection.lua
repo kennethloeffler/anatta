@@ -1,20 +1,20 @@
 local SingleCollection = {}
 SingleCollection.__index = SingleCollection
 
-function SingleCollection.new(pool)
+function SingleCollection.new(componentPool)
 	return  setmetatable({
-		onAdded = pool.onAdded,
-		onRemoved = pool.onRemoved,
+		added = componentPool.added,
+		removed = componentPool.removed,
 
-		_pool = pool,
+		_componentPool = componentPool,
 	}, SingleCollection)
 end
 
 function SingleCollection:each(callback)
-	local dense = self._pool.dense
-	local objects = self._pool.objects
+	local dense = self._componentPool.dense
+	local objects = self._componentPool.objects
 
-	for i = self._pool.size, 1, -1 do
+	for i = self._componentPool.size, 1, -1 do
 		callback(dense[i], objects[i])
 	end
 end

@@ -90,14 +90,14 @@ return function()
 				:all("Test1"):updated("Test2"):except("Test3")
 			)
 
-			expect(collection._required[1].onAdded._callbacks[1]).to.be.ok()
-			expect(collection._required[1].onRemoved._callbacks[1]).to.be.ok()
+			expect(collection._required[1].added._callbacks[1]).to.be.ok()
+			expect(collection._required[1].removed._callbacks[1]).to.be.ok()
 
-			expect(collection._forbidden[1].onRemoved._callbacks[1]).to.be.ok()
-			expect(collection._forbidden[1].onAdded._callbacks[1]).to.be.ok()
+			expect(collection._forbidden[1].removed._callbacks[1]).to.be.ok()
+			expect(collection._forbidden[1].added._callbacks[1]).to.be.ok()
 
-			expect(collection._updated[1].onUpdated._callbacks[1]).to.be.ok()
-			expect(collection._updated[1].onRemoved._callbacks[1]).to.be.ok()
+			expect(collection._updated[1].updated._callbacks[1]).to.be.ok()
+			expect(collection._updated[1].removed._callbacks[1]).to.be.ok()
 		end)
 	end)
 
@@ -264,7 +264,7 @@ return function()
 		end)
 	end)
 
-	describe("onAdded", function()
+	describe("added", function()
 		describe("required", function()
 			it("should call the callback when an entity with at least the required components is added", function(context)
 				local registry = context.registry
@@ -274,7 +274,7 @@ return function()
 					Matcher.new(registry):all("Test1", "Test2", "Test3")
 				)
 
-				collection.onAdded:connect(function(entity, test1, test2, test3)
+				collection.added:connect(function(entity, test1, test2, test3)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -302,7 +302,7 @@ return function()
 					Matcher.new(registry):all("Test1", "Test2"):except("Test3")
 				)
 
-				collection.onAdded:connect(function(entity, test1, test2)
+				collection.added:connect(function(entity, test1, test2)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -334,7 +334,7 @@ return function()
 					:all("Test1"):updated("Test2", "Test4"):except("Test3")
 				)
 
-				collection.onAdded:connect(function(entity, test1, test2, test4)
+				collection.added:connect(function(entity, test1, test2, test4)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -372,7 +372,7 @@ return function()
 					Matcher.new(registry):all("Test1", "Test2"):updated("Test4")
 				)
 
-				collection.onAdded:connect(function()
+				collection.added:connect(function()
 					called = true
 				end)
 
@@ -400,7 +400,7 @@ return function()
 					:all("Test1", "Test2"):any("Test3", "Test4")
 				)
 
-				collection.onAdded:connect(function(entity, test1, test2, test3, test4)
+				collection.added:connect(function(entity, test1, test2, test3, test4)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -422,7 +422,7 @@ return function()
 		end)
 	end)
 
-	describe("onRemoved", function()
+	describe("removed", function()
 		describe("required", function()
 			it("should call the callback when an entity with at least the required components is untracked", function(context)
 				local registry = context.registry
@@ -432,7 +432,7 @@ return function()
 					Matcher.new(registry):all("Test1", "Test2", "Test3")
 				)
 
-				collection.onRemoved:connect(function(entity, test1, test2, test3)
+				collection.removed:connect(function(entity, test1, test2, test3)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -461,7 +461,7 @@ return function()
 					Matcher.new(registry):all("Test1", "Test2"):except("Test3")
 				)
 
-				collection.onRemoved:connect(function(entity, test1, test2)
+				collection.removed:connect(function(entity, test1, test2)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
@@ -489,7 +489,7 @@ return function()
 					:all("Test1", "Test2"):except("Test3"):updated("Test4")
 				)
 
-				collection.onRemoved:connect(function(entity, test1, test2, test4)
+				collection.removed:connect(function(entity, test1, test2, test4)
 					called = true
 					expect(entity).to.equal(testEntity)
 					expect(test1).to.equal(registry:get(entity, "Test1"))

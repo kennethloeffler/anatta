@@ -36,8 +36,8 @@ function Collection.new(matcher)
 	)
 
 	local self = setmetatable({
-		onAdded = collectionPool.onAdded,
-		onRemoved = collectionPool.onRemoved,
+		added = collectionPool.added,
+		removed = collectionPool.removed,
 
 		_pool = collectionPool,
 		_matcher = matcher,
@@ -56,19 +56,23 @@ function Collection.new(matcher)
 	}, Collection)
 
 
-	for _, pool in ipairs(matcher._required) do
-		table.insert(connections, pool.onAdded:connect(self:_tryAdd()))
-		table.insert(connections, pool.onRemoved:connect(self:_tryRemove()))
+	for _, pool in ipairs(matcher.required) do
+		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
+		table.insert(self._connections, pool.removed:connect(self:_tryRemove()))
 	end
 
-	for i, pool in ipairs(matcher._updated) do
-		table.insert(connections, pool.onUpdated:connect(self:_tryAddUpdated(i - 1)))
-		table.insert(connections, pool.onRemoved:connect(self:_tryRemoveUpdated(i - 1)))
+	for i, pool in ipairs(matcher.update) do
+		table.insert(self._connections, pool.updated:connect(self:_tryAddUpdated(i - 1)))
+		table.insert(self._connections, pool.removed:connect(self:_tryRemoveUpdated(i - 1)))
 	end
 
-	for _, pool in ipairs(matcher._forbidden) do
-		table.insert(connections, pool.onAdded:connect(self:_tryRemove()))
-		table.insert(connections, pool.onRemoved:connect(self:_tryAdd()))
+	for _, pool in ipairs(matcher.forbidden) do
+		table.insert(self._connections, pool.added:connect(self:_tryRemove()))
+		table.insert(self._connections, pool.removed:connect(self:_tryAdd()))
+	end
+
+	for _, pool in ipairs(matcher.optional) do
+		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
 	end
 
 	return self
@@ -181,7 +185,7 @@ function Collection:_tryAdd()
 	return function(entity)
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
-			self._pool.onAdded:dispatch(entity, unpack(self._packed, 1, self._numPacked))
+			self._pool.added:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 		end
 	end
 end
@@ -194,7 +198,7 @@ function Collection:_tryAddUpdated(offset)
 
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
-			self._pool.onAdded:dispatch(entity, unpack(self._packed, 1, self._numPacked))
+			self._pool.added:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 		end
 	end
 end
@@ -203,7 +207,7 @@ function Collection:_tryRemove()
 	return function(entity)
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
-			self._pool.onRemoved:dispatch(entity, unpack(self._packed, 1, self._numPacked))
+			self._pool.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 			self._pool:delete(entity)
 		end
 	end
@@ -227,7 +231,7 @@ function Collection:_tryRemoveUpdated(offset)
 
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
-			self._pool.onRemoved:dispatch(entity, unpack(self._packed, 1, self._numPacked))
+			self._pool.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 			self._pool:delete(entity)
 		end
 	end
