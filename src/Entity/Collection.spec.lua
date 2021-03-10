@@ -29,13 +29,13 @@ return function()
 	end
 
 	beforeEach(function(context)
-		local registry = Registry.new()
-
-		registry:define("Test1", t.table)
-		registry:define("Test2", t.table)
-		registry:define("Test3", t.table)
-		registry:define("Test4", t.table)
-		context.registry = registry
+		context.registry = Registry.new({
+			Test1 = t.table,
+			Test2 = t.table,
+			Test3 = t.table,
+			Test4 = t.table,
+			Test5 = t.none,
+		})
 	end)
 
 	describe("new", function()
@@ -134,8 +134,6 @@ return function()
 			it("should iterate all the entities with at least the required components and any of the optional components", function(context)
 				local toIterate = {}
 				local registry = context.registry
-
-				registry:define("Test5", t.none)
 
 				local collection = Collection.new(
 					Matcher.new(registry)

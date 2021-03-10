@@ -24,10 +24,16 @@ local WarnEntityAlreadyExists = "creating a new entity (%08X) because %08X's id 
 local Registry = {}
 Registry.__index = Registry
 
-function Registry.new()
+function Registry.new(components)
+	local pools = {}
+
+	for componentName, typeCheck in pairs(components) do
+		pools[componentName] = Pool.new(componentName, typeCheck)
+	end
+
 	return setmetatable({
 		_entities = {},
-		_pools = {},
+		_pools = pools,
 		_nextRecyclableEntityId = NULL_ENTITYID,
 		_size = 0,
 	}, Registry)

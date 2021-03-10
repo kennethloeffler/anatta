@@ -17,18 +17,17 @@ return function()
 	end
 
 	beforeEach(function(context)
-		local registry = Registry.new()
-
-		registry:define("interface", t.interface { instance = t.Instance })
-		registry:define("instance", t.Instance)
-		registry:define("number", t.number)
-
-		context.registry = registry
+		context.registry = Registry.new({
+			interface = t.interface({ instance = t.Instance }),
+			instance = t.Instance,
+			number = t.number,
+			tag = t.none,
+		})
 	end)
 
 	describe("new", function()
 		it("should construct a new empty Registry", function()
-			local registry = Registry.new()
+			local registry = Registry.new({})
 
 			expect(getmetatable(registry)).to.equal(Registry)
 			expect(registry._size).to.equal(0)
@@ -37,29 +36,6 @@ return function()
 			expect(next(registry._entities)).to.equal(nil)
 			expect(registry._pools).to.be.a("table")
 			expect(next(registry._pools)).to.equal(nil)
-		end)
-	end)
-
-	describe("define", function()
-		it("should define a new component type", function()
-			local registry = Registry.new()
-			local typeCheck = t.table
-
-			registry:define("Test", typeCheck)
-
-			expect(registry._pools.Test).to.be.ok()
-			expect(registry._pools.Test.typeCheck).to.equal(typeCheck)
-			expect(registry._pools.Test.name).to.equal("Test")
-		end)
-
-		it("should error if the name is already in use", function()
-			local registry = Registry.new()
-
-			registry:define("Test", t.none)
-
-			expect(function()
-				registry:define("Test", t.none)
-			end).to.throw()
 		end)
 	end)
 
@@ -471,7 +447,6 @@ return function()
 			local registry = context.registry
 			local entity = registry:create()
 
-			registry:define("tag", t.none)
 			registry:add(entity, "tag")
 
 			expect(registry._pools.tag:getIndex(entity)).to.be.ok()
@@ -538,7 +513,6 @@ return function()
 			local registry = context.registry
 			local entity = registry:create()
 
-			registry:define("tag", t.none)
 			registry:tryAdd(entity, "tag")
 
 			expect(registry._pools.tag:getIndex(entity)).to.be.ok()
