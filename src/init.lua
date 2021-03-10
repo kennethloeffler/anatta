@@ -68,4 +68,6 @@ function Anatta:_unloadSystem(moduleScript)
 	self._systems[moduleScript] = nil
 end
 
-return Anatta
+return {
+	define = Anatta.new
+}
