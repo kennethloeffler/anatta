@@ -54,7 +54,7 @@ return function()
 		end)
 	end)
 
-	describe("each", function()
+	describe("update", function()
 		describe("all", function()
 			it("should iterate all and only the entities with at least the required components and pass them plus any optional ones", function(context)
 				local registry = context.registry
@@ -72,7 +72,7 @@ return function()
 					end
 				end
 
-				collection:each(function(entity, test1, test2, test3, test4)
+				collection:update(function(entity, test1, test2, test3, test4)
 					expect(toIterate[entity]).to.equal(true)
 					expect(test1).to.equal(registry:get(entity, "Test1"))
 					expect(test2).to.equal(registry:get(entity, "Test2"))
@@ -95,7 +95,7 @@ return function()
 
 				makeEntities(registry)
 
-				collection:each(function(entity)
+				collection:update(function(entity)
 					local newTest1 = {}
 					local newTest2 = {}
 
@@ -104,9 +104,11 @@ return function()
 					return newTest1, newTest2
 				end)
 
-				collection:each(function(entity, test1, test2)
+				collection:update(function(entity, test1, test2)
 					expect(test1).to.equal(toIterate[entity][1])
 					expect(test2).to.equal(toIterate[entity][2])
+
+					return test1, test2
 				end)
 			end)
 		end)

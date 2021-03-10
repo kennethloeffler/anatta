@@ -24,18 +24,29 @@ function ImmutableCollection.new(matcher)
 	}, ImmutableCollection)
 end
 
+function ImmutableCollection:update(callback)
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
+		if self:_tryPack(entity) then
+			self:_replace(entity, callback(entity, unpack(packed, 1, numPacked)))
+		end
+	end
+end
+
 function ImmutableCollection:each(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 
 	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
 		if self:_tryPack(entity) then
-			self:_apply(entity, callback(entity, unpack(packed, 1, numPacked)))
+			callback(entity, unpack(packed, 1, numPacked))
 		end
 	end
 end
 
-function ImmutableCollection:_apply(entity, ...)
+function ImmutableCollection:_replace(entity, ...)
 	for i, pool in ipairs(self._required) do
 		local component = select(i, ...)
 
