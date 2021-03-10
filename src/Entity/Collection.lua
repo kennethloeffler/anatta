@@ -79,20 +79,32 @@ end
 ]]
 function Collection:each(callback)
 	local dense = self._pool.dense
-	local sparse = self._pool.sparse
 	local packed = self._packed
 	local numPacked = self._numPacked
-	local updatedSet = self._updatedSet
 
-	for i = self._pool.size, 1, -1 do
-		local entity = dense[i]
+	if next(self._updated) then
+		local updates = self._updates
+		local pool = self._pool
 
-		dense[i] = nil
-		sparse[i] = nil
-		updatedSet[entity] = nil
+		for i = self._pool.size, 1, -1 do
+			local entity = dense[i]
 
-		self:_pack(entity)
-		callback(entity, unpack(packed, 1, numPacked))
+			self:_pack(entity)
+			callback(entity, unpack(packed, 1, numPacked))
+
+			if pool:getIndex(entity) then
+				pool:delete(entity)
+			end
+
+			updates[entity] = nil
+		end
+	else
+		for i = self._pool.size, 1, -1 do
+			local entity = dense[i]
+
+			self:_pack(entity)
+			callback(entity, unpack(packed, 1, numPacked))
+		end
 	end
 end
 
