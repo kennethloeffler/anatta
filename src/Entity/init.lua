@@ -1,11 +1,9 @@
-local Collection = require(script.Collection)
-local ImmutableCollection = require(script.ImmutableCollection)
+local Attachments = require(script.Attachments)
 local Matcher = require(script.Matcher)
 local Registry = require(script.Registry)
 
 return {
-	Collection = Collection,
-	ImmutableCollection = ImmutableCollection,
+	Attachments = Attachments,
 	Matcher = Matcher,
 	Registry = Registry,
 }

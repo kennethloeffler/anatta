@@ -1,3 +1,5 @@
+local Attachments = require(script.Parent.Attachments)
+
 local SingleCollection = {}
 SingleCollection.__index = SingleCollection
 
@@ -6,6 +8,8 @@ function SingleCollection.new(componentPool)
 		added = componentPool.added,
 		removed = componentPool.removed,
 
+		_pool = {},
+		_connections = {},
 		_componentPool = componentPool,
 	}, SingleCollection)
 end
@@ -18,5 +22,7 @@ function SingleCollection:each(callback)
 		callback(dense[i], objects[i])
 	end
 end
+
+SingleCollection.attach = Attachments.attach
 
 return SingleCollection

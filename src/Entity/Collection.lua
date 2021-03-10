@@ -1,3 +1,4 @@
+local Attachments = require(script.Parent.Attachments)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleCollection = require(script.Parent.SingleCollection)
 local util = require(script.Parent.Parent.util)
@@ -109,13 +110,12 @@ function Collection:each(callback)
 end
 
 --[[
-	Disconnects the collection from the registry, causing it to stop tracking changes.
+	Attaches a callback to the collection's added signal that should return a
+	list of temporary Instances and/or RBXScriptConnections. Disconnects the
+	connections and/or destroys the instances after an entity leaves the
+	collection.
 ]]
-function Collection:disconnect()
-	for _, connection in ipairs(self._connections) do
-		connection:disconnect()
-	end
-end
+Collection.attach = Attachments.attach
 
 --[[
 	Unconditionally fills the collection's _packed field with the entity's required,
