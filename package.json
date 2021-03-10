@@ -1,0 +1,24 @@
+{
+  "name": "@rbxts/anatta",
+  "version": "0.0.0",
+  "description": "ECS for Roblox Studio",
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kennethloeffler/anatta/issues"
+  },
+  "homepage": "https://github.com/kennethloeffler/anatta#readme",
+  "scripts": {
+    "main": "out/init.lua",
+    "prepublishOnly": "rbxtsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kennethloeffler/anatta.git"
+  },
+  "types": "out/index.d.ts",
+  "devDependencies": {
+    "@rbxts/compiler-types": "^1.0.0-beta.16.1",
+    "@rbxts/types": "^1.0.459"
+  }
+}
