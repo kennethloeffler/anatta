@@ -49,8 +49,8 @@ return function()
 			expect(collection._pool).to.be.ok()
 			expect(getmetatable(collection._pool)).to.equal(Pool)
 
-			expect(collection._updatedSet).to.be.a("table")
-			expect(next(collection._updatedSet)).to.equal(nil)
+			expect(collection._updates).to.be.a("table")
+			expect(next(collection._updates)).to.equal(nil)
 		end)
 
 		it("should create a new SingleCollection when there is exactly one required component and nothing else", function(context)
@@ -79,7 +79,7 @@ return function()
 				Matcher.new(context.registry):updated("Test1", "Test2", "Test3")
 			)
 
-			expect(collection._allUpdatedSet).to.equal(bit32.rshift(0xFFFFFFFF, 29))
+			expect(collection._allUpdates).to.equal(bit32.rshift(0xFFFFFFFF, 29))
 		end)
 	end)
 
@@ -526,7 +526,7 @@ return function()
 			registry:replace(testEntity, "Test4", {})
 			registry:remove(testEntity, "Test4")
 			expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
-			expect(collection._updatedSet[testEntity]).to.equal(nil)
+			expect(collection._updates[testEntity]).to.equal(nil)
 		end)
 	end)
 

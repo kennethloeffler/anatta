@@ -6,55 +6,49 @@ local Collection = {}
 Collection.__index = Collection
 
 function Collection.new(matcher)
-	local numForbidden = matcher._numForbidden
-	local numOptional = matcher._numOptional
-	local numRequired = matcher._numRequired
-	local numUpdated = matcher._numUpdated
-
 	util.assertAtCallSite(
-		numRequired > 0 or numUpdated > 0 or numOptional > 0,
+		#matcher.required > 0 or #matcher.update > 0 or #matcher.optional > 0,
 		"Collections must be given at least one required, updated, or optional component"
 	)
 
 	util.assertAtCallSite(
-		numUpdated <= 32,
+		#matcher.update <= 32,
 		"Collections may only track up to 32 updated components"
 	)
 
 	if
-		numRequired == 1
-		and numUpdated == 0
-		and numForbidden == 0
-		and numOptional == 0
+		#matcher.required == 1
+		and #matcher.update == 0
+		and #matcher.forbidden == 0
+		and #matcher.optional == 0
 	then
-		return SingleCollection.new(unpack(matcher._required))
+		return SingleCollection.new(unpack(matcher.required))
 	end
 
 	local collectionPool = Pool.new()
-	local connections = table.create(
-		2 * (numRequired + numUpdated + numForbidden)
-	)
 
 	local self = setmetatable({
 		added = collectionPool.added,
 		removed = collectionPool.removed,
 
 		_pool = collectionPool,
-		_matcher = matcher,
-		_updatedSet = {},
-		_connections = connections,
-		_numPacked = numRequired + numUpdated + numOptional,
-		_packed = table.create(numRequired + numUpdated + numOptional),
-		_required = matcher._required,
-		_forbidden = matcher._forbidden,
-		_updated = matcher._updated,
-		_optional = matcher._optional,
+		_updates = {},
+		_connections = {},
 
-		_numRequired = numRequired,
-		_numUpdated = numUpdated,
-		_allUpdatedSet = bit32.rshift(0xFFFFFFFF, 32 - numUpdated),
+		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #matcher.update),
+		_numPacked = #matcher.required + #matcher.update + #matcher.optional,
+		_numRequired = #matcher.required,
+		_numUpdated = #matcher.update,
+
+		_packed = table.create(
+			#matcher.required + #matcher.update + #matcher.optional
+		),
+		_required = matcher.required,
+		_forbidden = matcher.forbidden,
+		_updated = matcher.update,
+		_optional = matcher.optional,
+
 	}, Collection)
-
 
 	for _, pool in ipairs(matcher.required) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
@@ -141,7 +135,7 @@ end
 function Collection:_tryPack(entity)
 	local packed = self._packed
 
-	if (self._updatedSet[entity] or 0) ~= self._allUpdatedSet then
+	if (self._updates[entity] or 0) ~= self._allUpdates then
 		return false
 	end
 
@@ -161,9 +155,6 @@ function Collection:_tryPack(entity)
 		packed[i] = component
 	end
 
-	local numRequired = self._numRequired
-	local numUpdated = self._numUpdated
-
 	for i, pool in ipairs(self._updated) do
 		local component = pool:get(entity)
 
@@ -171,11 +162,11 @@ function Collection:_tryPack(entity)
 			return false
 		end
 
-		packed[numRequired + i] = component
+		packed[self._numRequired + i] = component
 	end
 
 	for i, pool in ipairs(self._optional) do
-		packed[numRequired + numUpdated + i] = pool:get(entity)
+		packed[self._numRequired + self._numUpdated + i] = pool:get(entity)
 	end
 
 	return true
@@ -194,7 +185,7 @@ function Collection:_tryAddUpdated(offset)
 	local mask = bit32.lshift(1, offset)
 
 	return function(entity)
-		self._updatedSet[entity] = bit32.bor(mask, self._updatedSet[entity] or 0)
+		self._updates[entity] = bit32.bor(mask, self._updates[entity] or 0)
 
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
@@ -217,15 +208,15 @@ function Collection:_tryRemoveUpdated(offset)
 	local mask = bit32.bnot(bit32.lshift(1, offset))
 
 	return function(entity)
-		local updates = self._updatedSet[entity]
+		local currentUpdates = self._updates[entity]
 
-		if updates then
-			local newUpdates = bit32.band(updates, mask)
+		if currentUpdates then
+			local newUpdates = bit32.band(currentUpdates, mask)
 
 			if newUpdates == 0 then
-				self._updatedSet[entity] = nil
+				self._updates[entity] = nil
 			else
-				self._updatedSet[entity] = newUpdates
+				self._updates[entity] = newUpdates
 			end
 		end
 

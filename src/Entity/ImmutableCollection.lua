@@ -5,26 +5,22 @@ local ImmutableCollection = {}
 ImmutableCollection.__index = ImmutableCollection
 
 function ImmutableCollection.new(matcher)
-	local numRequired = matcher._numRequired
-	local numForbidden = matcher._numForbidden
-	local numOptional = matcher._numOptional
-
 	util.assertAtCallSite(
-		numRequired > 0,
+		#matcher.required > 0,
 		"An immutable collection needs at least one required component"
 	)
 
-	if numForbidden == 0 and numOptional == 0 and numRequired == 1 then
-		return SingleImmutableCollection.new(unpack(matcher._required))
+	if #matcher.forbidden == 0 and #matcher.optional == 0 and #matcher.required == 1 then
+		return SingleImmutableCollection.new(unpack(matcher.required))
 	end
 
 	return setmetatable({
-		_required = matcher._required,
-		_forbidden = matcher._forbidden,
-		_optional = matcher._optional,
-		_packed = table.create(numRequired + numOptional),
-		_numPacked = numRequired + numOptional,
-		_numRequired = numRequired,
+		_required = matcher.required,
+		_forbidden = matcher.forbidden,
+		_optional = matcher.optional,
+		_packed = table.create(#matcher.required + #matcher.optional),
+		_numPacked = #matcher.required + #matcher.optional,
+		_numRequired = #matcher.required,
 	}, ImmutableCollection)
 end
 
