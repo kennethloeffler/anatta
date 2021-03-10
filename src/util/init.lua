@@ -1,5 +1,5 @@
-local assertAtCallSite = require(script.assertAtCallSite)
+local jumpAssert = require(script.jumpAssert)
 
 return {
-	assertAtCallSite = assertAtCallSite,
+	jumpAssert = jumpAssert,
 }

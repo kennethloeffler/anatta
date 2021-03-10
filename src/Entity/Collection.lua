@@ -7,16 +7,6 @@ local Collection = {}
 Collection.__index = Collection
 
 function Collection.new(matcher)
-	util.assertAtCallSite(
-		#matcher.required > 0 or #matcher.update > 0 or #matcher.optional > 0,
-		"Collections must be given at least one required, updated, or optional component"
-	)
-
-	util.assertAtCallSite(
-		#matcher.update <= 32,
-		"Collections may only track up to 32 updated components"
-	)
-
 	if
 		#matcher.required == 1
 		and #matcher.update == 0

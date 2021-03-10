@@ -5,7 +5,7 @@ local Constants = require(script.Parent.Parent.Core.Constants)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local util = require(script.Parent.Parent.util)
 
-local assertAtCallSite = util.assertAtCallSite
+local jumpAssert = util.jumpAssert
 
 local DEBUG = Constants.DEBUG
 local ENTITYID_MASK = Constants.ENTITYID_MASK
@@ -64,7 +64,7 @@ end
 	calls Destroy when the component is removed.
 ]]
 function Registry:define(componentName, typeCheck)
-	assertAtCallSite(
+	jumpAssert(
 		not self._pools[componentName],
 		ErrComponentNameTaken:format(componentName)
 	)
@@ -177,7 +177,7 @@ end
 ]]
 function Registry:destroy(entity)
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 	end
 
 	local entityId = bit32.band(entity, ENTITYID_MASK)
@@ -206,7 +206,7 @@ end
 function Registry:valid(entity)
 	if DEBUG then
 		local ty = type(entity)
-		assertAtCallSite(ty == "number", ErrBadEntityType:format(ty))
+		jumpAssert(ty == "number", ErrBadEntityType:format(ty))
 	end
 
 	return self._entities[bit32.band(entity, ENTITYID_MASK)] == entity
@@ -217,7 +217,7 @@ end
 ]]
 function Registry:stub(entity)
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 	end
 
 	for _, pool in pairs(self._pools) do
@@ -237,7 +237,7 @@ end
 function Registry:visit(func, entity)
 	if entity ~= nil then
 		if DEBUG then
-			assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
+			jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		end
 
 		for component, pool in pairs(self._pools) do
@@ -258,10 +258,10 @@ end
 ]]
 function Registry:has(entity, ...)
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 
 		for i = 1, select("#", ...) do
-			assertAtCallSite(
+			jumpAssert(
 				self._pools[select(i, ...)],
 				ErrBadComponentName:format(select(i, ...))
 			)
@@ -283,10 +283,10 @@ end
 ]]
 function Registry:any(entity, ...)
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 
 		for i = 1, select("#", ...) do
-			assertAtCallSite(
+			jumpAssert(
 				self._pools[select(i, ...)],
 				ErrBadComponentName:format(select(i, ...))
 			)
@@ -311,8 +311,8 @@ function Registry:get(entity, componentName)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
 	end
 
 	return self._pools[componentName]:get(entity)
@@ -338,13 +338,13 @@ function Registry:add(entity, componentName, object)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
-		assertAtCallSite(
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(
 			not pool:getIndex(entity),
 			ErrAlreadyHasComponent:format(entity, componentName)
 		)
-		assertAtCallSite(pool.typeCheck(object))
+		jumpAssert(pool.typeCheck(object))
 	end
 
 	pool:insert(entity, object)
@@ -368,9 +368,9 @@ function Registry:tryAdd(entity, componentName, object)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
-		assertAtCallSite(pool.typeCheck(object))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool.typeCheck(object))
 	end
 
 	if pool:getIndex(entity) then
@@ -391,9 +391,9 @@ function Registry:getOrAdd(entity, componentName, object)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
-		assertAtCallSite(pool.typeCheck(object))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool.typeCheck(object))
 	end
 
 	local denseIndex = pool:getIndex(entity)
@@ -417,10 +417,10 @@ function Registry:replace(entity, componentName, object)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
-		assertAtCallSite(pool.typeCheck(object))
-		assertAtCallSite(
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool.typeCheck(object))
+		jumpAssert(
 			pool:getIndex(entity),
 			ErrMissingComponent:format(entity, componentName)
 		)
@@ -442,9 +442,9 @@ function Registry:addOrReplace(entity, componentName, object)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
-		assertAtCallSite(pool.typeCheck(object))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool.typeCheck(object))
 	end
 
 	local denseIndex = pool:getIndex(entity)
@@ -470,9 +470,9 @@ function Registry:remove(entity, componentName)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
-		assertAtCallSite(
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(
 			pool:getIndex(entity),
 			ErrMissingComponent:format(entity, componentName)
 		)
@@ -498,8 +498,8 @@ function Registry:tryRemove(entity, componentName)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(self:valid(entity), ErrInvalidEntity:format(entity))
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
 	end
 
 	if pool:getIndex(entity) then
@@ -553,7 +553,7 @@ function Registry:raw(componentName)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
 	end
 
 	return pool.dense, pool.objects
@@ -566,7 +566,7 @@ function Registry:count(componentName)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		assertAtCallSite(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
 	end
 
 	return pool.size
@@ -593,7 +593,7 @@ function Registry:getPools(...)
 		local pool = self._pools[componentName]
 
 		if DEBUG then
-			assertAtCallSite(pool, ErrBadComponentName:format(componentName))
+			jumpAssert(pool, ErrBadComponentName:format(componentName))
 		end
 
 		output[i] = pool

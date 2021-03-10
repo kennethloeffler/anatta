@@ -5,11 +5,6 @@ local ImmutableCollection = {}
 ImmutableCollection.__index = ImmutableCollection
 
 function ImmutableCollection.new(matcher)
-	util.assertAtCallSite(
-		#matcher.required > 0,
-		"An immutable collection needs at least one required component"
-	)
-
 	if #matcher.forbidden == 0 and #matcher.optional == 0 and #matcher.required == 1 then
 		return SingleImmutableCollection.new(unpack(matcher.required))
 	end
