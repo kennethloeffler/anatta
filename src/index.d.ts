@@ -1,6 +1,7 @@
 import Matcher = require("./Entity/Matcher");
 import Registry = require("./Entity/Registry");
 import { Event } from "./Core/Types"
+import { t } from "../vendor/t"
 
 interface Anatta {
   loadSystems(container: Instance): void
@@ -12,4 +13,4 @@ export interface System<Components> {
   on<T extends Callback>(event: Event<T>, callback: T): void;
 }
 
-export function define<Components>(components: Components): Anatta
+export function define(components: { [componentName: string]: t.check<unknown> }): Anatta

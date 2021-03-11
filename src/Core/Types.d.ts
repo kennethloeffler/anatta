@@ -12,7 +12,7 @@ type Flatten<T extends unknown[], U extends unknown[]> = T extends Empty<T>
 
 export type ResolvedType<T, K extends keyof T> = T[K] extends t.check<infer U>
   ? U
-  : T;
+  : never;
 
 export type CollectionCallback<Tuple extends unknown[], Return = void> = (
   entity: number,
