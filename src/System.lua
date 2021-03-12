@@ -22,6 +22,10 @@ function System.new(registry)
 	}, System)
 end
 
+function System:getRegistry()
+	return self._registry
+end
+
 function System:unload()
 	if self._impureCollection then
 		self._impureCollection:detach()

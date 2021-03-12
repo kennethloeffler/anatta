@@ -21,7 +21,6 @@ function Collection.new(system)
 		added = collectionPool.added,
 		removed = collectionPool.removed,
 
-		_registry = system._registry,
 		_pool = collectionPool,
 		_updates = {},
 		_connections = {},
@@ -61,10 +60,6 @@ function Collection.new(system)
 	end
 
 	return self
-end
-
-function Collection:getRegistry()
-	return self._registry
 end
 
 function Collection:attach(callback)
