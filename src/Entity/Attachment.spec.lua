@@ -1,5 +1,5 @@
 return function()
-	local Attachments = require(script.Parent.Attachments)
+	local Attachments = require(script.Parent.Attachment)
 	local Registry = require(script.Parent.Registry)
 	local Matcher = require(script.Parent.Matcher)
 	local t = require(script.Parent.Parent.t)

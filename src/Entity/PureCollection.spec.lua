@@ -1,6 +1,6 @@
 return function()
-	local ImmutableCollection = require(script.Parent.ImmutableCollection)
-	local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
+	local PureCollection = require(script.Parent.PureCollection)
+	local SinglePureCollection = require(script.Parent.SinglePureCollection)
 	local Registry = require(script.Parent.Registry)
 	local Matcher = require(script.Parent.Matcher)
 	local t = require(script.Parent.Parent.t)
@@ -37,20 +37,20 @@ return function()
 	end)
 
 	describe("new", function()
-		it("should create a new ImmutableCollection when there are  multiple components", function(context)
-			local collection = ImmutableCollection.new(
+		it("should create a new PureCollection when there are  multiple components", function(context)
+			local collection = PureCollection.new(
 				Matcher.new(context.registry):all("Test1"):except("Test2")
 			)
 
-			expect(getmetatable(collection)).to.equal(ImmutableCollection)
+			expect(getmetatable(collection)).to.equal(PureCollection)
 		end)
 
-		it("should create a new SingleImmutableCollection when there is only one required component ", function(context)
-			local collection = ImmutableCollection.new(
+		it("should create a new SinglePureCollection when there is only one required component ", function(context)
+			local collection = PureCollection.new(
 				Matcher.new(context.registry):all("Test1")
 			)
 
-			expect(getmetatable(collection)).to.equal(SingleImmutableCollection)
+			expect(getmetatable(collection)).to.equal(SinglePureCollection)
 		end)
 	end)
 
@@ -59,7 +59,7 @@ return function()
 			it("should iterate all and only the entities with at least the required components and pass them plus any optional ones", function(context)
 				local registry = context.registry
 				local toIterate = {}
-				local collection = ImmutableCollection.new(
+				local collection = PureCollection.new(
 					Matcher.new(registry)
 					:all("Test1", "Test2"):any("Test3", "Test4")
 				)
@@ -88,7 +88,7 @@ return function()
 
 			it("should replace required components with ones returned by the callback", function(context)
 				local registry = context.registry
-				local collection = ImmutableCollection.new(
+				local collection = PureCollection.new(
 					Matcher.new(registry):all("Test1", "Test2")
 				)
 				local toIterate = {}

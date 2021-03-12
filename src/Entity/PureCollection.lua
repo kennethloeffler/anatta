@@ -1,12 +1,12 @@
-local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
+local SinglePureCollection = require(script.Parent.SinglePureCollection)
 local util = require(script.Parent.Parent.util)
 
-local ImmutableCollection = {}
-ImmutableCollection.__index = ImmutableCollection
+local PureCollection = {}
+PureCollection.__index = PureCollection
 
-function ImmutableCollection.new(matcher)
+function PureCollection.new(matcher)
 	if #matcher.forbidden == 0 and #matcher.optional == 0 and #matcher.required == 1 then
-		return SingleImmutableCollection.new(unpack(matcher.required))
+		return SinglePureCollection.new(unpack(matcher.required))
 	end
 
 	return setmetatable({
@@ -16,10 +16,10 @@ function ImmutableCollection.new(matcher)
 		_packed = table.create(#matcher.required + #matcher.optional),
 		_numPacked = #matcher.required + #matcher.optional,
 		_numRequired = #matcher.required,
-	}, ImmutableCollection)
+	}, PureCollection)
 end
 
-function ImmutableCollection:update(callback)
+function PureCollection:update(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 
@@ -30,7 +30,7 @@ function ImmutableCollection:update(callback)
 	end
 end
 
-function ImmutableCollection:each(callback)
+function PureCollection:each(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 
@@ -41,7 +41,7 @@ function ImmutableCollection:each(callback)
 	end
 end
 
-function ImmutableCollection:_replace(entity, ...)
+function PureCollection:_replace(entity, ...)
 	for i, pool in ipairs(self._required) do
 		local component = select(i, ...)
 
@@ -57,7 +57,7 @@ end
 --[[
 	Returns the required component pool with the least number of elements.
 ]]
-function ImmutableCollection:_getShortestRequiredPool()
+function PureCollection:_getShortestRequiredPool()
 	local size = math.huge
 	local selected
 
@@ -71,7 +71,7 @@ function ImmutableCollection:_getShortestRequiredPool()
 	return selected
 end
 
-function ImmutableCollection:_tryPack(entity)
+function PureCollection:_tryPack(entity)
 	local packed = self._packed
 
 	for _, pool in ipairs(self._forbidden) do
@@ -99,4 +99,4 @@ function ImmutableCollection:_tryPack(entity)
 	return true
 end
 
-return ImmutableCollection
+return PureCollection

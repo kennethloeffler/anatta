@@ -1,4 +1,4 @@
-local Attachments = require(script.Parent.Attachments)
+local Attachment = require(script.Parent.Attachment)
 
 local SingleCollection = {}
 SingleCollection.__index = SingleCollection
@@ -23,6 +23,6 @@ function SingleCollection:each(callback)
 	end
 end
 
-SingleCollection.attach = Attachments.attach
+SingleCollection.attach = Attachment.attach
 
 return SingleCollection
