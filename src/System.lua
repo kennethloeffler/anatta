@@ -5,7 +5,7 @@ local System = {}
 System.__index = System
 
 local ErrAlreadyHasCollection = "Systems can only create one collection"
-local ErrPureNeedComponents = "Pure collections need at least one required or optional component"
+local ErrPureNeedComponents = "Pure collections need at least one required component type"
 local ErrImpureNeedComponents = "Collections need least one required, updated, or optional component type"
 local ErrTooManyUpdated = "Collections can only track up to 32 updated component types"
 
@@ -77,7 +77,7 @@ end
 function System:pure()
 	util.jumpAssert(not self._hasCollection, ErrAlreadyHasCollection)
 	util.jumpAssert(
-		#self.required > 0 or #self.optional > 1,
+		#self.required > 0,
 		ErrPureNeedComponents
 	)
 

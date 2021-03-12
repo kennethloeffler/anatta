@@ -41,7 +41,6 @@ function PureCollection:each(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 	local shortest = self:_getShortestPool(self._required)
-		or self:_getShortestPool(self._optional)
 
 	for _, entity in ipairs(shortest.dense) do
 		if self:_tryPack(entity) then
