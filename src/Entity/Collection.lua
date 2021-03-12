@@ -1,7 +1,6 @@
-local Attachments = require(script.Parent.Attachments)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleCollection = require(script.Parent.SingleCollection)
-local util = require(script.Parent.Parent.util)
+local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 
 local Collection = {}
 Collection.__index = Collection
@@ -63,6 +62,37 @@ function Collection.new(matcher)
 	return self
 end
 
+function Collection:attach(callback)
+	table.insert(self._connections, self.added:connect(function(entity, ...)
+		self._pool:replace(entity, callback(...))
+	end))
+
+	table.insert(self._connections, self.removed:connect(function(entity)
+		for _, item in ipairs(self._pool:get(entity)) do
+			Finalizers[typeof(item)](item)
+		end
+	end))
+end
+
+function Collection:detach()
+	local objects = self._pool.objects
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	for i, entity in ipairs(self._pool.dense) do
+		for _, attached in ipairs(objects[i]) do
+			Finalizers[typeof(attached)](attached)
+		end
+
+		self:_pack(entity)
+		self.removed:dispatch(entity, unpack(packed, 1, numPacked))
+	end
+
+	for _, connection in ipairs(self._connections) do
+		connection:disconnect()
+	end
+end
+
 --[[
 	Applies the callback to each tracked entity and its components. Passes the
 	entity first, followed by its required, updated, and optional components (in
@@ -98,14 +128,6 @@ function Collection:each(callback)
 		end
 	end
 end
-
---[[
-	Attaches a callback to the collection's added signal that should return a
-	list of temporary Instances and/or RBXScriptConnections. Disconnects the
-	connections and/or destroys the instances after an entity leaves the
-	collection.
-]]
-Collection.attach = Attachments.attach
 
 --[[
 	Unconditionally fills the collection's _packed field with the entity's required,

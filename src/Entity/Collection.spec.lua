@@ -3,7 +3,6 @@ return function()
 	local Registry = require(script.Parent.Registry)
 	local Collection = require(script.Parent.Collection)
 	local SingleCollection = require(script.Parent.SingleCollection)
-	local Matcher = require(script.Parent.Matcher)
 	local t = require(script.Parent.Parent.t)
 
 	local function makeEntities(registry)
@@ -40,9 +39,13 @@ return function()
 
 	describe("new", function()
 		it("should create a new Collection when there is anything more than one required component", function(context)
-			local collection = Collection.new(
-				Matcher.new(context.registry):all("Test1", "Test2")
-			)
+			local collection = Collection.new({
+				required = context.registry:getPools("Test1", "Test2"),
+				update = {},
+				optional = {},
+				forbidden = {},
+				_registry = context._registry
+			})
 
 			expect(getmetatable(collection)).to.equal(Collection)
 
@@ -54,19 +57,26 @@ return function()
 		end)
 
 		it("should create a new SingleCollection when there is exactly one required component and nothing else", function(context)
-			local collection = Collection.new(
-				Matcher.new(context.registry):all("Test1")
-			)
+			local collection = Collection.new({
+				required = context.registry:getPools("Test1"),
+				update = {},
+				optional = {},
+				forbidden = {},
+				_registry = context.registry
+			})
 
 			expect(getmetatable(collection)).to.equal(SingleCollection)
 		end)
 
 		it("should populate _required, _updated, and _forbidden", function(context)
 			local registry = context.registry
-			local collection = Collection.new(
-				Matcher.new(context.registry)
-				:all("Test1", "Test2"):updated("Test3"):except("Test4")
-			)
+			local collection = Collection.new({
+				required = registry:getPools("Test1", "Test2"),
+				update = registry:getPools("Test3"),
+				optional = {},
+				forbidden = registry:getPools("Test4"),
+				_registry = context.registry
+			})
 
 			expect(collection._required[1]).to.equal(registry._pools.Test1)
 			expect(collection._required[2]).to.equal(registry._pools.Test2)
@@ -75,9 +85,13 @@ return function()
 		end)
 
 		it("should correctly instantiate the full update bitset", function(context)
-			local collection = Collection.new(
-				Matcher.new(context.registry):updated("Test1", "Test2", "Test3")
-			)
+			local collection = Collection.new({
+				required = context.registry:getPools("Test1"),
+				update = context.registry:getPools("Test1", "Test2", "Test3"),
+				optional = {},
+				forbidden = {},
+				_registry = context.registry
+			})
 
 			expect(collection._allUpdates).to.equal(bit32.rshift(0xFFFFFFFF, 29))
 		end)
@@ -85,10 +99,13 @@ return function()
 
 	describe("connect", function()
 		it("should connect the collection to the component pools", function(context)
-			local collection = Collection.new(
-				Matcher.new(context.registry)
-				:all("Test1"):updated("Test2"):except("Test3")
-			)
+			local collection = Collection.new({
+				required = context.registry:getPools("Test1"),
+				update = context.registry:getPools("Test2"),
+				optional = {},
+				forbidden = context.registry:getPools("Test3"),
+				_registry = context.registry
+			})
 
 			expect(collection._required[1].added._callbacks[1]).to.be.ok()
 			expect(collection._required[1].removed._callbacks[1]).to.be.ok()
@@ -106,9 +123,13 @@ return function()
 			it("should iterate all and only the entities with at least the required components and pass their data", function(context)
 				local toIterate = {}
 				local registry = context.registry
-				local collection = Collection.new(
-					Matcher.new(registry):all("Test1", "Test2", "Test3")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2", "Test3"),
+					update = {},
+					optional = {},
+					forbidden = {},
+					_registry = context.registry
+				})
 
 				makeEntities(registry)
 
@@ -135,10 +156,13 @@ return function()
 				local toIterate = {}
 				local registry = context.registry
 
-				local collection = Collection.new(
-					Matcher.new(registry)
-					:all("Test1", "Test2"):any("Test5", "Test4")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2"),
+					update = {},
+					optional = registry:getPools("Test5", "Test4"),
+					forbidden = {},
+					_registry = context.registry
+				})
 
 				makeEntities(registry)
 
@@ -168,10 +192,13 @@ return function()
 			it("should iterate all and only the entities with at least the required components and none of the forbidden components and pass their data", function(context)
 				local toIterate = {}
 				local registry = context.registry
-				local collection = Collection.new(
-					Matcher.new(registry)
-					:all("Test1", "Test2"):except("Test3")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2"),
+					update = {},
+					optional = {},
+					forbidden = registry:getPools("Test3"),
+					_registry = context.registry
+				})
 
 				makeEntities(registry)
 
@@ -196,10 +223,13 @@ return function()
 			it("should iterate all and only the entities with at least the required components, none of the forbidden components, and all of the updated components, and pass their data", function(context)
 				local registry = context.registry
 				local toIterate = {}
-				local collection = Collection.new(
-					Matcher.new(registry)
-					:all("Test1", "Test2"):except("Test4"):updated("Test3")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2"),
+					update = registry:getPools("Test3"),
+					optional = {},
+					forbidden = registry:getPools("Test4"),
+					_registry = context.registry
+				})
 
 				makeEntities(registry)
 
@@ -239,9 +269,13 @@ return function()
 			it("should capture updates caused during iteration", function(context)
 				local toIterate = {}
 				local registry = context.registry
-				local collection = Collection.new(
-					Matcher.new(registry):all("Test1"):updated("Test2")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1"),
+					update = registry:getPools("Test2"),
+					optional = {},
+					forbidden = {},
+					_registry = context.registry
+				})
 
 				makeEntities(registry)
 
@@ -268,9 +302,13 @@ return function()
 				local registry = context.registry
 				local called = false
 				local testEntity = registry:create()
-				local collection = Collection.new(
-					Matcher.new(registry):all("Test1", "Test2", "Test3")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2", "Test3"),
+					update = {},
+					optional = {},
+					forbidden = {},
+					_registry = context.registry
+				})
 
 				collection.added:connect(function(entity, test1, test2, test3)
 					called = true
@@ -296,9 +334,13 @@ return function()
 				local registry = context.registry
 				local called = false
 				local testEntity = registry:create()
-				local collection = Collection.new(
-					Matcher.new(registry):all("Test1", "Test2"):except("Test3")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2"),
+					update = {},
+					optional = {},
+					forbidden = registry:getPools("Test3"),
+					_registry = context.registry
+				})
 
 				collection.added:connect(function(entity, test1, test2)
 					called = true
@@ -327,10 +369,13 @@ return function()
 				local registry = context.registry
 				local testEntity = registry:create()
 				local called = false
-				local collection = Collection.new(
-					Matcher.new(registry)
-					:all("Test1"):updated("Test2", "Test4"):except("Test3")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1"),
+					update = registry:getPools("Test2", "Test4"),
+					optional = {},
+					forbidden = registry:getPools("Test3"),
+					_registry = context.registry
+				})
 
 				collection.added:connect(function(entity, test1, test2, test4)
 					called = true
@@ -366,9 +411,13 @@ return function()
 			it("should not fire twice when a component is updated twice", function(context)
 				local registry = context.registry
 				local called = false
-				local collection = Collection.new(
-					Matcher.new(registry):all("Test1", "Test2"):updated("Test4")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2"),
+					update = registry:getPools("Test4"),
+					optional = {},
+					forbidden = {},
+					_registry = context.registry
+				})
 
 				collection.added:connect(function()
 					called = true
@@ -393,10 +442,13 @@ return function()
 				local registry = context.registry
 				local called = false
 				local testEntity = registry:create()
-				local collection = Collection.new(
-					Matcher.new(registry)
-					:all("Test1", "Test2"):any("Test3", "Test4")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2"),
+					update = {},
+					optional = registry:getPools("Test3", "Test4"),
+					forbidden = {},
+					_registry = context.registry
+				})
 
 				collection.added:connect(function(entity, test1, test2, test3, test4)
 					called = true
@@ -426,9 +478,13 @@ return function()
 				local registry = context.registry
 				local called = false
 				local testEntity = registry:create()
-				local collection = Collection.new(
-					Matcher.new(registry):all("Test1", "Test2", "Test3")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2", "Test3"),
+					update = {},
+					optional = {},
+					forbidden = {},
+					_registry = context.registry
+				})
 
 				collection.removed:connect(function(entity, test1, test2, test3)
 					called = true
@@ -455,9 +511,13 @@ return function()
 				local registry = context.registry
 				local called = false
 				local testEntity = registry:create()
-				local collection = Collection.new(
-					Matcher.new(registry):all("Test1", "Test2"):except("Test3")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2"),
+					update = {},
+					optional = {},
+					forbidden = registry:getPools("Test3"),
+					_registry = context.registry
+				})
 
 				collection.removed:connect(function(entity, test1, test2)
 					called = true
@@ -482,10 +542,13 @@ return function()
 				local registry = context.registry
 				local called = false
 				local testEntity = registry:create()
-				local collection = Collection.new(
-					Matcher.new(registry)
-					:all("Test1", "Test2"):except("Test3"):updated("Test4")
-				)
+				local collection = Collection.new({
+					required = registry:getPools("Test1", "Test2"),
+					update = registry:getPools("Test4"),
+					optional = {},
+					forbidden = registry:getPools("Test3"),
+					_registry = context.registry
+				})
 
 				collection.removed:connect(function(entity, test1, test2, test4)
 					called = true
@@ -510,10 +573,13 @@ return function()
 
 		it("should stop tracking updates on an entity after all updated components have been removed", function(context)
 			local registry = context.registry
-			local collection = Collection.new(
-				Matcher.new(registry)
-				:all("Test1", "Test2"):except("Test3"):updated("Test4")
-			)
+			local collection = Collection.new({
+				required = registry:getPools("Test1", "Test2"),
+				update = registry:getPools("Test4"),
+				optional = {},
+				forbidden = registry:getPools("Test3"),
+				_registry = context.registry
+			})
 
 			local testEntity = registry:create()
 
@@ -530,12 +596,105 @@ return function()
 		end)
 	end)
 
+	describe("attach", function()
+		it("should attach items when an entity enters the collection", function(context)
+			local registry = context.registry
+			local event = Instance.new("BindableEvent")
+			local numCalled = 0
+			local holes = {}
+			local collection = Collection.new({
+				required = registry:getPools("Test1", "Test2"),
+				update = {},
+				optional = {},
+				forbidden = {},
+				_registry = context.registry
+			})
+
+			collection:attach(function()
+				local hole = Instance.new("Hole")
+
+				hole.Parent = workspace
+				table.insert(holes, hole)
+
+				return {
+					hole,
+					event.Event:Connect(function()
+						numCalled += 1
+					end),
+				}
+			end)
+
+			for _ = 1, 50 do
+				registry:multiAdd(registry:create(), {
+					Test1 = {},
+					Test2 = {},
+				})
+			end
+
+			event:Fire()
+			expect(numCalled).to.equal(50)
+			numCalled = 0
+
+			collection:each(function(entity)
+				registry:remove(entity, "Test2")
+			end)
+
+			event:Fire()
+			expect(numCalled).to.equal(0)
+
+			for _, hole in ipairs(holes) do
+				expect(function()
+					hole.Parent = workspace
+				end).to.throw()
+			end
+		end)
+	end)
+
+	describe("detach", function()
+		it("should detach every item from every entity in the collection", function(context)
+			local registry = context.registry
+			local event = Instance.new("BindableEvent")
+			local numCalled = 0
+			local collection = Collection.new({
+				required = registry:getPools("Test1", "Test2"),
+				update = {},
+				optional = {},
+				forbidden = {},
+				_registry = context.registry
+			})
+
+			collection:attach(function()
+				return {
+					event.Event:Connect(function()
+						numCalled += 1
+					end),
+				}
+			end)
+
+			for _ = 1, 50 do
+				registry:multiAdd(registry:create(), {
+					Test1 = {},
+					Test2 = {},
+				})
+			end
+
+			collection:detach()
+
+			event:Fire()
+			expect(numCalled).to.equal(0)
+		end)
+	end)
+
 	describe("_pack", function()
 		it("should pack the required and updated components of the entity into _packed", function(context)
-			local collection = Collection.new(
-				Matcher.new(context.registry)
-				:all("Test2", "Test3"):updated("Test3", "Test4")
-			)
+			local registry = context.registry
+			local collection = Collection.new({
+				required = registry:getPools("Test2", "Test3"),
+				update = registry:getPools("Test3", "Test4"),
+				optional = {},
+				forbidden = {},
+				_registry = context.registry
+			})
 
 			local entity = context.registry:multiAdd(context.registry:create(), {
 				Test1 = {},
@@ -556,10 +715,13 @@ return function()
 	describe("_tryPack", function()
 		it("should pack required and optional components and return true if the entity has all of them", function(context)
 			local registry = context.registry
-			local collection = Collection.new(
-				Matcher.new(registry)
-				:all("Test1", "Test2"):any("Test4"):except("Test3")
-			)
+			local collection = Collection.new({
+				required = registry:getPools("Test1", "Test2"),
+				update = {},
+				optional = registry:getPools("Test4"),
+				forbidden = registry:getPools("Test3"),
+				_registry = context.registry
+			})
 
 			local entity = registry:multiAdd(registry:create(), {
 				Test1 = {},
