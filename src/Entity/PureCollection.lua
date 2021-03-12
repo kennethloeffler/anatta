@@ -4,18 +4,20 @@ local util = require(script.Parent.Parent.util)
 local PureCollection = {}
 PureCollection.__index = PureCollection
 
-function PureCollection.new(matcher)
-	if #matcher.forbidden == 0 and #matcher.optional == 0 and #matcher.required == 1 then
-		return SinglePureCollection.new(unpack(matcher.required))
+function PureCollection.new(system)
+	if #system.forbidden == 0 and #system.optional == 0 and #system.required == 1 then
+		return SinglePureCollection.new(unpack(system.required))
 	end
 
 	return setmetatable({
-		_required = matcher.required,
-		_forbidden = matcher.forbidden,
-		_optional = matcher.optional,
-		_packed = table.create(#matcher.required + #matcher.optional),
-		_numPacked = #matcher.required + #matcher.optional,
-		_numRequired = #matcher.required,
+		_required = system.required,
+		_forbidden = system.forbidden,
+		_optional = system.optional,
+		_packed = table.create(#system.required + #system.optional),
+		_numPacked = #system.required + #system.optional,
+		_numRequired = #system.required,
+
+		update = #system.required > 0 and PureCollection.update or ErrNeedsRequired
 	}, PureCollection)
 end
 

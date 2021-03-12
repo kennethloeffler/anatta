@@ -5,14 +5,14 @@ local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 local Collection = {}
 Collection.__index = Collection
 
-function Collection.new(matcher)
+function Collection.new(system)
 	if
-		#matcher.required == 1
-		and #matcher.update == 0
-		and #matcher.forbidden == 0
-		and #matcher.optional == 0
+		#system.required == 1
+		and #system.update == 0
+		and #system.forbidden == 0
+		and #system.optional == 0
 	then
-		return SingleCollection.new(unpack(matcher.required))
+		return SingleCollection.new(unpack(system.required))
 	end
 
 	local collectionPool = Pool.new()
@@ -21,45 +21,50 @@ function Collection.new(matcher)
 		added = collectionPool.added,
 		removed = collectionPool.removed,
 
+		_registry = system._registry,
 		_pool = collectionPool,
 		_updates = {},
 		_connections = {},
 
-		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #matcher.update),
-		_numPacked = #matcher.required + #matcher.update + #matcher.optional,
-		_numRequired = #matcher.required,
-		_numUpdated = #matcher.update,
+		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #system.update),
+		_numPacked = #system.required + #system.update + #system.optional,
+		_numRequired = #system.required,
+		_numUpdated = #system.update,
 
 		_packed = table.create(
-			#matcher.required + #matcher.update + #matcher.optional
+			#system.required + #system.update + #system.optional
 		),
-		_required = matcher.required,
-		_forbidden = matcher.forbidden,
-		_updated = matcher.update,
-		_optional = matcher.optional,
+		_required = system.required,
+		_forbidden = system.forbidden,
+		_updated = system.update,
+		_optional = system.optional,
 
 	}, Collection)
 
-	for _, pool in ipairs(matcher.required) do
+	for _, pool in ipairs(system.required) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
 		table.insert(self._connections, pool.removed:connect(self:_tryRemove()))
 	end
 
-	for i, pool in ipairs(matcher.update) do
+	for i, pool in ipairs(system.update) do
 		table.insert(self._connections, pool.updated:connect(self:_tryAddUpdated(i - 1)))
 		table.insert(self._connections, pool.removed:connect(self:_tryRemoveUpdated(i - 1)))
 	end
 
-	for _, pool in ipairs(matcher.forbidden) do
+	for _, pool in ipairs(system.forbidden) do
 		table.insert(self._connections, pool.added:connect(self:_tryRemove()))
 		table.insert(self._connections, pool.removed:connect(self:_tryAdd()))
 	end
 
-	for _, pool in ipairs(matcher.optional) do
+	for _, pool in ipairs(system.optional) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
 	end
 
 	return self
+end
+
+function Collection:getRegistry()
+	return self._registry
 end
 
 function Collection:attach(callback)
@@ -158,6 +163,8 @@ end
 ]]
 function Collection:_tryPack(entity)
 	local packed = self._packed
+	local numRequired = self._numRequired
+	local numUpdated = self._numUpdated
 
 	if (self._updates[entity] or 0) ~= self._allUpdates then
 		return false
@@ -186,11 +193,11 @@ function Collection:_tryPack(entity)
 			return false
 		end
 
-		packed[self._numRequired + i] = component
+		packed[numRequired + i] = component
 	end
 
 	for i, pool in ipairs(self._optional) do
-		packed[self._numRequired + self._numUpdated + i] = pool:get(entity)
+		packed[numRequired + numUpdated + i] = pool:get(entity)
 	end
 
 	return true

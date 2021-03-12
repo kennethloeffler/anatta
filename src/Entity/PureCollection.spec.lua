@@ -2,7 +2,6 @@ return function()
 	local PureCollection = require(script.Parent.PureCollection)
 	local SinglePureCollection = require(script.Parent.SinglePureCollection)
 	local Registry = require(script.Parent.Registry)
-	local Matcher = require(script.Parent.Matcher)
 	local t = require(script.Parent.Parent.t)
 
 	local function makeEntities(registry)
@@ -38,17 +37,21 @@ return function()
 
 	describe("new", function()
 		it("should create a new PureCollection when there are  multiple components", function(context)
-			local collection = PureCollection.new(
-				Matcher.new(context.registry):all("Test1"):except("Test2")
-			)
+			local collection = PureCollection.new({
+				required = context.registry:getPools("Test1"),
+				forbidden = context.registry:getPools("Test2"),
+				optional = {},
+			})
 
 			expect(getmetatable(collection)).to.equal(PureCollection)
 		end)
 
 		it("should create a new SinglePureCollection when there is only one required component ", function(context)
-			local collection = PureCollection.new(
-				Matcher.new(context.registry):all("Test1")
-			)
+			local collection = PureCollection.new({
+				required = context.registry:getPools("Test1"),
+				forbidden = {},
+				optional = {},
+			})
 
 			expect(getmetatable(collection)).to.equal(SinglePureCollection)
 		end)
@@ -59,10 +62,11 @@ return function()
 			it("should iterate all and only the entities with at least the required components and pass them plus any optional ones", function(context)
 				local registry = context.registry
 				local toIterate = {}
-				local collection = PureCollection.new(
-					Matcher.new(registry)
-					:all("Test1", "Test2"):any("Test3", "Test4")
-				)
+				local collection = PureCollection.new({
+					required = registry:getPools("Test1", "Test2"),
+					optional = registry:getPools("Test3", "Test4"),
+					forbidden = {},
+				})
 
 				makeEntities(registry)
 
@@ -88,10 +92,12 @@ return function()
 
 			it("should replace required components with ones returned by the callback", function(context)
 				local registry = context.registry
-				local collection = PureCollection.new(
-					Matcher.new(registry):all("Test1", "Test2")
-				)
 				local toIterate = {}
+				local collection = PureCollection.new({
+					required = registry:getPools("Test1", "Test2"),
+					forbidden = {},
+					optional = {},
+				})
 
 				makeEntities(registry)
 
