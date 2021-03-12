@@ -1,9 +1,9 @@
-local Attachments = require(script.Attachments)
-local Matcher = require(script.Matcher)
+local Collection = require(script.Collection)
+local PureCollection = require(script.PureCollection)
 local Registry = require(script.Registry)
 
 return {
-	Attachments = Attachments,
-	Matcher = Matcher,
+	Collection = Collection,
+	PureCollection = PureCollection,
 	Registry = Registry,
 }
