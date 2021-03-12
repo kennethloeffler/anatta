@@ -119,4 +119,33 @@ return function()
 			end)
 		end)
 	end)
+
+	describe("each", function()
+		it("should iterate over a union properly" , function(context)
+			local registry = context.registry
+			local toIterate = {}
+			local collection = PureCollection.new({
+				optional = registry:getPools("Test1", "Test2", "Test3"),
+				required= {},
+				forbidden = {}
+			})
+
+			registry:each(function(entity)
+				if registry:has(entity, "Test1", "Test2", "Test3") then
+					toIterate[entity] = registry:multiGet(entity,
+						"Test1",
+						"Test2",
+						"Test3"
+					)
+				end
+			end)
+
+			collection:each(function(entity, test1, test2, test3)
+				expect(toIterate[entity]).to.be.ok()
+				expect(test1).to.equal(toIterate[entity][1])
+				expect(test2).to.equal(toIterate[entity][2])
+				expect(test3).to.equal(toIterate[entity][3])
+			end)
+		end)
+	end)
 end

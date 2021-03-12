@@ -4,6 +4,10 @@ local util = require(script.Parent.Parent.util)
 local PureCollection = {}
 PureCollection.__index = PureCollection
 
+local function ErrNeedsRequired()
+	util.jumpAssert("Pure collections can only update required components")
+end
+
 function PureCollection.new(system)
 	if #system.forbidden == 0 and #system.optional == 0 and #system.required == 1 then
 		return SinglePureCollection.new(unpack(system.required))
@@ -24,8 +28,9 @@ end
 function PureCollection:update(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
+	local shortest = self:_getShortestPool(self._required)
 
-	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
+	for _, entity in ipairs(shortest.dense) do
 		if self:_tryPack(entity) then
 			self:_replace(entity, callback(entity, unpack(packed, 1, numPacked)))
 		end
@@ -35,8 +40,10 @@ end
 function PureCollection:each(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
+	local shortest = self:_getShortestPool(self._required)
+		or self:_getShortestPool(self._optional)
 
-	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
+	for _, entity in ipairs(shortest.dense) do
 		if self:_tryPack(entity) then
 			callback(entity, unpack(packed, 1, numPacked))
 		end
@@ -59,11 +66,11 @@ end
 --[[
 	Returns the required component pool with the least number of elements.
 ]]
-function PureCollection:_getShortestRequiredPool()
+function PureCollection:_getShortestPool(pools)
 	local size = math.huge
 	local selected
 
-	for _, pool in ipairs(self._required) do
+	for _, pool in ipairs(pools) do
 		if pool.size < size then
 			size = pool.size
 			selected = pool
