@@ -9,14 +9,16 @@ local function ErrNeedsRequired()
 end
 
 function PureCollection.new(system)
+	local registry = system.registry
+
 	if #system.forbidden == 0 and #system.optional == 0 and #system.required == 1 then
 		return SinglePureCollection.new(unpack(system.required))
 	end
 
 	return setmetatable({
-		_required = system.required,
-		_forbidden = system.forbidden,
-		_optional = system.optional,
+		_required = registry:getPools(unpack(system.required)),
+		_forbidden = registry:getPools(unpack(system.forbidden)),
+		_optional = registry:getPools(unpack(system.optional)),
 		_packed = table.create(#system.required + #system.optional),
 		_numPacked = #system.required + #system.optional,
 		_numRequired = #system.required,

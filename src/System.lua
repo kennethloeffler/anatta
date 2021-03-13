@@ -15,16 +15,13 @@ function System.new(registry)
 		optional = {},
 		required = {},
 		update = {},
+		registry = registry,
 
 		_hasCollection = false,
 		_connections = {},
-		_registry = registry,
 	}, System)
 end
 
-function System:getRegistry()
-	return self._registry
-end
 
 function System:unload()
 	if self._impureCollection then
@@ -41,22 +38,22 @@ function System:on(event, callback)
 end
 
 function System:all(...)
-	self.required = self._registry:getPools(...)
+	self.required = { ... }
 	return self
 end
 
 function System:except(...)
-	self.forbidden = self._registry:getPools(...)
+	self.forbidden = { ... }
 	return self
 end
 
 function System:updated(...)
-	self.update = self._registry:getPools(...)
+	self.update = { ... }
 	return self
 end
 
 function System:any(...)
-	self.optional = self._registry:getPools(...)
+	self.optional = { ... }
 	return self
 end
 

@@ -6,6 +6,8 @@ local Collection = {}
 Collection.__index = Collection
 
 function Collection.new(system)
+	local registry = system.registry
+
 	if
 		#system.required == 1
 		and #system.update == 0
@@ -33,29 +35,29 @@ function Collection.new(system)
 		_packed = table.create(
 			#system.required + #system.update + #system.optional
 		),
-		_required = system.required,
-		_forbidden = system.forbidden,
-		_updated = system.update,
-		_optional = system.optional,
+		_required = registry:getPools(unpack(system.required)),
+		_forbidden = registry:getPools(unpack(system.forbidden)),
+		_updated = registry:getPools(unpack(system.update)),
+		_optional = registry:getPools(unpack(system.optional)),
 
 	}, Collection)
 
-	for _, pool in ipairs(system.required) do
+	for _, pool in ipairs(self._required) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
 		table.insert(self._connections, pool.removed:connect(self:_tryRemove()))
 	end
 
-	for i, pool in ipairs(system.update) do
+	for i, pool in ipairs(self._updated) do
 		table.insert(self._connections, pool.updated:connect(self:_tryAddUpdated(i - 1)))
 		table.insert(self._connections, pool.removed:connect(self:_tryRemoveUpdated(i - 1)))
 	end
 
-	for _, pool in ipairs(system.forbidden) do
+	for _, pool in ipairs(self._forbidden) do
 		table.insert(self._connections, pool.added:connect(self:_tryRemove()))
 		table.insert(self._connections, pool.removed:connect(self:_tryAdd()))
 	end
 
-	for _, pool in ipairs(system.optional) do
+	for _, pool in ipairs(self._optional) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
 	end
 
