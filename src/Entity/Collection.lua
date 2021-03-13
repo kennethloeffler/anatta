@@ -64,7 +64,7 @@ end
 
 function Collection:attach(callback)
 	table.insert(self._connections, self.added:connect(function(entity, ...)
-		self._pool:replace(entity, callback(...))
+		self._pool:replace(entity, callback(entity, ...))
 	end))
 
 	table.insert(self._connections, self.removed:connect(function(entity)
@@ -103,30 +103,35 @@ function Collection:each(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 
-	if next(self._updated) then
-		local updates = self._updates
-		local pool = self._pool
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
 
-		for i = self._pool.size, 1, -1 do
-			local entity = dense[i]
-
-			self:_pack(entity)
-			callback(entity, unpack(packed, 1, numPacked))
-
-			if pool:getIndex(entity) then
-				pool:delete(entity)
-			end
-
-			updates[entity] = nil
-		end
-	else
-		for i = self._pool.size, 1, -1 do
-			local entity = dense[i]
-
-			self:_pack(entity)
-			callback(entity, unpack(packed, 1, numPacked))
-		end
+		self:_pack(entity)
+		callback(entity, unpack(packed, 1, numPacked))
 	end
+end
+
+function Collection:consumeEach(callback)
+	local dense = self._pool.dense
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	local updates = self._updates
+	local pool = self._pool
+
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
+
+		pool:delete(entity)
+		updates[entity] = nil
+		self:_pack(entity)
+		callback(entity, unpack(packed, 1, numPacked))
+	end
+end
+
+function Collection:consume(entity)
+	self._pool:delete(entity)
+	self._updates[entity] = nil
 end
 
 --[[

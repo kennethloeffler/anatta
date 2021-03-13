@@ -51,13 +51,15 @@ end
 
 function PureCollection:_replace(entity, ...)
 	for i, pool in ipairs(self._required) do
-		local component = select(i, ...)
+		local newComponent = select(i, ...)
+		local oldComponent = pool:get(entity)
 
-		if pool:replace(entity, component) then
+		if newComponent ~= oldComponent then
 			-- !!! Beware: if a listener of this signal adds or removes any
-			-- !!! elements from the pool selected by _selectShortestPool, the
+			-- !!! elements from the pool selected by _getShortestPool, the
 			-- !!! iteration will terminate!
-			pool.updated:dispatch(entity, component)
+			pool.updated:dispatch(entity, newComponent)
+			pool:replace(entity, newComponent)
 		end
 	end
 end
