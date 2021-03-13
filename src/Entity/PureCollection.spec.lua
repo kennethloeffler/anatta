@@ -1,11 +1,15 @@
 return function()
-	local ImmutableCollection = require(script.Parent.ImmutableCollection)
-	local SingleImmutableCollection = require(script.Parent.SingleImmutableCollection)
+	local PureCollection = require(script.Parent.PureCollection)
+	local SinglePureCollection = require(script.Parent.SinglePureCollection)
 	local Registry = require(script.Parent.Registry)
-	local Matcher = require(script.Parent.Matcher)
 	local t = require(script.Parent.Parent.t)
 
-	local function makeEntities(registry)
+	local function getCollection(registry, system)
+		system.registry = registry
+
+		local toIterate = {}
+		local collection = PureCollection.new(system)
+
 		for i = 1, 100 do
 			local entity = registry:create()
 
@@ -24,7 +28,16 @@ return function()
 			if i % 5 == 0 then
 				registry:add(entity, "Test4", {})
 			end
+
+			if
+				registry:has(entity, unpack(system.required))
+				and not registry:any(entity, unpack(system.forbidden))
+			then
+				toIterate[entity] = true
+			end
 		end
+
+		return collection, toIterate
 	end
 
 	beforeEach(function(context)
@@ -37,20 +50,26 @@ return function()
 	end)
 
 	describe("new", function()
-		it("should create a new ImmutableCollection when there are  multiple components", function(context)
-			local collection = ImmutableCollection.new(
-				Matcher.new(context.registry):all("Test1"):except("Test2")
-			)
+		it("should create a new PureCollection when there are  multiple components", function(context)
+			local collection = PureCollection.new({
+				required = { "Test1" },
+				forbidden = { "Test2" },
+				optional = {},
+				registry = context.registry
+			})
 
-			expect(getmetatable(collection)).to.equal(ImmutableCollection)
+			expect(getmetatable(collection)).to.equal(PureCollection)
 		end)
 
-		it("should create a new SingleImmutableCollection when there is only one required component ", function(context)
-			local collection = ImmutableCollection.new(
-				Matcher.new(context.registry):all("Test1")
-			)
+		it("should create a new SinglePureCollection when there is only one required component ", function(context)
+			local collection = PureCollection.new({
+				required = { "Test1" },
+				forbidden = {},
+				optional = {},
+				registry = context.registry
+			})
 
-			expect(getmetatable(collection)).to.equal(SingleImmutableCollection)
+			expect(getmetatable(collection)).to.equal(SinglePureCollection)
 		end)
 	end)
 
@@ -58,19 +77,11 @@ return function()
 		describe("all", function()
 			it("should iterate all and only the entities with at least the required components and pass them plus any optional ones", function(context)
 				local registry = context.registry
-				local toIterate = {}
-				local collection = ImmutableCollection.new(
-					Matcher.new(registry)
-					:all("Test1", "Test2"):any("Test3", "Test4")
-				)
-
-				makeEntities(registry)
-
-				for _, entity in ipairs(registry._pools.Test1.dense) do
-					if registry:has(entity, "Test2") then
-						toIterate[entity] = true
-					end
-				end
+				local collection, toIterate = getCollection(registry, {
+					required = { "Test1", "Test2" },
+					optional = { "Test3", "Test4" },
+					forbidden = {},
+				})
 
 				collection:update(function(entity, test1, test2, test3, test4)
 					expect(toIterate[entity]).to.equal(true)
@@ -88,12 +99,11 @@ return function()
 
 			it("should replace required components with ones returned by the callback", function(context)
 				local registry = context.registry
-				local collection = ImmutableCollection.new(
-					Matcher.new(registry):all("Test1", "Test2")
-				)
-				local toIterate = {}
-
-				makeEntities(registry)
+				local collection, toIterate = getCollection(registry, {
+					required = { "Test1", "Test2" },
+					forbidden = {},
+					optional = {},
+				})
 
 				collection:update(function(entity)
 					local newTest1 = {}

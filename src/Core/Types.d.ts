@@ -25,8 +25,6 @@ export type Event<T extends Callback> =
     }
   | RBXScriptSignal<T>;
 
-export type Entity = number;
-
 export type ComponentTuple<
   Required extends unknown[],
   Updated extends unknown[],

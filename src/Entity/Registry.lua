@@ -426,9 +426,8 @@ function Registry:replace(entity, componentName, object)
 		)
 	end
 
-	if pool:replace(entity, object) then
-		pool.updated:dispatch(entity, object)
-	end
+	pool:replace(entity, object)
+	pool.updated:dispatch(entity, object)
 
 	return object
 end
@@ -449,7 +448,8 @@ function Registry:addOrReplace(entity, componentName, object)
 
 	local denseIndex = pool:getIndex(entity)
 
-	if denseIndex and pool:replace(entity, object) then
+	if denseIndex  then
+		pool:replace(entity, object)
 		pool.updated:dispatch(entity, object)
 		return object
 	end

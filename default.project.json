@@ -2,7 +2,7 @@
   "name": "anatta",
   "tree": {
     "$path": "src",
-    "t" : {
+    "t": {
       "$path": "vendor/t"
     }
   }

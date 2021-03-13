@@ -1,19 +1,20 @@
-local Attachments = require(script.Parent.Attachments)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleCollection = require(script.Parent.SingleCollection)
-local util = require(script.Parent.Parent.util)
+local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 
 local Collection = {}
 Collection.__index = Collection
 
-function Collection.new(matcher)
+function Collection.new(system)
+	local registry = system.registry
+
 	if
-		#matcher.required == 1
-		and #matcher.update == 0
-		and #matcher.forbidden == 0
-		and #matcher.optional == 0
+		#system.required == 1
+		and #system.update == 0
+		and #system.forbidden == 0
+		and #system.optional == 0
 	then
-		return SingleCollection.new(unpack(matcher.required))
+		return SingleCollection.new(unpack(system.required))
 	end
 
 	local collectionPool = Pool.new()
@@ -26,41 +27,72 @@ function Collection.new(matcher)
 		_updates = {},
 		_connections = {},
 
-		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #matcher.update),
-		_numPacked = #matcher.required + #matcher.update + #matcher.optional,
-		_numRequired = #matcher.required,
-		_numUpdated = #matcher.update,
+		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #system.update),
+		_numPacked = #system.required + #system.update + #system.optional,
+		_numRequired = #system.required,
+		_numUpdated = #system.update,
 
 		_packed = table.create(
-			#matcher.required + #matcher.update + #matcher.optional
+			#system.required + #system.update + #system.optional
 		),
-		_required = matcher.required,
-		_forbidden = matcher.forbidden,
-		_updated = matcher.update,
-		_optional = matcher.optional,
+		_required = registry:getPools(unpack(system.required)),
+		_forbidden = registry:getPools(unpack(system.forbidden)),
+		_updated = registry:getPools(unpack(system.update)),
+		_optional = registry:getPools(unpack(system.optional)),
 
 	}, Collection)
 
-	for _, pool in ipairs(matcher.required) do
+	for _, pool in ipairs(self._required) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
 		table.insert(self._connections, pool.removed:connect(self:_tryRemove()))
 	end
 
-	for i, pool in ipairs(matcher.update) do
+	for i, pool in ipairs(self._updated) do
 		table.insert(self._connections, pool.updated:connect(self:_tryAddUpdated(i - 1)))
 		table.insert(self._connections, pool.removed:connect(self:_tryRemoveUpdated(i - 1)))
 	end
 
-	for _, pool in ipairs(matcher.forbidden) do
+	for _, pool in ipairs(self._forbidden) do
 		table.insert(self._connections, pool.added:connect(self:_tryRemove()))
 		table.insert(self._connections, pool.removed:connect(self:_tryAdd()))
 	end
 
-	for _, pool in ipairs(matcher.optional) do
+	for _, pool in ipairs(self._optional) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
 	end
 
 	return self
+end
+
+function Collection:attach(callback)
+	table.insert(self._connections, self.added:connect(function(entity, ...)
+		self._pool:replace(entity, callback(entity, ...))
+	end))
+
+	table.insert(self._connections, self.removed:connect(function(entity)
+		for _, item in ipairs(self._pool:get(entity)) do
+			Finalizers[typeof(item)](item)
+		end
+	end))
+end
+
+function Collection:detach()
+	local objects = self._pool.objects
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	for i, entity in ipairs(self._pool.dense) do
+		for _, attached in ipairs(objects[i]) do
+			Finalizers[typeof(attached)](attached)
+		end
+
+		self:_pack(entity)
+		self.removed:dispatch(entity, unpack(packed, 1, numPacked))
+	end
+
+	for _, connection in ipairs(self._connections) do
+		connection:disconnect()
+	end
 end
 
 --[[
@@ -73,39 +105,36 @@ function Collection:each(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 
-	if next(self._updated) then
-		local updates = self._updates
-		local pool = self._pool
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
 
-		for i = self._pool.size, 1, -1 do
-			local entity = dense[i]
-
-			self:_pack(entity)
-			callback(entity, unpack(packed, 1, numPacked))
-
-			if pool:getIndex(entity) then
-				pool:delete(entity)
-			end
-
-			updates[entity] = nil
-		end
-	else
-		for i = self._pool.size, 1, -1 do
-			local entity = dense[i]
-
-			self:_pack(entity)
-			callback(entity, unpack(packed, 1, numPacked))
-		end
+		self:_pack(entity)
+		callback(entity, unpack(packed, 1, numPacked))
 	end
 end
 
---[[
-	Attaches a callback to the collection's added signal that should return a
-	list of temporary Instances and/or RBXScriptConnections. Disconnects the
-	connections and/or destroys the instances after an entity leaves the
-	collection.
-]]
-Collection.attach = Attachments.attach
+function Collection:consumeEach(callback)
+	local dense = self._pool.dense
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	local updates = self._updates
+	local pool = self._pool
+
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
+
+		pool:delete(entity)
+		updates[entity] = nil
+		self:_pack(entity)
+		callback(entity, unpack(packed, 1, numPacked))
+	end
+end
+
+function Collection:consume(entity)
+	self._pool:delete(entity)
+	self._updates[entity] = nil
+end
 
 --[[
 	Unconditionally fills the collection's _packed field with the entity's required,
@@ -136,6 +165,8 @@ end
 ]]
 function Collection:_tryPack(entity)
 	local packed = self._packed
+	local numRequired = self._numRequired
+	local numUpdated = self._numUpdated
 
 	if (self._updates[entity] or 0) ~= self._allUpdates then
 		return false
@@ -164,11 +195,11 @@ function Collection:_tryPack(entity)
 			return false
 		end
 
-		packed[self._numRequired + i] = component
+		packed[numRequired + i] = component
 	end
 
 	for i, pool in ipairs(self._optional) do
-		packed[self._numRequired + self._numUpdated + i] = pool:get(entity)
+		packed[numRequired + numUpdated + i] = pool:get(entity)
 	end
 
 	return true

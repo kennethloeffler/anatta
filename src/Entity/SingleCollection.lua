@@ -1,4 +1,5 @@
-local Attachments = require(script.Parent.Attachments)
+local Finalizers = require(script.Parent.Parent.Core.Finalizers)
+local Pool = require(script.Parent.Parent.Core.Pool)
 
 local SingleCollection = {}
 SingleCollection.__index = SingleCollection
@@ -8,7 +9,7 @@ function SingleCollection.new(componentPool)
 		added = componentPool.added,
 		removed = componentPool.removed,
 
-		_pool = {},
+		_pool = false,
 		_connections = {},
 		_componentPool = componentPool,
 	}, SingleCollection)
@@ -23,6 +24,42 @@ function SingleCollection:each(callback)
 	end
 end
 
-SingleCollection.attach = Attachments.attach
+function SingleCollection:attach(callback)
+	if not self._pool then
+		self._pool = Pool.new()
+	end
+
+	table.insert(self._connections, self.added:connect(function(entity, component)
+		self._pool:insert(entity, callback(entity, component))
+	end))
+
+	table.insert(self._connections, self.removed:connect(function(entity)
+		for _, item in ipairs(self._pool:get(entity)) do
+			Finalizers[typeof(item)](item)
+		end
+
+		self._pool:delete(entity)
+	end))
+end
+
+function SingleCollection:detach()
+	if not self._pool then
+		return
+	end
+
+	local objects = self._pool.objects
+
+	for i, entity in ipairs(self._pool.dense) do
+		for _, attached in ipairs(objects[i]) do
+			Finalizers[typeof(attached)](attached)
+		end
+
+		self.removed:dispatch(entity, objects[i])
+	end
+
+	for _, connection in ipairs(self._connections) do
+		connection:disconnect()
+	end
+end
 
 return SingleCollection

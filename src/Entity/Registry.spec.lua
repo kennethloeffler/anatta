@@ -618,13 +618,15 @@ return function()
 
 		it("should dispatch the component pool's update signal", function(context)
 			local registry = context.registry
-			local entity = registry:create()
+			local new = 11
 			local ranCallback
 
-			registry._pools.number.updated:connect(function()
+			registry._pools.number.updated:connect(function(_, newComponent)
+				expect(newComponent).to.equal(new)
 				ranCallback = true
 			end)
 
+			local entity = registry:create()
 			registry._pools.number:insert(entity, 10)
 			registry:replace(entity, "number", 11)
 
@@ -681,7 +683,7 @@ return function()
 			expect(registry._pools.number:get(entity)).to.equal(replaced)
 		end)
 
-		it("should dispatch the component pool's replacement signal", function(context)
+		it("should dispatch the component pool's replaced signal", function(context)
 			local registry = context.registry
 			local entity = registry:create()
 			local ranReplaceCallback = false

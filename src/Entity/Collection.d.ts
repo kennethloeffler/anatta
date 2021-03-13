@@ -5,6 +5,10 @@ interface Collection<Tuple extends unknown[]> {
 
   attach(callback: CollectionCallback<Tuple, (RBXScriptConnection | Instance)[]>): void;
 
+  consumeEach(callback: CollectionCallback<Tuple>): void;
+
+  consume(entity: number): void;
+
   added: Event<CollectionCallback<Tuple>>;
 
   removed: Event<CollectionCallback<Tuple>>;

@@ -33,4 +33,78 @@ return function()
 			expect(next(toIterate)).to.equal(nil)
 		end)
 	end)
+
+	describe("attach", function()
+		it("should attach items when an entity enters the collection", function()
+			local pool = Pool.new()
+			local collection = SingleCollection.new(pool)
+			local event = Instance.new("BindableEvent")
+			local numCalled = 0
+			local holes = {}
+
+			collection:attach(function()
+				local hole = Instance.new("Hole")
+
+				hole.Parent = workspace
+				table.insert(holes, hole)
+
+				return {
+					hole,
+					event.Event:Connect(function()
+						numCalled += 1
+					end),
+				}
+			end)
+
+			for i = 1, 50 do
+				pool:insert(i)
+				pool.added:dispatch(i)
+			end
+
+			event:Fire()
+			expect(numCalled).to.equal(50)
+			numCalled = 0
+
+			collection:each(function(entity)
+				pool:delete(entity)
+				pool.removed:dispatch(entity)
+			end)
+
+			event:Fire()
+			expect(numCalled).to.equal(0)
+
+			for _, hole in ipairs(holes) do
+				expect(function()
+					hole.Parent = workspace
+				end).to.throw()
+			end
+		end)
+	end)
+
+	describe("detach", function()
+		it("should detach every item from every entity in the collection", function()
+			local pool = Pool.new()
+			local collection = SingleCollection.new(pool)
+			local event = Instance.new("BindableEvent")
+			local numCalled = 0
+
+			collection:attach(function()
+				return {
+					event.Event:Connect(function()
+						numCalled += 1
+					end),
+				}
+			end)
+
+			for i = 1, 50 do
+				pool:insert(i)
+				pool.added:dispatch(i)
+			end
+
+			collection:detach(collection)
+
+			event:Fire()
+			expect(numCalled).to.equal(0)
+		end)
+	end)
 end

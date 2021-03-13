@@ -1,28 +1,28 @@
-import { Entity, ResolvedType } from "../Core/Types";
+import { ResolvedType } from "../Core/Types";
 
 type ComponentReturn<Components> = <Typename extends keyof Components>(
   this: Registry<Components>,
-  entity: Entity,
+  entity: number,
   component: Typename,
   data: ResolvedType<Components, Typename>
 ) => ResolvedType<Components, Typename>;
 
 interface Registry<Components> {
-  create(): Entity;
+  create(): number;
 
-  createFrom(entity: Entity): Entity;
+  createFrom(entity: number): number;
 
-  destroy(entity: Entity): void;
+  destroy(entity: number): void;
 
-  isValid(entity: Entity): boolean;
+  isValid(entity: number): boolean;
 
-  isStub(entity: Entity): boolean;
+  isStub(entity: number): boolean;
 
-  visit(callback: (component: string) => void, entity?: Entity): void;
+  visit(callback: (component: string) => void, entity?: number): void;
 
-  has(entity: Entity, ...components: (keyof Components)[]): boolean;
+  has(entity: number, ...components: (keyof Components)[]): boolean;
 
-  any(entity: Entity, ...components: (keyof Components)[]): boolean;
+  any(entity: number, ...components: (keyof Components)[]): boolean;
 
   add: ComponentReturn<Components>;
 
@@ -32,38 +32,38 @@ interface Registry<Components> {
 
   addOrReplace: ComponentReturn<Components>;
 
-  remove(entity: Entity, component: keyof Components): void;
+  remove(entity: number, component: keyof Components): void;
 
-  multiRemove(entity: Entity, ...components: (keyof Components)[]): void;
+  multiRemove(entity: number, ...components: (keyof Components)[]): void;
 
-  tryRemove(entity: Entity, component: keyof Components): boolean;
+  tryRemove(entity: number, component: keyof Components): boolean;
 
   get<Typename extends keyof Components>(
-    entity: Entity,
+    entity: number,
     component: Typename
   ): ResolvedType<Components, Typename> | undefined;
 
   multiAdd(
-    entity: Entity,
+    entity: number,
     componentMap: {
       [Typename in keyof Partial<Components>]: ResolvedType<
         Components,
         Typename
       >;
     }
-  ): Entity;
+  ): number;
 
   tryAdd<Typename extends keyof Components>(
-    entity: Entity,
+    entity: number,
     component: Typename,
     data: ResolvedType<Components, Typename>
   ): ResolvedType<Components, Typename> | undefined;
 
   raw<Typename extends keyof Components>(
     component: Typename
-  ): LuaTuple<[Entity[], ResolvedType<Components, Typename>[]]>;
+  ): LuaTuple<[number[], ResolvedType<Components, Typename>[]]>;
 
-  each(func: (entity: Entity) => void): void;
+  each(func: (entity: number) => void): void;
 
   countEntities(): number;
 
