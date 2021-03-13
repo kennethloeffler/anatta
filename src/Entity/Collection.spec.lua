@@ -205,10 +205,10 @@ return function()
 			it("should iterate all and only the entities with at least the required components, none of the forbidden components, and all of the updated components, and pass their data", function(context)
 				local registry = context.registry
 				local collection, toIterate = getCollection(registry, {
-					required = { "Test1", "Test2" },
-					update = { "Test3" },
+					required = { "Test1", },
+					update = { "Test2", "Test3" },
 					optional = {},
-					forbidden =  {"Test3" }
+					forbidden =  { "Test4" }
 				})
 
 				collection:each(function(entity, test1, test2, test3)

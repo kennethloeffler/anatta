@@ -618,13 +618,11 @@ return function()
 
 		it("should dispatch the component pool's update signal", function(context)
 			local registry = context.registry
-			local old= 10
-			local new= 11
+			local new = 11
 			local ranCallback
 
-			registry._pools.number.updated:connect(function(entity, newComponent)
+			registry._pools.number.updated:connect(function(_, newComponent)
 				expect(newComponent).to.equal(new)
-				expect(registry:get(entity, "number")).to.equal(old)
 				ranCallback = true
 			end)
 
