@@ -1,11 +1,11 @@
-import { ResolvedType } from "../Core/Types";
+import { Unwrap } from "../Core/Types";
 
 type ComponentReturn<Components> = <Typename extends keyof Components>(
   this: Registry<Components>,
   entity: number,
   component: Typename,
-  data: ResolvedType<Components, Typename>
-) => ResolvedType<Components, Typename>;
+  data: Unwrap<Components, Typename>
+) => Unwrap<Components, Typename>;
 
 interface Registry<Components> {
   create(): number;
@@ -41,12 +41,12 @@ interface Registry<Components> {
   get<Typename extends keyof Components>(
     entity: number,
     component: Typename
-  ): ResolvedType<Components, Typename> | undefined;
+  ): Unwrap<Components, Typename> | undefined;
 
   multiAdd(
     entity: number,
     componentMap: {
-      [Typename in keyof Partial<Components>]: ResolvedType<
+      [Typename in keyof Partial<Components>]: Unwrap<
         Components,
         Typename
       >;
@@ -56,12 +56,12 @@ interface Registry<Components> {
   tryAdd<Typename extends keyof Components>(
     entity: number,
     component: Typename,
-    data: ResolvedType<Components, Typename>
-  ): ResolvedType<Components, Typename> | undefined;
+    data: Unwrap<Components, Typename>
+  ): Unwrap<Components, Typename> | undefined;
 
   raw<Typename extends keyof Components>(
     component: Typename
-  ): LuaTuple<[number[], ResolvedType<Components, Typename>[]]>;
+  ): LuaTuple<[number[], Unwrap<Components, Typename>[]]>;
 
   each(func: (entity: number) => void): void;
 

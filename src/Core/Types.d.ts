@@ -10,7 +10,7 @@ type Flatten<T extends unknown[], U extends unknown[]> = T extends Empty<T>
   ? T
   : [...T, ...U];
 
-export type ResolvedType<T, K extends keyof T> = T[K] extends t.check<infer U>
+export type Unwrap<T, K extends keyof T> = T[K] extends t.check<infer U>
   ? U
   : never;
 
@@ -32,5 +32,5 @@ export type ComponentTuple<
 > = Flatten<Flatten<Required, Updated>, Optional>;
 
 export type Map<T, U> = {
-  [K in keyof T]: T[K] extends keyof U ? ResolvedType<U, T[K]> : never;
+  [K in keyof T]: T[K] extends keyof U ? Unwrap<U, T[K]> : never;
 };
