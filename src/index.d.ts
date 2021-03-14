@@ -6,9 +6,9 @@ import { t } from "../vendor/t"
 
 export interface System<
   Components,
-  Required extends unknown[],
-  Updated extends unknown[],
-  Optional extends unknown[]
+  Required extends unknown[]=[],
+  Updated extends unknown[]=[],
+  Optional extends unknown[]=[]
 > {
   registry: Registry<Components>;
 
@@ -25,8 +25,8 @@ export interface System<
   ): System<
     Components,
     Required,
-    Partial<Map<Typenames, Components>>,
-    Updated
+    Updated,
+    Map<Typenames, Components>
   >;
 
   updated<Typenames extends (keyof Components)[]>(
