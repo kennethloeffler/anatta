@@ -1,4 +1,10 @@
 local Entity = require(script.Entity)
+local t = require(script.Parent.t)
+local util = require(script.Parent.util)
+
+local IsSystem = t.interface({
+	init = t.callback
+})
 
 local Anatta = {}
 Anatta.__index = Anatta
@@ -16,20 +22,24 @@ function Anatta:loadSystems(container)
 			descendant:IsA("ModuleScript")
 			and not descendant.Name:match("%.spec$")
 		then
+			self:loadSystem(descendant)
 		end
 	end
 end
 
-function Anatta:_loadSystem(moduleScript)
-	local loadSystem = require(moduleScript)
+function Anatta:loadSystem(moduleScript)
 	local system = Entity.System.new(self._registry)
+	local systemModule = require(moduleScript)
+
+	util.jumpAssert(IsSystem(systemModule))
 
 	self._systems[moduleScript] = system
+	systemModule.init(system)
 
-	return loadSystem(system)
+	return systemModule
 end
 
-function Anatta:_unloadSystem(moduleScript)
+function Anatta:unloadSystem(moduleScript)
 	self._systems[moduleScript]:unload()
 end
 
