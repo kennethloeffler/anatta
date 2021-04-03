@@ -34,7 +34,10 @@ function Anatta:loadSystem(moduleScript)
 	util.jumpAssert(IsSystem(systemModule))
 
 	self._systems[moduleScript] = system
-	systemModule.init(system)
+	systemModule.system = system
+	systemModule.registry = self._registry
+
+	systemModule:init()
 
 	return systemModule
 end

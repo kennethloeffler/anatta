@@ -9,13 +9,12 @@ local ErrPureNeedComponents = "Pure collections need at least one required compo
 local ErrImpureNeedComponents = "Collections need least one required, updated, or optional component type"
 local ErrTooManyUpdated = "Collections can only track up to 32 updated component types"
 
-function System.new(registry)
+function System.new()
 	return setmetatable({
 		forbidden = {},
 		optional = {},
 		required = {},
 		update = {},
-		registry = registry,
 
 		_hasCollection = false,
 		_connections = {},
