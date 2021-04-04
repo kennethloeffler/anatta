@@ -1,50 +1,79 @@
-local Constants = require(script.Parent.Parent.Core.Constants)
 local SinglePureCollection = require(script.Parent.SinglePureCollection)
-
-local NONE = Constants.NONE
+local util = require(script.Parent.Parent.util)
 
 local PureCollection = {}
 PureCollection.__index = PureCollection
 
-function PureCollection.new(registry, components)
-	local required = registry:getPools(unpack(components.required or NONE))
-	local forbidden = registry:getPools(unpack(components.forbidden or NONE))
+local function ErrNeedsRequired()
+	util.jumpAssert("Pure collections can only update required components")
+end
 
-	assert(next(required), "A PureCollection needs at least one required component")
+function PureCollection.new(system)
+	local registry = system.registry
 
-	if not next(forbidden) and #required == 1 then
-		return SinglePureCollection.new(required[1])
+	if #system.forbidden == 0 and #system.optional == 0 and #system.required == 1 then
+		return SinglePureCollection.new(unpack(system.required))
 	end
 
 	return setmetatable({
-		_required = required,
-		_forbidden = forbidden,
-		_packed = table.create(#required),
+		_required = registry:getPools(unpack(system.required)),
+		_forbidden = registry:getPools(unpack(system.forbidden)),
+		_optional = registry:getPools(unpack(system.optional)),
+		_packed = table.create(#system.required + #system.optional),
+		_numPacked = #system.required + #system.optional,
+		_numRequired = #system.required,
+
+		update = #system.required > 0 and PureCollection.update or ErrNeedsRequired
 	}, PureCollection)
 end
 
-function PureCollection:each(callback)
-	for _, entity in ipairs(self:_getShortestRequiredPool().dense) do
+function PureCollection:update(callback)
+	local packed = self._packed
+	local numPacked = self._numPacked
+	local shortest = self:_getShortestPool(self._required)
+
+	for _, entity in ipairs(shortest.dense) do
 		if self:_tryPack(entity) then
-			self:_apply(entity, callback(entity, unpack(self._packed)))
+			self:_replace(entity, callback(entity, unpack(packed, 1, numPacked)))
 		end
 	end
 end
 
-function PureCollection:_apply(entity, ...)
+function PureCollection:each(callback)
+	local packed = self._packed
+	local numPacked = self._numPacked
+	local shortest = self:_getShortestPool(self._required)
+
+	for _, entity in ipairs(shortest.dense) do
+		if self:_tryPack(entity) then
+			callback(entity, unpack(packed, 1, numPacked))
+		end
+	end
+end
+
+function PureCollection:_replace(entity, ...)
 	for i, pool in ipairs(self._required) do
-		pool:replace(entity, select(i, ...))
+		local newComponent = select(i, ...)
+		local oldComponent = pool:get(entity)
+
+		if newComponent ~= oldComponent then
+			-- !!! Beware: if a listener of this signal adds or removes any
+			-- !!! elements from the pool selected by _getShortestPool, the
+			-- !!! iteration will terminate!
+			pool.updated:dispatch(entity, newComponent)
+			pool:replace(entity, newComponent)
+		end
 	end
 end
 
 --[[
 	Returns the required component pool with the least number of elements.
 ]]
-function PureCollection:_getShortestRequiredPool()
+function PureCollection:_getShortestPool(pools)
 	local size = math.huge
 	local selected
 
-	for _, pool in ipairs(self._required) do
+	for _, pool in ipairs(pools) do
 		if pool.size < size then
 			size = pool.size
 			selected = pool
@@ -55,6 +84,8 @@ function PureCollection:_getShortestRequiredPool()
 end
 
 function PureCollection:_tryPack(entity)
+	local packed = self._packed
+
 	for _, pool in ipairs(self._forbidden) do
 		if pool:getIndex(entity) then
 			return false
@@ -62,13 +93,19 @@ function PureCollection:_tryPack(entity)
 	end
 
 	for i, pool in ipairs(self._required) do
-		local denseIndex = pool:getIndex(entity)
+		local component = pool:get(entity)
 
-		if not denseIndex then
+		if not component then
 			return false
 		end
 
-		self._packed[i] = pool.objects[denseIndex]
+		packed[i] = component
+	end
+
+	local numRequired = self._numRequired
+
+	for i, pool in ipairs(self._optional) do
+		packed[numRequired + i] = pool:get(entity)
 	end
 
 	return true

@@ -5,7 +5,6 @@ return function()
 
 	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 	local NULL_ENTITYID = Constants.NULL_ENTITYID
-	local NONE = Constants.NONE
 
 	local function makeEntities(registry, num)
 		local entities = table.create(num)
@@ -18,49 +17,25 @@ return function()
 	end
 
 	beforeEach(function(context)
-		local registry = Registry.new()
-
-		registry:define("interface", t.interface { instance = t.Instance })
-		registry:define("instance", t.Instance)
-		registry:define("number", t.number)
-
-		context.registry = registry
+		context.registry = Registry.new({
+			interface = t.interface({ instance = t.Instance }),
+			instance = t.Instance,
+			number = t.number,
+			tag = t.none,
+		})
 	end)
 
 	describe("new", function()
 		it("should construct a new empty Registry", function()
-			local registry = Registry.new()
+			local registry = Registry.new({})
 
 			expect(getmetatable(registry)).to.equal(Registry)
 			expect(registry._size).to.equal(0)
-			expect(registry._nextRecyclable).to.equal(NULL_ENTITYID)
+			expect(registry._nextRecyclableEntityId).to.equal(NULL_ENTITYID)
 			expect(registry._entities).to.be.a("table")
 			expect(next(registry._entities)).to.equal(nil)
 			expect(registry._pools).to.be.a("table")
 			expect(next(registry._pools)).to.equal(nil)
-		end)
-	end)
-
-	describe("define", function()
-		it("should define a new component type", function()
-			local registry = Registry.new()
-			local typeCheck = t.table
-
-			registry:define("Test", typeCheck)
-
-			expect(registry._pools.Test).to.be.ok()
-			expect(registry._pools.Test.typeCheck).to.equal(typeCheck)
-			expect(registry._pools.Test.name).to.equal("Test")
-		end)
-
-		it("should error if the name is already in use", function()
-			local registry = Registry.new()
-
-			registry:define("Test", t.none)
-
-			expect(function()
-				registry:define("Test", t.none)
-			end).to.throw()
 		end)
 	end)
 
@@ -88,21 +63,21 @@ return function()
 					registry:destroy(entity)
 					maxDestroyed -= 1
 
-					expect(registry._nextRecyclable).to.equal(Registry.getId(entity))
+					expect(registry._nextRecyclableEntityId).to.equal(Registry.getId(entity))
 				end
 			end
 
 			for i, destroyedEntity in ipairs(destroyed) do
-				local nextRecyclable = destroyed[i + 1] and destroyed[i + 1] or NULL_ENTITYID
+				local nextRecyclableEntityId = destroyed[i + 1] and destroyed[i + 1] or NULL_ENTITYID
 
 				expect(Registry.getId(registry:create())).to.equal(destroyedEntity)
-				expect(registry._nextRecyclable).to.equal(nextRecyclable)
+				expect(registry._nextRecyclableEntityId).to.equal(nextRecyclableEntityId)
 
-				if nextRecyclable ~= NULL_ENTITYID then
+				if nextRecyclableEntityId ~= NULL_ENTITYID then
 					-- If we are not at the end of the free list, then the recyclable
 					-- id's element in ._entities should point to the next recyclable
 					-- id.
-					expect(Registry.getId(registry._entities[nextRecyclable]))
+					expect(Registry.getId(registry._entities[nextRecyclableEntityId]))
 						.to.equal(destroyed[i + 2] or NULL_ENTITYID)
 				end
 			end
@@ -218,7 +193,7 @@ return function()
 
 			registry:destroy(entity)
 
-			expect(registry._nextRecyclable).to.equal(entityId)
+			expect(registry._nextRecyclableEntityId).to.equal(entityId)
 			expect(Registry.getId(registry._entities[entityId])).to.equal(NULL_ENTITYID)
 		end)
 
@@ -387,9 +362,9 @@ return function()
 			expect(registry:get(entity, "instance")).to.equal(obj)
 		end)
 
-		it("should return NONE if the entity does not have the component", function(context)
+		it("should return nil if the entity does not have the component", function(context)
 			local registry = context.registry
-			expect(registry:get(registry:create(), "number")).to.equal(NONE)
+			expect(registry:get(registry:create(), "number")).to.equal(nil)
 		end)
 
 		it("should error if given an invalid entity", function(context)
@@ -409,14 +384,13 @@ return function()
 		it("should return the specified components on the entity in order", function(context)
 			local registry = context.registry
 			local entity = registry:create()
-			local tab = table.create(2)
 			local component1 = { instance = Instance.new("Script") }
 			local component2 = 10
 
 			registry._pools.instance:insert(entity, component1)
 			registry._pools.number:insert(entity, component2)
 
-			local instance, number = registry:multiGet(entity, tab, "instance", "number")
+			local instance, number = registry:multiGet(entity, {}, "instance", "number")
 
 			expect(instance).to.equal(component1)
 			expect(number).to.equal(component2)
@@ -450,7 +424,7 @@ return function()
 			local registry = context.registry
 			local ranCallback
 
-			registry._pools.instance.onAdded:connect(function()
+			registry._pools.instance.added:connect(function()
 				ranCallback = true
 			end)
 
@@ -473,7 +447,6 @@ return function()
 			local registry = context.registry
 			local entity = registry:create()
 
-			registry:define("tag", t.none)
 			registry:add(entity, "tag")
 
 			expect(registry._pools.tag:getIndex(entity)).to.be.ok()
@@ -517,7 +490,7 @@ return function()
 			local registry = context.registry
 			local ranCallback
 
-			registry._pools.number.onAdded:connect(function()
+			registry._pools.number.added:connect(function()
 				ranCallback = true
 			end)
 
@@ -540,7 +513,6 @@ return function()
 			local registry = context.registry
 			local entity = registry:create()
 
-			registry:define("tag", t.none)
 			registry:tryAdd(entity, "tag")
 
 			expect(registry._pools.tag:getIndex(entity)).to.be.ok()
@@ -568,10 +540,11 @@ return function()
 			local pool1 = registry._pools.instance
 			local pool2 = registry._pools.interface
 			local pool3 = registry._pools.number
-			local entity = registry:multiAdd(registry:create(),
-				"instance", component1,
-				"interface", component2,
-				"number", component3)
+			local entity = registry:multiAdd(registry:create(), {
+				instance = component1,
+				interface = component2,
+				number = component3,
+			})
 
 			expect(pool1:get(entity)).to.equal(component1)
 			expect(pool2:get(entity)).to.equal(component2)
@@ -580,13 +553,13 @@ return function()
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:multiAdd(0, "number", 0)
+				context.registry:multiAdd(0, { number = 0 })
 			end).to.throw()
 		end)
 
 		it("should error if given an invalid component name", function(context)
 			expect(function()
-				context.registry:multiAdd(context.registry:create(), "")
+				context.registry:multiAdd(context.registry:create(), { dkfjdkfj = 0 })
 			end).to.throw()
 		end)
 	end)
@@ -611,7 +584,7 @@ return function()
 			local registry =  context.registry
 			local ranCallback
 
-			registry._pools.number.onAdded:connect(function()
+			registry._pools.number.added:connect(function()
 				ranCallback = true
 			end)
 
@@ -645,13 +618,15 @@ return function()
 
 		it("should dispatch the component pool's update signal", function(context)
 			local registry = context.registry
-			local entity = registry:create()
+			local new = 11
 			local ranCallback
 
-			registry._pools.number.onUpdated:connect(function()
+			registry._pools.number.updated:connect(function(_, newComponent)
+				expect(newComponent).to.equal(new)
 				ranCallback = true
 			end)
 
+			local entity = registry:create()
 			registry._pools.number:insert(entity, 10)
 			registry:replace(entity, "number", 11)
 
@@ -691,7 +666,7 @@ return function()
 			local registry = context.registry
 			local ranAddCallback
 
-			registry._pools.instance.onAdded:connect(function()
+			registry._pools.instance.added:connect(function()
 				ranAddCallback = true
 			end)
 
@@ -708,12 +683,12 @@ return function()
 			expect(registry._pools.number:get(entity)).to.equal(replaced)
 		end)
 
-		it("should dispatch the component pool's replacement signal", function(context)
+		it("should dispatch the component pool's replaced signal", function(context)
 			local registry = context.registry
 			local entity = registry:create()
 			local ranReplaceCallback = false
 
-			registry._pools.instance.onUpdated:connect(function()
+			registry._pools.instance.updated:connect(function()
 				ranReplaceCallback = true
 			end)
 
@@ -752,7 +727,7 @@ return function()
 			local entity = registry:create()
 			local ranCallback
 
-			registry._pools.number.onRemoved:connect(function()
+			registry._pools.number.removed:connect(function()
 				ranCallback = true
 			end)
 
@@ -793,19 +768,19 @@ return function()
 			local component2ok = false
 			local component3ok = false
 
-			registry._pools.number.onRemoved:connect(function(e, component)
+			registry._pools.number.removed:connect(function(e, component)
 				expect(e).to.equal(entity)
 				expect(component).to.equal(component1)
 				component1ok = true
 			end)
 
-			registry._pools.instance.onRemoved:connect(function(e, component)
+			registry._pools.instance.removed:connect(function(e, component)
 				expect(e).to.equal(entity)
 				expect(component).to.equal(component2)
 				component2ok = true
 			end)
 
-			registry._pools.interface.onRemoved:connect(function(e, component)
+			registry._pools.interface.removed:connect(function(e, component)
 				expect(e).to.equal(entity)
 				expect(component).to.equal(component3)
 				component3ok = true
@@ -864,7 +839,7 @@ return function()
 			local entity = registry:create()
 			local ranCallback
 
-			registry._pools.number.onRemoved:connect(function()
+			registry._pools.number.removed:connect(function()
 				ranCallback = true
 			end)
 
@@ -915,24 +890,24 @@ return function()
 		end)
 	end)
 
-	describe("numEntities", function()
+	describe("countEntities", function()
 		it("should return the number of non-destroyed entities currently in the registry", function(context)
 			local registry = context.registry
-			local numEntities = 128
-			local entities = table.create(numEntities)
+			local count = 128
+			local entities = table.create(count)
 
-			for i = 1, numEntities do
+			for i = 1, count do
 				entities[i] = registry:create()
 			end
 
 			for i, entity in ipairs(entities) do
 				if i % 16 == 0 then
-					numEntities = numEntities - 1
+					count = count - 1
 					registry:destroy(entity)
 				end
 			end
 
-			expect(registry:numEntities()).to.equal(numEntities)
+			expect(registry:countEntities()).to.equal(count)
 		end)
 	end)
 

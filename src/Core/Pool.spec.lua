@@ -34,10 +34,19 @@ return function()
 		end)
 
 		it("should have lifecycle events", function()
-			expect(pool.onAdded).to.be.ok()
-			expect(pool.onRemoved).to.be.ok()
-			expect(pool.onUpdated).to.be.ok()
+			expect(pool.added).to.be.ok()
+			expect(pool.removed).to.be.ok()
+			expect(pool.updated).to.be.ok()
 		end)
+	end)
+
+	describe("getIndex", function()
+	end)
+
+	describe("get", function()
+	end)
+
+	describe("replace", function()
 	end)
 
 	describe("insert", function()
