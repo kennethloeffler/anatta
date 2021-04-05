@@ -2,8 +2,6 @@ return function()
 	local Type = require(script.Parent.Type)
 	local t = require(script.Parent.Parent.t)
 
-	FOCUS()
-
 	it("should return a primitive definition for first-order functions", function()
 		local ty = Type.Vector3
 
