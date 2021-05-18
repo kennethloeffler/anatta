@@ -21,7 +21,6 @@ function System.new()
 	}, System)
 end
 
-
 function System:unload()
 	if self._impureCollection then
 		self._impureCollection:detach()
@@ -59,10 +58,7 @@ end
 function System:collect()
 	util.jumpAssert(not self._hasCollection, ErrAlreadyHasCollection)
 	util.jumpAssert(#self.update <= 32, ErrTooManyUpdated)
-	util.jumpAssert(
-		#self.required > 0 or #self.update > 0 or #self.optional > 0,
-		ErrImpureNeedComponents
-	)
+	util.jumpAssert(#self.required > 0 or #self.update > 0 or #self.optional > 0, ErrImpureNeedComponents)
 
 	self._hasCollection = true
 	self._impureCollection = Entity.Collection.new(self)
@@ -72,10 +68,7 @@ end
 
 function System:pure()
 	util.jumpAssert(not self._hasCollection, ErrAlreadyHasCollection)
-	util.jumpAssert(
-		#self.required > 0,
-		ErrPureNeedComponents
-	)
+	util.jumpAssert(#self.required > 0, ErrPureNeedComponents)
 
 	self._hasCollection = true
 	return Entity.PureCollection.new(self)

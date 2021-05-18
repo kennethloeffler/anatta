@@ -14,7 +14,7 @@ end
 function Signal.new()
 	return setmetatable({
 		_callbacks = {},
-		_disconnected = {}
+		_disconnected = {},
 	}, Signal)
 end
 

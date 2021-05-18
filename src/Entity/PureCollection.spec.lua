@@ -55,7 +55,7 @@ return function()
 				required = { "Test1" },
 				forbidden = { "Test2" },
 				optional = {},
-				registry = context.registry
+				registry = context.registry,
 			})
 
 			expect(getmetatable(collection)).to.equal(PureCollection)
@@ -66,7 +66,7 @@ return function()
 				required = { "Test1" },
 				forbidden = {},
 				optional = {},
-				registry = context.registry
+				registry = context.registry,
 			})
 
 			expect(getmetatable(collection)).to.equal(SinglePureCollection)
@@ -75,27 +75,30 @@ return function()
 
 	describe("update", function()
 		describe("all", function()
-			it("should iterate all and only the entities with at least the required components and pass them plus any optional ones", function(context)
-				local registry = context.registry
-				local collection, toIterate = getCollection(registry, {
-					required = { "Test1", "Test2" },
-					optional = { "Test3", "Test4" },
-					forbidden = {},
-				})
+			it(
+				"should iterate all and only the entities with at least the required components and pass them plus any optional ones",
+				function(context)
+					local registry = context.registry
+					local collection, toIterate = getCollection(registry, {
+						required = { "Test1", "Test2" },
+						optional = { "Test3", "Test4" },
+						forbidden = {},
+					})
 
-				collection:update(function(entity, test1, test2, test3, test4)
-					expect(toIterate[entity]).to.equal(true)
-					expect(test1).to.equal(registry:get(entity, "Test1"))
-					expect(test2).to.equal(registry:get(entity, "Test2"))
-					expect(test3).to.equal(registry:get(entity, "Test3"))
-					expect(test4).to.equal(registry:get(entity, "Test4"))
-					toIterate[entity] = nil
+					collection:update(function(entity, test1, test2, test3, test4)
+						expect(toIterate[entity]).to.equal(true)
+						expect(test1).to.equal(registry:get(entity, "Test1"))
+						expect(test2).to.equal(registry:get(entity, "Test2"))
+						expect(test3).to.equal(registry:get(entity, "Test3"))
+						expect(test4).to.equal(registry:get(entity, "Test4"))
+						toIterate[entity] = nil
 
-					return test1, test2, test3, test4
-				end)
+						return test1, test2, test3, test4
+					end)
 
-				expect(next(toIterate)).to.equal(nil)
-			end)
+					expect(next(toIterate)).to.equal(nil)
+				end
+			)
 
 			it("should replace required components with ones returned by the callback", function(context)
 				local registry = context.registry

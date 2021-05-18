@@ -23,7 +23,7 @@ function PureCollection.new(system)
 		_numPacked = #system.required + #system.optional,
 		_numRequired = #system.required,
 
-		update = #system.required > 0 and PureCollection.update or ErrNeedsRequired
+		update = #system.required > 0 and PureCollection.update or ErrNeedsRequired,
 	}, PureCollection)
 end
 

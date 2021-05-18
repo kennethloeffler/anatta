@@ -5,7 +5,7 @@ local SingleCollection = {}
 SingleCollection.__index = SingleCollection
 
 function SingleCollection.new(componentPool)
-	return  setmetatable({
+	return setmetatable({
 		added = componentPool.added,
 		removed = componentPool.removed,
 
@@ -29,17 +29,23 @@ function SingleCollection:attach(callback)
 		self._pool = Pool.new()
 	end
 
-	table.insert(self._connections, self.added:connect(function(entity, component)
-		self._pool:insert(entity, callback(entity, component))
-	end))
+	table.insert(
+		self._connections,
+		self.added:connect(function(entity, component)
+			self._pool:insert(entity, callback(entity, component))
+		end)
+	)
 
-	table.insert(self._connections, self.removed:connect(function(entity)
-		for _, item in ipairs(self._pool:get(entity)) do
-			Finalizers[typeof(item)](item)
-		end
+	table.insert(
+		self._connections,
+		self.removed:connect(function(entity)
+			for _, item in ipairs(self._pool:get(entity)) do
+				Finalizers[typeof(item)](item)
+			end
 
-		self._pool:delete(entity)
-	end))
+			self._pool:delete(entity)
+		end)
+	)
 end
 
 function SingleCollection:detach()

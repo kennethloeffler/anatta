@@ -64,10 +64,7 @@ end
 	calls Destroy when the component is removed.
 ]]
 function Registry:define(componentName, typeCheck)
-	jumpAssert(
-		not self._pools[componentName],
-		ErrComponentNameTaken:format(componentName)
-	)
+	jumpAssert(not self._pools[componentName], ErrComponentNameTaken:format(componentName))
 
 	self._pools[componentName] = Pool.new(componentName, typeCheck)
 end
@@ -106,10 +103,7 @@ end
 function Registry:createFrom(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 	local entities = self._entities
-	local existingEntityId = bit32.band(
-		entities[entityId] or NULL_ENTITYID,
-		ENTITYID_MASK
-	)
+	local existingEntityId = bit32.band(entities[entityId] or NULL_ENTITYID, ENTITYID_MASK)
 
 	if existingEntityId == NULL_ENTITYID then
 		-- The given id is out of range. We don't want any gaps in _entities, so we
@@ -117,7 +111,7 @@ function Registry:createFrom(entity)
 		-- recyclable list.
 		local nextRecyclableEntityId = self._nextRecyclableEntityId
 
-		for id = self._size + 1, entityId - 1  do
+		for id = self._size + 1, entityId - 1 do
 			entities[id] = nextRecyclableEntityId
 			nextRecyclableEntityId = id
 		end
@@ -152,18 +146,12 @@ function Registry:createFrom(entity)
 
 		while nextRecyclableEntityId ~= entityId do
 			prevRecyclableEntityId = nextRecyclableEntityId
-			nextRecyclableEntityId = bit32.band(
-				self._entities[nextRecyclableEntityId],
-				ENTITYID_MASK
-			)
+			nextRecyclableEntityId = bit32.band(self._entities[nextRecyclableEntityId], ENTITYID_MASK)
 		end
 
 		entities[prevRecyclableEntityId] = bit32.bor(
 			bit32.band(entities[entityId], ENTITYID_MASK),
-			bit32.lshift(
-				bit32.rshift(entities[prevRecyclableEntityId], ENTITYID_WIDTH),
-				ENTITYID_WIDTH
-			)
+			bit32.lshift(bit32.rshift(entities[prevRecyclableEntityId], ENTITYID_WIDTH), ENTITYID_WIDTH)
 		)
 
 		entities[entityId] = entity
@@ -261,10 +249,7 @@ function Registry:has(entity, ...)
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 
 		for i = 1, select("#", ...) do
-			jumpAssert(
-				self._pools[select(i, ...)],
-				ErrBadComponentName:format(select(i, ...))
-			)
+			jumpAssert(self._pools[select(i, ...)], ErrBadComponentName:format(select(i, ...)))
 		end
 	end
 
@@ -286,10 +271,7 @@ function Registry:any(entity, ...)
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 
 		for i = 1, select("#", ...) do
-			jumpAssert(
-				self._pools[select(i, ...)],
-				ErrBadComponentName:format(select(i, ...))
-			)
+			jumpAssert(self._pools[select(i, ...)], ErrBadComponentName:format(select(i, ...)))
 		end
 	end
 
@@ -340,10 +322,7 @@ function Registry:add(entity, componentName, object)
 	if DEBUG then
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
-		jumpAssert(
-			not pool:getIndex(entity),
-			ErrAlreadyHasComponent:format(entity, componentName)
-		)
+		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent:format(entity, componentName))
 		jumpAssert(pool.typeCheck(object))
 	end
 
@@ -420,10 +399,7 @@ function Registry:replace(entity, componentName, object)
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 		jumpAssert(pool.typeCheck(object))
-		jumpAssert(
-			pool:getIndex(entity),
-			ErrMissingComponent:format(entity, componentName)
-		)
+		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
 	end
 
 	pool:replace(entity, object)
@@ -448,7 +424,7 @@ function Registry:addOrReplace(entity, componentName, object)
 
 	local denseIndex = pool:getIndex(entity)
 
-	if denseIndex  then
+	if denseIndex then
 		pool:replace(entity, object)
 		pool.updated:dispatch(entity, object)
 		return object
@@ -472,10 +448,7 @@ function Registry:remove(entity, componentName)
 	if DEBUG then
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
-		jumpAssert(
-			pool:getIndex(entity),
-			ErrMissingComponent:format(entity, componentName)
-		)
+		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
 	end
 
 	pool.removed:dispatch(entity, pool:get(entity))
@@ -511,7 +484,6 @@ function Registry:tryRemove(entity, componentName)
 
 	return false
 end
-
 
 --[[
 	Returns the number of entities currently in use.

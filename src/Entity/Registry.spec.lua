@@ -77,8 +77,9 @@ return function()
 					-- If we are not at the end of the free list, then the recyclable
 					-- id's element in ._entities should point to the next recyclable
 					-- id.
-					expect(Registry.getId(registry._entities[nextRecyclableEntityId]))
-						.to.equal(destroyed[i + 2] or NULL_ENTITYID)
+					expect(Registry.getId(registry._entities[nextRecyclableEntityId])).to.equal(
+						destroyed[i + 2] or NULL_ENTITYID
+					)
 				end
 			end
 		end)
@@ -287,7 +288,8 @@ return function()
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:visit(function() end, 0)
+				context.registry:visit(function()
+				end, 0)
 			end).to.throw()
 		end)
 	end)
@@ -439,8 +441,7 @@ return function()
 			registry:destroy(entity)
 			entity = registry:create()
 
-			expect(registry:add(entity, "instance", Instance.new("Part")))
-				.to.equal(registry._pools.instance:get(entity))
+			expect(registry:add(entity, "instance", Instance.new("Part"))).to.equal(registry._pools.instance:get(entity))
 		end)
 
 		it("should correctly handle tag components", function(context)
@@ -476,15 +477,18 @@ return function()
 			expect(registry:tryAdd(entity, "number", 10)).to.equal(nil)
 		end)
 
-		it("should add a new component instance to the entity and return it if the component does not exist on the entity", function(context)
-			local registry = context.registry
-			local entity = registry:create()
-			local component = Instance.new("Hole")
-			local obj = registry:tryAdd(entity, "instance", component)
+		it(
+			"should add a new component instance to the entity and return it if the component does not exist on the entity",
+			function(context)
+				local registry = context.registry
+				local entity = registry:create()
+				local component = Instance.new("Hole")
+				local obj = registry:tryAdd(entity, "instance", component)
 
-			expect(registry._pools.instance:getIndex(entity)).to.be.ok()
-			expect(component).to.equal(obj)
-		end)
+				expect(registry._pools.instance:getIndex(entity)).to.be.ok()
+				expect(component).to.equal(obj)
+			end
+		)
 
 		it("should dispatch the component pool's insertment signal", function(context)
 			local registry = context.registry
@@ -505,8 +509,7 @@ return function()
 			registry:destroy(entity)
 			entity = registry:create()
 
-			expect(registry:tryAdd(entity, "instance", Instance.new("Hole")))
-				.to.equal(registry._pools.instance:get(entity))
+			expect(registry:tryAdd(entity, "instance", Instance.new("Hole"))).to.equal(registry._pools.instance:get(entity))
 		end)
 
 		it("should correctly handle tag components", function(context)
@@ -581,7 +584,7 @@ return function()
 		end)
 
 		it("should dispatch the component pool's added signal", function(context)
-			local registry =  context.registry
+			local registry = context.registry
 			local ranCallback
 
 			registry._pools.number.added:connect(function()
@@ -757,44 +760,47 @@ return function()
 	end)
 
 	describe("multiRemove", function()
-		it("should remove all of the specified components from the entity and dispatch each components' removal signals", function(context)
-			local registry = context.registry
-			local entity = registry:create()
+		it(
+			"should remove all of the specified components from the entity and dispatch each components' removal signals",
+			function(context)
+				local registry = context.registry
+				local entity = registry:create()
 
-			local component1 = registry._pools.number:insert(entity, 10)
-			local component2 = registry._pools.instance:insert(entity, Instance.new("Hole"))
-			local component3 = registry._pools.interface:insert(entity, { instance = Instance.new("Part") })
-			local component1ok = false
-			local component2ok = false
-			local component3ok = false
+				local component1 = registry._pools.number:insert(entity, 10)
+				local component2 = registry._pools.instance:insert(entity, Instance.new("Hole"))
+				local component3 = registry._pools.interface:insert(entity, { instance = Instance.new("Part") })
+				local component1ok = false
+				local component2ok = false
+				local component3ok = false
 
-			registry._pools.number.removed:connect(function(e, component)
-				expect(e).to.equal(entity)
-				expect(component).to.equal(component1)
-				component1ok = true
-			end)
+				registry._pools.number.removed:connect(function(e, component)
+					expect(e).to.equal(entity)
+					expect(component).to.equal(component1)
+					component1ok = true
+				end)
 
-			registry._pools.instance.removed:connect(function(e, component)
-				expect(e).to.equal(entity)
-				expect(component).to.equal(component2)
-				component2ok = true
-			end)
+				registry._pools.instance.removed:connect(function(e, component)
+					expect(e).to.equal(entity)
+					expect(component).to.equal(component2)
+					component2ok = true
+				end)
 
-			registry._pools.interface.removed:connect(function(e, component)
-				expect(e).to.equal(entity)
-				expect(component).to.equal(component3)
-				component3ok = true
-			end)
+				registry._pools.interface.removed:connect(function(e, component)
+					expect(e).to.equal(entity)
+					expect(component).to.equal(component3)
+					component3ok = true
+				end)
 
-			registry:multiRemove(entity, "number", "instance", "interface")
+				registry:multiRemove(entity, "number", "instance", "interface")
 
-			expect(component1ok).to.equal(true)
-			expect(component2ok).to.equal(true)
-			expect(component3ok).to.equal(true)
-			expect(registry._pools.number:getIndex(entity)).to.equal(nil)
-			expect(registry._pools.instance:getIndex(entity)).to.equal(nil)
-			expect(registry._pools.interface:getIndex(entity)).to.equal(nil)
-		end)
+				expect(component1ok).to.equal(true)
+				expect(component2ok).to.equal(true)
+				expect(component3ok).to.equal(true)
+				expect(registry._pools.number:getIndex(entity)).to.equal(nil)
+				expect(registry._pools.instance:getIndex(entity)).to.equal(nil)
+				expect(registry._pools.interface:getIndex(entity)).to.equal(nil)
+			end
+		)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
@@ -813,7 +819,6 @@ return function()
 				context.registry:multiRemove(context.registry:create(), "number")
 			end).to.throw()
 		end)
-
 	end)
 
 	describe("tryRemove", function()

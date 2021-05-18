@@ -10,8 +10,8 @@ return function()
 		local size = 0
 
 		for _ = 1, 200 do
-			local id = rand:NextInteger(1, 2^16 - 1)
-			local version = bit32.lshift(rand:NextInteger(1, 2^16 - 1), ENTITYID_WIDTH)
+			local id = rand:NextInteger(1, 2 ^ 16 - 1)
+			local version = bit32.lshift(rand:NextInteger(1, 2 ^ 16 - 1), ENTITYID_WIDTH)
 
 			if not pool.sparse[id] then
 				size += 1
@@ -86,14 +86,17 @@ return function()
 			expect(pool.size).to.equal(0)
 		end)
 
-		it("should swap the last element into the removed element's place when there is more than one element in the pool", function()
-			local pool, size = generate(Pool.new())
-			local last = pool.dense[size]
-			local toRemove = pool.dense[size - 50]
+		it(
+			"should swap the last element into the removed element's place when there is more than one element in the pool",
+			function()
+				local pool, size = generate(Pool.new())
+				local last = pool.dense[size]
+				local toRemove = pool.dense[size - 50]
 
-			pool:delete(toRemove)
+				pool:delete(toRemove)
 
-			expect(pool.dense[size - 50]).to.equal(last)
-		end)
+				expect(pool.dense[size - 50]).to.equal(last)
+			end
+		)
 	end)
 end

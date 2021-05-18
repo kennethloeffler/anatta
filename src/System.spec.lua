@@ -70,7 +70,7 @@ return function()
 
 			collection:attach(function()
 				return {
-					hole
+					hole,
 				}
 			end)
 

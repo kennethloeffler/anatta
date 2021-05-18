@@ -8,12 +8,7 @@ Collection.__index = Collection
 function Collection.new(system)
 	local registry = system.registry
 
-	if
-		#system.required == 1
-		and #system.update == 0
-		and #system.forbidden == 0
-		and #system.optional == 0
-	then
+	if #system.required == 1 and #system.update == 0 and #system.forbidden == 0 and #system.optional == 0 then
 		return SingleCollection.new(unpack(system.required))
 	end
 
@@ -32,14 +27,11 @@ function Collection.new(system)
 		_numRequired = #system.required,
 		_numUpdated = #system.update,
 
-		_packed = table.create(
-			#system.required + #system.update + #system.optional
-		),
+		_packed = table.create(#system.required + #system.update + #system.optional),
 		_required = registry:getPools(unpack(system.required)),
 		_forbidden = registry:getPools(unpack(system.forbidden)),
 		_updated = registry:getPools(unpack(system.update)),
 		_optional = registry:getPools(unpack(system.optional)),
-
 	}, Collection)
 
 	for _, pool in ipairs(self._required) do
@@ -65,15 +57,21 @@ function Collection.new(system)
 end
 
 function Collection:attach(callback)
-	table.insert(self._connections, self.added:connect(function(entity, ...)
-		self._pool:replace(entity, callback(entity, ...))
-	end))
+	table.insert(
+		self._connections,
+		self.added:connect(function(entity, ...)
+			self._pool:replace(entity, callback(entity, ...))
+		end)
+	)
 
-	table.insert(self._connections, self.removed:connect(function(entity)
-		for _, item in ipairs(self._pool:get(entity)) do
-			Finalizers[typeof(item)](item)
-		end
-	end))
+	table.insert(
+		self._connections,
+		self.removed:connect(function(entity)
+			for _, item in ipairs(self._pool:get(entity)) do
+				Finalizers[typeof(item)](item)
+			end
+		end)
+	)
 end
 
 function Collection:detach()

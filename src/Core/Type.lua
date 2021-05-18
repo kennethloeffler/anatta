@@ -65,9 +65,9 @@ local secondOrder = {
 	array = true,
 	strictArray = true,
 	union = true,
-	some  = true,
+	some = true,
 	intersection = true,
-	every  = true,
+	every = true,
 	interface = true,
 	strictInterface = true,
 	instanceOf = true,
@@ -82,7 +82,7 @@ local concrete = {
 	numberMin = "number",
 	numberMax = "number",
 	numberMinExclusive = "number",
-	numberMaxExclusive =  "number",
+	numberMaxExclusive = "number",
 	numberConstrained = "number",
 	numberConstrainedExclusive = "number",
 	numberPositive = "number",
@@ -90,9 +90,7 @@ local concrete = {
 }
 
 local function getConcrete(typeName)
-	return
-		concrete[typeName]
-		or (firstOrder[typeName] and typeName)
+	return concrete[typeName] or (firstOrder[typeName] and typeName)
 end
 
 local function unwrap(...)

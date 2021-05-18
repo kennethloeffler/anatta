@@ -3,7 +3,7 @@ local t = require(script.Parent.t)
 local util = require(script.Parent.util)
 
 local IsSystem = t.interface({
-	init = t.callback
+	init = t.callback,
 })
 
 local Anatta = {}
@@ -18,10 +18,7 @@ end
 
 function Anatta:loadSystems(container)
 	for _, descendant in ipairs(container:GetDescendants()) do
-		if
-			descendant:IsA("ModuleScript")
-			and not descendant.Name:match("%.spec$")
-		then
+		if descendant:IsA("ModuleScript") and not descendant.Name:match("%.spec$") then
 			self:loadSystem(descendant)
 		end
 	end

@@ -3,7 +3,7 @@ SinglePureCollection.__index = SinglePureCollection
 
 function SinglePureCollection.new(pool)
 	return setmetatable({
-		_pool = pool
+		_pool = pool,
 	}, SinglePureCollection)
 end
 
