@@ -6,6 +6,12 @@
       "$className": "ReplicatedStorage",
       "AnattaPlugin": {
         "$className": "Folder",
+        "Roact": {
+          "$path": "vendor/roact"
+        },
+        "studiocomponents": {
+          "$path": "vendor/studiocomponents"
+        },
         "anatta": {
           "$path": "./"
         },
