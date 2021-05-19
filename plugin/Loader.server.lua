@@ -8,23 +8,23 @@ assert(plugin, "Plugin2 must be executed as a plugin!")
 local ServerStorage = game:GetService("ServerStorage")
 local Studio = settings().Studio
 
--- RenderStepped errors out in Start Server, so we consider it a hostile environment even
--- though it has a 3D view that we could potentially be using.
+-- RenderStepped errors out in Start Server, so we consider it a hostile
+-- environment even though it has a 3D view that we could potentially be using.
 if not game:GetService("RunService"):IsClient() then
 	return
 end
 
--- Change to true to enable hot reloading support. Opening a place containing the code
--- synced via Rojo will cause the plugin to be reloaded in edit mode. (No need for play
--- solo or the hotswap plugin.)
+-- Change to true to enable hot reloading support. Opening a place containing
+-- the code synced via Rojo will cause the plugin to be reloaded in edit
+-- mode. (No need for play solo or the hotswap plugin.)
 local useDevSource = true
 local devSource = ServerStorage:WaitForChild("AnattaStudioPlugin", 3)
 
 -- The source that's shipped integrated into the plugin.
 local builtinSource = script.Parent
 
--- `source` is where we should watch for changes. `currentRoot` is the clone we make of
--- source to avoid require() returning stale values.
+-- `source` is where we should watch for changes. `currentRoot` is the clone we
+-- make of source to avoid require() returning stale values.
 local source = builtinSource
 local currentRoot = source
 
@@ -60,7 +60,7 @@ function Plugin2.new(rbxPlugin)
 		Plugin2:unload()
 	end)
 
-	Plugin2.load()
+	Plugin2._load()
 	Plugin2:_watch(source)
 
 	return plugin2
@@ -147,7 +147,8 @@ function Plugin2:action(params)
 	local existingAction = self._actions[actionId]
 
 	if existingAction then
-		-- assume the plugin is reloading and disconnect the currently connected function
+		-- assume the plugin is reloading and disconnect the currently connected
+		-- function
 		existingAction.connection:Disconnect()
 		existingAction.connection = existingAction.action.Triggered:Connect(func)
 
@@ -158,7 +159,7 @@ function Plugin2:action(params)
 
 	self._actions[actionId] = {
 		connection = action.Triggered:Connect(func),
-		action = action
+		action = action,
 	}
 
 	return action
@@ -194,9 +195,9 @@ function Plugin2:menu(id, title, icon)
 
 			self._actions[actionId] = {
 				connection = action.Triggered:Connect(func),
-				action = action
+				action = action,
 			}
-		end
+		end,
 	}
 
 	return self._menus[id]
@@ -209,9 +210,9 @@ function Plugin2:beforeUnload(callback)
 	self._beforeUnload = callback
 end
 
-function Plugin2.load()
-	-- clone if we're using dev source b/c the first require will be stale after writing
-	-- out to file for the first time
+function Plugin2._load()
+	-- Clone if we're using dev source b/c the first require will be stale after
+	-- writing out to file for the first time
 	local main = useDevSource and currentRoot:Clone() or currentRoot
 	local ok, result = pcall(require, main)
 
@@ -248,7 +249,7 @@ function Plugin2:_reload()
 	local saveState = self:unload()
 	currentRoot = source:Clone()
 
-	self.load(saveState)
+	self._load(saveState)
 end
 
 function Plugin2:_watch(instance)
@@ -274,10 +275,9 @@ function Plugin2:_watch(instance)
 		self:_watch(instance)
 	end)
 
-
 	local watched = {
 		childAddedConnection = childAddedConnection,
-		changedConnection = changedConnection
+		changedConnection = changedConnection,
 	}
 
 	self._watching[instance] = watched
@@ -287,4 +287,4 @@ function Plugin2:_watch(instance)
 	end
 end
 
-return Plugin2
+return Plugin2.new(plugin)
