@@ -5,16 +5,18 @@ local System = {}
 System.__index = System
 
 local ErrAlreadyHasCollection = "Systems can only create one collection"
+local ErrPureCantHaveUpdated = "Pure collections cannot track updates to components"
 local ErrPureNeedComponents = "Pure collections need at least one required component type"
 local ErrImpureNeedComponents = "Collections need least one required, updated, or optional component type"
 local ErrTooManyUpdated = "Collections can only track up to 32 updated component types"
 
-function System.new()
+function System.new(registry)
 	return setmetatable({
 		forbidden = {},
 		optional = {},
 		required = {},
 		update = {},
+		registry = registry,
 
 		_hasCollection = false,
 		_connections = {},
@@ -68,6 +70,7 @@ end
 
 function System:pure()
 	util.jumpAssert(not self._hasCollection, ErrAlreadyHasCollection)
+	util.jumpAssert(#self.update == 0, ErrPureCantHaveUpdated)
 	util.jumpAssert(#self.required > 0, ErrPureNeedComponents)
 
 	self._hasCollection = true
