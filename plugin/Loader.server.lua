@@ -54,6 +54,7 @@ function Plugin2.new(rbxPlugin)
 		_connections = {},
 		_beforeUnload = nil,
 		isDev = useDevSource and devSource ~= nil,
+		rbxPlugin = rbxPlugin,
 	}, Plugin2)
 
 	RbxPlugin.Unloading:Connect(function()
@@ -64,22 +65,6 @@ function Plugin2.new(rbxPlugin)
 	Plugin2:_watch(source)
 
 	return plugin2
-end
-
-function Plugin2:getTheme()
-	return self._theme or Studio.Theme
-end
-
-function Plugin2:setTheme(enum)
-	if enum then
-		self._theme = enum
-	else
-		self._theme = Studio.Theme
-	end
-end
-
-function Plugin2:themeChanged(callback)
-	table.insert(self._connections, Studio.ThemeChanged:Connect(callback))
 end
 
 function Plugin2:toolbar(name)
