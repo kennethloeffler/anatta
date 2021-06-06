@@ -3,7 +3,6 @@
   "tree": {
     "$className": "DataModel",
     "ReplicatedStorage": {
-      "$className": "ReplicatedStorage",
       "AnattaPlugin": {
         "$className": "Folder",
         "Roact": {
@@ -21,7 +20,6 @@
       }
     },
     "TestService": {
-      "$className": "TestService",
       "$properties": {
         "ExecuteWithStudioRun": true
       },
