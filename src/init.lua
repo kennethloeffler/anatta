@@ -1,5 +1,5 @@
 local Entity = require(script.Entity)
-local t = require(script.Parent.t)
+local t = require(script.Parent.Parent.t)
 local util = require(script.Parent.util)
 
 local IsSystem = t.interface({

@@ -5,7 +5,7 @@
 
 ]]
 
-local t = require(script.Parent.Parent.t)
+local t = require(script.Parent.Parent.Parent.t)
 
 local firstOrder = {
 	boolean = true,

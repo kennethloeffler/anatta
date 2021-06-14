@@ -1,0 +1,14 @@
+{
+  "name": "AnattaTest",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Anatta": {
+        "$path": "../"
+      },
+      "TestEZ" : {
+        "$path": "../vendor/testez"
+      }
+    }
+  }
+}

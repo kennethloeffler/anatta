@@ -3,7 +3,7 @@ return function()
 	local Registry = require(script.Parent.Registry)
 	local Collection = require(script.Parent.Collection)
 	local SingleCollection = require(script.Parent.SingleCollection)
-	local t = require(script.Parent.Parent.t)
+	local t = require(script.Parent.Parent.Parent.t)
 
 	local function getCollection(registry, system, callback)
 		system.registry = registry

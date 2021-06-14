@@ -1,7 +1,13 @@
 {
-  "name": "anatta",
+  "name": "Anatta",
   "tree": {
-    "$path": "src",
+    "$className": "ModuleScript",
+    "$properties": {
+      "Source": "return require(script.src)"
+    },
+    "src": {
+      "$path": "src"
+    },
     "t": {
       "$path": "vendor/t"
     }
