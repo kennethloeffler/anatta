@@ -8,10 +8,10 @@ function SinglePureCollection.new(pool)
 end
 
 function SinglePureCollection:each(callback)
-	local objects = self._pool.objects
+	local components = self._pool.components
 
 	for i, entity in ipairs(self._pool.dense) do
-		objects[i] = callback(entity, objects[i])
+		components[i] = callback(entity, components[i])
 	end
 end
 

@@ -316,25 +316,25 @@ end
 	one component of each type at a time. Throws upon an attempt to add multiple
 	components of the same type to an entity.
 ]]
-function Registry:add(entity, componentName, object)
+function Registry:add(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent:format(entity, componentName))
-		jumpAssert(pool.typeCheck(object))
+		jumpAssert(pool.typeCheck(component))
 	end
 
-	pool:insert(entity, object)
-	pool.added:dispatch(entity, object)
+	pool:insert(entity, component)
+	pool.added:dispatch(entity, component)
 
-	return object
+	return component
 end
 
 function Registry:multiAdd(entity, componentMap)
-	for componentName, object in pairs(componentMap) do
-		self:add(entity, componentName, object)
+	for componentName, component in pairs(componentMap) do
+		self:add(entity, componentName, component)
 	end
 
 	return entity
@@ -343,47 +343,47 @@ end
 	If the entity does not have the component, adds and returns the component.
 	Otherwise, does nothing.
 ]]
-function Registry:tryAdd(entity, componentName, object)
+function Registry:tryAdd(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
-		jumpAssert(pool.typeCheck(object))
+		jumpAssert(pool.typeCheck(component))
 	end
 
 	if pool:getIndex(entity) then
 		return
 	end
 
-	pool:insert(entity, object)
-	pool.added:dispatch(entity, object)
+	pool:insert(entity, component)
+	pool.added:dispatch(entity, component)
 
-	return object
+	return component
 end
 
 --[[
 	If the entity has the component, returns the component. Otherwise adds the
 	component to the entity and returns the component.
 ]]
-function Registry:getOrAdd(entity, componentName, object)
+function Registry:getOrAdd(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
-		jumpAssert(pool.typeCheck(object))
+		jumpAssert(pool.typeCheck(component))
 	end
 
 	local denseIndex = pool:getIndex(entity)
 
 	if denseIndex then
-		return pool.objects[denseIndex]
+		return pool.components[denseIndex]
 	else
-		pool:insert(entity, object)
-		pool.added:dispatch(entity, object)
+		pool:insert(entity, component)
+		pool.added:dispatch(entity, component)
 
-		return object
+		return component
 	end
 end
 
@@ -392,20 +392,20 @@ end
 
 	Throws upon an attempt to replace a component that the entity does not have.
 ]]
-function Registry:replace(entity, componentName, object)
+function Registry:replace(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
-		jumpAssert(pool.typeCheck(object))
+		jumpAssert(pool.typeCheck(component))
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
 	end
 
-	pool:replace(entity, object)
-	pool.updated:dispatch(entity, object)
+	pool:replace(entity, component)
+	pool.updated:dispatch(entity, component)
 
-	return object
+	return component
 end
 
 --[[
@@ -413,27 +413,27 @@ end
 	new component. Otherwise, adds the component to the entity and returns the new
 	component.
 ]]
-function Registry:addOrReplace(entity, componentName, object)
+function Registry:addOrReplace(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
 		jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
-		jumpAssert(pool.typeCheck(object))
+		jumpAssert(pool.typeCheck(component))
 	end
 
 	local denseIndex = pool:getIndex(entity)
 
 	if denseIndex then
-		pool:replace(entity, object)
-		pool.updated:dispatch(entity, object)
-		return object
+		pool:replace(entity, component)
+		pool.updated:dispatch(entity, component)
+		return component
 	end
 
-	pool:insert(entity, object)
-	pool.added:dispatch(entity, object)
+	pool:insert(entity, component)
+	pool.added:dispatch(entity, component)
 
-	return object
+	return component
 end
 
 --[[
@@ -519,7 +519,7 @@ end
 
 --[[
 	Returns a list of entities and a list of components. The lists are both in the same
-	order, so that the component for the entity at dense[n] is at objects[n].
+	order, so that the component for the entity at dense[n] is at components[n].
 ]]
 function Registry:raw(componentName)
 	local pool = self._pools[componentName]
@@ -528,7 +528,7 @@ function Registry:raw(componentName)
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 	end
 
-	return pool.dense, pool.objects
+	return pool.dense, pool.components
 end
 
 --[[

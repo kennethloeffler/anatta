@@ -917,13 +917,13 @@ return function()
 	end)
 
 	describe("raw", function()
-		it("should return the pool's .dense and .objects fields", function(context)
+		it("should return the pool's .dense and .components fields", function(context)
 			local registry = context.registry
-			local dense, objects = registry:raw("instance")
+			local dense, components = registry:raw("instance")
 			local pool = registry._pools.instance
 
 			expect(dense).to.equal(pool.dense)
-			expect(objects).to.equal(pool.objects)
+			expect(components).to.equal(pool.components)
 		end)
 	end)
 

@@ -18,7 +18,7 @@ function Pool.new(name, typeCheck)
 		size = 0,
 		sparse = {},
 		dense = {},
-		objects = {},
+		components = {},
 	}, Pool)
 end
 
@@ -27,11 +27,11 @@ function Pool:getIndex(entity)
 end
 
 function Pool:get(entity)
-	return self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]]
+	return self.components[self.sparse[bit32.band(entity, ENTITYID_MASK)]]
 end
 
 function Pool:replace(entity, component)
-	self.objects[self.sparse[bit32.band(entity, ENTITYID_MASK)]] = component
+	self.components[self.sparse[bit32.band(entity, ENTITYID_MASK)]] = component
 end
 
 function Pool:insert(entity, component)
@@ -41,7 +41,7 @@ function Pool:insert(entity, component)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 
 	self.dense[size] = entity
-	self.objects[size] = component
+	self.components[size] = component
 	self.sparse[entityId] = size
 
 	return component
@@ -61,10 +61,10 @@ function Pool:delete(entity)
 
 		self.dense[denseIdx] = swapped
 		self.sparse[bit32.band(swapped, ENTITYID_MASK)] = denseIdx
-		self.objects[denseIdx] = self.objects[prevSize]
+		self.components[denseIdx] = self.components[prevSize]
 	else
 		self.dense[denseIdx] = nil
-		self.objects[denseIdx] = nil
+		self.components[denseIdx] = nil
 	end
 end
 

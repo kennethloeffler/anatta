@@ -17,10 +17,10 @@ end
 
 function SingleCollection:each(callback)
 	local dense = self._componentPool.dense
-	local objects = self._componentPool.objects
+	local components = self._componentPool.components
 
 	for i = self._componentPool.size, 1, -1 do
-		callback(dense[i], objects[i])
+		callback(dense[i], components[i])
 	end
 end
 
@@ -53,14 +53,14 @@ function SingleCollection:detach()
 		return
 	end
 
-	local objects = self._pool.objects
+	local components = self._pool.components
 
 	for i, entity in ipairs(self._pool.dense) do
-		for _, attached in ipairs(objects[i]) do
+		for _, attached in ipairs(components[i]) do
 			Finalizers[typeof(attached)](attached)
 		end
 
-		self.removed:dispatch(entity, objects[i])
+		self.removed:dispatch(entity, components[i])
 	end
 
 	for _, connection in ipairs(self._connections) do

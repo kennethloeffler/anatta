@@ -27,7 +27,7 @@ return function()
 
 		it("should return a new empty pool", function()
 			expect(pool).to.be.a("table")
-			expect(next(pool.objects)).to.never.be.ok()
+			expect(next(pool.components)).to.never.be.ok()
 			expect(next(pool.sparse)).to.never.be.ok()
 			expect(next(pool.dense)).to.never.be.ok()
 			expect(pool.size).to.equal(0)
@@ -55,7 +55,7 @@ return function()
 			local obj = {}
 			local val = 0xBADF00D
 			local component = pool:insert(val, obj)
-			local _, objInPool = next(pool.objects)
+			local _, objInPool = next(pool.components)
 
 			expect(component).to.equal(obj)
 			expect(objInPool).to.equal(component)
@@ -80,7 +80,7 @@ return function()
 				pool:delete(pool.dense[i])
 			end
 
-			expect(next(pool.objects)).to.never.be.ok()
+			expect(next(pool.components)).to.never.be.ok()
 			expect(next(pool.sparse)).to.never.be.ok()
 			expect(next(pool.dense)).to.never.be.ok()
 			expect(pool.size).to.equal(0)
