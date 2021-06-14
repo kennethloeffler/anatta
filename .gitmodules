@@ -4,9 +4,3 @@
 [submodule "vendor/t"]
 	path = vendor/t
 	url = https://github.com/osyrisrblx/t
-[submodule "vendor/studiocomponents"]
-	path = vendor/studiocomponents
-	url = https://github.com/sircfenner/studiocomponents
-[submodule "vendor/roact"]
-	path = vendor/roact
-	url = https://github.com/roblox/roact
