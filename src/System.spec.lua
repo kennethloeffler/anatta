@@ -20,7 +20,7 @@ return function()
 		it("should return a new PureCollection", function()
 			local system = System.new(registry)
 
-			expect(getmetatable(system:all("Test1", "Test2"):pure())).to.equal(Entity.PureCollection)
+			expect(getmetatable(system:all("Test1", "Test2"):freeze())).to.equal(Entity.PureCollection)
 		end)
 	end)
 
