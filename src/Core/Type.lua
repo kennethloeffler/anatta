@@ -84,6 +84,7 @@ local secondOrder = {
 }
 
 local concrete = {
+	integer = "number",
 	match = "string",
 	numberMin = "number",
 	numberMax = "number",
