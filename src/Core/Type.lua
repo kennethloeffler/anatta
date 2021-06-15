@@ -89,10 +89,6 @@ local concrete = {
 	numberNegative = "number",
 }
 
-local function getConcrete(typeName)
-	return concrete[typeName] or (firstOrder[typeName] and typeName)
-end
-
 local function unwrap(...)
 	local unwrapped = table.create(select("#", ...))
 
@@ -104,21 +100,32 @@ local function unwrap(...)
 end
 
 local Type = {}
+Type.__index = Type
+
+function Type._new(typeName, check, ...)
+	return setmetatable({
+		args = { ... },
+		check = check,
+		typeName = typeName,
+	}, Type)
+end
+
+function Type:getConcreteType()
+	local isConcrete = next(self.args) == nil
+
+	if isConcrete then
+		return concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
+	else
+		return nil
+	end
+end
 
 for typeName in pairs(t) do
 	if firstOrder[typeName] ~= nil then
-		Type[typeName] = {
-			check = t[typeName],
-			name = typeName,
-			concrete = getConcrete(typeName),
-		}
+		Type[typeName] = Type._new(typeName, t[typeName])
 	elseif secondOrder[typeName] ~= nil then
 		Type[typeName] = function(...)
-			return {
-				args = { ... },
-				check = t[typeName](unwrap(...)),
-				name = typeName,
-			}
+			return Type._new(typeName, t[typeName](unwrap(...)), ...)
 		end
 	end
 end

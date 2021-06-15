@@ -7,8 +7,8 @@ return function()
 
 		expect(ty).to.be.a("table")
 		expect(ty.check).to.equal(t.Vector3)
-		expect(ty.concrete).to.equal("Vector3")
-		expect(ty.name).to.equal("Vector3")
+		expect(ty:getConcreteType()).to.equal("Vector3")
+		expect(ty.typeName).to.equal("Vector3")
 	end)
 
 	it("should return a compound definition for second-order functions", function()
@@ -18,7 +18,7 @@ return function()
 		expect(ty.args).to.be.a("table")
 		expect(ty.args[1]).to.equal("BasePart")
 		expect(ty.check).to.be.a("function")
-		expect(ty.name).to.equal("instanceIsA")
+		expect(ty.typeName).to.equal("instanceIsA")
 	end)
 
 	it("should return a compound definition for second-order functions that take functions as arguments", function()
@@ -27,7 +27,7 @@ return function()
 		expect(ty).to.be.a("table")
 		expect(ty.args).to.be.a("table")
 		expect(ty.check).to.be.a("function")
-		expect(ty.name).to.equal("union")
+		expect(ty.typeName).to.equal("union")
 
 		local args = ty.args
 		local string1 = args[1]
@@ -39,7 +39,7 @@ return function()
 		expect(string2.check).to.be.a("function")
 		expect(string1.args[1]).to.equal("string1")
 		expect(string2.args[1]).to.equal("string2")
-		expect(string1.name).to.equal("literal")
-		expect(string2.name).to.equal("literal")
+		expect(string1.typeName).to.equal("literal")
+		expect(string2.typeName).to.equal("literal")
 	end)
 end
