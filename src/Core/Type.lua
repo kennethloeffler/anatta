@@ -7,6 +7,12 @@
 
 local t = require(script.Parent.Parent.Parent.t)
 
+local isTypeDefinition = t.strictInterface({
+	args = t.table,
+	check = t.callback,
+	typeName = t.string,
+})
+
 local firstOrder = {
 	boolean = true,
 	none = true,
@@ -93,7 +99,13 @@ local function unwrap(...)
 	local unwrapped = table.create(select("#", ...))
 
 	for i = 1, select("#", ...) do
-		unwrapped[i] = select(i, ...).check or select(i, ...)
+		local arg = select(i, ...)
+
+		if isTypeDefinition(arg) then
+			unwrapped[i] = arg.check
+		else
+			unwrapped[i] = arg
+		end
 	end
 
 	return unpack(unwrapped)
@@ -111,10 +123,10 @@ function Type._new(typeName, check, ...)
 end
 
 function Type:getConcreteType()
-	local isConcrete = next(self.args) == nil
+	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
 
-	if isConcrete then
-		return concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
+	if concreteType then
+		return concreteType
 	else
 		return nil
 	end
