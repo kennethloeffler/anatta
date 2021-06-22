@@ -6,7 +6,7 @@ System.__index = System
 
 local ErrAlreadyHasCollection = "Systems can only create one collection"
 local ErrPureCantHaveUpdated = "Pure collections cannot track updates to components"
-local ErrFrozenNeedComponents = "Pure collections need at least one required component type"
+local ErrFrozenNeedsComponents = "Pure collections need at least one required component type"
 local ErrImpureNeedComponents = "Collections need least one required, updated, or optional component type"
 local ErrTooManyUpdated = "Collections can only track up to 32 updated component types"
 
