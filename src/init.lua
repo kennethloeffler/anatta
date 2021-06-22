@@ -17,7 +17,7 @@ function Anatta.define(components)
 end
 
 function Anatta:loadSystems(container)
-	for _, descendant in ipairs(container:GetDescendants()) do
+	for _, descendant in ipairs(container:GetChildren()) do
 		if descendant:IsA("ModuleScript") and not descendant.Name:match("%.spec$") then
 			self:loadSystem(descendant)
 		end
