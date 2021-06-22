@@ -7,8 +7,8 @@
 
 local t = require(script.Parent.Parent.Parent.t)
 
-local isTypeDefinition = t.strictInterface({
-	args = t.table,
+local isTypeParam = t.strictInterface({
+	typeParams = t.table,
 	check = t.callback,
 	typeName = t.string,
 })
@@ -102,8 +102,16 @@ local function unwrap(...)
 	for i = 1, select("#", ...) do
 		local arg = select(i, ...)
 
-		if isTypeDefinition(arg) then
+		if isTypeParam(arg) then
 			unwrapped[i] = arg.check
+		elseif typeof(arg) == "table" then
+			local tableArg = {}
+
+			for k, v in pairs(tableArg) do
+				t[k] = unwrap(v)
+			end
+
+			unwrapped[i] = tableArg
 		else
 			unwrapped[i] = arg
 		end
@@ -117,17 +125,49 @@ Type.__index = Type
 
 function Type._new(typeName, check, ...)
 	return setmetatable({
-		args = { ... },
+		typeParams = { ... },
 		check = check,
 		typeName = typeName,
 	}, Type)
 end
 
-function Type:getConcreteType()
+function Type:tryGetConcreteType()
 	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
 
 	if concreteType then
 		return concreteType
+	elseif self.typeName == "union" then
+		local previousConcreteType = self.typeParams[1]:tryGetConcreteType()
+
+		for _, typeParam in ipairs(self.typeParams) do
+			local currentConcreteType = typeParam:tryGetConcreteType()
+
+			if (currentConcreteType == nil) or (currentConcreteType ~= previousConcreteType) then
+				return nil
+			else
+				previousConcreteType = currentConcreteType
+			end
+		end
+
+		return previousConcreteType
+	elseif self.typeName == "literal" then
+		return typeof(self.typeParams[1])
+	elseif self.typeName == "strictArray" then
+		local result = table.create(#self.typeParams)
+
+		for i, typeParam in ipairs(self.typeParams) do
+			result[i] = typeParam:tryGetConcreteType()
+		end
+
+		return result
+	elseif self.typeName == "strictInterface" then
+		local result = {}
+
+		for key, typeDefinition in pairs(self.typeParams[1]) do
+			result[key] = typeDefinition:tryGetConcreteType()
+		end
+
+		return result
 	else
 		return nil
 	end
