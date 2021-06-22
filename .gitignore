@@ -28,6 +28,7 @@ $RECYCLE.BIN/
 # Selene Roblox standard library
 roblox.toml
 
+# Roblox TypeScript related
 README.html
 .log
 /out/
@@ -35,3 +36,6 @@ README.html
 /package.json
 /node_modules/
 /include/
+
+# Emacs directory-local variables
+.dir-locals.el
