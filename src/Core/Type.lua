@@ -107,8 +107,8 @@ local function unwrap(...)
 		elseif typeof(arg) == "table" then
 			local tableArg = {}
 
-			for k, v in pairs(tableArg) do
-				t[k] = unwrap(v)
+			for k, v in pairs(arg) do
+				tableArg[k] = unwrap(v)
 			end
 
 			unwrapped[i] = tableArg

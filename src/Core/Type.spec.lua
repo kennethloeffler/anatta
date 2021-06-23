@@ -57,12 +57,15 @@ return function()
 		it("should resolve a strict interface into a dictionary of concrete types", function()
 			local interface = Type.strictInterface({
 				all = Type.Enum,
-				simulacrum = Type.string,
+				simulacrum = Type.strictInterface({
+					name = Type.string,
+				}),
 			})
 			local concreteInterface = interface:tryGetConcreteType()
 
 			expect(concreteInterface.all).to.equal("Enum")
-			expect(concreteInterface.simulacrum).to.equal("string")
+			expect(concreteInterface.simulacrum).to.be.a("table")
+			expect(concreteInterface.simulacrum.name).to.equal("string")
 		end)
 
 		it("should resolve a strict array into an array of concrete types", function()
