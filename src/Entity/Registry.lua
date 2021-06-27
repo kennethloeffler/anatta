@@ -59,9 +59,7 @@ function Registry.getVersion(entity)
 end
 
 --[[
-	Defines a component for the registry. If the component's type is an Instance or an
-	interface with a top-level field that is an Instance, the registry automatically
-	calls Destroy when the component is removed.
+	Defines a component for the registry.
 ]]
 function Registry:define(componentName, typeCheck)
 	jumpAssert(not self._pools[componentName], ErrComponentNameTaken:format(componentName))
