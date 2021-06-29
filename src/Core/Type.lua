@@ -84,6 +84,7 @@ local secondOrder = {
 }
 
 local concrete = {
+	enum = "enum",
 	integer = "number",
 	match = "string",
 	numberMin = "number",
@@ -94,6 +95,48 @@ local concrete = {
 	numberConstrainedExclusive = "number",
 	numberPositive = "number",
 	numberNegative = "number",
+}
+
+local concreters = {
+	union = function(typeDefinition)
+		local previousConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
+
+		for _, typeParam in ipairs(typeDefinition.typeParams) do
+			local currentConcreteType = typeParam:tryGetConcreteType()
+
+			if (currentConcreteType == nil) or (currentConcreteType ~= previousConcreteType) then
+				return nil
+			else
+				previousConcreteType = currentConcreteType
+			end
+		end
+
+		return previousConcreteType
+	end,
+
+	literal = function(typeDefinition)
+		return typeof(typeDefinition.typeParams[1])
+	end,
+
+	strictArray = function(typeDefinition)
+		local result = table.create(#typeDefinition.typeParams)
+
+		for i, typeParam in ipairs(typeDefinition.typeParams) do
+			result[i] = typeParam:tryGetConcreteType()
+		end
+
+		return result
+	end,
+
+	strictInterface = function(typeDefinition)
+		local result = {}
+
+		for key, def in pairs(typeDefinition.typeParams[1]) do
+			result[key] = def:tryGetConcreteType()
+		end
+
+		return result
+	end,
 }
 
 local function unwrap(...)
@@ -136,38 +179,8 @@ function Type:tryGetConcreteType()
 
 	if concreteType then
 		return concreteType
-	elseif self.typeName == "union" then
-		local previousConcreteType = self.typeParams[1]:tryGetConcreteType()
-
-		for _, typeParam in ipairs(self.typeParams) do
-			local currentConcreteType = typeParam:tryGetConcreteType()
-
-			if (currentConcreteType == nil) or (currentConcreteType ~= previousConcreteType) then
-				return nil
-			else
-				previousConcreteType = currentConcreteType
-			end
-		end
-
-		return previousConcreteType
-	elseif self.typeName == "literal" then
-		return typeof(self.typeParams[1])
-	elseif self.typeName == "strictArray" then
-		local result = table.create(#self.typeParams)
-
-		for i, typeParam in ipairs(self.typeParams) do
-			result[i] = typeParam:tryGetConcreteType()
-		end
-
-		return result
-	elseif self.typeName == "strictInterface" then
-		local result = {}
-
-		for key, typeDefinition in pairs(self.typeParams[1]) do
-			result[key] = typeDefinition:tryGetConcreteType()
-		end
-
-		return result
+	elseif concreters[self.typeName] then
+		return concreters[self.typeName](self)
 	else
 		return nil
 	end
