@@ -8,9 +8,12 @@ local defaultValues = {
 	BrickColor = BrickColor.new(Color3.new()),
 	CFrame = CFrame.new(),
 	Color3 = Color3.new(),
-	ColorSequence = ColorSequence.new(ColorSequenceKeypoint.new(0, Color3.new())),
+	ColorSequence = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.new()),
+		ColorSequenceKeypoint.new(1, Color3.new()),
+	}),
 	NumberRange = NumberRange.new(0, 0),
-	NumberSequence = NumberSequence.new(NumberSequenceKeypoint.new(0, 0)),
+	NumberSequence = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0) }),
 	Rect = Rect.new(Vector2.new(), Vector2.new()),
 	UDim = UDim.new(0, 0),
 	UDim2 = UDim2.new(0, 0, 0, 0),
@@ -19,7 +22,7 @@ local defaultValues = {
 }
 
 return function(componentName, typeDefinition)
-	local concreteType = typeDefinition:tryGetConcrete()
+	local concreteType = typeDefinition:tryGetConcreteType()
 	local attributeMap = {}
 
 	if concreteType ~= nil then

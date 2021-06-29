@@ -9,7 +9,7 @@
       "$path": "src"
     },
     "t": {
-      "$path": "vendor/t"
+      "$path": "../vendor/t"
     }
   }
 }

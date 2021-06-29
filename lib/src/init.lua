@@ -1,6 +1,6 @@
 local Entity = require(script.Entity)
-local t = require(script.Parent.Parent.t)
-local util = require(script.Parent.util)
+local t = require(script.Parent.t)
+local util = require(script.util)
 
 local IsSystem = t.interface({
 	init = t.callback,
