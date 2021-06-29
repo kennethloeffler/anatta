@@ -1,0 +1,12 @@
+{
+  "name": "AnattaPlugin",
+  "tree": {
+    "$className": "Folder",
+    "src": {
+      "$path": "src"
+    },
+    "Anatta": {
+      "$path": "../lib"
+    }
+  }
+}

@@ -5,7 +5,7 @@
 -- Sanity check.
 assert(plugin, "Plugin loader must be executed as a plugin!")
 
-local ServerStorage = game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 -- RenderStepped errors out in Start Server, so we consider it a hostile
 -- environment even though it has a 3D view that we could potentially be using.
@@ -17,7 +17,7 @@ end
 -- the code synced via Rojo will cause the plugin to be reloaded in edit
 -- mode. (No need for play solo or the hotswap plugin.)
 local useDevSource = true
-local devSource = ServerStorage:WaitForChild("Anatta", 3)
+local devSource = ReplicatedStorage:WaitForChild("AnattaPlugin", 3)
 
 -- The source that's shipped integrated into the plugin.
 local builtinSource = script.Parent
@@ -53,11 +53,11 @@ function PluginLoader.new()
 	}, PluginLoader)
 
 	plugin.Unloading:Connect(function()
-		PluginLoader:unload()
+		pluginLoader:unload()
 	end)
 
-	PluginLoader._load()
-	PluginLoader:_watch(source)
+	pluginLoader._load()
+	pluginLoader:_watch(source)
 
 	return pluginLoader
 end
@@ -193,7 +193,7 @@ end
 function PluginLoader._load()
 	-- Always clone if we're using dev source b/c the first require can be
 	-- stale after Studio writes the plugin to a model file for the first time
-	local main = useDevSource and currentRoot:Clone() or currentRoot
+	local main = (useDevSource and currentRoot:Clone() or currentRoot).src.Main
 	local ok, result = pcall(require, main)
 
 	if not ok then

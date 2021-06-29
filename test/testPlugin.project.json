@@ -1,0 +1,11 @@
+{
+  "name": "TestPlugin",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "AnattaPlugin": {
+        "$path": "../plugin"
+      }
+    }
+  }
+}
