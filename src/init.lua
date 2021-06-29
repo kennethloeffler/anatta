@@ -11,7 +11,7 @@ Anatta.__index = Anatta
 
 function Anatta.define(components)
 	return setmetatable({
-		_registry = Entity.Registry.new(components),
+		registry = Entity.Registry.new(components),
 		_systems = {},
 	}, Anatta)
 end
