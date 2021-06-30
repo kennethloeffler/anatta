@@ -1,6 +1,6 @@
 local defaultValues = {
 	enum = function(typeDefinition)
-		return typeDefinition.args[1]:GetEnumItems()[1]
+		return typeDefinition.typeParams[1]:GetEnumItems()[1].Name
 	end,
 	number = 0,
 	string = "",
@@ -38,7 +38,7 @@ return function(componentName, typeDefinition)
 				local value = defaultValues[fieldType]
 
 				if typeof(value) == "function" then
-					attributeMap[attributeName] = value(typeDefinition)
+					attributeMap[attributeName] = value(typeDefinition.typeParams[1][field])
 				elseif value ~= nil then
 					attributeMap[attributeName] = value
 				else
