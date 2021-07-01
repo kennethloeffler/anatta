@@ -2,7 +2,7 @@
   "name": "AnattaPlugin",
   "tree": {
     "$className": "Folder",
-    "src": {
+    "PluginLoader": {
       "$path": "src"
     },
     "Anatta": {
