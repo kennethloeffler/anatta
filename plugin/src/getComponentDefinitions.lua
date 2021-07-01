@@ -1,9 +1,11 @@
 local CollectionService = game:GetService("CollectionService")
 
-local MODULE_TAG_NAME = "AnattaPluginComponents"
+local Constants = require(script.Parent.Constants)
+
+local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
 
 return function()
-	local definitionModules = CollectionService:GetTagged(MODULE_TAG_NAME)
+	local definitionModules = CollectionService:GetTagged(DEFINITION_MODULE_TAG_NAME)
 	local allDefinitions = {}
 
 	for _, moduleScript in ipairs(definitionModules) do
