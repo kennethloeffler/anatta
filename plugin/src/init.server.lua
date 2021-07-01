@@ -56,7 +56,7 @@ function PluginLoader.new()
 		pluginLoader:unload()
 	end)
 
-	pluginLoader._load()
+	pluginLoader:_load()
 	pluginLoader:_watch(source)
 
 	return pluginLoader
@@ -190,10 +190,10 @@ function PluginLoader:beforeUnload(callback)
 	self._beforeUnload = callback
 end
 
-function PluginLoader._load()
+function PluginLoader:_load()
 	-- Always clone if we're using dev source b/c the first require can be
 	-- stale after Studio writes the plugin to a model file for the first time
-	local main = (useDevSource and currentRoot:Clone() or currentRoot).PluginLoader.Main
+	local main = (useDevSource and currentRoot:Clone() or currentRoot).Plugin.Main
 	local ok, result = pcall(require, main)
 
 	if not ok then
@@ -203,7 +203,7 @@ function PluginLoader._load()
 
 	local Plugin = result
 
-	ok, result = pcall(Plugin, PluginLoader)
+	ok, result = pcall(Plugin, self)
 
 	if not ok then
 		warn("Plugin failed to run: " .. result)
