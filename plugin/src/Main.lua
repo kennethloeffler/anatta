@@ -1,12 +1,9 @@
 local Anatta = require(script.Parent.Parent.Anatta)
 
-local getComponentDefinitions = require(script.Parent.getComponentDefinitions)
-
 local Systems = script.Parent.Systems
 
 return function(plugin)
-	local componentDefinitions = getComponentDefinitions()
-	local anatta = Anatta.new(componentDefinitions)
+	local anatta = Anatta.new({})
 
 	anatta:loadSystems(Systems)
 
