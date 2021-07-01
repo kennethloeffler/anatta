@@ -25,6 +25,14 @@ function Anatta:loadSystems(container)
 	end
 end
 
+function Anatta:unloadSystems(container)
+	for _, descendant in ipairs(container:GetChildren()) do
+		if descendant:IsA("ModuleScript") and not descendant.Name:match("%.spec$") then
+			self:unloadSystem(descendant)
+		end
+	end
+end
+
 function Anatta:loadSystem(moduleScript)
 	local system = System.new(self._registry)
 	local systemModule = require(moduleScript)
