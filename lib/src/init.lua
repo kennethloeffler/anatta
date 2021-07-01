@@ -10,7 +10,7 @@ local IsSystem = t.interface({
 local Anatta = {}
 Anatta.__index = Anatta
 
-function Anatta.define(components)
+function Anatta.new(components)
 	return setmetatable({
 		_registry = Entity.Registry.new(components),
 		_systems = {},
