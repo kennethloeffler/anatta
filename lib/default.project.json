@@ -3,9 +3,9 @@
   "tree": {
     "$className": "ModuleScript",
     "$properties": {
-      "Source": "return require(script.src)"
+      "Source": "return require(script.Library)"
     },
-    "src": {
+    "Library": {
       "$path": "src"
     },
     "t": {
