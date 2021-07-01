@@ -1,4 +1,5 @@
 local Entity = require(script.Entity)
+local System = require(script.System)
 local t = require(script.Parent.t)
 local util = require(script.util)
 
@@ -11,7 +12,7 @@ Anatta.__index = Anatta
 
 function Anatta.define(components)
 	return setmetatable({
-		registry = Entity.Registry.new(components),
+		_registry = Entity.Registry.new(components),
 		_systems = {},
 	}, Anatta)
 end
@@ -25,7 +26,7 @@ function Anatta:loadSystems(container)
 end
 
 function Anatta:loadSystem(moduleScript)
-	local system = Entity.System.new(self._registry)
+	local system = System.new(self._registry)
 	local systemModule = require(moduleScript)
 
 	util.jumpAssert(IsSystem(systemModule))
