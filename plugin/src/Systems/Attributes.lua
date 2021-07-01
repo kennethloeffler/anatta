@@ -3,7 +3,7 @@ local CollectionService = game:GetService("CollectionService")
 local Constants = require(script.Parent.Parent.Constants)
 
 local getComponentDefinitions = require(script.Parent.Parent.getComponentDefinitions)
-local tryGetAttributes = require(script.Parent.Parent.Parent.Anatta.src.util.tryGetAttributes)
+local tryToAttribute = require(script.Parent.Parent.Parent.Anatta.Library.util.tryToAttribute)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
@@ -16,7 +16,7 @@ function TagsAndAttributes:init()
 
 	for componentName, typeDefinition in pairs(componentDefinitions) do
 		local tagComponentName = ("%sTag"):format(componentName)
-		local attributeMap, failedAttributeName, failedType = tryGetAttributes(componentName, typeDefinition)
+		local attributeMap, failedAttributeName, failedType = tryToAttribute(componentName, typeDefinition)
 
 		if failedType then
 			warn(("%s (%s) cannot be turned into an attribute"):format(failedAttributeName, failedType))
