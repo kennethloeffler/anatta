@@ -32,7 +32,7 @@ function TagsAndAttributes:init()
 
 			if entity ~= nil and registry:valid(entity) then
 				if registry:get(entity, tagComponentName) ~= instance then
-					-- The entity is valid, but it is associated with a
+					-- The entity is valid, but it is already associated with a
 					-- different instance. This can happen when a model file
 					-- containing entities is inserted or when entities are
 					-- cloned.
