@@ -1,0 +1,3 @@
+return {
+	EntityAttributeName = "__entityId",
+}
