@@ -17,7 +17,7 @@ end
 -- the code synced via Rojo will cause the plugin to be reloaded in edit
 -- mode. (No need for play solo or the hotswap plugin.)
 local useDevSource = true
-local devSource = ReplicatedStorage:WaitForChild("AnattaPlugin", 3)
+local devSource = ReplicatedStorage:WaitForChild("AnattaPlugin", 20)
 
 -- The source that's shipped integrated into the plugin.
 local builtinSource = script.Parent
