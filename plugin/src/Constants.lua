@@ -1,4 +1,5 @@
 return {
 	EntityAttributeName = "__entityId",
-	DefinitionModuleTagName = "AnattaPluginComponents",
+	DefinitionModuleTagName = "AnattaComponentDefinitions",
+	PrivateComponentPrefix = "__anatta",
 }
