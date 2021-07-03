@@ -193,7 +193,7 @@ end
 function PluginLoader._load()
 	-- Always clone if we're using dev source b/c the first require can be
 	-- stale after Studio writes the plugin to a model file for the first time
-	local main = (useDevSource and currentRoot:Clone() or currentRoot).PluginLoader.Main
+	local main = (useDevSource and currentRoot:Clone() or currentRoot).Plugin.Main
 	local ok, result = pcall(require, main)
 
 	if not ok then
