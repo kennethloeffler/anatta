@@ -1,9 +1,21 @@
 local Anatta = require(script.Parent.Parent.Anatta)
 
+local Constants = require(script.Parent.Constants)
 local Systems = script.Parent.Systems
+local t = require(script.Parent.Parent.Anatta.Library.Core.Type)
+
+local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
 
 return function(plugin)
-	local anatta = Anatta.new({})
+	local components = {
+		AssociatedInstance = t.Instance,
+	}
+
+	for name, definition in pairs(components) do
+		components[PRIVATE_COMPONENT_PREFIX .. name] = definition
+	end
+
+	local anatta = Anatta.new(components)
 
 	anatta:loadSystems(Systems)
 
