@@ -3,8 +3,11 @@ local CollectionService = game:GetService("CollectionService")
 local Constants = require(script.Parent.Parent.Constants)
 local util = require(script.Parent.Parent.Parent.Anatta.Library.util)
 
+local getValidEntity = require(script.Parent.Parent.getValidEntity)
+
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
+local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
 
 local Attributes = {}
 
@@ -28,7 +31,7 @@ function Attributes:init()
 					componentName,
 					moduleScript:GetFullName()
 				))
-				return
+				continue
 			end
 
 			local attributeMap, failedAttributeName, failedType = util.tryToAttribute(componentName, typeDefinition)
@@ -38,28 +41,14 @@ function Attributes:init()
 				continue
 			end
 
-			registry:define(tagComponentName, function(component)
-				return component:IsA("Instance")
+			registry:define(tagComponentName, function(arg)
+				return arg == nil
 			end)
 
 			system:on(CollectionService:GetInstanceAddedSignal(componentName), function(instance)
-				local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+				local entity = getValidEntity(registry, instance)
 
-				if entity ~= nil and registry:valid(entity) then
-					if registry:get(entity, tagComponentName) ~= instance then
-						-- The entity is valid, but it is already associated with a
-						-- different instance. This can happen when a model file
-						-- containing entities is inserted or when entities are
-						-- cloned.
-						entity = registry:create()
-						instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
-					end
-				else
-					entity = registry:create()
-					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
-				end
-
-				registry:add(entity, tagComponentName, instance)
+				registry:add(entity, tagComponentName)
 
 				for attributeName, defaultValue in pairs(attributeMap) do
 					instance:SetAttribute(attributeName, defaultValue)
@@ -67,17 +56,22 @@ function Attributes:init()
 			end)
 
 			system:on(CollectionService:GetInstanceRemovedSignal(componentName), function(instance)
-				local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+				local entity = getValidEntity(registry, instance)
 
-				if registry:valid(entity) then
-					registry:remove(entity, tagComponentName)
+				registry:remove(entity, tagComponentName)
 
-					if registry:stub(entity) then
-						registry:destroy(entity)
+				local isStub = true
+
+				registry:visit(function(name)
+					if not name:find(PRIVATE_COMPONENT_PREFIX) then
+						isStub = false
 					end
-				end
+				end, entity)
 
-				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+				if isStub then
+					registry:destroy(entity)
+					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+				end
 
 				for attributeName in pairs(attributeMap) do
 					instance:SetAttribute(attributeName, nil)
