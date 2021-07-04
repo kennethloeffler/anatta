@@ -9,7 +9,7 @@ function Collection.new(system)
 	local registry = system.registry
 
 	if #system.required == 1 and #system.update == 0 and #system.forbidden == 0 and #system.optional == 0 then
-		return SingleCollection.new(unpack(system.required))
+		return SingleCollection.new(registry:getPools(unpack(system.required))[1])
 	end
 
 	local collectionPool = Pool.new()
