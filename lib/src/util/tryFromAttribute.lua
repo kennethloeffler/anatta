@@ -13,4 +13,6 @@ return function(instance, componentName, typeDefinition)
 			warn(('Attribute "%s" is missing from instance %s'):format(attributeName, instance:GetFullName()))
 		end
 	end
+
+	return attributeMap
 end
