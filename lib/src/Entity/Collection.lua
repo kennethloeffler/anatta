@@ -187,13 +187,13 @@ function Collection:_tryPack(entity)
 	end
 
 	for i, pool in ipairs(self._updated) do
-		local component = pool:get(entity)
+		local index = pool:getIndex(entity)
 
-		if not component then
+		if not index then
 			return false
 		end
 
-		packed[numRequired + i] = component
+		packed[numRequired + i] = pool.components[index]
 	end
 
 	for i, pool in ipairs(self._optional) do

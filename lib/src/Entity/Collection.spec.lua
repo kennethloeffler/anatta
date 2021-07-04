@@ -21,6 +21,7 @@ return function()
 
 			if i % 2 == 0 then
 				registry:add(entity, "Test1", {})
+				registry:add(entity, "Test5")
 			end
 
 			if i % 3 == 0 then
@@ -168,17 +169,12 @@ return function()
 						update = {},
 					})
 
-					registry:each(function(entity)
-						registry:add(entity, "Test5")
-					end)
-
 					collection:each(function(entity, test1, test2, test5)
 						expect(toIterate[entity]).to.equal(true)
 						toIterate[entity] = nil
 
 						expect(test1).to.equal(registry:get(entity, "Test1"))
 						expect(test2).to.equal(registry:get(entity, "Test2"))
-
 						expect(test5).to.equal(nil)
 					end)
 

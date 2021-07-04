@@ -15,6 +15,7 @@ return function()
 
 			if i % 2 == 0 then
 				registry:add(entity, "Test1", {})
+				registry:add(entity, "Test5")
 			end
 
 			if i % 3 == 0 then
@@ -46,6 +47,7 @@ return function()
 			Test2 = t.table,
 			Test3 = t.table,
 			Test4 = t.table,
+			Test5 = t.none,
 		})
 	end)
 
