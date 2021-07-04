@@ -25,9 +25,7 @@ function Attributes:init()
 		local componentDefinitions = require(moduleScript)
 
 		for componentName, typeDefinition in pairs(componentDefinitions) do
-			local tagComponentName = ("%sTag"):format(componentName)
-
-			if registry:hasDefined(tagComponentName) then
+			if registry:hasDefined(componentName) then
 				warn(("Found duplicate component name %s in %s; skipping"):format(
 					componentName,
 					moduleScript:GetFullName()
@@ -42,7 +40,7 @@ function Attributes:init()
 				continue
 			end
 
-			registry:define(tagComponentName, function(arg)
+			registry:define(componentName, function(arg)
 				return arg == nil
 			end)
 
@@ -64,7 +62,7 @@ function Attributes:init()
 					local entity = getValidEntity(registry, instance)
 
 					pendingAddition[instance] = nil
-					registry:add(entity, tagComponentName)
+					registry:add(entity, componentName)
 					registry:tryAdd(entity, "__anattaSelected")
 
 					for attributeName, defaultValue in pairs(attributeMap) do
@@ -76,7 +74,7 @@ function Attributes:init()
 					local entity = getValidEntity(registry, instance)
 
 					pendingRemoval[instance] = nil
-					registry:remove(entity, tagComponentName)
+					registry:remove(entity, componentName)
 
 					local isStub = true
 
