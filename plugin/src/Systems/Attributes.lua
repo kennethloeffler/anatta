@@ -63,19 +63,19 @@ function Attributes:init()
 				for instance in pairs(pendingAddition) do
 					local entity = getValidEntity(registry, instance)
 
+					pendingAddition[instance] = nil
 					registry:add(entity, tagComponentName)
 					registry:tryAdd(entity, "__anattaSelected")
 
 					for attributeName, defaultValue in pairs(attributeMap) do
 						instance:SetAttribute(attributeName, defaultValue)
 					end
-
-					pendingAddition[instance] = nil
 				end
 
 				for instance in pairs(pendingRemoval) do
 					local entity = getValidEntity(registry, instance)
 
+					pendingRemoval[instance] = nil
 					registry:remove(entity, tagComponentName)
 
 					local isStub = true
@@ -94,8 +94,6 @@ function Attributes:init()
 					for attributeName in pairs(attributeMap) do
 						instance:SetAttribute(attributeName, nil)
 					end
-
-					pendingRemoval[instance] = nil
 				end
 			end)
 		end
