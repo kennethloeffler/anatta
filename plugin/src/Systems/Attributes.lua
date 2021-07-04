@@ -1,4 +1,5 @@
 local CollectionService = game:GetService("CollectionService")
+local RunService = game:GetService("RunService")
 
 local Constants = require(script.Parent.Parent.Constants)
 local util = require(script.Parent.Parent.Parent.Anatta.Library.util)
@@ -45,36 +46,54 @@ function Attributes:init()
 				return arg == nil
 			end)
 
+			local pendingAddition = {}
+			local pendingRemoval = {}
+
 			system:on(CollectionService:GetInstanceAddedSignal(componentName), function(instance)
-				local entity = getValidEntity(registry, instance)
-
-				registry:add(entity, tagComponentName)
-
-				for attributeName, defaultValue in pairs(attributeMap) do
-					instance:SetAttribute(attributeName, defaultValue)
-				end
+				pendingAddition[instance] = true
+				pendingRemoval[instance] = nil
 			end)
 
 			system:on(CollectionService:GetInstanceRemovedSignal(componentName), function(instance)
-				local entity = getValidEntity(registry, instance)
+				pendingAddition[instance] = nil
+				pendingRemoval[instance] = true
+			end)
 
-				registry:remove(entity, tagComponentName)
+			system:on(RunService.Heartbeat, function()
+				for instance in pairs(pendingAddition) do
+					pendingAddition[instance] = nil
+					local entity = getValidEntity(registry, instance)
 
-				local isStub = true
+					registry:add(entity, tagComponentName)
+					registry:tryAdd(entity, "__anattaSelected")
 
-				registry:visit(function(name)
-					if not name:find(PRIVATE_COMPONENT_PREFIX) then
-						isStub = false
+					for attributeName, defaultValue in pairs(attributeMap) do
+						instance:SetAttribute(attributeName, defaultValue)
 					end
-				end, entity)
-
-				if isStub then
-					registry:destroy(entity)
-					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 				end
 
-				for attributeName in pairs(attributeMap) do
-					instance:SetAttribute(attributeName, nil)
+				for instance in pairs(pendingRemoval) do
+					pendingRemoval[instance] = nil
+					local entity = getValidEntity(registry, instance)
+
+					registry:remove(entity, tagComponentName)
+
+					local isStub = true
+
+					registry:visit(function(name)
+						if not name:find(PRIVATE_COMPONENT_PREFIX) then
+							isStub = false
+						end
+					end, entity)
+
+					if isStub then
+						registry:destroy(entity)
+						instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+					end
+
+					for attributeName in pairs(attributeMap) do
+						instance:SetAttribute(attributeName, nil)
+					end
 				end
 			end)
 		end
