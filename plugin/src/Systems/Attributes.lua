@@ -44,6 +44,8 @@ function Attributes:init()
 				return arg == nil
 			end)
 
+			registry:getPools(componentName)[1].typeDefinition = typeDefinition
+
 			local pendingAddition = {}
 			local pendingRemoval = {}
 
