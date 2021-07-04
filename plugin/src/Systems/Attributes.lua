@@ -65,11 +65,13 @@ function Attributes:init()
 
 					pendingAddition[instance] = nil
 					registry:add(entity, componentName)
-					registry:tryAdd(entity, "__anattaSelected")
 
 					for attributeName, defaultValue in pairs(attributeMap) do
 						instance:SetAttribute(attributeName, defaultValue)
 					end
+
+					registry:tryRemove(entity, "__anattaSelected")
+					registry:add(entity, "__anattaSelected")
 				end
 
 				for instance in pairs(pendingRemoval) do
