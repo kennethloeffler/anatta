@@ -10,9 +10,9 @@ local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
 local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
 
-local Attributes = {}
+local Components = {}
 
-function Attributes:init()
+function Components:init()
 	local registry = self.registry
 	local system = self.system
 
@@ -112,4 +112,4 @@ function Attributes:init()
 	system:on(CollectionService:GetInstanceAddedSignal(DEFINITION_MODULE_TAG_NAME), loadDefinitions)
 end
 
-return Attributes
+return Components
