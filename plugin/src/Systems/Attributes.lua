@@ -88,13 +88,17 @@ function Attributes:init()
 						end
 					end, entity)
 
-					if isStub then
-						registry:destroy(entity)
-						instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
-					end
+					registry:tryRemove(entity, "__anattaSelected")
 
 					for attributeName in pairs(attributeMap) do
 						instance:SetAttribute(attributeName, nil)
+					end
+
+					registry:add(entity, "__anattaSelected")
+
+					if isStub then
+						registry:destroy(entity)
+						instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 					end
 				end
 			end)
