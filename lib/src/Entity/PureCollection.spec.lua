@@ -2,7 +2,7 @@ return function()
 	local PureCollection = require(script.Parent.PureCollection)
 	local SinglePureCollection = require(script.Parent.SinglePureCollection)
 	local Registry = require(script.Parent.Registry)
-	local t = require(script.Parent.Parent.Parent.t)
+	local t = require(script.Parent.Parent.Core.Type)
 
 	local function getCollection(registry, system)
 		system.registry = registry

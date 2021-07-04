@@ -1,7 +1,7 @@
 return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
 	local Registry = require(script.Parent.Registry)
-	local t = require(script.Parent.Parent.Parent.t)
+	local t = require(script.Parent.Parent.Core.Type)
 
 	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 	local NULL_ENTITYID = Constants.NULL_ENTITYID
