@@ -40,7 +40,6 @@ function AttributeCheck:init()
 					attributeName == ENTITY_ATTRIBUTE_NAME
 					and instance:GetAttribute(ENTITY_ATTRIBUTE_NAME) ~= entity
 				then
-					warn("You wanna die?")
 					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 				else
 					for componentName, typeDefinition in pairs(componentTypes) do
