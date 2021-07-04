@@ -61,7 +61,6 @@ function Attributes:init()
 
 			system:on(RunService.Heartbeat, function()
 				for instance in pairs(pendingAddition) do
-					pendingAddition[instance] = nil
 					local entity = getValidEntity(registry, instance)
 
 					registry:add(entity, tagComponentName)
@@ -70,10 +69,11 @@ function Attributes:init()
 					for attributeName, defaultValue in pairs(attributeMap) do
 						instance:SetAttribute(attributeName, defaultValue)
 					end
+
+					pendingAddition[instance] = nil
 				end
 
 				for instance in pairs(pendingRemoval) do
-					pendingRemoval[instance] = nil
 					local entity = getValidEntity(registry, instance)
 
 					registry:remove(entity, tagComponentName)
@@ -94,6 +94,8 @@ function Attributes:init()
 					for attributeName in pairs(attributeMap) do
 						instance:SetAttribute(attributeName, nil)
 					end
+
+					pendingRemoval[instance] = nil
 				end
 			end)
 		end
