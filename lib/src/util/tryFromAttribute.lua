@@ -6,7 +6,7 @@ return function(instance, componentName, typeDefinition)
 	for attributeName, defaultValue in pairs(attributeMap) do
 		local value = instance:GetAttribute(attributeName)
 
-		if value == nil then
+		if value ~= nil then
 			attributeMap[attributeName] = value
 		else
 			instance:SetAttribute(attributeName, defaultValue)
