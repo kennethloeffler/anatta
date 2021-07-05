@@ -23,7 +23,7 @@ return function()
 	end
 
 	describe("new", function()
-		local pool = Pool.new()
+		local pool = Pool.new("test", {})
 
 		it("should return a new empty pool", function()
 			expect(pool).to.be.a("table")
@@ -51,7 +51,7 @@ return function()
 
 	describe("insert", function()
 		it("should add an element and return the passed component object", function()
-			local pool = Pool.new()
+			local pool = Pool.new("test", {})
 			local obj = {}
 			local val = 0xBADF00D
 			local component = pool:insert(val, obj)
@@ -62,7 +62,7 @@ return function()
 		end)
 
 		it("should construct the sparse array correctly", function()
-			local pool, size = generate(Pool.new())
+			local pool, size = generate(Pool.new("test", {}))
 
 			expect(pool.size).to.equal(size)
 
@@ -74,7 +74,7 @@ return function()
 
 	describe("delete", function()
 		it("should empty the pool when all elements are removed", function()
-			local pool, size = generate(Pool.new())
+			local pool, size = generate(Pool.new("test", {}))
 
 			for i = size, 1, -1 do
 				pool:delete(pool.dense[i])
@@ -89,7 +89,7 @@ return function()
 		it(
 			"should swap the last element into the removed element's place when there is more than one element in the pool",
 			function()
-				local pool, size = generate(Pool.new())
+				local pool, size = generate(Pool.new("test", {}))
 				local last = pool.dense[size]
 				local toRemove = pool.dense[size - 50]
 

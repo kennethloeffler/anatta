@@ -12,7 +12,7 @@ function Collection.new(system)
 		return SingleCollection.new(registry:getPools(unpack(system.required))[1])
 	end
 
-	local collectionPool = Pool.new()
+	local collectionPool = Pool.new("collectionInteral", {})
 
 	local self = setmetatable({
 		added = collectionPool.added,

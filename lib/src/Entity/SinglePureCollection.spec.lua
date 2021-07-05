@@ -4,7 +4,7 @@ return function()
 
 	describe("new", function()
 		it("should create a new SinglePureCollection from a pool", function()
-			local pool = Pool.new()
+			local pool = Pool.new("test", {})
 			local collection = SinglePureCollection.new(pool)
 
 			expect(getmetatable(collection)).to.equal(SinglePureCollection)
@@ -14,7 +14,7 @@ return function()
 
 	describe("each", function()
 		it("should iterate all and only the elements in the pool and pass their data", function()
-			local pool = Pool.new()
+			local pool = Pool.new("test", {})
 			local collection = SinglePureCollection.new(pool)
 			local toIterate = {}
 
@@ -35,7 +35,7 @@ return function()
 		end)
 
 		it("should replace the passed data with the returned data", function()
-			local pool = Pool.new()
+			local pool = Pool.new("test", {})
 			local collection = SinglePureCollection.new(pool)
 			local toIterate = {}
 

@@ -28,7 +28,7 @@ function Registry.new(components)
 	local pools = {}
 
 	for componentName, typeDefinition in pairs(components) do
-		pools[componentName] = Pool.new(componentName, typeDefinition.check)
+		pools[componentName] = Pool.new(componentName, typeDefinition)
 	end
 
 	return setmetatable({
@@ -570,6 +570,16 @@ function Registry:getPools(...)
 	end
 
 	return output
+end
+
+function Registry:getPool(componentName)
+	local pool = self._pools[componentName]
+
+	if DEBUG then
+		jumpAssert(pool, ErrBadComponentName:format(componentName))
+	end
+
+	return self._pools[componentName]
 end
 
 return Registry
