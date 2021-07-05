@@ -13,10 +13,10 @@ local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
 local NULL_ENTITYID = Constants.NULL_ENTITYID
 
 local ErrBadEntityType = "entity must be a number (got %s)"
-local ErrAlreadyHasComponent = "entity %08X already has a %s"
+local ErrAlreadyHasComponent = "entity %s already has a %s"
 local ErrBadComponentName = "invalid component identifier: %s"
-local ErrInvalidEntity = "entity %08X either does not exist or it has been destroyed"
-local ErrMissingComponent = "entity %08X does not have a %s"
+local ErrInvalidEntity = "entity %s either does not exist or it has been destroyed"
+local ErrMissingComponent = "entity %s does not have a %s"
 local ErrComponentNameTaken = "there is already a component named %s"
 
 local WarnEntityAlreadyExists = "creating a new entity (%08X) because %08X's id is already in use"
@@ -27,8 +27,8 @@ Registry.__index = Registry
 function Registry.new(components)
 	local pools = {}
 
-	for componentName, typeCheck in pairs(components) do
-		pools[componentName] = Pool.new(componentName, typeCheck)
+	for componentName, typeDefinition in pairs(components) do
+		pools[componentName] = Pool.new(componentName, typeDefinition.check)
 	end
 
 	return setmetatable({

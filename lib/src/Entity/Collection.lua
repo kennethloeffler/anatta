@@ -9,7 +9,7 @@ function Collection.new(system)
 	local registry = system.registry
 
 	if #system.required == 1 and #system.update == 0 and #system.forbidden == 0 and #system.optional == 0 then
-		return SingleCollection.new(unpack(system.required))
+		return SingleCollection.new(registry:getPools(unpack(system.required))[1])
 	end
 
 	local collectionPool = Pool.new()
@@ -177,23 +177,23 @@ function Collection:_tryPack(entity)
 	end
 
 	for i, pool in ipairs(self._required) do
-		local component = pool:get(entity)
+		local index = pool:getIndex(entity)
 
-		if not component then
+		if not index then
 			return false
 		end
 
-		packed[i] = component
+		packed[i] = pool.components[index]
 	end
 
 	for i, pool in ipairs(self._updated) do
-		local component = pool:get(entity)
+		local index = pool:getIndex(entity)
 
-		if not component then
+		if not index then
 			return false
 		end
 
-		packed[numRequired + i] = component
+		packed[numRequired + i] = pool.components[index]
 	end
 
 	for i, pool in ipairs(self._optional) do

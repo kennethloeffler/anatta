@@ -29,13 +29,9 @@ $RECYCLE.BIN/
 roblox.toml
 
 # Roblox TypeScript related
-README.html
 .log
 /out/
 /package-lock.json
 /package.json
 /node_modules/
 /include/
-
-# Emacs directory-local variables
-.dir-locals.el

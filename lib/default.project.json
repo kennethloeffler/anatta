@@ -1,0 +1,15 @@
+{
+  "name": "Anatta",
+  "tree": {
+    "$className": "ModuleScript",
+    "$properties": {
+      "Source": "return require(script.Library)"
+    },
+    "Library": {
+      "$path": "src"
+    },
+    "t": {
+      "$path": "../vendor/t"
+    }
+  }
+}

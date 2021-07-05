@@ -2,4 +2,4 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local TestEZ = require(ReplicatedStorage.TestEZ)
 
-TestEZ.TestBootstrap:run({ ReplicatedStorage.Anatta.src })
+TestEZ.TestBootstrap:run({ ReplicatedStorage.Anatta.Library })

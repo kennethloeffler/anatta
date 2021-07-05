@@ -4,7 +4,7 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "Anatta": {
-        "$path": "../"
+        "$path": "../lib"
       },
       "TestEZ" : {
         "$path": "../vendor/testez"
