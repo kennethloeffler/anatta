@@ -66,12 +66,13 @@ function Components:init()
 					pendingAddition[instance] = nil
 					registry:add(entity, componentName)
 
+					registry:tryRemove(entity, "__anattaValidate")
+
 					for attributeName, defaultValue in pairs(attributeMap) do
 						instance:SetAttribute(attributeName, defaultValue)
 					end
 
-					registry:tryRemove(entity, "__anattaSelected")
-					registry:add(entity, "__anattaSelected")
+					registry:add(entity, "__anattaValidate")
 				end
 
 				for instance in pairs(pendingRemoval) do
@@ -88,17 +89,17 @@ function Components:init()
 						end
 					end, entity)
 
-					registry:tryRemove(entity, "__anattaSelected")
+					registry:tryRemove(entity, "__anattaValidate")
 
 					for attributeName in pairs(attributeMap) do
 						instance:SetAttribute(attributeName, nil)
 					end
 
-					registry:add(entity, "__anattaSelected")
-
 					if isStub then
 						registry:destroy(entity)
 						instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+					else
+						registry:add(entity, "__anattaValidate")
 					end
 				end
 			end)

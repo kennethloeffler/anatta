@@ -17,9 +17,9 @@ function AttributeCheck:init()
 
 	local previousSelection = {}
 	local dirty = false
-	local selectedCollection = system:all("__anattaAssociatedInstance", "__anattaSelected"):collect()
+	local validateCollection = system:all("__anattaAssociatedInstance", "__anattaValidate"):collect()
 
-	selectedCollection:attach(function(entity, instance)
+	validateCollection:attach(function(entity, instance)
 		local componentTypes = {}
 		local attributeMap = {}
 
@@ -84,7 +84,7 @@ function AttributeCheck:init()
 
 			local entity = getValidEntity(registry, instance)
 			previousSelection[instance] = nil
-			registry:tryAdd(entity, "__anattaSelected")
+			registry:tryAdd(entity, "__anattaValidate")
 		end
 
 		for instance in pairs(previousSelection) do
@@ -92,7 +92,7 @@ function AttributeCheck:init()
 				continue
 			end
 
-			registry:tryRemove(getValidEntity(registry, instance), "__anattaSelected")
+			registry:tryRemove(getValidEntity(registry, instance), "__anattaValidate")
 			previousSelection[instance] = nil
 		end
 

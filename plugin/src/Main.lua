@@ -9,7 +9,7 @@ local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
 return function(plugin)
 	local components = {
 		AssociatedInstance = t.Instance,
-		Selected = t.none,
+		Validate = t.none,
 	}
 
 	for name, definition in pairs(components) do
