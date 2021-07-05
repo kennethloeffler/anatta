@@ -32,9 +32,9 @@ return function(componentName, typeDefinition)
 				-- We don't support nested tables
 				return nil, attributeName, fieldType
 			elseif generators[fieldType] then
-				attributeMap[attributeName] = generators[fieldType](typeDefinition.typeParams[1])
+				attributeMap[attributeName] = generators[fieldType](typeDefinition.typeParams[1][field].typeParams[1])
 			else
-				attributeMap[attributeName] = typeDefinition[field].check
+				attributeMap[attributeName] = typeDefinition.typeParams[1][field].check
 			end
 		end
 	elseif generators[concreteType] then
