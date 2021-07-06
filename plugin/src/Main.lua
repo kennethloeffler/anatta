@@ -1,10 +1,10 @@
 local CollectionService = game:GetService("CollectionService")
 
 local Anatta = require(script.Parent.Parent.Anatta)
+local PluginComponents = require(script.Parent.PluginComponents)
 local Constants = require(script.Parent.Constants)
 local Systems = script.Parent.Systems
 
-local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
 
 local function loadDefinitions(moduleScript, anatta)
@@ -31,20 +31,7 @@ local function loadDefinitions(moduleScript, anatta)
 end
 
 return function(plugin)
-	local components = {
-		Instance = Anatta.t.Instance,
-		PendingValidation = Anatta.t.none,
-		ForceEntityAttribute = Anatta.t.none,
-		ValidationListener = Anatta.t.none,
-	}
-
-	local renamedComponents = {}
-
-	for name, definition in pairs(components) do
-		renamedComponents[PRIVATE_COMPONENT_PREFIX .. name] = definition
-	end
-
-	local anatta = Anatta.new(renamedComponents)
+	local anatta = Anatta.new(PluginComponents)
 
 	for _, moduleScript in ipairs(CollectionService:GetTagged(DEFINITION_MODULE_TAG_NAME)) do
 		loadDefinitions(moduleScript, anatta)
