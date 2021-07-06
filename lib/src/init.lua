@@ -3,10 +3,6 @@ local System = require(script.System)
 local t = require(script.Parent.t)
 local util = require(script.util)
 
-local IsSystem = t.interface({
-	init = t.callback,
-})
-
 local Anatta = {}
 Anatta.__index = Anatta
 
@@ -33,17 +29,14 @@ function Anatta:unloadSystems(container)
 	end
 end
 
-function Anatta:loadSystem(moduleScript)
+function Anatta:loadSystem(moduleScript, ...)
 	local system = System.new(self._registry)
 	local systemModule = require(moduleScript)
 
-	util.jumpAssert(IsSystem(systemModule))
+	util.jumpAssert(t.callback(systemModule))
 
 	self._systems[moduleScript] = system
-	systemModule.system = system
-	systemModule.registry = self._registry
-
-	systemModule:init()
+	systemModule(system, self._registry, ...)
 
 	return systemModule
 end
