@@ -139,6 +139,39 @@ local concreters = {
 	end,
 }
 
+local defaults = {
+	enum = function(typeDefinition)
+		return typeDefinition.typeParams[1]:GetEnumItems()[1]
+	end,
+	table = function(typeDefinition, concreteType)
+		local default = {}
+
+		for field in pairs(concreteType) do
+			default[field] = typeDefinition.typeParams[1][field]:default()
+		end
+
+		return default
+	end,
+	number = 0,
+	string = "",
+	boolean = false,
+	BrickColor = BrickColor.new(Color3.new()),
+	CFrame = CFrame.new(),
+	Color3 = Color3.new(),
+	ColorSequence = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.new()),
+		ColorSequenceKeypoint.new(1, Color3.new()),
+	}),
+	NumberRange = NumberRange.new(0, 0),
+	NumberSequence = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0) }),
+	Rect = Rect.new(Vector2.new(), Vector2.new()),
+	TweenInfo = TweenInfo.new(),
+	UDim = UDim.new(0, 0),
+	UDim2 = UDim2.new(0, 0, 0, 0),
+	Vector2 = Vector2.new(),
+	Vector3 = Vector3.new(),
+}
+
 local function unwrap(...)
 	local unwrapped = table.create(select("#", ...))
 
@@ -172,6 +205,21 @@ function Type._new(typeName, check, ...)
 		check = check,
 		typeName = typeName,
 	}, Type)
+end
+
+function Type:default()
+	local concreteType = self:tryGetConcreteType()
+	local value = defaults[concreteType]
+
+	if typeof(concreteType) == "table" then
+		return defaults.table(self, concreteType)
+	elseif typeof(value) == "function" then
+		return value(self, concreteType)
+	elseif value ~= nil then
+		return value
+	else
+		return nil
+	end
 end
 
 function Type:tryGetConcreteType()
