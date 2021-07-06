@@ -22,10 +22,7 @@ function AttributeCheck:init()
 	validateCollection:attach(function(entity, instance)
 		return {
 			instance.AttributeChanged:Connect(function(attributeName)
-				if
-					attributeName == ENTITY_ATTRIBUTE_NAME
-					and instance:GetAttribute(ENTITY_ATTRIBUTE_NAME) ~= entity
-				then
+				if attributeName == ENTITY_ATTRIBUTE_NAME and instance:GetAttribute(attributeName) ~= entity then
 					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 				else
 					local componentName = registry:visit(function(name)
