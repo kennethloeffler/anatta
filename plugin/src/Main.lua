@@ -8,7 +8,7 @@ local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
 
 return function(plugin)
 	local components = {
-		AssociatedInstance = t.Instance,
+		Instance = t.Instance,
 		Validate = t.none,
 	}
 

@@ -17,7 +17,7 @@ function AttributeCheck:init()
 
 	local previousSelection = {}
 	local dirty = false
-	local validateCollection = system:all("__anattaAssociatedInstance", "__anattaValidate"):collect()
+	local validateCollection = system:all("__anattaInstance", "__anattaValidate"):collect()
 
 	validateCollection:attach(function(entity, instance)
 		return {
