@@ -190,7 +190,7 @@ function PluginLoader:beforeUnload(callback)
 	self._beforeUnload = callback
 end
 
-function PluginLoader:_load()
+function PluginLoader:_load(saveState)
 	-- Always clone if we're using dev source b/c the first require can be
 	-- stale after Studio writes the plugin to a model file for the first time
 	local main = (useDevSource and currentRoot:Clone() or currentRoot).Plugin.Main
@@ -203,7 +203,7 @@ function PluginLoader:_load()
 
 	local Plugin = result
 
-	ok, result = pcall(Plugin, self)
+	ok, result = pcall(Plugin, self, saveState)
 
 	if not ok then
 		warn("Plugin failed to run: " .. result .. debug.traceback("", 0))
