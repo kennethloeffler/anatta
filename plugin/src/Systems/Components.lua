@@ -77,12 +77,7 @@ function Components:init()
 
 					pendingRemoval[instance] = nil
 
-					-- It's possible for the component to not exist on the entity when an
-					-- instance that has been deleted is resurrected via undo. It's
-					-- probably safe to just ignore it in that case.
-					if not registry:tryRemove(entity, componentName) then
-						return
-					end
+					registry:tryRemove(entity, componentName)
 
 					local hasAny = registry:visit(function(name)
 						if not name:find(PRIVATE_COMPONENT_PREFIX) then
