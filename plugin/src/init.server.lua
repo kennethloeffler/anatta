@@ -197,7 +197,7 @@ function PluginLoader:_load()
 	local ok, result = pcall(require, main)
 
 	if not ok then
-		warn("Plugin failed to load: " .. result)
+		warn("Plugin failed to load: " .. result .. debug.traceback("", 0))
 		return
 	end
 
@@ -206,7 +206,7 @@ function PluginLoader:_load()
 	ok, result = pcall(Plugin, self)
 
 	if not ok then
-		warn("Plugin failed to run: " .. result)
+		warn("Plugin failed to run: " .. result .. debug.traceback("", 0))
 		return
 	end
 end
