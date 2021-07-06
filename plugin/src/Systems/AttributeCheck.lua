@@ -45,7 +45,8 @@ function AttributeCheck:init()
 
 					if not success then
 						local previousValue = registry:get(entity, componentName)
-						-- This will always succeed because the previous value must be valid
+						-- tryToAttribute will always succeed here because the previous
+						-- value is definitely valid.
 						local _, attributeMap = util.tryToAttribute(pool, previousValue)
 
 						for name, value in pairs(attributeMap) do
