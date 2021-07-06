@@ -225,7 +225,7 @@ function PluginLoader:unload()
 	end
 end
 
-function PluginLoader:_reload()
+function PluginLoader:reload()
 	local saveState = self:unload()
 	currentRoot = source:Clone()
 
@@ -247,7 +247,7 @@ function PluginLoader:_watch(instance)
 	if instance:IsA("ModuleScript") then
 		changedConnection = instance.Changed:Connect(function()
 			print("Reloading due to", instance:GetFullName())
-			self:_reload()
+			self:reload()
 		end)
 	end
 
