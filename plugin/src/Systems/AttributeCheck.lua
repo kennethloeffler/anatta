@@ -20,20 +20,6 @@ function AttributeCheck:init()
 	local validateCollection = system:all("__anattaAssociatedInstance", "__anattaValidate"):collect()
 
 	validateCollection:attach(function(entity, instance)
-		local componentTypes = {}
-		local attributeMap = {}
-
-		registry:visit(function(componentName)
-			if componentName:find(PRIVATE_COMPONENT_PREFIX) then
-				return
-			end
-
-			local typeDefinition = registry:getPools(componentName)[1].typeDefinition
-
-			componentTypes[componentName] = typeDefinition
-			attributeMap[componentName] = util.tryFromAttribute(instance, componentName, typeDefinition)
-		end, entity)
-
 		return {
 			instance.AttributeChanged:Connect(function(attributeName)
 				if
@@ -42,22 +28,35 @@ function AttributeCheck:init()
 				then
 					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 				else
-					for componentName, typeDefinition in pairs(componentTypes) do
-						if not attributeName:find(componentName) then
-							continue
+					local componentName = registry:visit(function(name)
+						if name:find(PRIVATE_COMPONENT_PREFIX) then
+							return nil
+						elseif attributeName:find(name) then
+							return name
+						end
+					end, entity)
+
+					if not componentName then
+						return
+					end
+
+					local pool = registry:getPool(componentName)
+					local success, result = util.tryFromAttribute(pool, instance)
+
+					if not success then
+						local previousValue = registry:get(entity, componentName)
+						-- This will always succeed because the previous value must be valid
+						local _, attributeMap = util.tryToAttribute(pool, previousValue)
+
+						for name, value in pairs(attributeMap) do
+							instance:SetAttribute(name, value)
 						end
 
-						local checks = util.getAttributeChecks(componentName, typeDefinition)
-						local previousValue = attributeMap[componentName][attributeName]
-						local newValue = instance:GetAttribute(attributeName)
-						local success, err = checks[attributeName](newValue)
-
-						if not success then
-							warn(err)
-							instance:SetAttribute(attributeName, previousValue)
-						else
-							attributeMap[componentName][attributeName] = newValue
+						if result then
+							warn(result)
 						end
+					else
+						registry:replace(entity, componentName, result)
 					end
 				end
 			end),

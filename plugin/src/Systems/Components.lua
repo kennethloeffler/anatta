@@ -25,7 +25,9 @@ function Components:init()
 		local componentDefinitions = require(moduleScript)
 
 		for componentName, typeDefinition in pairs(componentDefinitions) do
-			if registry:hasDefined(componentName) then
+			if not registry:hasDefined(componentName) then
+				registry:define(componentName, typeDefinition)
+			else
 				warn(("Found duplicate component name %s in %s; skipping"):format(
 					componentName,
 					moduleScript:GetFullName()
@@ -40,12 +42,6 @@ function Components:init()
 				warn(attributeMap)
 				continue
 			end
-
-			registry:define(componentName, function(arg)
-				return arg == nil
-			end)
-
-			registry:getPools(componentName)[1].typeDefinition = typeDefinition
 
 			local pendingAddition = {}
 			local pendingRemoval = {}
@@ -65,7 +61,7 @@ function Components:init()
 					local entity = getValidEntity(registry, instance)
 
 					pendingAddition[instance] = nil
-					registry:add(entity, componentName)
+					registry:add(entity, componentName, default)
 
 					registry:tryRemove(entity, "__anattaValidate")
 
@@ -82,11 +78,9 @@ function Components:init()
 					pendingRemoval[instance] = nil
 					registry:remove(entity, componentName)
 
-					local isStub = true
-
-					registry:visit(function(name)
+					local hasAny = registry:visit(function(name)
 						if not name:find(PRIVATE_COMPONENT_PREFIX) then
-							isStub = false
+							return true
 						end
 					end, entity)
 
@@ -96,7 +90,7 @@ function Components:init()
 						instance:SetAttribute(attributeName, nil)
 					end
 
-					if isStub then
+					if not hasAny then
 						registry:destroy(entity)
 						instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 					else
