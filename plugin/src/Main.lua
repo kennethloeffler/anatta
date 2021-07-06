@@ -9,7 +9,9 @@ local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
 return function(plugin)
 	local components = {
 		Instance = t.Instance,
-		Validate = t.none,
+		PendingValidation = t.none,
+		ForceEntityAttribute = t.none,
+		ValidationListener = t.none,
 	}
 
 	local renamedComponents = {}
@@ -20,7 +22,9 @@ return function(plugin)
 
 	local anatta = Anatta.new(renamedComponents)
 
-	anatta:loadSystems(Systems)
+	anatta:loadSystem(Systems.CheckSelectedAttributes)
+	anatta:loadSystem(Systems.Components)
+	anatta:loadSystem(Systems.ForceEntityAttribute)
 
 	local reloadButton = plugin:createButton({
 		icon = "",
