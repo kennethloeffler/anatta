@@ -5,8 +5,6 @@ local Constants = require(script.Parent.Parent.Constants)
 local util = require(script.Parent.Parent.Parent.Anatta.Library.util)
 
 local getValidEntity = require(script.Parent.Parent.getValidEntity)
-
-local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local AttributeCheck = {}
@@ -30,9 +28,7 @@ function AttributeCheck:init()
 					return
 				else
 					local componentName = registry:visit(function(name)
-						if name:find(PRIVATE_COMPONENT_PREFIX) then
-							return nil
-						elseif attributeName:find(name) then
+						if attributeName:find(name) then
 							return name
 						end
 					end, entity)
