@@ -10,25 +10,28 @@ return function(system, registry)
 	local previousSelection = {}
 	local dirty = false
 	local entitiesToListenTo = system
-		:all("__anattaInstance", "__anattaValidationListener")
+		:all("__anattaPluginInstance", "__anattaPluginValidationListener")
 		:collect()
 
 	entitiesToListenTo:attach(function(entity, instance)
 		return {
 			instance.AttributeChanged:Connect(function(attributeName)
+				if not registry:valid(entity) then
+					return
+				end
+
 				local currentValue = instance:GetAttribute(attributeName)
 
 				if attributeName == ENTITY_ATTRIBUTE_NAME then
 					if currentValue ~= entity then
-						registry:tryAdd(entity, "__anattaForceEntityAttribute")
+						registry:tryAdd(entity, "__anattaPluginForceEntityAttribute")
 					end
 				elseif currentValue == nil then
-					registry:tryRemove(entity, "__anattaPendingValidation")
 					return
 				else
 					registry:visit(function(componentName)
 						if attributeName:find(componentName) then
-							registry:tryAdd(entity, "__anattaPendingValidation")
+							registry:tryAdd(entity, "__anattaPluginPendingValidation")
 							return true
 						end
 					end, entity)
@@ -54,7 +57,10 @@ return function(system, registry)
 			end
 
 			previousSelection[instance] = nil
-			registry:tryAdd(util.getValidEntity(registry, instance), "__anattaValidationListener")
+			registry:tryAdd(
+				util.getValidEntity(registry, instance),
+				"__anattaPluginValidationListener"
+			)
 		end
 
 		for instance in pairs(previousSelection) do
@@ -62,7 +68,10 @@ return function(system, registry)
 				continue
 			end
 
-			registry:tryRemove(util.getValidEntity(registry, instance), "__anattaValidationListener")
+			registry:tryRemove(
+				util.getValidEntity(registry, instance),
+				"__anattaPluginValidationListener"
+			)
 			previousSelection[instance] = nil
 		end
 

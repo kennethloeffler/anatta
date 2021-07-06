@@ -2,7 +2,7 @@ local Anatta = require(script.Parent.Parent.Anatta)
 local Constants = require(script.Parent.Constants)
 local t = Anatta.t
 
-local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
+local PLUGIN_PRIVATE_COMPONENT_PREFIX = Constants.PluginPrivateComponentPrefix
 
 local renamedComponents = {}
 local components = {
@@ -13,7 +13,7 @@ local components = {
 }
 
 for name, definition in pairs(components) do
-	renamedComponents[PRIVATE_COMPONENT_PREFIX .. name] = definition
+	renamedComponents[PLUGIN_PRIVATE_COMPONENT_PREFIX .. name] = definition
 end
 
 return renamedComponents

@@ -9,13 +9,13 @@ return function(registry, instance)
 
 	if
 		entity == nil
-		or (registry:valid(entity) and registry:get(entity, "__anattaInstance") ~= instance)
+		or (registry:valid(entity) and registry:get(entity, "__anattaPluginInstance") ~= instance)
 		or not registry:valid(entity)
 	then
 		local newEntity = registry:create()
 
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, newEntity)
-		registry:add(newEntity, "__anattaInstance", instance)
+		registry:add(newEntity, "__anattaPluginInstance", instance)
 
 		return newEntity
 	else

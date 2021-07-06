@@ -6,7 +6,7 @@ local Constants = require(script.Parent.Parent.Parent.Constants)
 local util = require(script.Parent.Parent.util)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
-local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
+local PLUGIN_PRIVATE_COMPONENT_PREFIX = Constants.PluginPrivateComponentPrefix
 
 return function(system, registry, componentName)
 	local pendingAddition = {}
@@ -37,7 +37,7 @@ return function(system, registry, componentName)
 
 			pendingRemoval[instance] = nil
 			registry:tryRemove(entity, componentName)
-			registry:tryRemove(entity, "__anattaValidationListener")
+			registry:tryRemove(entity, "__anattaPluginValidationListener")
 
 			for attributeName in pairs(attributeMap) do
 				instance:SetAttribute(attributeName, nil)
@@ -45,7 +45,7 @@ return function(system, registry, componentName)
 
 			if
 				registry:visit(function(visitedComponentName)
-					if not visitedComponentName:find(PRIVATE_COMPONENT_PREFIX) then
+					if not visitedComponentName:find(PLUGIN_PRIVATE_COMPONENT_PREFIX) then
 						return true
 					end
 				end, entity) == nil
@@ -53,7 +53,7 @@ return function(system, registry, componentName)
 				registry:destroy(entity)
 				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 			else
-				registry:add(entity, "__anattaValidationListener")
+				registry:add(entity, "__anattaPluginValidationListener")
 			end
 		end
 
@@ -62,13 +62,13 @@ return function(system, registry, componentName)
 
 			pendingAddition[instance] = nil
 			registry:add(entity, componentName, default)
-			registry:tryRemove(entity, "__anattaValidationListener")
+			registry:tryRemove(entity, "__anattaPluginValidationListener")
 
 			for attributeName, defaultValue in pairs(attributeMap) do
 				instance:SetAttribute(attributeName, defaultValue)
 			end
 
-			registry:add(entity, "__anattaValidationListener")
+			registry:add(entity, "__anattaPluginValidationListener")
 		end
 	end)
 end
