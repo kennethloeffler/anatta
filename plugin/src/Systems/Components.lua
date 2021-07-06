@@ -33,10 +33,11 @@ function Components:init()
 				continue
 			end
 
-			local attributeMap, failedAttributeName, failedType = util.tryToAttribute(componentName, typeDefinition)
+			local default = typeDefinition:default()
+			local success, attributeMap = util.tryToAttribute(registry:getPool(componentName), default)
 
-			if failedType then
-				warn(("%s (%s) cannot be turned into an attribute"):format(failedAttributeName, failedType))
+			if not success then
+				warn(attributeMap)
 				continue
 			end
 

@@ -226,14 +226,22 @@ function Registry:visit(func, entity)
 			jumpAssert(self:valid(entity), ErrInvalidEntity:format(entity))
 		end
 
-		for component, pool in pairs(self._pools) do
+		for componentName, pool in pairs(self._pools) do
 			if pool:getIndex(entity) then
-				func(component)
+				local result = func(componentName)
+
+				if result ~= nil then
+					return result
+				end
 			end
 		end
 	else
-		for component in pairs(self._pools) do
-			func(component)
+		for componentName in pairs(self._pools) do
+			local result = func(componentName)
+
+			if result ~= nil then
+				return result
+			end
 		end
 	end
 end
