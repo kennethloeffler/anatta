@@ -1,24 +1,58 @@
+local function convertEnum(instance, attributeName, typeDefinition, enum)
+	enum = enum or typeDefinition.typeParams[1]
+	local enums = enum:GetEnumItems()
+	local enumName = instance:GetAttribute(attributeName)
+
+	if enumName == nil then
+		return false
+	end
+
+	for i, enumItem in ipairs(enums) do
+		enums[i] = enumItem.Name
+	end
+
+	for _, name in ipairs(enums) do
+		if name == enumName then
+			return true, enum[enumName]
+		end
+	end
+
+	return false, ('Expected one of:\n%s;\ngot "%s"'):format(table.concat(enums, "\n"), enumName)
+end
+
 local conversions = {
-	enum = function(instance, attributeName, typeDefinition)
-		local enum = typeDefinition.typeParams[1]
-		local enums = enum:GetEnumItems()
-		local enumName = instance:GetAttribute(attributeName)
+	enum = convertEnum,
 
-		if enumName == nil then
-			return false
+	TweenInfo = function(instance, attributeName)
+		local easingStyleSuccess, easingStyle = convertEnum(
+			instance,
+			attributeName .. "_EasingStyle",
+			nil,
+			Enum.EasingStyle
+		)
+		local easingDirectionSuccess, easingDirection = convertEnum(
+			instance,
+			attributeName .. "_EasingDirection",
+			nil,
+			Enum.EasingDirection
+		)
+
+		if not easingStyleSuccess then
+			return false, easingStyle
 		end
 
-		for i, enumItem in ipairs(enums) do
-			enums[i] = enumItem.Name
+		if not easingDirectionSuccess then
+			return false, easingDirection
 		end
 
-		for _, name in ipairs(enums) do
-			if name == enumName then
-				return true, enum[enumName]
-			end
-		end
-
-		return false, ('Expected one of:\n%s;\ngot "%s"'):format(table.concat(enums, "\n"), enumName)
+		return true, TweenInfo.new(
+			instance:GetAttribute(attributeName .. "_Time"),
+			easingStyle,
+			easingDirection,
+			instance:GetAttribute(attributeName .. "_RepeatCount"),
+			instance:GetAttribute(attributeName .. "_Reverses"),
+			instance:GetAttribute(attributeName .. "_DelayTime")
+		)
 	end,
 }
 
