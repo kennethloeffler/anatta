@@ -86,6 +86,8 @@ function convert(instance, attributeName, typeDefinition)
 		else
 			return false, err
 		end
+	else
+		return false, ("%s (%s) has no concrete type"):format(attributeName, typeDefinition.typeName)
 	end
 end
 
