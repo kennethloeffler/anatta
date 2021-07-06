@@ -36,12 +36,8 @@ function convert(attributeMap, attributeName, concreteType, value)
 	return true, attributeMap
 end
 
-return function(pool, component)
-	jumpAssert(pool.typeCheck(component))
+return function(component, componentName, typeDefinition)
+	jumpAssert(typeDefinition.check(component))
 
-	local concreteType = pool.typeDefinition:tryGetConcreteType()
-
-	jumpAssert(concreteType, ErrConversionFailed:format(pool.name, pool.typeDefinition.typeName))
-
-	return convert({}, pool.name, concreteType, component)
+	return convert({}, componentName, typeDefinition:tryGetConcreteType(), component)
 end

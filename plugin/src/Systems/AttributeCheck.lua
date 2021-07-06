@@ -37,14 +37,14 @@ function AttributeCheck:init()
 						return
 					end
 
-					local pool = registry:getPool(componentName)
-					local success, result = util.tryFromAttribute(pool, instance)
+					local typeDefinition = registry:getDefiniton(componentName)
+					local success, result = util.tryFromAttribute(instance, componentName, typeDefinition)
 
 					if not success then
 						local previousValue = registry:get(entity, componentName)
 						-- tryToAttribute will always succeed here because the previous
 						-- value is definitely valid.
-						local _, attributeMap = util.tryToAttribute(pool, previousValue)
+						local _, attributeMap = util.tryToAttribute(previousValue, componentName, typeDefinition)
 
 						for name, value in pairs(attributeMap) do
 							instance:SetAttribute(name, value)

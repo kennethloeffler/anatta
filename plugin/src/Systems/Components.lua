@@ -36,7 +36,7 @@ function Components:init()
 			end
 
 			local default = typeDefinition:default()
-			local success, attributeMap = util.tryToAttribute(registry:getPool(componentName), default)
+			local success, attributeMap = util.tryToAttribute(default, componentName, typeDefinition)
 
 			if not success then
 				warn(attributeMap)

@@ -91,6 +91,4 @@ function convert(instance, attributeName, typeDefinition)
 	end
 end
 
-return function(pool, instance)
-	return convert(instance, pool.name, pool.typeDefinition)
-end
+return convert
