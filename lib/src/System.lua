@@ -4,10 +4,10 @@ local util = require(script.Parent.util)
 local System = {}
 System.__index = System
 
-local ErrAlreadyHasCollection = "Systems can only create one collection"
 local ErrPureCantHaveUpdated = "Pure collections cannot track updates to components"
 local ErrFrozenNeedsComponents = "Pure collections need at least one required component type"
-local ErrImpureNeedComponents = "Collections need least one required, updated, or optional component type"
+local ErrImpureNeedComponents =
+	"Collections need least one required, updated, or optional component type"
 local ErrTooManyUpdated = "Collections can only track up to 32 updated component types"
 
 function System.new(registry)
@@ -18,23 +18,9 @@ function System.new(registry)
 		update = {},
 		registry = registry,
 
-		_hasCollection = false,
+		_impureCollections = {},
 		_connections = {},
 	}, System)
-end
-
-function System:unload()
-	if self._impureCollection then
-		self._impureCollection:detach()
-	end
-
-	for _, connection in ipairs(self._connections) do
-		connection:Disconnect()
-	end
-end
-
-function System:on(event, callback)
-	table.insert(self._connections, event:Connect(callback))
 end
 
 function System:all(...)
@@ -58,23 +44,38 @@ function System:any(...)
 end
 
 function System:collect()
-	util.jumpAssert(not self._hasCollection, ErrAlreadyHasCollection)
 	util.jumpAssert(#self.update <= 32, ErrTooManyUpdated)
-	util.jumpAssert(#self.required > 0 or #self.update > 0 or #self.optional > 0, ErrImpureNeedComponents)
+	util.jumpAssert(
+		#self.required > 0 or #self.update > 0 or #self.optional > 0,
+		ErrImpureNeedComponents
+	)
 
-	self._hasCollection = true
-	self._impureCollection = Entity.Collection.new(self)
+	local collection = Entity.Collection.new(self)
 
-	return self._impureCollection
+	table.insert(self._impureCollections, collection)
+
+	return collection
 end
 
 function System:freeze()
-	util.jumpAssert(not self._hasCollection, ErrAlreadyHasCollection)
 	util.jumpAssert(#self.update == 0, ErrPureCantHaveUpdated)
 	util.jumpAssert(#self.required > 0, ErrFrozenNeedsComponents)
 
-	self._hasCollection = true
 	return Entity.PureCollection.new(self)
+end
+
+function System:unload()
+	for _, collection in ipairs(self._impureCollections) do
+		collection:detach()
+	end
+
+	for _, connection in ipairs(self._connections) do
+		connection:Disconnect()
+	end
+end
+
+function System:on(event, callback)
+	table.insert(self._connections, event:Connect(callback))
 end
 
 return System
