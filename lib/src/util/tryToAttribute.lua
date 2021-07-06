@@ -1,38 +1,47 @@
-local getAttributeDefault = require(script.Parent.getAttributeDefault)
+local jumpAssert = require(script.Parent.jumpAssert)
 
-return function(componentName, typeDefinition)
-	local concreteType = typeDefinition:tryGetConcreteType()
-	local attributeMap = {}
+local ErrConversionFailed = "%s (%s) cannot be turned into an attribute"
 
+local conversions = {
+	enum = function(attributeMap, attributeName, value)
+		attributeMap[attributeName] = value.Name
+	end,
+	TweenInfo = function(attributeMap, attributeName, value)
+		convert(attributeMap, attributeName, {
+			EasingDirection = "enum",
+			Time = "number",
+			DelayTime = "number",
+			RepeatCount = "number",
+			EasingStyle = "enum",
+			Reverses = "boolean",
+		}, value)
+	end,
+}
+
+function convert(attributeMap, attributeName, concreteType, value)
 	if typeof(concreteType) == "table" then
-		for field, fieldType in pairs(concreteType) do
-			local attributeName = ("%s_%s"):format(componentName, field)
+		for field, fieldConcreteType in pairs(concreteType) do
+			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 
-			if typeof(fieldType) == "table" then
-				-- We don't support nested tables
-				return nil, attributeName, fieldType
-			end
-
-			local defaultValue = getAttributeDefault(fieldType, typeDefinition.typeParams[1][field])
-
-			if defaultValue ~= nil then
-				attributeMap[attributeName] = defaultValue
-			else
-				-- Attributes don't support this type
-				return nil, attributeName, fieldType
-			end
+			convert(attributeMap, fieldAttributeName, fieldConcreteType, value[field])
 		end
+	elseif conversions[concreteType] then
+		conversions[concreteType](attributeMap, attributeName, value)
 	elseif concreteType ~= nil then
-		local defaultValue = getAttributeDefault(concreteType, typeDefinition)
-
-		if defaultValue ~= nil then
-			attributeMap[componentName] = defaultValue
-		else
-			return nil, componentName, concreteType
-		end
+		attributeMap[attributeName] = value
 	else
-		return nil
+		return false, (ErrConversionFailed:format(attributeName, concreteType))
 	end
 
-	return attributeMap
+	return true, attributeMap
+end
+
+return function(pool, component)
+	jumpAssert(pool.typeCheck(component))
+
+	local concreteType = pool.typeDefinition:tryGetConcreteType()
+
+	jumpAssert(concreteType, ErrConversionFailed:format(pool.name, pool.typeDefinition.typeName))
+
+	return convert({}, pool.name, concreteType, component)
 end
