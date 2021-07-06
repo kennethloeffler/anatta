@@ -22,7 +22,21 @@ return function(plugin)
 
 	anatta:loadSystems(Systems)
 
+	local reloadButton = plugin:createButton({
+		icon = "",
+		active = false,
+		tooltip = "Reload the plugin",
+		toolbar = plugin:createToolbar("Anatta"),
+		name = "Reload",
+	})
+
+	local reloadConnection = reloadButton.Click:Connect(function()
+		plugin:reload()
+		reloadButton:SetActive(false)
+	end)
+
 	plugin:beforeUnload(function()
 		anatta:unloadSystems(Systems)
+		reloadConnection:Disconnect()
 	end)
 end
