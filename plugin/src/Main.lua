@@ -12,11 +12,13 @@ return function(plugin)
 		Validate = t.none,
 	}
 
+	local renamedComponents = {}
+
 	for name, definition in pairs(components) do
-		components[PRIVATE_COMPONENT_PREFIX .. name] = definition
+		renamedComponents[PRIVATE_COMPONENT_PREFIX .. name] = definition
 	end
 
-	local anatta = Anatta.new(components)
+	local anatta = Anatta.new(renamedComponents)
 
 	anatta:loadSystems(Systems)
 
