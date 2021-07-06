@@ -558,6 +558,14 @@ function Registry:hasDefined(componentName)
 	return not not self._pools[componentName]
 end
 
+function Registry:getDefinition(componentName)
+	local pool = self._pools[componentName]
+
+	jumpAssert(pool, ErrBadComponentName:format(componentName))
+
+	return pool.typeDefinition
+end
+
 --[[
 	Returns a list of pools used to manage the specified components in the same order as
 	the given tuple.
