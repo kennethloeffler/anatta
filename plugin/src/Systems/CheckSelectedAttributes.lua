@@ -2,8 +2,8 @@ local RunService = game:GetService("RunService")
 local Selection = game:GetService("Selection")
 
 local Constants = require(script.Parent.Parent.Constants)
+local util = require(script.Parent.util)
 
-local getValidEntity = require(script.Parent.Parent.getValidEntity)
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 return function(system, registry)
@@ -54,7 +54,7 @@ return function(system, registry)
 			end
 
 			previousSelection[instance] = nil
-			registry:tryAdd(getValidEntity(registry, instance), "__anattaValidationListener")
+			registry:tryAdd(util.getValidEntity(registry, instance), "__anattaValidationListener")
 		end
 
 		for instance in pairs(previousSelection) do
@@ -62,7 +62,7 @@ return function(system, registry)
 				continue
 			end
 
-			registry:tryRemove(getValidEntity(registry, instance), "__anattaValidationListener")
+			registry:tryRemove(util.getValidEntity(registry, instance), "__anattaValidationListener")
 			previousSelection[instance] = nil
 		end
 

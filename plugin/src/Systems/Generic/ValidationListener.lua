@@ -1,10 +1,8 @@
 local RunService = game:GetService("RunService")
 
-local util = require(script.Parent.Parent.Parent.Parent.Anatta.Library.util)
+local Anatta = require(script:FindFirstAncestor("AnattaPlugin").Anatta)
 
-local ValidationListener = {}
-
-function ValidationListener.init(system, registry, componentName)
+return function(system, registry, componentName)
 	local typeDefinition = registry:getDefinition(componentName)
 	local listeningTo = system
 		:all(componentName, "__anattaInstance", "__anattaPendingValidation")
@@ -12,13 +10,20 @@ function ValidationListener.init(system, registry, componentName)
 
 	system:on(RunService.Heartbeat, function()
 		listeningTo:each(function(entity, component, instance)
-			local success, result = util.tryFromAttribute(instance, componentName, typeDefinition)
+			local success, result = Anatta.Dom.tryFromAttribute(
+				instance,
+				componentName,
+				typeDefinition
+			)
 
 			if not success then
 				-- tryToAttribute will always succeed here because all data in a registry
 				-- must be valid.
-				local _, attributeMap =
-					util.tryToAttribute(component, componentName, typeDefinition)
+				local _, attributeMap = Anatta.Dom.tryToAttribute(
+					component,
+					componentName,
+					typeDefinition
+				)
 
 				for name, value in pairs(attributeMap) do
 					instance:SetAttribute(name, value)
@@ -35,5 +40,3 @@ function ValidationListener.init(system, registry, componentName)
 		end)
 	end)
 end
-
-return ValidationListener

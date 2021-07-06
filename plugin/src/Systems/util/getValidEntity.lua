@@ -1,4 +1,4 @@
-local Constants = require(script.Parent.Constants)
+local Constants = require(script.Parent.Parent.Parent.Constants)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 

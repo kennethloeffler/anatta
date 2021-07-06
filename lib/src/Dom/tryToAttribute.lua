@@ -1,4 +1,4 @@
-local jumpAssert = require(script.Parent.jumpAssert)
+local util = require(script.Parent.Parent.util)
 
 local ErrConversionFailed = "%s (%s) cannot be turned into an attribute"
 
@@ -37,7 +37,7 @@ function convert(attributeMap, attributeName, concreteType, value)
 end
 
 return function(component, componentName, typeDefinition)
-	jumpAssert(typeDefinition.check(component))
+	util.jumpAssert(typeDefinition.check(component))
 
 	return convert({}, componentName, typeDefinition:tryGetConcreteType(), component)
 end

@@ -1,17 +1,41 @@
-local Anatta = require(script.Parent.Parent.Anatta)
+local CollectionService = game:GetService("CollectionService")
 
+local Anatta = require(script.Parent.Parent.Anatta)
 local Constants = require(script.Parent.Constants)
 local Systems = script.Parent.Systems
-local t = require(script.Parent.Parent.Anatta.Library.Core.Type)
 
 local PRIVATE_COMPONENT_PREFIX = Constants.PrivateComponentPrefix
+local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
+
+local function loadDefinitions(moduleScript, anatta)
+	if not moduleScript:IsA("ModuleScript") then
+		warn(("Components definition instance %s must be a ModuleScript"):format(moduleScript:GetFullName()))
+		return
+	end
+
+	local componentDefinitions = require(moduleScript)
+
+	for componentName, typeDefinition in pairs(componentDefinitions) do
+		if not anatta.registry:hasDefined(componentName) then
+			anatta.registry:define(componentName, typeDefinition)
+			anatta:loadSystem(Systems.Generic.ValidationListener, componentName)
+			anatta:loadSystem(Systems.Generic.Component, componentName)
+		else
+			warn(("Found duplicate component name %s in %s; skipping"):format(
+				componentName,
+				moduleScript:GetFullName()
+			))
+			continue
+		end
+	end
+end
 
 return function(plugin)
 	local components = {
-		Instance = t.Instance,
-		PendingValidation = t.none,
-		ForceEntityAttribute = t.none,
-		ValidationListener = t.none,
+		Instance = Anatta.t.Instance,
+		PendingValidation = Anatta.t.none,
+		ForceEntityAttribute = Anatta.t.none,
+		ValidationListener = Anatta.t.none,
 	}
 
 	local renamedComponents = {}
@@ -22,8 +46,11 @@ return function(plugin)
 
 	local anatta = Anatta.new(renamedComponents)
 
+	for _, moduleScript in ipairs(CollectionService:GetTagged(DEFINITION_MODULE_TAG_NAME)) do
+		loadDefinitions(moduleScript, anatta)
+	end
+
 	anatta:loadSystem(Systems.CheckSelectedAttributes)
-	anatta:loadSystem(Systems.Components)
 	anatta:loadSystem(Systems.ForceEntityAttribute)
 
 	local reloadButton = plugin:createButton({
@@ -40,7 +67,7 @@ return function(plugin)
 	end)
 
 	plugin:beforeUnload(function()
-		anatta:unloadSystems(Systems)
+		anatta:unloadAllSystems()
 		reloadConnection:Disconnect()
 	end)
 end
