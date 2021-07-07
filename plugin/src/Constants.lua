@@ -1,5 +1,8 @@
+local privatePrefix = "__anattaPlugin"
+
 return {
 	EntityAttributeName = "__entityId",
 	DefinitionModuleTagName = "AnattaComponentDefinitions",
-	PluginPrivateComponentPrefix = "__anattaPlugin",
+	PluginPrivateComponentPrefix = privatePrefix,
+	PendingValidation = privatePrefix .. "Pending%s",
 }

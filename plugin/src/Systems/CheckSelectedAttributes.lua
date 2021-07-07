@@ -5,6 +5,7 @@ local Constants = require(script.Parent.Parent.Constants)
 local util = require(script.Parent.util)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
+local PENDING_VALIDATION = Constants.PendingValidation
 
 return function(system, registry)
 	local previousSelection = {}
@@ -31,7 +32,7 @@ return function(system, registry)
 				else
 					registry:visit(function(componentName)
 						if attributeName:find(componentName) then
-							registry:tryAdd(entity, "__anattaPluginPendingValidation")
+							registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
 							return true
 						end
 					end, entity)

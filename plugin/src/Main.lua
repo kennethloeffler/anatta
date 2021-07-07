@@ -6,6 +6,7 @@ local Constants = require(script.Parent.Constants)
 local Systems = script.Parent.Systems
 
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
+local PENDING_VALIDATION = Constants.PendingValidation
 
 local function loadDefinitions(moduleScript, anatta)
 	if not moduleScript:IsA("ModuleScript") then
@@ -18,6 +19,8 @@ local function loadDefinitions(moduleScript, anatta)
 	for componentName, typeDefinition in pairs(componentDefinitions) do
 		if not anatta.registry:hasDefined(componentName) then
 			anatta.registry:define(componentName, typeDefinition)
+			anatta.registry:define(PENDING_VALIDATION:format(componentName), Anatta.t.none)
+
 			anatta:loadSystem(Systems.Generic.Component, componentName)
 			anatta:loadSystem(Systems.Generic.AttributeValidator, componentName)
 		else

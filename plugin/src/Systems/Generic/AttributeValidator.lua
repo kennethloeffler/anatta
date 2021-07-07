@@ -1,11 +1,15 @@
 local RunService = game:GetService("RunService")
 
 local Anatta = require(script:FindFirstAncestor("AnattaPlugin").Anatta)
+local Constants = require(script.Parent.Parent.Parent.Constants)
+
+local PENDING_VALIDATION = Constants.PendingValidation
 
 return function(system, registry, componentName)
 	local typeDefinition = registry:getDefinition(componentName)
+	local pendingValidation = PENDING_VALIDATION:format(componentName)
 	local listeningTo = system
-		:all(componentName, "__anattaPluginInstance", "__anattaPluginPendingValidation")
+		:all(componentName, "__anattaPluginInstance", pendingValidation)
 		:collect()
 
 	system:on(RunService.Heartbeat, function()
@@ -36,7 +40,7 @@ return function(system, registry, componentName)
 				registry:replace(entity, componentName, result)
 			end
 
-			registry:remove(entity, "__anattaPluginPendingValidation")
+			registry:remove(entity, pendingValidation)
 		end)
 	end)
 end
