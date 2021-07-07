@@ -40,7 +40,7 @@ return function(plugin, saveState)
 		loadDefinitions(moduleScript, anatta)
 	end
 
-	anatta:loadSystem(Systems.CheckSelectedAttributes)
+	anatta:loadSystem(Systems.ListenToAttributes)
 	anatta:loadSystem(Systems.ForceEntityAttribute)
 
 	if saveState then
