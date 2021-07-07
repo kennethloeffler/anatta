@@ -17,7 +17,10 @@ local function convertEnum(instance, attributeName, typeDefinition, enum)
 		end
 	end
 
-	return false, ('Expected one of:\n\n\t\t%s;\n\n\tgot "%s"'):format(table.concat(enums, "\n\t\t"), enumName)
+	return false, ('Expected one of:\n\n\t\t%s;\n\n\tgot "%s"'):format(
+		table.concat(enums, "\n\t\t"),
+		enumName
+	)
 end
 
 local conversions = {
