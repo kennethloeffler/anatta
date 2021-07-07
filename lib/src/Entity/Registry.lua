@@ -104,10 +104,10 @@ end
 --[[
 	Defines a component for the registry.
 ]]
-function Registry:define(componentName, typeCheck)
+function Registry:define(componentName, typeDefinition)
 	jumpAssert(not self._pools[componentName], ErrComponentNameTaken:format(componentName))
 
-	self._pools[componentName] = Pool.new(componentName, typeCheck)
+	self._pools[componentName] = Pool.new(componentName, typeDefinition)
 end
 
 --[[
@@ -187,12 +187,18 @@ function Registry:createFrom(entity)
 
 		while nextRecyclableEntityId ~= entityId do
 			prevRecyclableEntityId = nextRecyclableEntityId
-			nextRecyclableEntityId = bit32.band(self._entities[nextRecyclableEntityId], ENTITYID_MASK)
+			nextRecyclableEntityId = bit32.band(
+				self._entities[nextRecyclableEntityId],
+				ENTITYID_MASK
+			)
 		end
 
 		entities[prevRecyclableEntityId] = bit32.bor(
 			bit32.band(entities[entityId], ENTITYID_MASK),
-			bit32.lshift(bit32.rshift(entities[prevRecyclableEntityId], ENTITYID_WIDTH), ENTITYID_WIDTH)
+			bit32.lshift(
+				bit32.rshift(entities[prevRecyclableEntityId], ENTITYID_WIDTH),
+				ENTITYID_WIDTH
+			)
 		)
 
 		entities[entityId] = entity
