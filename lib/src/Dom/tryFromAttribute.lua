@@ -1,61 +1,55 @@
-local function convertEnum(instance, attributeName, typeDefinition, enum)
-	enum = enum or typeDefinition.typeParams[1]
-	local enums = enum:GetEnumItems()
-	local enumName = instance:GetAttribute(attributeName)
+local t = require(script.Parent.Parent.Core.Type)
 
-	if enumName == nil then
-		return false
-	end
-
-	for i, enumItem in ipairs(enums) do
-		enums[i] = enumItem.Name
-	end
-
-	for _, name in ipairs(enums) do
-		if name == enumName then
-			return true, enum[enumName]
-		end
-	end
-
-	return false, ('Expected one of:\n\n\t\t%s;\n\n\tgot "%s"'):format(
-		table.concat(enums, "\n\t\t"),
-		enumName
-	)
-end
+local TweenInfoType = t.strictInterface({
+	Time = t.number,
+	EasingStyle = t.enum(Enum.EasingStyle),
+	EasingDirection = t.enum(Enum.EasingDirection),
+	RepeatCount = t.number,
+	Reverses = t.boolean,
+	DelayTime = t.number,
+})
 
 local conversions = {
-	enum = convertEnum,
+	enum = function(instance, attributeName, typeDefinition)
+		local enum = typeDefinition.typeParams[1]
+		local enums = enum:GetEnumItems()
+		local enumName = instance:GetAttribute(attributeName)
+
+		if enumName == nil then
+			return false
+		end
+
+		for i, enumItem in ipairs(enums) do
+			enums[i] = enumItem.Name
+		end
+
+		for _, name in ipairs(enums) do
+			if name == enumName then
+				return true, enum[enumName]
+			end
+		end
+
+		return false, ('Expected one of:\n\n\t\t%s;\n\n\tgot "%s"'):format(
+			table.concat(enums, "\n\t\t"),
+			enumName
+		)
+	end,
 
 	TweenInfo = function(instance, attributeName)
-		local easingStyleSuccess, easingStyle = convertEnum(
-			instance,
-			attributeName .. "_EasingStyle",
-			nil,
-			Enum.EasingStyle
-		)
-		local easingDirectionSuccess, easingDirection = convertEnum(
-			instance,
-			attributeName .. "_EasingDirection",
-			nil,
-			Enum.EasingDirection
-		)
+		local success, result = convert(instance, attributeName, TweenInfoType)
 
-		if not easingStyleSuccess then
-			return false, easingStyle
+		if success then
+			return true, TweenInfo.new(
+				result.Time,
+				result.EasingStyle,
+				result.EasingDirection,
+				result.RepeatCount,
+				result.Reverses,
+				result.DelayTime
+			)
+		else
+			return false, result
 		end
-
-		if not easingDirectionSuccess then
-			return false, easingDirection
-		end
-
-		return true, TweenInfo.new(
-			instance:GetAttribute(attributeName .. "_Time"),
-			easingStyle,
-			easingDirection,
-			instance:GetAttribute(attributeName .. "_RepeatCount"),
-			instance:GetAttribute(attributeName .. "_Reverses"),
-			instance:GetAttribute(attributeName .. "_DelayTime")
-		)
 	end,
 }
 
