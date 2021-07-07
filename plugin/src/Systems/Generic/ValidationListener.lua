@@ -35,6 +35,8 @@ return function(system, registry, componentName)
 			else
 				registry:replace(entity, componentName, result)
 			end
+
+			registry:remove(entity, "__anattaPluginPendingValidation")
 		end)
 	end)
 end
