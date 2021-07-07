@@ -457,8 +457,8 @@ function Registry:replace(entity, componentName, component)
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
 	end
 
-	pool:replace(entity, component)
 	pool.updated:dispatch(entity, component)
+	pool:replace(entity, component)
 
 	return component
 end
@@ -480,8 +480,8 @@ function Registry:addOrReplace(entity, componentName, component)
 	local denseIndex = pool:getIndex(entity)
 
 	if denseIndex then
-		pool:replace(entity, component)
 		pool.updated:dispatch(entity, component)
+		pool:replace(entity, component)
 		return component
 	end
 
