@@ -33,7 +33,7 @@ local function loadDefinitions(moduleScript, anatta)
 	end
 end
 
-return function(plugin)
+return function(plugin, saveState)
 	local anatta = Anatta.new(PluginComponents)
 
 	for _, moduleScript in ipairs(CollectionService:GetTagged(DEFINITION_MODULE_TAG_NAME)) do
@@ -42,6 +42,10 @@ return function(plugin)
 
 	anatta:loadSystem(Systems.CheckSelectedAttributes)
 	anatta:loadSystem(Systems.ForceEntityAttribute)
+
+	if saveState then
+		anatta.registry:tryLoad(saveState)
+	end
 
 	local reloadButton = plugin:createButton({
 		icon = "",
@@ -59,5 +63,7 @@ return function(plugin)
 	plugin:beforeUnload(function()
 		anatta:unloadAllSystems()
 		reloadConnection:Disconnect()
+
+		return anatta.registry
 	end)
 end
