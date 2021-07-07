@@ -1,7 +1,7 @@
 local Constants = require(script.Parent.Constants)
 local Signal = require(script.Parent.Signal)
 
-local ENTITYID_MASK = Constants.ENTITYID_MASK
+local ENTITYID_MASK = Constants.EntityIdMask
 
 local Pool = {}
 Pool.__index = Pool

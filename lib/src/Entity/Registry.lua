@@ -7,10 +7,10 @@ local util = require(script.Parent.Parent.util)
 
 local jumpAssert = util.jumpAssert
 
-local DEBUG = Constants.DEBUG
-local ENTITYID_MASK = Constants.ENTITYID_MASK
-local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
-local NULL_ENTITYID = Constants.NULL_ENTITYID
+local DEBUG = Constants.Debug
+local ENTITYID_MASK = Constants.EntityIdMask
+local ENTITYID_WIDTH = Constants.EntityIdWidth
+local NULL_ENTITYID = Constants.NullEntityId
 
 local ErrBadEntityType = "entity must be a number (got %s)"
 local ErrAlreadyHasComponent = "entity %s already has a %s"
@@ -89,7 +89,7 @@ function Registry:tryLoad(registry)
 				pool.added:dispatch(entity, pool:get(entity))
 			end
 		else
-			warn((checkSuccess("Type check for entity %s's %s failed: %s")):format(
+			warn(("Type check for entity %s's %s failed: %s"):format(
 				failedEntity,
 				pool.name,
 				checkErr

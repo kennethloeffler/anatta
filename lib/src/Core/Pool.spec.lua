@@ -2,8 +2,8 @@ return function()
 	local Constants = require(script.Parent.Constants)
 	local Pool = require(script.Parent.Pool)
 
-	local ENTITYID_MASK = Constants.ENTITYID_MASK
-	local ENTITYID_WIDTH = Constants.ENTITYID_WIDTH
+	local ENTITYID_MASK = Constants.EntityIdMask
+	local ENTITYID_WIDTH = Constants.EntityIdWidth
 
 	local function generate(pool)
 		local rand = Random.new()
