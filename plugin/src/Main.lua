@@ -4,6 +4,7 @@ local Anatta = require(script.Parent.Parent.Anatta)
 local PluginComponents = require(script.Parent.PluginComponents)
 local Constants = require(script.Parent.Constants)
 local Systems = script.Parent.Systems
+local t = Anatta.t
 
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
 local PENDING_VALIDATION = Constants.PendingValidation
@@ -18,11 +19,13 @@ local function loadDefinitions(moduleScript, anatta)
 
 	for componentName, typeDefinition in pairs(componentDefinitions) do
 		if not anatta.registry:hasDefined(componentName) then
-			anatta.registry:define(componentName, typeDefinition)
-			anatta.registry:define(PENDING_VALIDATION:format(componentName), Anatta.t.none)
+			local pendingValidation = PENDING_VALIDATION:format(componentName)
 
-			anatta:loadSystem(Systems.Generic.Component, componentName)
-			anatta:loadSystem(Systems.Generic.AttributeValidator, componentName)
+			anatta.registry:define(componentName, typeDefinition)
+			anatta:loadSystem(Systems.Generic.Component, componentName, pendingValidation)
+
+			anatta.registry:define(pendingValidation, t.none)
+			anatta:loadSystem(Systems.Generic.AttributeValidator, componentName, pendingValidation)
 		else
 			warn(("Found duplicate component name %s in %s; skipping"):format(
 				componentName,

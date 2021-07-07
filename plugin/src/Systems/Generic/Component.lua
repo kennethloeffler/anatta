@@ -8,7 +8,7 @@ local util = require(script.Parent.Parent.util)
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local PLUGIN_PRIVATE_COMPONENT_PREFIX = Constants.PluginPrivateComponentPrefix
 
-return function(system, registry, componentName)
+return function(system, registry, componentName, pendingComponentValidation)
 	local pendingAddition = {}
 	local pendingRemoval = {}
 
@@ -51,6 +51,7 @@ return function(system, registry, componentName)
 
 			pendingRemoval[instance] = nil
 			registry:remove(entity, componentName)
+			registry:tryRemove(entity, pendingComponentValidation)
 			registry:tryRemove(entity, "__anattaPluginValidationListener")
 
 			for attributeName in pairs(attributeMap) do
