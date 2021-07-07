@@ -18,8 +18,8 @@ local function loadDefinitions(moduleScript, anatta)
 	for componentName, typeDefinition in pairs(componentDefinitions) do
 		if not anatta.registry:hasDefined(componentName) then
 			anatta.registry:define(componentName, typeDefinition)
-			anatta:loadSystem(Systems.Generic.ValidationListener, componentName)
 			anatta:loadSystem(Systems.Generic.Component, componentName)
+			anatta:loadSystem(Systems.Generic.AttributeValidator, componentName)
 		else
 			warn(("Found duplicate component name %s in %s; skipping"):format(
 				componentName,
