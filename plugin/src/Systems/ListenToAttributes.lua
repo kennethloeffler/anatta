@@ -24,12 +24,12 @@ return function(system, registry)
 				local currentValue = instance:GetAttribute(attributeName)
 
 				if attributeName == ENTITY_ATTRIBUTE_NAME then
-					if currentValue ~= entity then
+					if currentValue == nil then
+						registry:destroy(entity)
+					elseif currentValue ~= entity then
 						registry:tryAdd(entity, "__anattaPluginForceEntityAttribute")
 					end
-				elseif currentValue == nil then
-					return
-				else
+				elseif currentValue ~= nil then
 					registry:visit(function(componentName)
 						if attributeName:find(componentName) then
 							registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
