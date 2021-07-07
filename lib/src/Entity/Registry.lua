@@ -58,6 +58,49 @@ function Registry.getVersion(entity)
 	return bit32.rshift(entity, ENTITYID_WIDTH)
 end
 
+function Registry:tryLoad(registry)
+	assert(self._size == 0)
+
+	self._size = registry._size
+	self._entities = registry._entities
+	self._nextRecyclableEntityId = registry._nextRecyclableEntityId
+
+	for _, otherPool in pairs(registry._pools) do
+		local pool = self:getPool(otherPool.name)
+		local checkSuccess, checkErr, failedEntity = true, "", 0
+
+		for _, entity in ipairs(otherPool.dense) do
+			local component = otherPool:get(entity)
+			local success, err = pool.typeCheck(component)
+
+			if not success then
+				checkSuccess, checkErr, failedEntity = false, err, entity
+				break
+			end
+		end
+
+		if checkSuccess then
+			pool.size = otherPool.size
+			pool.sparse = otherPool.sparse
+			pool.dense = otherPool.dense
+			pool.components = otherPool.components
+
+			for _, entity in ipairs(pool.dense) do
+				pool.added:dispatch(entity, pool:get(entity))
+			end
+		else
+			warn((checkSuccess("Type check for entity %s's %s failed: %s")):format(
+				failedEntity,
+				pool.name,
+				checkErr
+			))
+			continue
+		end
+	end
+
+	return true
+end
+
 --[[
 	Defines a component for the registry.
 ]]
