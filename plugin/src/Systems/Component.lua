@@ -2,8 +2,8 @@ local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
 local Anatta = require(script:FindFirstAncestor("AnattaPlugin").Anatta)
-local Constants = require(script.Parent.Parent.Parent.Constants)
-local util = require(script.Parent.Parent.util)
+local Constants = require(script.Parent.Parent.Constants)
+local util = require(script.Parent.util)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local PLUGIN_PRIVATE_COMPONENT_PREFIX = Constants.PluginPrivateComponentPrefix

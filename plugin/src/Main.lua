@@ -22,10 +22,11 @@ local function loadDefinitions(moduleScript, anatta)
 			local pendingValidation = PENDING_VALIDATION:format(componentName)
 
 			anatta.registry:define(componentName, typeDefinition)
-			anatta:loadSystem(Systems.Generic.Component, componentName, pendingValidation)
-
 			anatta.registry:define(pendingValidation, t.none)
-			anatta:loadSystem(Systems.Generic.AttributeValidator, componentName, pendingValidation)
+
+			anatta:loadSystem(Systems.Component, componentName, pendingValidation)
+			anatta:loadSystem(Systems.AttributeValidator, componentName, pendingValidation)
+			anatta:loadSystem(Systems.AttributeListener, componentName)
 		else
 			warn(("Found duplicate component name %s in %s; skipping"):format(
 				componentName,
@@ -43,7 +44,6 @@ return function(plugin, saveState)
 		loadDefinitions(moduleScript, anatta)
 	end
 
-	anatta:loadSystem(Systems.ListenToAttributes)
 	anatta:loadSystem(Systems.ForceEntityAttribute)
 
 	if saveState then

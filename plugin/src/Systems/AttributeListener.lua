@@ -7,7 +7,7 @@ local util = require(script.Parent.util)
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local PENDING_VALIDATION = Constants.PendingValidation
 
-return function(system, registry)
+return function(system, registry, componentName)
 	local previousSelection = {}
 	local dirty = false
 
@@ -29,17 +29,8 @@ return function(system, registry)
 						elseif currentValue ~= entity then
 							registry:tryAdd(entity, "__anattaPluginForceEntityAttribute")
 						end
-					else
-						registry:visit(function(componentName)
-							if attributeName:find(componentName) then
-								if registry:has(entity, componentName) then
-									registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
-									return true
-								else
-									instance:SetAttribute(attributeName, nil)
-								end
-							end
-						end)
+					elseif attributeName:find(componentName) then
+						registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
 					end
 				end),
 			}
