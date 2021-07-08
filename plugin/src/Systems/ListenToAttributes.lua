@@ -32,10 +32,14 @@ return function(system, registry)
 				elseif currentValue ~= nil then
 					registry:visit(function(componentName)
 						if attributeName:find(componentName) then
-							registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
-							return true
+							if registry:has(entity, componentName) then
+								registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
+								return true
+							else
+								instance:SetAttribute(attributeName, nil)
+							end
 						end
-					end, entity)
+					end)
 				end
 			end),
 		}
