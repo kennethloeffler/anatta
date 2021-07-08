@@ -82,6 +82,7 @@ return function(system, registry, componentName, pendingComponentValidation)
 			local existing = registry:get(entity, componentName)
 
 			registry:tryAdd(entity, componentName, existing or default)
+			pendingAddition[instance] = nil
 		end
 
 		for instance in pairs(pendingRemoval) do
@@ -99,6 +100,8 @@ return function(system, registry, componentName, pendingComponentValidation)
 				registry:destroy(entity)
 				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 			end
+
+			pendingRemoval[instance] = nil
 		end
 	end)
 end
