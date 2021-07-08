@@ -25,8 +25,14 @@ return function(system, registry, componentName, pendingComponentValidation)
 					typeDefinition
 				)
 
+				local wasListening = registry:tryRemove(entity, "__anattaPluginValidationListener")
+
 				for name, value in pairs(attributeMap) do
 					instance:SetAttribute(name, value)
+				end
+
+				if wasListening then
+					registry:add(entity, "__anattaPluginValidationListener")
 				end
 
 				if result then
