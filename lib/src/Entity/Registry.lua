@@ -66,7 +66,13 @@ function Registry:tryLoad(registry)
 	self._nextRecyclableEntityId = registry._nextRecyclableEntityId
 
 	for _, otherPool in pairs(registry._pools) do
-		local pool = self:getPool(otherPool.name)
+		local componentName = otherPool.name
+
+		if not self:hasDefined(componentName) then
+			continue
+		end
+
+		local pool = self:getPool(componentName)
 		local checkSuccess, checkErr, failedEntity = true, "", 0
 
 		for i, component in ipairs(otherPool.components) do
@@ -91,7 +97,7 @@ function Registry:tryLoad(registry)
 		else
 			warn(("Type check for entity %s's %s failed: %s"):format(
 				failedEntity,
-				pool.name,
+				componentName,
 				checkErr
 			))
 			continue
