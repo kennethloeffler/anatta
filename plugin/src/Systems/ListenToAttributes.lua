@@ -29,7 +29,7 @@ return function(system, registry)
 						elseif currentValue ~= entity then
 							registry:tryAdd(entity, "__anattaPluginForceEntityAttribute")
 						end
-					elseif currentValue ~= nil then
+					else
 						registry:visit(function(componentName)
 							if attributeName:find(componentName) then
 								if registry:has(entity, componentName) then
