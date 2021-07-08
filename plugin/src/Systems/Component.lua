@@ -20,7 +20,7 @@ return function(system, registry, componentName, pendingComponentValidation)
 		CollectionService:AddTag(instance, componentName)
 		pendingAddition[instance] = nil
 
-		local wasListening = registry:tryRemove(entity, "__anattaPluginValidationListener")
+		registry:tryRemove(entity, "__anattaPluginValidationListener")
 
 		local success, attributeMap = Anatta.Dom.tryToAttribute(
 			component,
@@ -36,9 +36,7 @@ return function(system, registry, componentName, pendingComponentValidation)
 			instance:SetAttribute(attributeName, value)
 		end
 
-		if wasListening then
-			registry:add(entity, "__anattaPluginValidationListener")
-		end
+		registry:add(entity, "__anattaPluginValidationListener")
 	end)
 
 	system:on(allWithComponent.removed, function(entity, instance, component)
