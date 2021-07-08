@@ -2,7 +2,6 @@ local RunService = game:GetService("RunService")
 local Selection = game:GetService("Selection")
 
 local Constants = require(script.Parent.Parent.Constants)
-local util = require(script.Parent.util)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local PENDING_VALIDATION = Constants.PendingValidation
@@ -48,27 +47,25 @@ return function(system, registry, componentName)
 		local currentSelection = Selection:Get()
 
 		for _, instance in ipairs(currentSelection) do
-			if instance:GetAttribute(ENTITY_ATTRIBUTE_NAME) == nil then
+			local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+			if entity == nil or not registry:valid(entity) then
 				continue
 			end
 
 			previousSelection[instance] = nil
-			registry:tryAdd(
-				util.getValidEntity(registry, instance),
-				"__anattaPluginValidationListener"
-			)
+			registry:tryAdd(entity, "__anattaPluginValidationListener")
 		end
 
 		for instance in pairs(previousSelection) do
-			if instance:GetAttribute(ENTITY_ATTRIBUTE_NAME) == nil then
+			local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+			if entity == nil or not registry:valid(entity) then
 				continue
 			end
 
-			registry:tryRemove(
-				util.getValidEntity(registry, instance),
-				"__anattaPluginValidationListener"
-			)
 			previousSelection[instance] = nil
+			registry:tryRemove(entity, "__anattaPluginValidationListener")
 		end
 
 		for _, instance in ipairs(currentSelection) do
