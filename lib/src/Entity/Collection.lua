@@ -80,14 +80,6 @@ function Collection:attach(callback)
 end
 
 function Collection:detach()
-	local packed = self._packed
-	local numPacked = self._numPacked
-
-	for _, entity in ipairs(self._pool.dense) do
-		self:_pack(entity)
-		self.removed:dispatch(entity, unpack(packed, 1, numPacked))
-	end
-
 	for _, attached in ipairs(self._pool.components) do
 		for _, item in ipairs(attached) do
 			Finalizers[typeof(item)](item)
