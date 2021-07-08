@@ -8,7 +8,7 @@ local PENDING_VALIDATION = Constants.PendingValidation
 
 return function(system, registry, componentName)
 	local previousSelection = {}
-	local dirty = false
+	local dirty = true
 
 	system
 		:all("__anattaPluginInstance", "__anattaPluginValidationListener")
