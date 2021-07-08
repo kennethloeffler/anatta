@@ -12,14 +12,59 @@ return function(system, registry, componentName, pendingComponentValidation)
 	local pendingAddition = {}
 	local pendingRemoval = {}
 
+	local allWithComponent = system:all("__anattaPluginInstance", componentName):collect()
 	local typeDefinition = registry:getDefinition(componentName)
 	local default = typeDefinition:default()
-	local success, attributeMap = Anatta.Dom.tryToAttribute(default, componentName, typeDefinition)
 
-	if not success then
-		warn(attributeMap)
-		return
-	end
+	system:on(allWithComponent.added, function(entity, instance, component)
+		CollectionService:AddTag(instance, componentName)
+		pendingAddition[instance] = nil
+
+		registry:tryRemove(entity, "__anattaPluginValidationListener")
+
+		local success, attributeMap = Anatta.Dom.tryToAttribute(
+			component,
+			componentName,
+			typeDefinition
+		)
+
+		if not success then
+			warn(attributeMap)
+		end
+
+		for attributeName, value in pairs(attributeMap) do
+			instance:SetAttribute(attributeName, value)
+		end
+
+		registry:add(entity, "__anattaPluginValidationListener")
+	end)
+
+	system:on(allWithComponent.removed, function(entity, instance, component)
+		CollectionService:RemoveTag(instance, componentName)
+		pendingRemoval[instance] = nil
+
+		local wasListening = registry:tryRemove(entity, "__anattaPluginValidationListener")
+
+		local success, attributeMap = Anatta.Dom.tryToAttribute(
+			component,
+			componentName,
+			typeDefinition
+		)
+
+		if not success then
+			warn(attributeMap)
+		end
+
+		for attributeName in pairs(attributeMap) do
+			instance:SetAttribute(attributeName, nil)
+		end
+
+		if wasListening then
+			registry:add(entity, "__anattaPluginValidationListener")
+		end
+
+		registry:tryRemove(entity, pendingComponentValidation)
+	end)
 
 	system:on(CollectionService:GetInstanceAddedSignal(componentName), function(instance)
 		pendingAddition[instance] = true
@@ -34,29 +79,15 @@ return function(system, registry, componentName, pendingComponentValidation)
 	system:on(RunService.Heartbeat, function()
 		for instance in pairs(pendingAddition) do
 			local entity = util.getValidEntity(registry, instance)
+			local existing = registry:get(entity, componentName)
 
-			pendingAddition[instance] = nil
-			registry:add(entity, componentName, default)
-			registry:tryRemove(entity, "__anattaPluginValidationListener")
-
-			for attributeName, defaultValue in pairs(attributeMap) do
-				instance:SetAttribute(attributeName, defaultValue)
-			end
-
-			registry:add(entity, "__anattaPluginValidationListener")
+			registry:tryAdd(entity, componentName, existing or default)
 		end
 
 		for instance in pairs(pendingRemoval) do
 			local entity = util.getValidEntity(registry, instance)
 
-			pendingRemoval[instance] = nil
-			registry:remove(entity, componentName)
-			registry:tryRemove(entity, pendingComponentValidation)
-			registry:tryRemove(entity, "__anattaPluginValidationListener")
-
-			for attributeName in pairs(attributeMap) do
-				instance:SetAttribute(attributeName, nil)
-			end
+			registry:tryRemove(entity, componentName)
 
 			if
 				registry:visit(function(visitedComponentName)
@@ -67,8 +98,6 @@ return function(system, registry, componentName, pendingComponentValidation)
 			then
 				registry:destroy(entity)
 				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
-			else
-				registry:add(entity, "__anattaPluginValidationListener")
 			end
 		end
 	end)
