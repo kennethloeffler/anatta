@@ -69,8 +69,8 @@ function Registry:tryLoad(registry)
 		local pool = self:getPool(otherPool.name)
 		local checkSuccess, checkErr, failedEntity = true, "", 0
 
-		for _, entity in ipairs(otherPool.dense) do
-			local component = otherPool:get(entity)
+		for i, component in ipairs(otherPool.components) do
+			local entity = otherPool.dense[i]
 			local success, err = pool.typeCheck(component)
 
 			if not success then
