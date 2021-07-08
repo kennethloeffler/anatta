@@ -4,12 +4,12 @@ local Anatta = require(script:FindFirstAncestor("AnattaPlugin").Anatta)
 
 return function(system, registry, componentName, pendingComponentValidation)
 	local typeDefinition = registry:getDefinition(componentName)
-	local listeningTo = system
+	local pendingValidations = system
 		:all(componentName, "__anattaPluginInstance", pendingComponentValidation)
 		:collect()
 
 	system:on(RunService.Heartbeat, function()
-		listeningTo:each(function(entity, component, instance)
+		pendingValidations:each(function(entity, component, instance)
 			local success, result = Anatta.Dom.tryFromAttribute(
 				instance,
 				componentName,
