@@ -10,40 +10,40 @@ local PENDING_VALIDATION = Constants.PendingValidation
 return function(system, registry)
 	local previousSelection = {}
 	local dirty = false
-	local entitiesToListenTo = system
+
+	system
 		:all("__anattaPluginInstance", "__anattaPluginValidationListener")
 		:collect()
-
-	entitiesToListenTo:attach(function(entity, instance)
-		return {
-			instance.AttributeChanged:Connect(function(attributeName)
-				if not registry:valid(entity) then
-					return
-				end
-
-				local currentValue = instance:GetAttribute(attributeName)
-
-				if attributeName == ENTITY_ATTRIBUTE_NAME then
-					if currentValue == nil then
-						registry:destroy(entity)
-					elseif currentValue ~= entity then
-						registry:tryAdd(entity, "__anattaPluginForceEntityAttribute")
+		:attach(function(entity, instance)
+			return {
+				instance.AttributeChanged:Connect(function(attributeName)
+					if not registry:valid(entity) then
+						return
 					end
-				elseif currentValue ~= nil then
-					registry:visit(function(componentName)
-						if attributeName:find(componentName) then
-							if registry:has(entity, componentName) then
-								registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
-								return true
-							else
-								instance:SetAttribute(attributeName, nil)
-							end
+
+					local currentValue = instance:GetAttribute(attributeName)
+
+					if attributeName == ENTITY_ATTRIBUTE_NAME then
+						if currentValue == nil then
+							registry:destroy(entity)
+						elseif currentValue ~= entity then
+							registry:tryAdd(entity, "__anattaPluginForceEntityAttribute")
 						end
-					end)
-				end
-			end),
-		}
-	end)
+					elseif currentValue ~= nil then
+						registry:visit(function(componentName)
+							if attributeName:find(componentName) then
+								if registry:has(entity, componentName) then
+									registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
+									return true
+								else
+									instance:SetAttribute(attributeName, nil)
+								end
+							end
+						end)
+					end
+				end),
+			}
+		end)
 
 	system:on(Selection.SelectionChanged, function()
 		dirty = true
