@@ -8,7 +8,12 @@ Collection.__index = Collection
 function Collection.new(system)
 	local registry = system.registry
 
-	if #system.required == 1 and #system.update == 0 and #system.forbidden == 0 and #system.optional == 0 then
+	if
+		#system.required == 1
+		and #system.update == 0
+		and #system.forbidden == 0
+		and #system.optional == 0
+	then
 		return SingleCollection.new(registry:getPools(unpack(system.required))[1])
 	end
 
@@ -75,17 +80,18 @@ function Collection:attach(callback)
 end
 
 function Collection:detach()
-	local components = self._pool.components
 	local packed = self._packed
 	local numPacked = self._numPacked
 
-	for i, entity in ipairs(self._pool.dense) do
-		for _, attached in ipairs(components[i]) do
-			Finalizers[typeof(attached)](attached)
-		end
-
+	for _, entity in ipairs(self._pool.dense) do
 		self:_pack(entity)
 		self.removed:dispatch(entity, unpack(packed, 1, numPacked))
+	end
+
+	for _, attached in ipairs(self._pool.components) do
+		for _, item in ipairs(attached) do
+			Finalizers[typeof(item)](item)
+		end
 	end
 
 	for _, connection in ipairs(self._connections) do
