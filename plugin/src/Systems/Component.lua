@@ -1,3 +1,4 @@
+local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
@@ -106,12 +107,18 @@ return function(system, registry, componentName, pendingComponentValidation)
 	end)
 
 	system:on(RunService.Heartbeat, function()
+		ChangeHistoryService:SetWaypoint("Processing Anatta added events")
+
 		for instance in pairs(pendingAddition) do
 			local entity = util.getValidEntity(registry, instance)
 			local existing = registry:get(entity, componentName)
 
 			registry:tryAdd(entity, componentName, existing or default)
 		end
+
+		ChangeHistoryService:SetWaypoint("Processed Anatta added events")
+
+		ChangeHistoryService:SetWaypoint("Processing Anatta removed events")
 
 		for instance in pairs(pendingRemoval) do
 			local entity = util.getValidEntity(registry, instance)
@@ -125,5 +132,7 @@ return function(system, registry, componentName, pendingComponentValidation)
 				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 			end
 		end)
+
+		ChangeHistoryService:SetWaypoint("Processed Anatta removed events")
 	end)
 end
