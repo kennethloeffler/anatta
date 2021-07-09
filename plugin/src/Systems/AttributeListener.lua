@@ -10,7 +10,7 @@ return function(system, registry, componentName, pendingValidation)
 	local dirty = true
 
 	system
-		:all("__anattaPluginInstance", "__anattaPluginValidationListener")
+		:all(".anattaInstance", ".anattaValidationListener")
 		:collect()
 		:attach(function(entity, instance)
 			return {
@@ -25,7 +25,7 @@ return function(system, registry, componentName, pendingValidation)
 						if currentValue == nil then
 							registry:destroy(entity)
 						elseif currentValue ~= entity then
-							registry:tryAdd(entity, "__anattaPluginForceEntityAttribute")
+							registry:tryAdd(entity, ".anattaForceEntityAttribute")
 						end
 					elseif attributeName:find(componentName) then
 						registry:tryAdd(entity, pendingValidation)
@@ -53,7 +53,7 @@ return function(system, registry, componentName, pendingValidation)
 			end
 
 			previousSelection[instance] = nil
-			registry:tryAdd(entity, "__anattaPluginValidationListener")
+			registry:tryAdd(entity, ".anattaValidationListener")
 		end
 
 		for instance in pairs(previousSelection) do
@@ -64,7 +64,7 @@ return function(system, registry, componentName, pendingValidation)
 			end
 
 			previousSelection[instance] = nil
-			registry:tryRemove(entity, "__anattaPluginValidationListener")
+			registry:tryRemove(entity, ".anattaValidationListener")
 		end
 
 		for _, instance in ipairs(currentSelection) do

@@ -50,7 +50,7 @@ return function(plugin, saveState)
 		anatta.registry:load(saveState)
 
 		anatta.registry:each(function(entity)
-			anatta.registry:tryRemove(entity, "__anattaPluginValidationListener")
+			anatta.registry:tryRemove(entity, ".anattaValidationListener")
 		end)
 	else
 		local success, result = anatta.registry:tryFromDom()

@@ -1,6 +1,6 @@
 local Constants = require(script.Parent.Parent.Anatta.Library.Core.Constants)
 
-local privatePrefix = "__anattaPlugin"
+local privatePrefix = ".anatta"
 
 return {
 	EntityAttributeName = Constants.EntityAttributeName,

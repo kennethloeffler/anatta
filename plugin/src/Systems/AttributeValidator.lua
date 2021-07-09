@@ -5,7 +5,7 @@ local Anatta = require(script:FindFirstAncestor("AnattaPlugin").Anatta)
 return function(system, registry, componentName, pendingComponentValidation)
 	local typeDefinition = registry:getDefinition(componentName)
 	local pendingValidations = system
-		:all(componentName, "__anattaPluginInstance", pendingComponentValidation)
+		:all(componentName, ".anattaInstance", pendingComponentValidation)
 		:collect()
 
 	system:on(RunService.Heartbeat, function()
@@ -25,14 +25,14 @@ return function(system, registry, componentName, pendingComponentValidation)
 					typeDefinition
 				)
 
-				local wasListening = registry:tryRemove(entity, "__anattaPluginValidationListener")
+				local wasListening = registry:tryRemove(entity, ".anattaValidationListener")
 
 				for name, value in pairs(attributeMap) do
 					instance:SetAttribute(name, value)
 				end
 
 				if wasListening then
-					registry:add(entity, "__anattaPluginValidationListener")
+					registry:add(entity, ".anattaValidationListener")
 				end
 
 				if result then
