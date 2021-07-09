@@ -4,3 +4,6 @@
 [submodule "vendor/t"]
 	path = vendor/t
 	url = https://github.com/osyrisrblx/t
+[submodule "vendor/tag-editor"]
+	path = vendor/tag-editor
+	url = https://github.com/kennethloeffler/roblox-tag-editor
