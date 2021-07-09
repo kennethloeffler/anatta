@@ -16,7 +16,7 @@ local conversions = {
 		local enumName = instance:GetAttribute(attributeName)
 
 		if enumName == nil then
-			return false, ("Got nil for %s"):format(tostring(enum))
+			return false, ("%s expected, got nil"):format(tostring(enum))
 		end
 
 		for i, enumItem in ipairs(enums) do
