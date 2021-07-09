@@ -1,3 +1,5 @@
+local CollectionService = game:GetService("CollectionService")
+
 local Constants = require(script.Parent.Parent.Parent.Constants)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
@@ -15,6 +17,8 @@ return function(registry, instance)
 		local newEntity = registry:create()
 
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, newEntity)
+
+		CollectionService:AddTag(instance, ".anattaInstance")
 		registry:add(newEntity, ".anattaInstance", instance)
 
 		return newEntity

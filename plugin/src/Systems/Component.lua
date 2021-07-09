@@ -98,6 +98,7 @@ return function(system, registry, componentName, pendingComponentValidation)
 				end, entity) == nil
 			then
 				registry:destroy(entity)
+				CollectionService:RemoveTag(instance, ".anattaInstance")
 				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 			end
 

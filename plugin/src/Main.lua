@@ -6,6 +6,7 @@ local Constants = require(script.Parent.Constants)
 local Systems = script.Parent.Systems
 local t = Anatta.t
 
+local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
 local PENDING_VALIDATION = Constants.PendingValidation
 
@@ -57,6 +58,14 @@ return function(plugin, saveState)
 
 		if not success then
 			warn(result)
+		else
+			for _, instance in ipairs(CollectionService:GetTagged(".anattaInstance")) do
+				local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+				if anatta.registry:valid(entity) then
+					anatta.registry:add(entity, ".anattaInstance", instance)
+				end
+			end
 		end
 	end
 
