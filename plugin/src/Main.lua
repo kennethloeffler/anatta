@@ -26,7 +26,7 @@ local function loadDefinitions(moduleScript, anatta)
 
 			anatta:loadSystem(Systems.Component, componentName, pendingValidation)
 			anatta:loadSystem(Systems.AttributeValidator, componentName, pendingValidation)
-			anatta:loadSystem(Systems.AttributeListener, componentName)
+			anatta:loadSystem(Systems.AttributeListener, componentName, pendingValidation)
 		else
 			warn(("Found duplicate component name %s in %s; skipping"):format(
 				componentName,

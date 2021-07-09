@@ -4,9 +4,8 @@ local Selection = game:GetService("Selection")
 local Constants = require(script.Parent.Parent.Constants)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
-local PENDING_VALIDATION = Constants.PendingValidation
 
-return function(system, registry, componentName)
+return function(system, registry, componentName, pendingValidation)
 	local previousSelection = {}
 	local dirty = true
 
@@ -29,7 +28,7 @@ return function(system, registry, componentName)
 							registry:tryAdd(entity, "__anattaPluginForceEntityAttribute")
 						end
 					elseif attributeName:find(componentName) then
-						registry:tryAdd(entity, PENDING_VALIDATION:format(componentName))
+						registry:tryAdd(entity, pendingValidation)
 					end
 				end),
 			}
