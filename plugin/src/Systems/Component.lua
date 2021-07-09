@@ -5,21 +5,22 @@ local Anatta = require(script:FindFirstAncestor("AnattaPlugin").Anatta)
 local Constants = require(script.Parent.Parent.Constants)
 local util = require(script.Parent.util)
 
+local SECONDS_BEFORE_DESTRUCTION = Constants.SecondsBeforeDestruction
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local PLUGIN_PRIVATE_COMPONENT_PREFIX = Constants.PluginPrivateComponentPrefix
 
 return function(system, registry, componentName, pendingComponentValidation)
+	local withComponent = system:all(".anattaInstance", componentName):collect()
+	local scheduledDestructions = system
+		:all(".anattaInstance", ".anattaScheduledDestruction")
+		:collect()
+
+	local typeDefinition = registry:getDefinition(componentName)
+	local default = typeDefinition:default()
 	local pendingAddition = {}
 	local pendingRemoval = {}
 
-	local allWithComponent = system:all(".anattaInstance", componentName):collect()
-	local typeDefinition = registry:getDefinition(componentName)
-	local default = typeDefinition:default()
-
-	system:on(allWithComponent.added, function(entity, instance, component)
-		CollectionService:AddTag(instance, componentName)
-		pendingAddition[instance] = nil
-
+	system:on(withComponent.added, function(entity, instance, component)
 		registry:tryRemove(entity, ".anattaValidationListener")
 
 		local success, attributeMap = Anatta.Dom.tryToAttribute(
@@ -32,17 +33,20 @@ return function(system, registry, componentName, pendingComponentValidation)
 			warn(attributeMap)
 		end
 
+		CollectionService:AddTag(instance, componentName)
+		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
+
 		for attributeName, value in pairs(attributeMap) do
 			instance:SetAttribute(attributeName, value)
 		end
 
+		pendingAddition[instance] = nil
+
 		registry:add(entity, ".anattaValidationListener")
+		registry:tryRemove(entity, ".anattaScheduledDestruction")
 	end)
 
-	system:on(allWithComponent.removed, function(entity, instance, component)
-		CollectionService:RemoveTag(instance, componentName)
-		pendingRemoval[instance] = nil
-
+	system:on(withComponent.removed, function(entity, instance, component)
 		local wasListening = registry:tryRemove(entity, ".anattaValidationListener")
 
 		local success, attributeMap = Anatta.Dom.tryToAttribute(
@@ -55,9 +59,34 @@ return function(system, registry, componentName, pendingComponentValidation)
 			warn(attributeMap)
 		end
 
+		CollectionService:RemoveTag(instance, componentName)
+
 		for attributeName in pairs(attributeMap) do
 			instance:SetAttribute(attributeName, nil)
 		end
+
+		if
+			registry:visit(function(visitedComponentName)
+				if
+					visitedComponentName ~= componentName
+					and not visitedComponentName:find(PLUGIN_PRIVATE_COMPONENT_PREFIX)
+				then
+					return true
+				end
+			end, entity) == nil
+		then
+			if instance.Parent ~= nil then
+				registry:add(entity, ".anattaScheduledDestruction", tick())
+			else
+				registry:tryAdd(
+					entity,
+					".anattaScheduledDestruction",
+					tick() + SECONDS_BEFORE_DESTRUCTION
+				)
+			end
+		end
+
+		pendingRemoval[instance] = nil
 
 		if wasListening then
 			registry:add(entity, ".anattaValidationListener")
@@ -82,27 +111,19 @@ return function(system, registry, componentName, pendingComponentValidation)
 			local existing = registry:get(entity, componentName)
 
 			registry:tryAdd(entity, componentName, existing or default)
-			pendingAddition[instance] = nil
 		end
 
 		for instance in pairs(pendingRemoval) do
 			local entity = util.getValidEntity(registry, instance)
 
 			registry:tryRemove(entity, componentName)
+		end
 
-			if
-				registry:visit(function(visitedComponentName)
-					if not visitedComponentName:find(PLUGIN_PRIVATE_COMPONENT_PREFIX) then
-						return true
-					end
-				end, entity) == nil
-			then
+		scheduledDestructions:each(function(entity, instance, scheduledDestruction)
+			if tick() >= scheduledDestruction then
 				registry:destroy(entity)
-				CollectionService:RemoveTag(instance, ".anattaInstance")
 				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 			end
-
-			pendingRemoval[instance] = nil
-		end
+		end)
 	end)
 end

@@ -1,5 +1,3 @@
-local CollectionService = game:GetService("CollectionService")
-
 local Constants = require(script.Parent.Parent.Parent.Constants)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
@@ -9,18 +7,15 @@ return function(registry, instance)
 
 	assert(entity == nil or typeof(entity) == "number")
 
-	if
-		entity == nil
-		or (registry:valid(entity) and registry:get(entity, ".anattaInstance") ~= instance)
-		or not registry:valid(entity)
-	then
+	local isNil = entity == nil
+	local isInvalid = not isNil and not registry:valid(entity)
+	local isInvalidInstance = not isNil
+		and not isInvalid
+		and registry:get(entity, ".anattaInstance") ~= instance
+
+	if isNil or isInvalid or isInvalidInstance then
 		local newEntity = registry:create()
-
-		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, newEntity)
-
-		CollectionService:AddTag(instance, ".anattaInstance")
 		registry:add(newEntity, ".anattaInstance", instance)
-
 		return newEntity
 	else
 		return entity

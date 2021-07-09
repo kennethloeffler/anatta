@@ -7,4 +7,5 @@ return {
 	DefinitionModuleTagName = "AnattaComponentDefinitions",
 	PluginPrivateComponentPrefix = privatePrefix,
 	PendingValidation = privatePrefix .. "Pending%s",
+	SecondsBeforeDestruction = 200,
 }
