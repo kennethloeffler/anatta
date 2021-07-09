@@ -2,11 +2,14 @@
   "name": "AnattaPlugin",
   "tree": {
     "$className": "Folder",
-    "PluginLoader": {
+    "TagEditor": {
+      "$path": "../vendor/tag-editor"
+    },
+    "Plugin": {
       "$path": "src"
     },
     "Anatta": {
-      "$path": "../lib"
+      "$path": "../"
     }
   }
 }

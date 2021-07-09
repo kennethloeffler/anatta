@@ -4,13 +4,7 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "AnattaPlugin": {
-        "$className": "Folder",
-        "Anatta": {
-          "$path": "../lib"
-        },
-        "Plugin": {
-          "$path": "src"
-        }
+        "$path": "."
       }
     }
   }
