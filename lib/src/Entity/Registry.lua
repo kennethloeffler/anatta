@@ -2,6 +2,7 @@
 	Registry.lua
 ]]
 local Constants = require(script.Parent.Parent.Core.Constants)
+local Dom = require(script.Parent.Parent.Dom)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local util = require(script.Parent.Parent.util)
 
@@ -39,6 +40,49 @@ function Registry.new(components)
 	}, Registry)
 end
 
+function Registry:tryFromDom()
+	jumpAssert(self._size == 0, "Registry was not empty")
+
+	local entitySet = {}
+
+	for componentName, pool in pairs(self._pools) do
+		local success, result = Dom.tryFromTag(pool, componentName, pool.typeDefinition)
+
+		if success then
+			for _, entity in ipairs(pool.dense) do
+				entitySet[entity] = true
+			end
+		else
+			return false, result
+		end
+	end
+
+	local entities = {}
+
+	for entity in pairs(entitySet) do
+		table.insert(entities, entity)
+	end
+
+	table.sort(entities, function(lhs, rhs)
+		return bit32.band(lhs, ENTITYID_MASK) < bit32.band(rhs, ENTITYID_MASK)
+	end)
+
+	for _, entity in ipairs(entities) do
+		self:createFrom(entity)
+		if game:GetService("RunService"):IsStudio() then
+			self:add(entity, "__anattaPluginInstance")
+		end
+	end
+
+	for _, pool in pairs(self._pools) do
+		for _, entity in ipairs(pool.dense) do
+			pool.added:dispatch(entity, pool:get(entity))
+		end
+	end
+
+	return true
+end
+
 --[[
 	Returns an integer equal to the first ENTITYID_WIDTH bits of the entity. The
 	equality
@@ -58,8 +102,8 @@ function Registry.getVersion(entity)
 	return bit32.rshift(entity, ENTITYID_WIDTH)
 end
 
-function Registry:tryLoad(registry)
-	assert(self._size == 0)
+function Registry:load(registry)
+	jumpAssert(self._size == 0)
 
 	self._size = registry._size
 	self._entities = registry._entities
@@ -103,8 +147,6 @@ function Registry:tryLoad(registry)
 			continue
 		end
 	end
-
-	return true
 end
 
 --[[
