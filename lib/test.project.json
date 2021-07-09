@@ -9,6 +9,14 @@
       "TestEZ" : {
         "$path": "../vendor/testez"
       }
+    },
+    "TestService": {
+      "$properties": {
+        "ExecuteWithStudioRun": true
+      },
+      "TestRunner": {
+        "$path": "TestRunner.server.lua"
+      }
     }
   }
 }
