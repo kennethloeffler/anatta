@@ -57,6 +57,17 @@ function Registry:tryFromDom()
 		end
 	end
 
+	-- There is a bit of trickery going on here. A simple traversal over entitySet,
+	-- calling createFrom on each entity, does work - but it is unordered. If createFrom
+	-- is given an entity that is out of range, it must backfill _entities with recyclable
+	-- IDs. When entities with the same ID are later encountered at some point later in
+	-- the iteration, createFrom must search the recyclable list. It likely contains many
+	-- elements in such a scenario, so this can become fairly costly overall.
+
+	-- To get around this, we create an intermediate list of entities and sort it by its
+	-- entity ID field. This results in an ordering identical to the eventual registry. In
+	-- this scenario, createFrom backfills less often and the recyclable list is kept
+	-- smaller.
 	local entities = {}
 
 	for entity in pairs(entitySet) do
@@ -81,8 +92,7 @@ function Registry:tryFromDom()
 end
 
 --[[
-	Returns an integer equal to the first ENTITYID_WIDTH bits of the entity. The
-	equality
+	Returns an integer equal to the first ENTITYID_WIDTH bits of the entity. The equality
 
 	registry._entities[id] == entity
 
@@ -168,15 +178,15 @@ function Registry:create()
 		return newEntity
 	else
 		local entities = self._entities
-		local nextRecyclableEntityId = self._nextRecyclableEntityId
-		local nextNode = entities[nextRecyclableEntityId]
+		local recyclableEntityId = self._nextRecyclableEntityId
+		local nextElement = entities[recyclableEntityId]
 		local recycledEntity = bit32.bor(
-			nextRecyclableEntityId,
-			bit32.lshift(bit32.rshift(nextNode, ENTITYID_WIDTH), ENTITYID_WIDTH)
+			recyclableEntityId,
+			bit32.lshift(bit32.rshift(nextElement, ENTITYID_WIDTH), ENTITYID_WIDTH)
 		)
 
-		entities[nextRecyclableEntityId] = recycledEntity
-		self._nextRecyclableEntityId = bit32.band(nextNode, ENTITYID_MASK)
+		entities[recyclableEntityId] = recycledEntity
+		self._nextRecyclableEntityId = bit32.band(nextElement, ENTITYID_MASK)
 
 		return recycledEntity
 	end
@@ -192,16 +202,18 @@ function Registry:createFrom(entity)
 	local existingEntityId = bit32.band(entities[entityId] or NULL_ENTITYID, ENTITYID_MASK)
 
 	if existingEntityId == NULL_ENTITYID then
-		-- The given id is out of range. We don't want any gaps in _entities, so we
-		-- create the entities on the interval (size, entityId) and push them onto the
-		-- recyclable list.
+		-- The given id is out of range.
 		local nextRecyclableEntityId = self._nextRecyclableEntityId
 
+		-- _entities musn't contain any gaps. If necessary, create the entities on the
+		-- interval (size, entityId) and push them onto the recyclable list.
 		for id = self._size + 1, entityId - 1 do
 			entities[id] = nextRecyclableEntityId
 			nextRecyclableEntityId = id
 		end
 
+		-- Now all we have to do is set the head of the recyclable list and append to
+		-- _entities.
 		self._nextRecyclableEntityId = nextRecyclableEntityId
 		self._size = entityId
 		entities[entityId] = entity
@@ -222,12 +234,14 @@ function Registry:createFrom(entity)
 		local nextRecyclableEntityId = self._nextRecyclableEntityId
 
 		if nextRecyclableEntityId == entityId then
+			-- Pop the recyclable list. Done.
 			self._nextRecyclableEntityId = bit32.band(entities[entityId], ENTITYID_MASK)
 			entities[entityId] = entity
-
 			return entity
 		end
 
+		-- Do a linear search of the recyclable list for entityId and take note of the
+		-- previous element.
 		local prevRecyclableEntityId
 
 		while nextRecyclableEntityId ~= entityId do
@@ -238,6 +252,8 @@ function Registry:createFrom(entity)
 			)
 		end
 
+		-- Make the previous element point to the next element, effectively removing
+		-- entityId from the recyclable list.
 		entities[prevRecyclableEntityId] = bit32.bor(
 			bit32.band(entities[entityId], ENTITYID_MASK),
 			bit32.lshift(
@@ -439,9 +455,10 @@ function Registry:multiAdd(entity, componentMap)
 
 	return entity
 end
+
 --[[
-	If the entity does not have the component, adds and returns the component.
-	Otherwise, does nothing.
+	If the entity does not have the component, adds and returns the component. Otherwise,
+	does nothing.
 ]]
 function Registry:tryAdd(entity, componentName, component)
 	local pool = self._pools[componentName]
@@ -463,8 +480,8 @@ function Registry:tryAdd(entity, componentName, component)
 end
 
 --[[
-	If the entity has the component, returns the component. Otherwise adds the
-	component to the entity and returns the component.
+	If the entity has the component, returns the component. Otherwise adds the component
+	to the entity and returns the component.
 ]]
 function Registry:getOrAdd(entity, componentName, component)
 	local pool = self._pools[componentName]

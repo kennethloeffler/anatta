@@ -6,9 +6,9 @@ local tryFromAttribute = require(script.Parent.tryFromAttribute)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
--- Populates a pool with attribute data from the Roblox DataModel by getting all instances
--- tagged with the pool's name and attempting to convert their attributes into entities
--- and components of the pool's type.
+-- Populates a pool with attribute and tag data from the Roblox DataModel by getting all
+-- instances tagged with the pool's name and attempting to convert their attributes into
+-- entities and components of the pool's type.
 
 -- If a component conversion fails, the entire function fails. However, it is not a hard
 -- failure for an entity attribute to be invalid; if an entity attribute is invalid, the
@@ -33,6 +33,9 @@ return function(pool)
 		local success, componentResult = tryFromAttribute(instance, componentName, typeDefinition)
 
 		if not success then
+			pool.size = 0
+			pool.sparse = {}
+
 			return false, (("Type check failed for entity %s's %s: %s"):format(
 				entity,
 				componentName,
