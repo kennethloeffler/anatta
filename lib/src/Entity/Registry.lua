@@ -46,6 +46,10 @@ function Registry:tryFromDom()
 	local entitySet = {}
 
 	for componentName, pool in pairs(self._pools) do
+		if componentName:sub(1, 1) == "." then
+			continue
+		end
+
 		local success, result = Dom.tryFromTag(pool, componentName, pool.typeDefinition)
 
 		if success then
