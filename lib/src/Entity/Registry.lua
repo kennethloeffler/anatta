@@ -69,9 +69,6 @@ function Registry:tryFromDom()
 
 	for _, entity in ipairs(entities) do
 		self:createFrom(entity)
-		if game:GetService("RunService"):IsStudio() then
-			self:add(entity, "__anattaPluginInstance")
-		end
 	end
 
 	for _, pool in pairs(self._pools) do

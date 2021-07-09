@@ -47,11 +47,17 @@ return function(plugin, saveState)
 	anatta:loadSystem(Systems.ForceEntityAttribute)
 
 	if saveState then
-		anatta.registry:tryLoad(saveState)
+		anatta.registry:load(saveState)
 
 		anatta.registry:each(function(entity)
 			anatta.registry:tryRemove(entity, "__anattaPluginValidationListener")
 		end)
+	else
+		local success, result = anatta.registry:tryFromDom()
+
+		if not success then
+			warn(result)
+		end
 	end
 
 	local reloadButton = plugin:createButton({
