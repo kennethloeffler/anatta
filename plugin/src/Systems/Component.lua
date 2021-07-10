@@ -12,9 +12,7 @@ local PLUGIN_PRIVATE_COMPONENT_PREFIX = Constants.PluginPrivateComponentPrefix
 
 return function(system, registry, componentName, pendingComponentValidation)
 	local withComponent = system:all(".anattaInstance", componentName):collect()
-	local scheduledDestructions = system
-		:all(".anattaInstance", ".anattaScheduledDestruction")
-		:collect()
+	local scheduledDestructions = system:all(".anattaScheduledDestruction"):collect()
 
 	local typeDefinition = registry:getDefinition(componentName)
 	local default = typeDefinition:default()
@@ -125,7 +123,7 @@ return function(system, registry, componentName, pendingComponentValidation)
 				registry:tryRemove(entity, componentName)
 			end
 
-			scheduledDestructions:each(function(entity, instance, scheduledDestruction)
+			scheduledDestructions:each(function(entity, scheduledDestruction)
 				if tick() >= scheduledDestruction then
 					registry:destroy(entity)
 				end
