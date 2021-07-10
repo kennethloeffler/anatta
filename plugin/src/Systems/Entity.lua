@@ -7,10 +7,16 @@ local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 return function(system, registry)
 	local forcedEntities = system:all(".anattaInstance", ".anattaForceEntityAttribute"):collect()
+	local instances = system:all(".anattaInstance"):collect()
 
-	system:on(system:all(".anattaInstance"):collect().added, function(entity, instance)
+	system:on(instances.added, function(entity, instance)
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 		CollectionService:AddTag(instance, ".anattaInstance")
+	end)
+
+	system:on(instances.removed, function(entity, instance)
+		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+		CollectionService:RemoveTag(instance, ".anattaInstance")
 	end)
 
 	system:on(RunService.Heartbeat, function()

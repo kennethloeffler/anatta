@@ -128,7 +128,6 @@ return function(system, registry, componentName, pendingComponentValidation)
 			scheduledDestructions:each(function(entity, instance, scheduledDestruction)
 				if tick() >= scheduledDestruction then
 					registry:destroy(entity)
-					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 				end
 			end)
 
