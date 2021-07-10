@@ -35,7 +35,6 @@ return function(system, registry, componentName, pendingComponentValidation)
 		end
 
 		CollectionService:AddTag(instance, componentName)
-		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 
 		for attributeName, value in pairs(attributeMap) do
 			instance:SetAttribute(attributeName, value)
@@ -107,32 +106,33 @@ return function(system, registry, componentName, pendingComponentValidation)
 	end)
 
 	system:on(RunService.Heartbeat, function()
-		ChangeHistoryService:SetWaypoint("Processing Anatta added events")
+		if next(pendingAddition) then
+			ChangeHistoryService:SetWaypoint("Processing Anatta added events")
 
-		for instance in pairs(pendingAddition) do
-			local entity = util.getValidEntity(registry, instance)
-			local existing = registry:get(entity, componentName)
-
-			registry:tryAdd(entity, componentName, existing or default)
-		end
-
-		ChangeHistoryService:SetWaypoint("Processed Anatta added events")
-
-		ChangeHistoryService:SetWaypoint("Processing Anatta removed events")
-
-		for instance in pairs(pendingRemoval) do
-			local entity = util.getValidEntity(registry, instance)
-
-			registry:tryRemove(entity, componentName)
-		end
-
-		scheduledDestructions:each(function(entity, instance, scheduledDestruction)
-			if tick() >= scheduledDestruction then
-				registry:destroy(entity)
-				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+			for instance in pairs(pendingAddition) do
+				local entity = util.getValidEntity(registry, instance)
+				registry:add(entity, componentName, default)
 			end
-		end)
 
-		ChangeHistoryService:SetWaypoint("Processed Anatta removed events")
+			ChangeHistoryService:SetWaypoint("Processed Anatta added events")
+		end
+
+		if next(pendingRemoval) then
+			ChangeHistoryService:SetWaypoint("Processed Anatta removed events")
+
+			for instance in pairs(pendingRemoval) do
+				local entity = util.getValidEntity(registry, instance)
+				registry:tryRemove(entity, componentName)
+			end
+
+			scheduledDestructions:each(function(entity, instance, scheduledDestruction)
+				if tick() >= scheduledDestruction then
+					registry:destroy(entity)
+					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+				end
+			end)
+
+			ChangeHistoryService:SetWaypoint("Processed Anatta removed events")
+		end
 	end)
 end

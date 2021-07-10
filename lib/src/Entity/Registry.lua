@@ -209,7 +209,7 @@ function Registry:createFrom(entity)
 		-- The given id is out of range.
 		local nextRecyclableEntityId = self._nextRecyclableEntityId
 
-		-- _entities musn't contain any gaps. If necessary, create the entities on the
+		-- _entities mustn't contain any gaps. If necessary, create the entities on the
 		-- interval (size, entityId) and push them onto the recyclable list.
 		for id = self._size + 1, entityId - 1 do
 			entities[id] = nextRecyclableEntityId
