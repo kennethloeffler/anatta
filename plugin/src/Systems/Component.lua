@@ -105,6 +105,12 @@ return function(system, registry, componentName, pendingComponentValidation)
 
 	system:on(RunService.Heartbeat, function()
 		if next(pendingAddition) then
+			for instance in pairs(pendingAddition) do
+				CollectionService:RemoveTag(instance, componentName)
+				pendingAddition[instance] = true
+				pendingRemoval[instance] = nil
+			end
+
 			ChangeHistoryService:SetWaypoint("Processing Anatta added events")
 
 			for instance in pairs(pendingAddition) do
@@ -116,7 +122,13 @@ return function(system, registry, componentName, pendingComponentValidation)
 		end
 
 		if next(pendingRemoval) then
-			ChangeHistoryService:SetWaypoint("Processed Anatta removed events")
+			for instance in pairs(pendingRemoval) do
+				CollectionService:AddTag(instance, componentName)
+				pendingAddition[instance] = nil
+				pendingRemoval[instance] = true
+			end
+
+			ChangeHistoryService:SetWaypoint("Processing Anatta removed events")
 
 			for instance in pairs(pendingRemoval) do
 				local entity = util.getValidEntity(registry, instance)
