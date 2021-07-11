@@ -14,7 +14,7 @@ return function(system, registry)
 		CollectionService:AddTag(instance, ".anattaInstance")
 	end)
 
-	system:on(instances.removed, function(entity, instance)
+	system:on(instances.removed, function(_, instance)
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 		CollectionService:RemoveTag(instance, ".anattaInstance")
 	end)
