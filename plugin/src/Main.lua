@@ -43,6 +43,21 @@ local function loadDefinitions(moduleScript, anatta)
 end
 
 return function(plugin, saveState)
+	local reloadButton = plugin:createButton({
+		icon = "",
+		active = false,
+		tooltip = "Reload the plugin",
+		toolbar = plugin:createToolbar("Anatta"),
+		name = "Reload",
+	})
+
+	local reloadConnection = reloadButton.Click:Connect(function()
+		reloadButton:SetActive(true)
+		wait()
+		plugin:reload()
+		reloadButton:SetActive(false)
+	end)
+
 	local anatta = Anatta.new(PluginComponents)
 
 	for _, moduleScript in ipairs(CollectionService:GetTagged(DEFINITION_MODULE_TAG_NAME)) do
@@ -72,19 +87,6 @@ return function(plugin, saveState)
 			end
 		end
 	end
-
-	local reloadButton = plugin:createButton({
-		icon = "",
-		active = false,
-		tooltip = "Reload the plugin",
-		toolbar = plugin:createToolbar("Anatta"),
-		name = "Reload",
-	})
-
-	local reloadConnection = reloadButton.Click:Connect(function()
-		plugin:reload()
-		reloadButton:SetActive(false)
-	end)
 
 	plugin:beforeUnload(function()
 		anatta:unloadAllSystems()
