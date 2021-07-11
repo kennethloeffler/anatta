@@ -39,7 +39,6 @@ function Anatta:loadSystem(moduleScript, ...)
 	local system = System.new(self.registry)
 	local loadSystem = require(moduleScript)
 
-	warn(("Loaded system %s"):format(moduleScript.Name))
 	util.jumpAssert(t.callback(loadSystem))
 
 	if self._systems[moduleScript] == nil then
