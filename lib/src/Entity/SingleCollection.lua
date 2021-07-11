@@ -42,8 +42,6 @@ function SingleCollection:attach(callback)
 			for _, item in ipairs(self._pool:get(entity)) do
 				Finalizers[typeof(item)](item)
 			end
-
-			self._pool:delete(entity)
 		end)
 	)
 end
@@ -53,14 +51,10 @@ function SingleCollection:detach()
 		return
 	end
 
-	local components = self._pool.components
-
-	for i, entity in ipairs(self._pool.dense) do
-		for _, attached in ipairs(components[i]) do
+	for _, item in ipairs(self._pool.components) do
+		for _, attached in ipairs(item) do
 			Finalizers[typeof(attached)](attached)
 		end
-
-		self.removed:dispatch(entity, components[i])
 	end
 
 	for _, connection in ipairs(self._connections) do
