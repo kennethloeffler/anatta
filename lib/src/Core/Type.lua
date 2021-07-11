@@ -99,59 +99,88 @@ local concrete = {
 
 local concreters = {
 	union = function(typeDefinition)
-		local previousConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
+		local success, previousConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
+
+		if not success then
+			return false, previousConcreteType
+		end
 
 		for _, typeParam in ipairs(typeDefinition.typeParams) do
-			local currentConcreteType = typeParam:tryGetConcreteType()
+			local currentConcreteType
+			success, currentConcreteType = typeParam:tryGetConcreteType()
+
+			if not success then
+				return false, currentConcreteType
+			end
 
 			if (currentConcreteType == nil) or (currentConcreteType ~= previousConcreteType) then
-				return nil
+				return false, nil
 			else
 				previousConcreteType = currentConcreteType
 			end
 		end
 
-		return previousConcreteType
+		return true, previousConcreteType
 	end,
 
 	literal = function(typeDefinition)
-		return typeof(typeDefinition.typeParams[1])
+		return true, typeof(typeDefinition.typeParams[1])
 	end,
 
 	strictArray = function(typeDefinition)
 		local result = table.create(#typeDefinition.typeParams)
 
 		for i, typeParam in ipairs(typeDefinition.typeParams) do
-			result[i] = typeParam:tryGetConcreteType()
+			local success, concreteType = typeParam:tryGetConcreteType()
+
+			if not success then
+				return false, concreteType
+			end
+
+			result[i] = concreteType
 		end
 
-		return result
+		return true, result
 	end,
 
 	strictInterface = function(typeDefinition)
 		local result = {}
 
 		for key, def in pairs(typeDefinition.typeParams[1]) do
-			result[key] = def:tryGetConcreteType()
+			local success, concreteType = def:tryGetConcreteType()
+
+			if not success then
+				return false, concreteType
+			end
+
+			result[key] = concreteType
 		end
 
-		return result
+		return true, result
 	end,
 }
 
 local defaults = {
 	enum = function(typeDefinition)
-		return typeDefinition.typeParams[1]:GetEnumItems()[1]
+		return true, typeDefinition.typeParams[1]:GetEnumItems()[1]
 	end,
+
 	table = function(typeDefinition, concreteType)
 		local default = {}
 
 		for field in pairs(concreteType) do
-			default[field] = typeDefinition.typeParams[1][field]:default()
+			local success, fieldDefault = typeDefinition.typeParams[1][field]:tryDefault()
+
+			if not success then
+				return false, fieldDefault
+			end
+
+			default[field] = fieldDefault
 		end
 
-		return default
+		return true, default
 	end,
+
 	number = 0,
 	string = "",
 	boolean = false,
@@ -163,7 +192,10 @@ local defaults = {
 		ColorSequenceKeypoint.new(1, Color3.new()),
 	}),
 	NumberRange = NumberRange.new(0, 0),
-	NumberSequence = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 0) }),
+	NumberSequence = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0),
+		NumberSequenceKeypoint.new(1, 0),
+	}),
 	Rect = Rect.new(Vector2.new(), Vector2.new()),
 	TweenInfo = TweenInfo.new(),
 	UDim = UDim.new(0, 0),
@@ -207,18 +239,22 @@ function Type._new(typeName, check, ...)
 	}, Type)
 end
 
-function Type:default()
-	local concreteType = self:tryGetConcreteType()
+function Type:tryDefault()
+	local success, concreteType = self:tryGetConcreteType()
 	local value = defaults[concreteType]
+
+	if not success then
+		return false, concreteType
+	end
 
 	if typeof(concreteType) == "table" then
 		return defaults.table(self, concreteType)
 	elseif typeof(value) == "function" then
 		return value(self, concreteType)
 	elseif value ~= nil then
-		return value
+		return true, value
 	else
-		return nil
+		return false, nil
 	end
 end
 
@@ -226,11 +262,11 @@ function Type:tryGetConcreteType()
 	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
 
 	if concreteType then
-		return concreteType
+		return true, concreteType
 	elseif concreters[self.typeName] then
 		return concreters[self.typeName](self)
 	else
-		return nil
+		return false, ("%s has no concrete type"):format(self.typeName)
 	end
 end
 

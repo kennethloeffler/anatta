@@ -7,30 +7,87 @@ local Constants = require(script.Parent.Parent.Constants)
 local util = require(script.Parent.util)
 
 local SECONDS_BEFORE_DESTRUCTION = Constants.SecondsBeforeDestruction
-local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local PLUGIN_PRIVATE_COMPONENT_PREFIX = Constants.PluginPrivateComponentPrefix
 
 return function(system, registry, componentName, pendingComponentValidation)
-	local withComponent = system:all(".anattaInstance", componentName):collect()
-	local scheduledDestructions = system:all(".anattaScheduledDestruction"):collect()
-
 	local typeDefinition = registry:getDefinition(componentName)
-	local default = typeDefinition:default()
+	local defaultSuccess, default = typeDefinition:tryDefault()
+
+	if not defaultSuccess then
+		error(default)
+	end
+
+	local entitiesWithComponent = system:all(".anattaInstance", componentName):collect()
+	local scheduledDestructions = system:all(".anattaScheduledDestruction"):collect()
 	local pendingAddition = {}
 	local pendingRemoval = {}
 
-	system:on(withComponent.added, function(entity, instance, component)
+	system:on(CollectionService:GetInstanceAddedSignal(componentName), function(instance)
+		pendingAddition[instance] = true
+		pendingRemoval[instance] = nil
+	end)
+
+	system:on(CollectionService:GetInstanceRemovedSignal(componentName), function(instance)
+		pendingAddition[instance] = nil
+		pendingRemoval[instance] = true
+	end)
+
+	system:on(RunService.Heartbeat, function()
+		if
+			not (
+				next(pendingAddition)
+				or next(pendingRemoval)
+				or registry:count(".anattaScheduledDestruction") > 0
+			)
+		then
+			return
+		end
+
+		-- The system is driven by CollectionService added/removed signals. A
+		-- change history waypoint is created for any tag set, even without
+		-- calls to ChangeHistoryService:SetWaypoint. To make sure the
+		-- invariants hold after undos and redos, we need to remove any added
+		-- tags and add any removed tags before recording the waypoint.
+		for instance in pairs(pendingAddition) do
+			CollectionService:RemoveTag(instance, componentName)
+			pendingAddition[instance] = true
+			pendingRemoval[instance] = nil
+		end
+
+		for instance in pairs(pendingRemoval) do
+			CollectionService:AddTag(instance, componentName)
+			pendingAddition[instance] = nil
+			pendingRemoval[instance] = true
+		end
+
+		-- All attribute and tag sets related to component addition and removal
+		-- must be done in this waypoint in order for the invariants to hold
+		-- after undos and redos.
+		ChangeHistoryService:SetWaypoint("Processing Anatta component events")
+
+		for instance in pairs(pendingAddition) do
+			local entity = util.getValidEntity(registry, instance)
+			registry:add(entity, componentName, default)
+		end
+
+		for instance in pairs(pendingRemoval) do
+			local entity = util.getValidEntity(registry, instance)
+			registry:tryRemove(entity, componentName)
+		end
+
+		scheduledDestructions:each(function(entity, scheduledDestruction)
+			if tick() >= scheduledDestruction and registry:valid(entity) then
+				registry:destroy(entity)
+			end
+		end)
+
+		ChangeHistoryService:SetWaypoint("Processed Anatta component events")
+	end)
+
+	system:on(entitiesWithComponent.added, function(entity, instance, component)
 		registry:tryRemove(entity, ".anattaValidationListener")
 
-		local success, attributeMap = Anatta.Dom.tryToAttribute(
-			component,
-			componentName,
-			typeDefinition
-		)
-
-		if not success then
-			warn(attributeMap)
-		end
+		local _, attributeMap = Anatta.Dom.tryToAttribute(component, componentName, typeDefinition)
 
 		CollectionService:AddTag(instance, componentName)
 
@@ -44,18 +101,10 @@ return function(system, registry, componentName, pendingComponentValidation)
 		registry:tryRemove(entity, ".anattaScheduledDestruction")
 	end)
 
-	system:on(withComponent.removed, function(entity, instance, component)
+	system:on(entitiesWithComponent.removed, function(entity, instance, component)
 		local wasListening = registry:tryRemove(entity, ".anattaValidationListener")
 
-		local success, attributeMap = Anatta.Dom.tryToAttribute(
-			component,
-			componentName,
-			typeDefinition
-		)
-
-		if not success then
-			warn(attributeMap)
-		end
+		local _, attributeMap = Anatta.Dom.tryToAttribute(component, componentName, typeDefinition)
 
 		CollectionService:RemoveTag(instance, componentName)
 
@@ -64,17 +113,17 @@ return function(system, registry, componentName, pendingComponentValidation)
 		end
 
 		if
-			registry:visit(function(visitedComponentName)
+			not registry:visit(function(visitedComponentName)
 				if
 					visitedComponentName ~= componentName
 					and not visitedComponentName:find(PLUGIN_PRIVATE_COMPONENT_PREFIX)
 				then
 					return true
 				end
-			end, entity) == nil
+			end, entity)
 		then
 			if instance.Parent ~= nil then
-				registry:add(entity, ".anattaScheduledDestruction", tick())
+				registry:tryAdd(entity, ".anattaScheduledDestruction", tick())
 			else
 				registry:tryAdd(
 					entity,
@@ -91,57 +140,5 @@ return function(system, registry, componentName, pendingComponentValidation)
 		end
 
 		registry:tryRemove(entity, pendingComponentValidation)
-	end)
-
-	system:on(CollectionService:GetInstanceAddedSignal(componentName), function(instance)
-		pendingAddition[instance] = true
-		pendingRemoval[instance] = nil
-	end)
-
-	system:on(CollectionService:GetInstanceRemovedSignal(componentName), function(instance)
-		pendingAddition[instance] = nil
-		pendingRemoval[instance] = true
-	end)
-
-	system:on(RunService.Heartbeat, function()
-		if next(pendingAddition) then
-			for instance in pairs(pendingAddition) do
-				CollectionService:RemoveTag(instance, componentName)
-				pendingAddition[instance] = true
-				pendingRemoval[instance] = nil
-			end
-
-			ChangeHistoryService:SetWaypoint("Processing Anatta added events")
-
-			for instance in pairs(pendingAddition) do
-				local entity = util.getValidEntity(registry, instance)
-				registry:add(entity, componentName, default)
-			end
-
-			ChangeHistoryService:SetWaypoint("Processed Anatta added events")
-		end
-
-		if next(pendingRemoval) then
-			for instance in pairs(pendingRemoval) do
-				CollectionService:AddTag(instance, componentName)
-				pendingAddition[instance] = nil
-				pendingRemoval[instance] = true
-			end
-
-			ChangeHistoryService:SetWaypoint("Processing Anatta removed events")
-
-			for instance in pairs(pendingRemoval) do
-				local entity = util.getValidEntity(registry, instance)
-				registry:tryRemove(entity, componentName)
-			end
-
-			scheduledDestructions:each(function(entity, scheduledDestruction)
-				if tick() >= scheduledDestruction then
-					registry:destroy(entity)
-				end
-			end)
-
-			ChangeHistoryService:SetWaypoint("Processed Anatta removed events")
-		end
 	end)
 end

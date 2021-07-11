@@ -39,5 +39,11 @@ end
 return function(component, componentName, typeDefinition)
 	util.jumpAssert(typeDefinition.check(component))
 
-	return convert({}, componentName, typeDefinition:tryGetConcreteType(), component)
+	local success, concreteType = typeDefinition:tryGetConcreteType()
+
+	if not success then
+		return false, ("Error converting %s: %s"):format(componentName, concreteType)
+	end
+
+	return convert({}, componentName, concreteType, component)
 end

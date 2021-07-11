@@ -24,7 +24,7 @@ return function(system, registry, componentName, pendingValidation)
 
 					if attributeName == ENTITY_ATTRIBUTE_NAME then
 						if currentValue == nil then
-							registry:destroy(entity)
+							registry:tryAdd(entity, ".anattaScheduledDestruction", tick())
 						elseif currentValue ~= entity then
 							registry:tryAdd(entity, ".anattaForceEntityAttribute")
 						end

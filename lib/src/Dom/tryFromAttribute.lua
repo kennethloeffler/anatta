@@ -54,7 +54,11 @@ local conversions = {
 }
 
 function convert(instance, attributeName, typeDefinition)
-	local concreteType = typeDefinition:tryGetConcreteType()
+	local success, concreteType = typeDefinition:tryGetConcreteType()
+
+	if not success then
+		return false, ("Error converting %s: %s"):format(attributeName, concreteType)
+	end
 
 	if typeof(concreteType) == "table" then
 		local value = {}
@@ -62,7 +66,8 @@ function convert(instance, attributeName, typeDefinition)
 		for field in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 			local fieldTypeDefinition = typeDefinition.typeParams[1][field]
-			local success, result = convert(instance, fieldAttributeName, fieldTypeDefinition)
+			local result
+			success, result = convert(instance, fieldAttributeName, fieldTypeDefinition)
 
 			if success then
 				value[field] = result
@@ -74,17 +79,16 @@ function convert(instance, attributeName, typeDefinition)
 		return true, value
 	elseif conversions[concreteType] then
 		return conversions[concreteType](instance, attributeName, typeDefinition)
-	elseif concreteType ~= nil then
+	else
 		local value = instance:GetAttribute(attributeName)
-		local success, err = typeDefinition.check(value)
+		local err
+		success, err = typeDefinition.check(value)
 
 		if success then
 			return true, value
 		else
 			return false, err
 		end
-	else
-		return false, ("%s (%s) has no concrete type"):format(attributeName, typeDefinition.typeName)
 	end
 end
 
