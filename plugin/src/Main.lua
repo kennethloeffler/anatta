@@ -16,7 +16,11 @@ local function loadDefinitions(moduleScript, anatta)
 		return
 	end
 
-	local componentDefinitions = require(moduleScript)
+	local clone = moduleScript:Clone()
+	clone.Parent = moduleScript.Parent
+	moduleScript:Destroy()
+
+	local componentDefinitions = require(clone)
 
 	for componentName, typeDefinition in pairs(componentDefinitions) do
 		if not anatta.registry:hasDefined(componentName) then
