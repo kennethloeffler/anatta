@@ -69,4 +69,68 @@ return function()
 			end
 		)
 	end)
+
+	describe("Instance", function()
+		it(
+			"should resolve a dot-delimited string attribute to a descendant of the Instance possessing the attribute",
+			function()
+				local instanceWithAttribute = Instance.new("FlagStand")
+				local folder = Instance.new("Folder")
+				local part = Instance.new("Part")
+
+				part.Parent = folder
+				folder.Parent = instanceWithAttribute
+				instanceWithAttribute:SetAttribute("Test", "Folder.Part")
+
+				local success, result = tryFromAttribute(instanceWithAttribute, "Test", t.Instance)
+
+				expect(success).to.equal(true)
+				expect(result).to.equal(part)
+			end
+		)
+	end)
+
+	describe("instanceOf", function()
+		it("should fail when the resolved instance does not have the correct class name", function()
+			local instanceWithAttribute = Instance.new("Hole")
+			local folder = Instance.new("Folder")
+			local part = Instance.new("Part")
+
+			part.Parent = folder
+			folder.Parent = instanceWithAttribute
+			instanceWithAttribute:SetAttribute("Test", "Folder.Part")
+
+			local success, result = tryFromAttribute(
+				instanceWithAttribute,
+				"Test",
+				t.instanceOf("Hole")
+			)
+
+			expect(success).to.equal(false)
+			expect(typeof(result)).to.equal("string")
+		end)
+	end)
+	describe("instanceIsA", function()
+		itFOCUS(
+			"should fail when the resolved instance does not belong to the correct class",
+			function()
+				local instanceWithAttribute = Instance.new("Flag")
+				local folder = Instance.new("Folder")
+				local hole = Instance.new("Hole")
+
+				hole.Parent = folder
+				folder.Parent = instanceWithAttribute
+				instanceWithAttribute:SetAttribute("Test", "Folder.Part")
+
+				local success, result = tryFromAttribute(
+					instanceWithAttribute,
+					"Test",
+					t.instanceIsA("BasePart")
+				)
+
+				expect(success).to.equal(false)
+				expect(typeof(result)).to.equal("string")
+			end
+		)
+	end)
 end
