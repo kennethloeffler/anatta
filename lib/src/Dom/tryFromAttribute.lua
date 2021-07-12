@@ -1,7 +1,5 @@
 local t = require(script.Parent.Parent.Core.Type)
 
-local ErrBadAttributeType = "Expected %s, got %s"
-
 local TweenInfoType = t.strictInterface({
 	Time = t.number,
 	EasingStyle = t.enum(Enum.EasingStyle),
@@ -11,95 +9,14 @@ local TweenInfoType = t.strictInterface({
 	DelayTime = t.number,
 })
 
-local function instanceConversion(instance, attributeName, instanceKind, className)
-	local path = instance:GetAttribute(attributeName)
-
-	if typeof(path) ~= "string" then
-		return false, ErrBadAttributeType:format("Instance", typeof(path))
-	end
-
-	local split = path:split(".")
-	local currentInstance = instance
-
-	for _, name in ipairs(split) do
-		local nextInstance = currentInstance:FindFirstChild(name)
-
-		if not nextInstance then
-			return false, ('Failed to locate Instance "%s" under %s'):format(
-				path,
-				instance:GetFullName()
-			)
-		end
-
-		currentInstance = nextInstance
-	end
-
-	if instanceKind ~= nil then
-		if currentInstance:IsA(instanceKind) then
-			return true, currentInstance
-		else
-			return false, ErrBadAttributeType:format(instanceKind, currentInstance.ClassName)
-		end
-	elseif className ~= nil then
-		if currentInstance.ClassName ~= className then
-			return false, ErrBadAttributeType:format(className, currentInstance.ClassName)
-		else
-			return true, currentInstance
-		end
-	else
-		return true, currentInstance
-	end
-end
-
-local function instanceOf(instance, attributeName, typeDefinition)
-	local className = typeDefinition.typeParams[1]
-	local success, result = instanceConversion(instance, attributeName, nil, className)
-
-	if not success then
-		return false, result
-	end
-
-	success, result = typeDefinition.check(result)
-
-	if not success then
-		return false, result
-	end
-
-	return true, result
-end
-
 local conversions = {
-	instance = instanceOf,
-	instanceOf = instanceOf,
-
-	instanceIsA = function(instance, attributeName, typeDefinition)
-		local instanceKind = typeDefinition.typeParams[1]
-		local success, result = instanceConversion(instance, attributeName, instanceKind)
-
-		if not success then
-			return false, result
-		end
-
-		success, result = typeDefinition.check(result)
-
-		if not success then
-			return false, result
-		end
-
-		return true, result
-	end,
-
-	Instance = function(instance, attributeName)
-		return instanceConversion(instance, attributeName)
-	end,
-
 	enum = function(instance, attributeName, typeDefinition)
 		local enum = typeDefinition.typeParams[1]
 		local enums = enum:GetEnumItems()
 		local enumName = instance:GetAttribute(attributeName)
 
-		if typeof(enumName) ~= "string" then
-			return false, ErrBadAttributeType:format(tostring(enum), typeof(enumName))
+		if enumName == nil then
+			return false, ("%s expected, got nil"):format(tostring(enum))
 		end
 
 		for i, enumItem in ipairs(enums) do
