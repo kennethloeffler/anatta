@@ -13,14 +13,15 @@ if not game:GetService("RunService"):IsClient() then
 	return
 end
 
+-- The source that's shipped integrated into the plugin.
+local builtinSource = script.Parent
+
 -- Change to true to enable hot reloading support. Opening a place containing
 -- the code synced via Rojo will cause the plugin to be reloaded in edit
 -- mode. (No need for play solo or the hotswap plugin.)
-local useDevSource = true
-local devSource = ReplicatedStorage:WaitForChild("AnattaPlugin", 20)
-
--- The source that's shipped integrated into the plugin.
-local builtinSource = script.Parent
+local useDevSource = false
+local devSource = useDevSource and ReplicatedStorage:WaitForChild("AnattaPlugin", 20)
+	or builtinSource
 
 -- `source` is where we should watch for changes. `currentRoot` is the clone we
 -- make of source to avoid require() returning stale values.
