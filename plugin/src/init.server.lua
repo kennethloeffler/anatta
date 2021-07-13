@@ -62,6 +62,22 @@ function PluginLoader.new()
 	return pluginLoader
 end
 
+function PluginLoader:isActivated()
+	return plugin:IsActivated()
+end
+
+function PluginLoader:deactivate()
+	plugin:Deactivate()
+end
+
+function PluginLoader:activate(exclusiveMouse)
+	plugin:Activate(exclusiveMouse)
+end
+
+function PluginLoader:getMouse()
+	return plugin:GetMouse()
+end
+
 function PluginLoader:createToolbar(name)
 	if self._toolbars[name] then
 		return self._toolbars[name]
