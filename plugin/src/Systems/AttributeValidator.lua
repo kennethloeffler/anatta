@@ -20,6 +20,7 @@ return function(system, registry, componentName, pendingComponentValidation)
 				-- tryToAttribute will always succeed here because all data in a registry
 				-- must be valid.
 				local _, attributeMap = Anatta.Dom.tryToAttribute(
+					instance,
 					component,
 					componentName,
 					typeDefinition
@@ -28,7 +29,11 @@ return function(system, registry, componentName, pendingComponentValidation)
 				local wasListening = registry:tryRemove(entity, ".anattaValidationListener")
 
 				for name, value in pairs(attributeMap) do
-					instance:SetAttribute(name, value)
+					if typeof(value) ~= "Instance" then
+						instance:SetAttribute(name, value)
+					else
+						instance:SetAttribute(name, value:GetFullName())
+					end
 				end
 
 				if wasListening then

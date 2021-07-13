@@ -110,12 +110,21 @@ return function(system, registry, componentName, pendingComponentValidation)
 	system:on(entitiesWithComponent.added, function(entity, instance, component)
 		registry:tryRemove(entity, ".anattaValidationListener")
 
-		local _, attributeMap = Anatta.Dom.tryToAttribute(component, componentName, typeDefinition)
+		local _, attributeMap = Anatta.Dom.tryToAttribute(
+			instance,
+			component,
+			componentName,
+			typeDefinition
+		)
 
 		CollectionService:AddTag(instance, componentName)
 
 		for attributeName, value in pairs(attributeMap) do
-			instance:SetAttribute(attributeName, value)
+			if typeof(value) ~= "Instance" then
+				instance:SetAttribute(attributeName, value)
+			else
+				instance:SetAttribute(attributeName, value:GetFullName())
+			end
 		end
 
 		pendingAddition[instance] = nil
@@ -127,12 +136,25 @@ return function(system, registry, componentName, pendingComponentValidation)
 	system:on(entitiesWithComponent.removed, function(entity, instance, component)
 		local wasListening = registry:tryRemove(entity, ".anattaValidationListener")
 
-		local _, attributeMap = Anatta.Dom.tryToAttribute(component, componentName, typeDefinition)
+		local _, attributeMap = Anatta.Dom.tryToAttribute(
+			instance,
+			component,
+			componentName,
+			typeDefinition
+		)
 
 		CollectionService:RemoveTag(instance, componentName)
 
-		for attributeName in pairs(attributeMap) do
+		for attributeName, value in pairs(attributeMap) do
 			instance:SetAttribute(attributeName, nil)
+
+			if typeof(value) == "Instance" then
+				instance.__anattaRefs[attributeName]:Destroy()
+
+				if not next(instance.__anattaRefs:GetChildren()) then
+					instance.__anattaRefs:Destroy()
+				end
+			end
 		end
 
 		pendingRemoval[instance] = nil

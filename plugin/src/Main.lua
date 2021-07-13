@@ -10,7 +10,7 @@ local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
 local PENDING_VALIDATION = Constants.PendingValidation
 
-local function loadDefinitions(moduleScript, anatta)
+local function loadDefinitions(moduleScript, anatta, plugin)
 	if not moduleScript:IsA("ModuleScript") then
 		warn(("Components definition instance %s must be a ModuleScript"):format(moduleScript:GetFullName()))
 		return
@@ -30,7 +30,12 @@ local function loadDefinitions(moduleScript, anatta)
 			anatta.registry:define(pendingValidation, t.none)
 
 			anatta:loadSystem(Systems.AttributeValidator, componentName, pendingValidation)
-			anatta:loadSystem(Systems.AttributeListener, componentName, pendingValidation)
+			anatta:loadSystem(
+				Systems.AttributeListener,
+				componentName,
+				pendingValidation,
+				plugin:getMouse()
+			)
 			anatta:loadSystem(Systems.Component, componentName, pendingValidation)
 		else
 			warn(("Found duplicate component name %s in %s; skipping"):format(
@@ -43,6 +48,8 @@ local function loadDefinitions(moduleScript, anatta)
 end
 
 return function(plugin, saveState)
+	plugin:activate(false)
+
 	local reloadButton = plugin:createButton({
 		icon = "",
 		active = false,
@@ -61,7 +68,7 @@ return function(plugin, saveState)
 	local anatta = Anatta.new(PluginComponents)
 
 	for _, moduleScript in ipairs(CollectionService:GetTagged(DEFINITION_MODULE_TAG_NAME)) do
-		loadDefinitions(moduleScript, anatta)
+		loadDefinitions(moduleScript, anatta, plugin)
 	end
 
 	anatta:loadSystem(Systems.Entity)
@@ -89,6 +96,7 @@ return function(plugin, saveState)
 	end
 
 	plugin:beforeUnload(function()
+		plugin:deactivate()
 		anatta:unloadAllSystems()
 		reloadConnection:Disconnect()
 
