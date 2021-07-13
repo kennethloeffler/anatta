@@ -29,7 +29,7 @@ local firstOrder = {
 	ColorSequenceKeypoint = true,
 	DockWidgetPluginGuiInfo = true,
 	Faces = true,
-	Instance = false,
+	Instance = true,
 	NumberRange = true,
 	NumberSequence = true,
 	NumberSequenceKeypoint = true,
@@ -84,6 +84,9 @@ local secondOrder = {
 }
 
 local concrete = {
+	instance = "instanceOf",
+	instanceOf = "instanceOf",
+	instanceIsA = "instanceIsA",
 	enum = "enum",
 	integer = "number",
 	match = "string",
@@ -160,6 +163,12 @@ local concreters = {
 	end,
 }
 
+local concreteFromAbstract = {
+	BasePart = "Part",
+	Model = "Model",
+	Light = "PointLight",
+}
+
 local defaults = {
 	enum = function(typeDefinition)
 		return true, typeDefinition.typeParams[1]:GetEnumItems()[1]
@@ -179,6 +188,24 @@ local defaults = {
 		end
 
 		return true, default
+	end,
+
+	Instance = function()
+		return true, Instance.new("Hole")
+	end,
+
+	instanceOf = function(typeDefinition)
+		return true, Instance.new(typeDefinition.typeParams[1])
+	end,
+
+	instance = function(typeDefinition)
+		return true, Instance.new(typeDefinition.typeParams[1])
+	end,
+
+	instanceIsA = function(typeDefinition)
+		local class = typeDefinition.typeParams[1]
+
+		return true, Instance.new(concreteFromAbstract[class] or class)
 	end,
 
 	number = 0,

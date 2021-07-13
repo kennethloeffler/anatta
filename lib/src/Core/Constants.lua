@@ -5,5 +5,6 @@ return {
 	EntityIdMask = bit32.rshift(0xFFFFFFFF, 32 - EntityIdWidth),
 	EntityIdWidth = EntityIdWidth,
 	EntityAttributeName = "__entity",
+	InstanceRefFolder = "__anattaRefs",
 	NullEntityId = 0,
 }

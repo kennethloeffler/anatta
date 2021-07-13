@@ -1,4 +1,7 @@
+local Constants = require(script.Parent.Parent.Core.Constants)
 local t = require(script.Parent.Parent.Core.Type)
+
+local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local TweenInfoType = t.strictInterface({
 	Time = t.number,
@@ -9,7 +12,42 @@ local TweenInfoType = t.strictInterface({
 	DelayTime = t.number,
 })
 
+local function instanceConversion(instance, attributeName, typeDefinition)
+	local refFolder = instance:FindFirstChild(INSTANCE_REF_FOLDER)
+
+	if not refFolder or not refFolder:IsA("Folder") then
+		return false, ("Expected ref folder under %s, got %s"):format(
+			instance:GetFullName(),
+			tostring(refFolder)
+		)
+	end
+
+	local objectValue = refFolder:FindFirstChild(attributeName)
+
+	if not objectValue or not objectValue:IsA("ObjectValue") then
+		return false, ("Expected ObjectValue %s under %s, got %s"):format(
+			attributeName,
+			instance:GetFullName(),
+			tostring(objectValue)
+		)
+	end
+
+	local ref = objectValue.Value
+	local success, result = typeDefinition.check(ref)
+
+	if success then
+		return true, ref
+	else
+		return false, result
+	end
+end
+
 local conversions = {
+	Instance = instanceConversion,
+	instanceOf = instanceConversion,
+	instance = instanceConversion,
+	instanceIsA = instanceConversion,
+
 	enum = function(instance, attributeName, typeDefinition)
 		local enum = typeDefinition.typeParams[1]
 		local enums = enum:GetEnumItems()

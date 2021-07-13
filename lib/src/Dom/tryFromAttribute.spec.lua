@@ -1,5 +1,8 @@
 return function()
+	local Constants = require(script.Parent.Parent.Core.Constants)
 	local t = require(script.Parent.Parent.Core.Type)
+
+	local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 	local tryFromAttribute = require(script.Parent.tryFromAttribute)
 
@@ -68,5 +71,122 @@ return function()
 				expect(result.Field3).to.equal(-273.15)
 			end
 		)
+	end)
+
+	describe("Instance", function()
+		it(
+			"should resolve a true boolean attribute to a an Instance reference contained by a correspondingly-named ObjectValue under the ref folder",
+			function()
+				local instanceWithAttribute = Instance.new("FlagStand")
+				local refFolder = Instance.new("Folder")
+				local objectValue = Instance.new("ObjectValue")
+				local part = Instance.new("Part")
+
+				refFolder.Name = INSTANCE_REF_FOLDER
+				refFolder.Parent = instanceWithAttribute
+
+				objectValue.Value = part
+				objectValue.Name = "Test"
+				objectValue.Parent = refFolder
+
+				instanceWithAttribute:SetAttribute("Test", true)
+
+				local success, result = tryFromAttribute(instanceWithAttribute, "Test", t.Instance)
+
+				expect(success).to.equal(true)
+				expect(result).to.equal(part)
+			end
+		)
+
+		it("should fail when the ObjectValue does not exist", function()
+			local instanceWithAttribute = Instance.new("FlagStand")
+			local refFolder = Instance.new("Folder")
+
+			refFolder.Name = INSTANCE_REF_FOLDER
+			refFolder.Parent = instanceWithAttribute
+
+			instanceWithAttribute:SetAttribute("Test", true)
+
+			local success, result = tryFromAttribute(instanceWithAttribute, "Test", t.Instance)
+
+			expect(success).to.equal(false)
+			expect(result).to.be.a("string")
+		end)
+
+		it("should fail when the ref folder does not exist", function()
+			local instanceWithAttribute = Instance.new("FlagStand")
+
+			instanceWithAttribute:SetAttribute("Test", true)
+
+			local success, result = tryFromAttribute(instanceWithAttribute, "Test", t.Instance)
+
+			expect(success).to.equal(false)
+			expect(result).to.be.a("string")
+		end)
+
+		it("should fail when the attribute is false", function()
+			local instanceWithAttribute = Instance.new("FlagStand")
+
+			instanceWithAttribute:SetAttribute("Test", false)
+
+			local success, result = tryFromAttribute(instanceWithAttribute, "Test", t.Instance)
+
+			expect(success).to.equal(false)
+			expect(result).to.be.a("string")
+		end)
+	end)
+
+	describe("instanceOf", function()
+		it("should fail when the referent is not of the correct class", function()
+			local instanceWithAttribute = Instance.new("FlagStand")
+			local refFolder = Instance.new("Folder")
+			local objectValue = Instance.new("ObjectValue")
+			local hole = Instance.new("Hole")
+
+			refFolder.Name = INSTANCE_REF_FOLDER
+			refFolder.Parent = instanceWithAttribute
+
+			objectValue.Value = hole
+			objectValue.Name = "Test"
+			objectValue.Parent = refFolder
+
+			instanceWithAttribute:SetAttribute("Test", true)
+
+			local success, result = tryFromAttribute(
+				instanceWithAttribute,
+				"Test",
+				t.instanceOf("Part")
+			)
+
+			expect(success).to.equal(false)
+			expect(result).to.be.a("string")
+		end)
+	end)
+
+	describe("instanceIsA", function()
+		it("should fail when the referent is not of the correct kind", function()
+			local instanceWithAttribute = Instance.new("FlagStand")
+			local refFolder = Instance.new("Folder")
+			local objectValue = Instance.new("ObjectValue")
+			local hole = Instance.new("Hole")
+
+			refFolder.Name = INSTANCE_REF_FOLDER
+			refFolder.Parent = instanceWithAttribute
+
+			objectValue.Value = hole
+			objectValue.Name = "Test"
+			objectValue.Parent = refFolder
+
+			instanceWithAttribute:SetAttribute("Test", true)
+
+			local success, result = tryFromAttribute(
+				instanceWithAttribute,
+				"Test",
+				t.instanceIsA("BasePart")
+			)
+
+			expect(success).to.equal(false)
+			expect(result).to.be.a("string")
+		end)
 	end)
 end
