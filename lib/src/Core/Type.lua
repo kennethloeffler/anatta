@@ -167,6 +167,7 @@ local concreteFromAbstract = {
 	BasePart = "Part",
 	Model = "Model",
 	Light = "PointLight",
+	PVInstance = "Model",
 }
 
 local defaults = {
