@@ -12,7 +12,7 @@ function PureCollection.new(system)
 	local registry = system.registry
 
 	if #system.forbidden == 0 and #system.optional == 0 and #system.required == 1 then
-		return SinglePureCollection.new(unpack(system.required))
+		return SinglePureCollection.new(registry:getPool(unpack(system.required)))
 	end
 
 	return setmetatable({
