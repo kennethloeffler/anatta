@@ -5,6 +5,7 @@ local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
+local Anatta = require(script:FindFirstAncestor("AnattaPlugin").Anatta)
 local util = require(script.Parent.util)
 
 local add = require(script.addComponent)
@@ -101,7 +102,13 @@ return function(system, registry, componentName, pendingComponentValidation)
 
 		for instance in pairs(pendingAddition) do
 			local entity = util.getValidEntity(registry, instance)
-			registry:tryAdd(entity, componentName, default)
+			local success, existingComponent = Anatta.Dom.tryFromAttribute(
+				instance,
+				componentName,
+				typeDefinition
+			)
+
+			registry:tryAdd(entity, componentName, success and existingComponent or default)
 		end
 
 		for instance in pairs(pendingRemoval) do
