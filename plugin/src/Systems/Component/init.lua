@@ -118,6 +118,10 @@ return function(system, registry, componentName, pendingComponentValidation)
 				continue
 			end
 
+			if instance.Parent == nil then
+				continue
+			end
+
 			local entity = util.getValidEntity(registry, instance)
 			registry:tryRemove(entity, componentName)
 		end
