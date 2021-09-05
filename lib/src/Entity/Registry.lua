@@ -572,8 +572,9 @@ function Registry:remove(entity, componentName)
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
 	end
 
+	local component = pool:get(entity)
 	pool:delete(entity)
-	pool.removed:dispatch(entity, pool:get(entity))
+	pool.removed:dispatch(entity, component)
 end
 
 --[[
