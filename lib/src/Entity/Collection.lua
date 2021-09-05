@@ -14,10 +14,10 @@ function Collection.new(system)
 		and #system.forbidden == 0
 		and #system.optional == 0
 	then
-		return SingleCollection.new(registry:getPools(unpack(system.required))[1])
+		return SingleCollection.new(registry:getPool(system.required[1]))
 	end
 
-	local collectionPool = Pool.new("collectionInteral", {})
+	local collectionPool = Pool.new("collectionInternal", {})
 
 	local self = setmetatable({
 		added = collectionPool.added,
@@ -33,10 +33,10 @@ function Collection.new(system)
 		_numUpdated = #system.update,
 
 		_packed = table.create(#system.required + #system.update + #system.optional),
-		_required = registry:getPools(unpack(system.required)),
-		_forbidden = registry:getPools(unpack(system.forbidden)),
-		_updated = registry:getPools(unpack(system.update)),
-		_optional = registry:getPools(unpack(system.optional)),
+		_required = registry:getPools(system.required),
+		_forbidden = registry:getPools(system.forbidden),
+		_updated = registry:getPools(system.update),
+		_optional = registry:getPools(system.optional),
 	}, Collection)
 
 	for _, pool in ipairs(self._required) do

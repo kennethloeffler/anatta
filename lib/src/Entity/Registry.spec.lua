@@ -967,7 +967,7 @@ return function()
 	describe("getPools", function()
 		it("should return the pools for the specified component types", function(context)
 			local registry = context.registry
-			local pools = registry:getPools("number", "instance")
+			local pools = registry:getPools({ "number", "instance" })
 
 			expect(pools[1]).to.equal(registry._pools.number)
 			expect(pools[2]).to.equal(registry._pools.instance)

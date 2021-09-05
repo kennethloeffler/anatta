@@ -12,13 +12,13 @@ function PureCollection.new(system)
 	local registry = system.registry
 
 	if #system.forbidden == 0 and #system.optional == 0 and #system.required == 1 then
-		return SinglePureCollection.new(registry:getPool(unpack(system.required)))
+		return SinglePureCollection.new(registry:getPool(system.required[1]))
 	end
 
 	return setmetatable({
-		_required = registry:getPools(unpack(system.required)),
-		_forbidden = registry:getPools(unpack(system.forbidden)),
-		_optional = registry:getPools(unpack(system.optional)),
+		_required = registry:getPools(system.required),
+		_forbidden = registry:getPools(system.forbidden),
+		_optional = registry:getPools(system.optional),
 		_packed = table.create(#system.required + #system.optional),
 		_numPacked = #system.required + #system.optional,
 		_numRequired = #system.required,

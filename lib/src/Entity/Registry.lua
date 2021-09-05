@@ -686,12 +686,10 @@ end
 	Returns a list of pools used to manage the specified components in the same order as
 	the given tuple.
 ]]
-function Registry:getPools(...)
-	local n = select("#", ...)
-	local output = table.create(n)
+function Registry:getPools(componentNames)
+	local output = table.create(#componentNames)
 
-	for i = 1, n do
-		local componentName = select(i, ...)
+	for i, componentName in ipairs(componentNames) do
 		local pool = self._pools[componentName]
 
 		if DEBUG then
