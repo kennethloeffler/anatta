@@ -31,9 +31,19 @@ return function(registry, componentName, pendingValidation, pluginMouse)
 						registry:tryAdd(entity, ".anattaForceEntityAttribute")
 					end
 				elseif attributeMap[attributeName] ~= nil then
-					if typeof(attributeMap[attributeName]) ~= "Instance" then
-						registry:tryAdd(entity, pendingValidation)
-					elseif currentValue == nil then
+					if typeof(attributeMap[attributeName]) == "Instance" then
+						if currentValue ~= nil then
+							local ref = instance.__anattaRefs[attributeName].Value
+
+							instance:SetAttribute(
+								attributeName,
+								ref.Parent ~= nil and ref.Name or ""
+							)
+
+							Selection:Set({ ref })
+							return
+						end
+
 						local originalSelection = Selection:Get()
 
 						Selection:Set({})
@@ -42,7 +52,7 @@ return function(registry, componentName, pendingValidation, pluginMouse)
 						pluginMouse.Icon = "rbxassetid://7087918593"
 						Selection.SelectionChanged:Wait()
 
-						local ref = Selection:Get()[1]
+						local _, ref = next(Selection:Get())
 
 						instance.__anattaRefs[attributeName].Value = ref
 						pluginMouse.Icon = ""
@@ -53,11 +63,7 @@ return function(registry, componentName, pendingValidation, pluginMouse)
 						RunService.Heartbeat:Wait()
 						Selection:Set(originalSelection)
 					else
-						instance:SetAttribute(
-							attributeName,
-							ref.Parent == nil and ""
-								or instance.__anattaRefs[attributeName].Value.Name
-						)
+						registry:tryAdd(entity, pendingValidation)
 					end
 				end
 			end),
