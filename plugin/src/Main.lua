@@ -80,7 +80,7 @@ return function(plugin, saveState)
 			anatta.registry:tryRemove(entity, ".anattaValidationListener")
 		end)
 	else
-		local success, result = anatta.registry:tryFromDom()
+		local success, result = Anatta.Dom.tryFromDom(anatta.registry)
 
 		if not success then
 			warn(result)
