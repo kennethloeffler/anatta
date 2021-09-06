@@ -22,7 +22,6 @@ return function(system, registry, componentName, pendingComponentValidation)
 
 	local _, default = typeDefinition:tryDefault()
 
-	-- All entities with an
 	local entitiesWithComponent = system:all(".anattaInstance", componentName):collect()
 
 	-- Entities that are awaiting destruction (this means their corresponding
@@ -53,7 +52,7 @@ return function(system, registry, componentName, pendingComponentValidation)
 		:GetInstanceRemovedSignal(componentName)
 		:Connect(tagRemoved)
 
-	local addComponent = add(registry, componentName)
+	local addComponent = add(registry, componentName, pendingComponentValidation)
 	local removeComponent = remove(registry, componentName, pendingComponentValidation)
 
 	system:on(entitiesWithComponent.added, function(entity, instance, component)

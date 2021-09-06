@@ -22,7 +22,7 @@ return function(registry, componentName, pendingComponentValidation)
 				if typeof(value) ~= "Instance" then
 					instance:SetAttribute(name, value)
 				else
-					instance:SetAttribute(name, value:GetFullName())
+					instance:SetAttribute(name, value.Parent == nil and "" or value.Name)
 				end
 			end
 

@@ -47,7 +47,7 @@ return function(registry, componentName, pendingValidation, pluginMouse)
 						instance.__anattaRefs[attributeName].Value = ref
 						pluginMouse.Icon = ""
 						registry:tryAdd(entity, pendingValidation)
-						instance:SetAttribute(attributeName, ref:GetFullName())
+						instance:SetAttribute(attributeName, ref.Parent == nil and "" or ref.Name)
 
 						-- This yield is required to set the selection back to what it was.
 						RunService.Heartbeat:Wait()
@@ -55,7 +55,8 @@ return function(registry, componentName, pendingValidation, pluginMouse)
 					else
 						instance:SetAttribute(
 							attributeName,
-							instance.__anattaRefs[attributeName].Value:GetFullName()
+							ref.Parent == nil and ""
+								or instance.__anattaRefs[attributeName].Value.Name
 						)
 					end
 				end
