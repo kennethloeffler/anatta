@@ -42,7 +42,7 @@ function Loader:loadSystem(moduleScript, ...)
 		table.insert(self._systems[moduleScript], system)
 	end
 
-	loadSystem(system, self.registry, ...)
+	loadSystem(system, ...)
 
 	return loadSystem
 end
