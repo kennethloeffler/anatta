@@ -35,6 +35,7 @@ local conversions = {
 	enum = function(attributeMap, attributeName, value)
 		attributeMap[attributeName] = value.Name
 	end,
+
 	TweenInfo = function(attributeMap, attributeName, value)
 		convert(attributeMap, attributeName, {
 			EasingDirection = "enum",

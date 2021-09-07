@@ -2,7 +2,6 @@
 	Registry.lua
 ]]
 local Constants = require(script.Parent.Parent.Core.Constants)
-local Dom = require(script.Parent.Parent.Dom)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local util = require(script.Parent.Parent.util)
 
