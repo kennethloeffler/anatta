@@ -3,14 +3,37 @@ local System = require(script.Parent.System)
 local t = require(script.Parent.Parent.t)
 local util = require(script.Parent.util)
 
+local CheckComponentDefinition = t.strictInterface({
+	name = t.string,
+	type = t.table,
+	meta = t.optional(t.strictInterface({
+		plugin = t.strictInterface({
+			conversion = t.callback,
+			type = t.table,
+		}),
+	})),
+})
+
 local Loader = {}
 Loader.__index = Loader
 
-function Loader.new(components)
+function Loader.new()
 	return setmetatable({
-		registry = Entity.Registry.new(components),
+		registry = Entity.Registry.new(),
 		_systems = {},
 	}, Loader)
+end
+
+function Loader:loadComponents(container)
+	for _, child in ipairs(container:GetChildren()) do
+		if child:IsA("ModuleScript") and not child.Name:match("%.spec$") then
+			local definition = require(child)
+
+			util.jumpAssert(CheckComponentDefinition(definition))
+
+			self.registry:define(definition.name, definition.type)
+		end
+	end
 end
 
 function Loader:loadSystems(container, ...)
