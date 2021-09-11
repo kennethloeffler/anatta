@@ -1,19 +1,21 @@
 local CollectionService = game:GetService("CollectionService")
 
 local Constants = require(script.Parent.Parent.Core.Constants)
+local util = require(script.Parent.Parent.util)
 
 local tryFromAttribute = require(script.Parent.tryFromAttribute)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
--- Populates a pool with attribute and tag data from the Roblox DataModel by getting all
--- instances tagged with the pool's name and attempting to convert their attributes into
--- entities and components of the pool's type.
+-- Attempts to convert attributes from Instances tagged with an empty Pool's name into
+-- entities and components of the correct type.
 
--- If a component conversion fails, the entire function fails. However, it is not a hard
--- failure for an entity attribute to be invalid; if an entity attribute is invalid, the
--- function skips it and prints a warning.
+-- Throws If an attribute(s) -> component conversion fails (it's likely that the entire
+-- set of attributes is bad in this case). It is not a an error for only the entity
+-- attribute is invalid; instead, a warning is printed.
 return function(pool)
+	util.jumpAssert(pool.size == 0, "Pool must be empty")
+
 	local componentName = pool.name
 	local typeDefinition = pool.typeDefinition
 	local tagged = CollectionService:GetTagged(componentName)

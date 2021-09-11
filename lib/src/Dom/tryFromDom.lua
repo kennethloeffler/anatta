@@ -5,8 +5,9 @@ local jumpAssert = require(script.Parent.Parent.util.jumpAssert)
 
 local ENTITYID_MASK = Constants.EntityIdMask
 
--- Try to load entity component data that has been stored in the dom (via Anatta's plugin,
--- for example) into an empty registry.
+-- Tries to load any and all entity component data from Instance tags/attributes into an
+-- empty Registry. Throws if the registry is not empty. It is not an error for an Instance
+-- to fail validation; instead, a warning is printed.
 return function(registry)
 	jumpAssert(registry._size == 0, "Registry must be empty")
 
@@ -31,9 +32,10 @@ return function(registry)
 	-- There is a bit of trickery going on here. A simple traversal over entitySet,
 	-- calling createFrom on each entity, does work - but it is unordered. If createFrom
 	-- is given an entity that is out of range, it must backfill _entities with recyclable
-	-- IDs. When entities with the same ID are later encountered at some point later in
-	-- the iteration, createFrom must search the recyclable list. It likely contains many
-	-- elements in such a scenario, so this can become fairly costly overall.
+	-- IDs. When entities with the same ID are later encountered at some point later
+	-- during the iteration, createFrom linearly searches the recyclable list. It likely
+	-- contains many elements in such a scenario, so this can become fairly costly
+	-- overall.
 
 	-- To get around this, we create an intermediate list of entities and sort it by its
 	-- entity ID field. This results in an ordering identical to the eventual registry. In
