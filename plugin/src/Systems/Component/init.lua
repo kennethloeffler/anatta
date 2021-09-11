@@ -11,7 +11,8 @@ local util = require(script.Parent.util)
 local add = require(script.addComponent)
 local remove = require(script.removeComponent)
 
-return function(system, registry, componentName, pendingComponentValidation)
+return function(system, componentName, pendingComponentValidation)
+	local registry = system.registry
 	local typeDefinition = registry:getDefinition(componentName)
 	local typeAllowed, result = typeDefinition:tryGetConcreteType()
 

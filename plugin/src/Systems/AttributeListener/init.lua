@@ -5,7 +5,8 @@ local util = require(script.Parent.util)
 
 local createListener = require(script.createListener)
 
-return function(system, registry, componentName, pendingValidation, pluginMouse)
+return function(system, componentName, pendingValidation, pluginMouse)
+	local registry = system.registry
 	local previousSelection = {}
 	local dirty = true
 

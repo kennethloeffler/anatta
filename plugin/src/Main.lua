@@ -10,77 +10,76 @@ local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
 local PENDING_VALIDATION = Constants.PendingValidation
 
-local function loadDefinitions(moduleScript, anatta, plugin)
+local function loadDefinition(moduleScript, loader, plugin)
 	if not moduleScript:IsA("ModuleScript") then
 		warn(("Components definition instance %s must be a ModuleScript"):format(moduleScript:GetFullName()))
 		return
 	end
 
 	local clone = moduleScript:Clone()
-	clone.Parent = moduleScript.Parent
-	moduleScript:Destroy()
+	local componentDefinition = require(clone)
+	local name = componentDefinition.name
+	local type
 
-	local componentDefinitions = require(clone)
+	if componentDefinition.meta ~= nil and componentDefinition.meta.plugin ~= nil then
+		type = componentDefinition.meta.plugin.type
+	else
+		type = componentDefinition.type
+	end
 
-	for componentName, typeDefinition in pairs(componentDefinitions) do
-		if not anatta.registry:hasDefined(componentName) then
-			local pendingValidation = PENDING_VALIDATION:format(componentName)
+	if not loader.registry:hasDefined(name) then
+		local pendingValidation = PENDING_VALIDATION:format(name)
 
-			anatta.registry:define(componentName, typeDefinition)
-			anatta.registry:define(pendingValidation, t.none)
+		loader.registry:define(name, type)
+		loader.registry:define(pendingValidation, t.none)
 
-			anatta:loadSystem(Systems.AttributeValidator, componentName, pendingValidation)
-			anatta:loadSystem(
-				Systems.AttributeListener,
-				componentName,
-				pendingValidation,
-				plugin:getMouse()
-			)
-			anatta:loadSystem(Systems.Component, componentName, pendingValidation)
-		else
-			warn(("Found duplicate component name %s in %s; skipping"):format(
-				componentName,
-				moduleScript:GetFullName()
-			))
-			continue
-		end
+		loader:loadSystem(Systems.AttributeValidator, name, pendingValidation)
+		loader:loadSystem(Systems.AttributeListener, name, pendingValidation, plugin:getMouse())
+		loader:loadSystem(Systems.Component, name, pendingValidation)
+	else
+		warn(("Found duplicate component name %s in %s; skipping"):format(
+			name,
+			moduleScript:GetFullName()
+		))
+		continue
 	end
 end
 
 return function(plugin, saveState)
+	local loader = Anatta.Loader.new(PluginComponents)
+	local componentModuleAdded =
+		CollectionService:GetInstanceAddedSignal(DEFINITION_MODULE_TAG_NAME)
+	local componentChangedConnections = {}
+
 	plugin:activate(false)
 
-	local reloadButton = plugin:createButton({
-		icon = "",
-		active = false,
-		tooltip = "Reload the plugin",
-		toolbar = plugin:createToolbar("Anatta"),
-		name = "Reload",
-	})
-
-	local reloadConnection = reloadButton.Click:Connect(function()
-		reloadButton:SetActive(true)
-		wait()
-		plugin:reload()
-		reloadButton:SetActive(false)
-	end)
-
-	local anatta = Anatta.new(PluginComponents)
+	table.insert(
+		componentChangedConnections,
+		componentModuleAdded:Connect(function(moduleScript)
+			loadDefinition(moduleScript, loader, plugin)
+		end)
+	)
 
 	for _, moduleScript in ipairs(CollectionService:GetTagged(DEFINITION_MODULE_TAG_NAME)) do
-		loadDefinitions(moduleScript, anatta, plugin)
+		loadDefinition(moduleScript, loader, plugin)
+
+		table.insert(moduleScript.Changed:Connect(function(propertyName)
+			if propertyName == "Source" then
+				plugin:reload()
+			end
+		end))
 	end
 
-	anatta:loadSystem(Systems.Entity)
+	loader:loadSystem(Systems.Entity)
 
 	if saveState then
-		anatta.registry:load(saveState)
+		loader.registry:load(saveState)
 
-		anatta.registry:each(function(entity)
-			anatta.registry:tryRemove(entity, ".anattaValidationListener")
+		loader.registry:each(function(entity)
+			loader.registry:tryRemove(entity, ".anattaValidationListener")
 		end)
 	else
-		local success, result = Anatta.Dom.tryFromDom(anatta.registry)
+		local success, result = Anatta.Dom.tryFromDom(loader.registry)
 
 		if not success then
 			warn(result)
@@ -88,18 +87,21 @@ return function(plugin, saveState)
 			for _, instance in ipairs(CollectionService:GetTagged(".anattaInstance")) do
 				local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
-				if anatta.registry:valid(entity) then
-					anatta.registry:add(entity, ".anattaInstance", instance)
+				if loader.registry:valid(entity) then
+					loader.registry:add(entity, ".anattaInstance", instance)
 				end
 			end
 		end
 	end
 
 	plugin:beforeUnload(function()
-		plugin:deactivate()
-		anatta:unloadAllSystems()
-		reloadConnection:Disconnect()
+		for _, connection in ipairs(componentChangedConnections) do
+			connection:Disconnect()
+		end
 
-		return anatta.registry
+		plugin:deactivate()
+		loader:unloadAllSystems()
+
+		return loader.registry
 	end)
 end

@@ -21,12 +21,12 @@ return function(registry, componentName, pendingComponentValidation)
 			if typeof(value) ~= "Instance" then
 				instance:SetAttribute(attributeName, value)
 			else
-				instance:SetAttribute(attributeName, "")
-
 				if value.Parent == nil then
 					instance:SetAttribute(attributeName, instance.Name)
 					instance.__anattaRefs[attributeName].Value = instance
 					registry:tryAdd(entity, pendingComponentValidation)
+				else
+					instance:SetAttribute(attributeName, value.Name)
 				end
 			end
 		end

@@ -5,7 +5,8 @@ local Constants = require(script.Parent.Parent.Constants)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
-return function(system, registry)
+return function(system)
+	local registry = system.registry
 	local forcedEntities = system:all(".anattaInstance", ".anattaForceEntityAttribute"):collect()
 	local instances = system:all(".anattaInstance"):collect()
 
