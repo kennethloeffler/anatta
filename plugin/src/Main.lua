@@ -9,6 +9,7 @@ local t = Anatta.t
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
 local PENDING_VALIDATION = Constants.PendingValidation
+local SHARED_INSTANCE_TAG_NAME = Constants.SharedInstanceTagName
 
 local function loadDefinition(moduleScript, loader, plugin)
 	if not moduleScript:IsA("ModuleScript") then
@@ -84,7 +85,7 @@ return function(plugin, saveState)
 		if not success then
 			warn(result)
 		else
-			for _, instance in ipairs(CollectionService:GetTagged(".anattaInstance")) do
+			for _, instance in ipairs(CollectionService:GetTagged(SHARED_INSTANCE_TAG_NAME)) do
 				local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
 				if loader.registry:valid(entity) then
