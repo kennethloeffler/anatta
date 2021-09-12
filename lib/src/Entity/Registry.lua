@@ -27,8 +27,10 @@ Registry.__index = Registry
 function Registry.new(components)
 	local pools = {}
 
-	for componentName, typeDefinition in pairs(components) do
-		pools[componentName] = Pool.new(componentName, typeDefinition)
+	if components then
+		for componentName, typeDefinition in pairs(components) do
+			pools[componentName] = Pool.new(componentName, typeDefinition)
+		end
 	end
 
 	return setmetatable({

@@ -7,11 +7,11 @@ local Systems = script.Parent.Systems
 local t = Anatta.t
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
-local DEFINITION_MODULE_TAG_NAME = Constants.DefinitionModuleTagName
+local DEFINITION_CONTAINER_TAG_NAME = Constants.DefinitionModuleTagName
 local PENDING_VALIDATION = Constants.PendingValidation
 local SHARED_INSTANCE_TAG_NAME = Constants.SharedInstanceTagName
 
-local function loadDefinition(moduleScript, loader, plugin)
+local function loadDefinition(plugin, loader, moduleScript)
 	if not moduleScript:IsA("ModuleScript") then
 		warn(("Components definition instance %s must be a ModuleScript"):format(moduleScript:GetFullName()))
 		return
@@ -42,34 +42,49 @@ local function loadDefinition(moduleScript, loader, plugin)
 			name,
 			moduleScript:GetFullName()
 		))
-		continue
 	end
+end
+
+local function loadDefinitionContainer(plugin, loader, container, connections)
+	for _, moduleScript in ipairs(container:GetChildren()) do
+		loadDefinition(plugin, loader, moduleScript)
+
+		table.insert(
+			connections,
+			moduleScript.Changed:Connect(function(propertyName)
+				if propertyName == "Source" then
+					plugin:reload()
+				end
+			end)
+		)
+	end
+
+	table.insert(
+		connections,
+		container.ChildAdded:Connect(function(moduleScript)
+			loadDefinition(plugin, loader, moduleScript)
+		end)
+	)
 end
 
 return function(plugin, saveState)
 	local loader = Anatta.Loader.new(PluginComponents)
-	local componentModuleAdded =
-		CollectionService:GetInstanceAddedSignal(DEFINITION_MODULE_TAG_NAME)
-	local componentChangedConnections = {}
+	local definitionContainerAdded =
+		CollectionService:GetInstanceAddedSignal(DEFINITION_CONTAINER_TAG_NAME)
+	local connections = {}
 
 	plugin:activate(false)
 
+	for _, container in ipairs(CollectionService:GetTagged(DEFINITION_CONTAINER_TAG_NAME)) do
+		loadDefinitionContainer(plugin, loader, container, connections)
+	end
+
 	table.insert(
-		componentChangedConnections,
-		componentModuleAdded:Connect(function(moduleScript)
-			loadDefinition(moduleScript, loader, plugin)
+		connections,
+		definitionContainerAdded:Connect(function(container)
+			loadDefinitionContainer(plugin, loader, container, connections)
 		end)
 	)
-
-	for _, moduleScript in ipairs(CollectionService:GetTagged(DEFINITION_MODULE_TAG_NAME)) do
-		loadDefinition(moduleScript, loader, plugin)
-
-		table.insert(moduleScript.Changed:Connect(function(propertyName)
-			if propertyName == "Source" then
-				plugin:reload()
-			end
-		end))
-	end
 
 	loader:loadSystem(Systems.Entity)
 
@@ -96,7 +111,7 @@ return function(plugin, saveState)
 	end
 
 	plugin:beforeUnload(function()
-		for _, connection in ipairs(componentChangedConnections) do
+		for _, connection in ipairs(connections) do
 			connection:Disconnect()
 		end
 

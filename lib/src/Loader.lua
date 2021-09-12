@@ -17,9 +17,9 @@ local CheckComponentDefinition = t.strictInterface({
 local Loader = {}
 Loader.__index = Loader
 
-function Loader.new()
+function Loader.new(components)
 	return setmetatable({
-		registry = Entity.Registry.new(),
+		registry = Entity.Registry.new(components),
 		_systems = {},
 	}, Loader)
 end
