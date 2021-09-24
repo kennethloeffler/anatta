@@ -24,11 +24,12 @@ local function loadDefinition(plugin, loader, moduleScript)
 
 	if componentDefinition.meta ~= nil and componentDefinition.meta.plugin ~= nil then
 		type = componentDefinition.meta.plugin.type
+		--createTagEditorConfiguration(componentDefinition.meta.plugin)
 	else
 		type = componentDefinition.type
 	end
 
-	if not loader.registry:hasDefined(name) then
+	if not loader.registry:isComponentDefined(name) then
 		local pendingValidation = PENDING_VALIDATION:format(name)
 
 		loader.registry:define(name, type)
@@ -92,7 +93,7 @@ return function(plugin, saveState)
 		loader.registry:load(saveState)
 
 		loader.registry:each(function(entity)
-			loader.registry:tryRemove(entity, ".anattaValidationListener")
+			loader.registry:tryRemoveComponent(entity, ".anattaValidationListener")
 		end)
 	else
 		local success, result = Anatta.Dom.tryFromDom(loader.registry)
@@ -103,8 +104,8 @@ return function(plugin, saveState)
 			for _, instance in ipairs(CollectionService:GetTagged(SHARED_INSTANCE_TAG_NAME)) do
 				local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
-				if loader.registry:valid(entity) then
-					loader.registry:add(entity, ".anattaInstance", instance)
+				if loader.registry:isValidEntity(entity) then
+					loader.registry:addComponent(entity, ".anattaInstance", instance)
 				end
 			end
 		end

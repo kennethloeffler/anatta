@@ -23,7 +23,7 @@ return function(system)
 
 	system:on(RunService.Heartbeat, function()
 		forcedEntities:each(function(entity, instance)
-			registry:remove(entity, ".anattaForceEntityAttribute")
+			registry:removeComponent(entity, ".anattaForceEntityAttribute")
 			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 		end)
 	end)

@@ -13,7 +13,7 @@ local remove = require(script.removeComponent)
 
 return function(system, componentName, pendingComponentValidation)
 	local registry = system.registry
-	local typeDefinition = registry:getDefinition(componentName)
+	local typeDefinition = registry:getComponentDefinition(componentName)
 	local typeAllowed, result = typeDefinition:tryGetConcreteType()
 
 	if not typeAllowed then
@@ -71,7 +71,7 @@ return function(system, componentName, pendingComponentValidation)
 			not (
 				next(pendingAddition)
 				or next(pendingRemoval)
-				or registry:count(".anattaScheduledDestruction") > 0
+				or registry:countComponents(".anattaScheduledDestruction") > 0
 			)
 		then
 			return
@@ -108,7 +108,7 @@ return function(system, componentName, pendingComponentValidation)
 				typeDefinition
 			)
 
-			registry:tryAdd(entity, componentName, success and existingComponent or default)
+			registry:tryAddComponent(entity, componentName, success and existingComponent or default)
 		end
 
 		for instance in pairs(pendingRemoval) do
@@ -123,7 +123,7 @@ return function(system, componentName, pendingComponentValidation)
 			end
 
 			local entity = util.getValidEntity(registry, instance)
-			registry:tryRemove(entity, componentName)
+			registry:tryRemoveComponent(entity, componentName)
 		end
 
 		-- Destroying an entity first removes all its components (resulting in
@@ -135,7 +135,7 @@ return function(system, componentName, pendingComponentValidation)
 		-- will happen much less frequently than checking it.
 		scheduledDestructions:each(function(entity, scheduledDestruction)
 			if tick() >= scheduledDestruction then
-				registry:destroy(entity)
+				registry:destroyEntity(entity)
 			end
 		end)
 

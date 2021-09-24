@@ -7,10 +7,10 @@ local PLUGIN_PRIVATE_COMPONENT_PREFIX = Constants.PluginPrivateComponentPrefix
 local SECONDS_BEFORE_DESTRUCTION = Constants.SecondsBeforeDestruction
 
 return function(registry, componentName, pendingComponentValidation)
-	local typeDefinition = registry:getDefinition(componentName)
+	local typeDefinition = registry:getComponentDefinition(componentName)
 
 	return function(entity, instance, component)
-		local wasListening = registry:tryRemove(entity, ".anattaValidationListener")
+		local wasListening = registry:tryRemoveComponent(entity, ".anattaValidationListener")
 
 		local _, attributeMap = Anatta.Dom.tryToAttribute(
 			instance,
@@ -34,7 +34,7 @@ return function(registry, componentName, pendingComponentValidation)
 		end
 
 		if
-			not registry:visit(function(visitedComponentName)
+			not registry:visitComponents(function(visitedComponentName)
 				if
 					visitedComponentName ~= componentName
 					and not visitedComponentName:find(PLUGIN_PRIVATE_COMPONENT_PREFIX)
@@ -44,9 +44,9 @@ return function(registry, componentName, pendingComponentValidation)
 			end, entity)
 		then
 			if instance.Parent ~= nil then
-				registry:tryAdd(entity, ".anattaScheduledDestruction", tick())
+				registry:tryAddComponent(entity, ".anattaScheduledDestruction", tick())
 			else
-				registry:tryAdd(
+				registry:tryAddComponent(
 					entity,
 					".anattaScheduledDestruction",
 					tick() + SECONDS_BEFORE_DESTRUCTION
@@ -55,9 +55,9 @@ return function(registry, componentName, pendingComponentValidation)
 		end
 
 		if wasListening then
-			registry:add(entity, ".anattaValidationListener")
+			registry:addComponent(entity, ".anattaValidationListener")
 		end
 
-		registry:tryRemove(entity, pendingComponentValidation)
+		registry:tryRemoveComponent(entity, pendingComponentValidation)
 	end
 end

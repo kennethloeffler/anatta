@@ -7,28 +7,28 @@ local Constants = require(script.Parent.Parent.Parent.Constants)
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 return function(registry, componentName, pendingValidation, pluginMouse)
-	local typeDefinition = registry:getDefinition(componentName)
+	local typeDefinition = registry:getComponentDefinition(componentName)
 
 	return function(entity, instance)
 		return {
 			instance.AttributeChanged:Connect(function(attributeName)
-				if not registry:valid(entity) then
+				if not registry:isValidEntity(entity) then
 					return
 				end
 
 				local currentValue = instance:GetAttribute(attributeName)
 				local _, attributeMap = Anatta.Dom.tryToAttribute(
 					instance,
-					registry:get(entity, componentName),
+					registry:getComponent(entity, componentName),
 					componentName,
 					typeDefinition
 				)
 
 				if attributeName == ENTITY_ATTRIBUTE_NAME then
 					if currentValue == nil then
-						registry:tryAdd(entity, ".anattaScheduledDestruction", tick())
+						registry:tryAddComponent(entity, ".anattaScheduledDestruction", tick())
 					elseif currentValue ~= entity then
-						registry:tryAdd(entity, ".anattaForceEntityAttribute")
+						registry:tryAddComponent(entity, ".anattaForceEntityAttribute")
 					end
 				elseif attributeMap[attributeName] ~= nil then
 					if typeof(attributeMap[attributeName]) == "Instance" then
@@ -56,14 +56,14 @@ return function(registry, componentName, pendingValidation, pluginMouse)
 
 						instance.__anattaRefs[attributeName].Value = ref
 						pluginMouse.Icon = ""
-						registry:tryAdd(entity, pendingValidation)
+						registry:tryAddComponent(entity, pendingValidation)
 						instance:SetAttribute(attributeName, ref.Parent == nil and "" or ref.Name)
 
 						-- This yield is required to set the selection back to what it was.
 						RunService.Heartbeat:Wait()
 						Selection:Set(originalSelection)
 					else
-						registry:tryAdd(entity, pendingValidation)
+						registry:tryAddComponent(entity, pendingValidation)
 					end
 				end
 			end),

@@ -31,7 +31,7 @@ return function(system, componentName, pendingValidation, pluginMouse)
 
 			if isValidEntity then
 				previousSelection[instance] = nil
-				registry:tryAdd(entity, ".anattaValidationListener")
+				registry:tryAddComponent(entity, ".anattaValidationListener")
 			end
 		end
 
@@ -40,7 +40,7 @@ return function(system, componentName, pendingValidation, pluginMouse)
 
 			if isValidEntity then
 				previousSelection[instance] = nil
-				registry:tryRemove(entity, ".anattaValidationListener")
+				registry:tryRemoveComponent(entity, ".anattaValidationListener")
 			end
 		end
 

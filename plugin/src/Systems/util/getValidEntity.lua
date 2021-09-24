@@ -8,14 +8,14 @@ return function(registry, instance)
 	assert(entity == nil or typeof(entity) == "number")
 
 	local isNil = entity == nil
-	local isInvalid = not isNil and not registry:valid(entity)
+	local isInvalid = not isNil and not registry:isValidEntity(entity)
 	local isInvalidInstance = not isNil
 		and not isInvalid
-		and registry:get(entity, ".anattaInstance") ~= instance
+		and registry:getComponent(entity, ".anattaInstance") ~= instance
 
 	if isNil or isInvalid or isInvalidInstance then
-		local newEntity = registry:create()
-		registry:add(newEntity, ".anattaInstance", instance)
+		local newEntity = registry:createEntity()
+		registry:addComponent(newEntity, ".anattaInstance", instance)
 		return newEntity
 	else
 		return entity
