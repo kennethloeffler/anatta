@@ -47,7 +47,7 @@ return function()
 				fired = true
 			end)
 
-			registry:multiAdd(registry:create(), {
+			registry:multiAdd(registry:createEntity(), {
 				Test1 = {},
 				Test2 = {},
 			})
@@ -57,36 +57,39 @@ return function()
 	end)
 
 	describe("unload", function()
-		it("should disconnect any listeners connected through :on and detach the collection", function()
-			local system = System.new(registry)
-			local collection = system:all("Test1", "Test2"):collect()
-			local hole = Instance.new("Hole")
-			local bindableEvent = Instance.new("BindableEvent")
-			local fired = false
+		it(
+			"should disconnect any listeners connected through :on and detach the collection",
+			function()
+				local system = System.new(registry)
+				local collection = system:all("Test1", "Test2"):collect()
+				local hole = Instance.new("Hole")
+				local bindableEvent = Instance.new("BindableEvent")
+				local fired = false
 
-			system:on(bindableEvent.Event, function()
-				fired = true
-			end)
+				system:on(bindableEvent.Event, function()
+					fired = true
+				end)
 
-			collection:attach(function()
-				return {
-					hole,
-				}
-			end)
+				collection:attach(function()
+					return {
+						hole,
+					}
+				end)
 
-			registry:multiAdd(registry:create(), {
-				Test1 = {},
-				Test2 = {},
-			})
+				registry:multiAdd(registry:createEntity(), {
+					Test1 = {},
+					Test2 = {},
+				})
 
-			system:unload()
+				system:unload()
 
-			bindableEvent:Fire()
-			expect(fired).to.equal(false)
+				bindableEvent:Fire()
+				expect(fired).to.equal(false)
 
-			expect(function()
-				hole.Parent = workspace
-			end).to.throw()
-		end)
+				expect(function()
+					hole.Parent = workspace
+				end).to.throw()
+			end
+		)
 	end)
 end

@@ -32,7 +32,7 @@ return function(pool)
 			continue
 		end
 
-		local success, componentResult = tryFromAttribute(instance, componentName, typeDefinition)
+		local success, component = tryFromAttribute(instance, componentName, typeDefinition)
 
 		if not success then
 			pool.size = 0
@@ -41,10 +41,12 @@ return function(pool)
 			return false, (("Type check failed for entity %s's %s: %s"):format(
 				entity,
 				componentName,
-				componentResult
+				component
 			))
 		else
-			pool:insert(entity, componentResult)
+			local conversion = pool.meta and pool.meta.plugin and pool.meta.plugin.conversion
+
+			pool:insert(entity, component)
 		end
 	end
 
