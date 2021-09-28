@@ -5,7 +5,7 @@ local System = {}
 System.__index = System
 
 local ErrPureCantHaveUpdated = "Pure collections cannot track updates to components"
-local ErrFrozenNeedsComponents = "Pure collections need at least one required component type"
+local ErrPureNeedsComponents = "Pure collections need at least one required component type"
 local ErrImpureNeedComponents =
 	"Collections need least one required, updated, or optional component type"
 local ErrTooManyUpdated = "Collections can only track up to 32 updated component types"
@@ -23,27 +23,27 @@ function System.new(registry)
 	}, System)
 end
 
-function System:all(...)
+function System:entitiesWithAll(...)
 	self.required = { ... }
 	return self
 end
 
-function System:except(...)
-	self.forbidden = { ... }
-	return self
-end
-
-function System:updated(...)
+function System:entitiesWithUpdated(...)
 	self.update = { ... }
 	return self
 end
 
-function System:any(...)
+function System:entitiesWithout(...)
+	self.forbidden = { ... }
+	return self
+end
+
+function System:entitiesWithAny(...)
 	self.optional = { ... }
 	return self
 end
 
-function System:collect()
+function System:collectEntities()
 	util.jumpAssert(#self.update <= 32, ErrTooManyUpdated)
 	util.jumpAssert(
 		#self.required > 0 or #self.update > 0 or #self.optional > 0,
@@ -57,9 +57,9 @@ function System:collect()
 	return collection
 end
 
-function System:freeze()
+function System:freezeEntities()
 	util.jumpAssert(#self.update == 0, ErrPureCantHaveUpdated)
-	util.jumpAssert(#self.required > 0, ErrFrozenNeedsComponents)
+	util.jumpAssert(#self.required > 0, ErrPureNeedsComponents)
 
 	return Entity.PureCollection.new(self)
 end

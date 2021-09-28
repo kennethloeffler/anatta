@@ -9,18 +9,18 @@ return function()
 		Test3 = t.table,
 	})
 
-	describe("collect", function()
+	describe("collectEntities", function()
 		it("should return a new Collection", function()
 			local system = System.new(registry)
-			expect(getmetatable(system:all("Test1", "Test2"):collect())).to.equal(Entity.Collection)
+			expect(getmetatable(system:entitiesWithAll("Test1", "Test2"):collectEntities())).to.equal(Entity.Collection)
 		end)
 	end)
 
-	describe("pure", function()
+	describe("freezeEntities", function()
 		it("should return a new PureCollection", function()
 			local system = System.new(registry)
 
-			expect(getmetatable(system:all("Test1", "Test2"):freeze())).to.equal(Entity.PureCollection)
+			expect(getmetatable(system:entitiesWithAll("Test1", "Test2"):freezeEntities())).to.equal(Entity.PureCollection)
 		end)
 	end)
 
@@ -38,9 +38,9 @@ return function()
 			expect(fired).to.equal(true)
 		end)
 
-		it("should work with collection events", function()
+		it("should work with Collection events", function()
 			local system = System.new(registry)
-			local collection = system:all("Test1", "Test2"):collect()
+			local collection = system:entitiesWithAll("Test1", "Test2"):collectEntities()
 			local fired = false
 
 			system:on(collection.added, function()
@@ -61,7 +61,7 @@ return function()
 			"should disconnect any listeners connected through :on and detach the collection",
 			function()
 				local system = System.new(registry)
-				local collection = system:all("Test1", "Test2"):collect()
+				local collection = system:entitiesWithAll("Test1", "Test2"):collectEntities()
 				local hole = Instance.new("Hole")
 				local bindableEvent = Instance.new("BindableEvent")
 				local fired = false
