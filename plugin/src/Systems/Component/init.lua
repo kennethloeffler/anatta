@@ -23,15 +23,17 @@ return function(system, componentName, pendingComponentValidation)
 
 	local _, default = typeDefinition:tryDefault()
 
-	local entitiesWithComponent = system:all(".anattaInstance", componentName):collect()
+	local entitiesWithComponent = system
+		:entitiesWithAll(".anattaInstance", componentName)
+		:collectEntities()
 
 	-- Entities that are awaiting destruction (this means their corresponding
 	-- instance was deleted or its __entity attribute set to nil). It would be
 	-- preferrable to handle entity destruction in another system, but all
 	-- attributes must be set in the same undo waypoint (see below).
 	local scheduledDestructions = system
-		:all(".anattaScheduledDestruction", ".anattaInstance")
-		:collect()
+		:entitiesWithAll(".anattaScheduledDestruction", ".anattaInstance")
+		:collectEntities()
 
 	local pendingAddition = {}
 	local pendingRemoval = {}
