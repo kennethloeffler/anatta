@@ -35,11 +35,9 @@ return function()
 		context.registry = registry
 	end)
 
-	local function createTestCollection(registry, system)
-		system.registry = registry
-
+	local function createTestMapper(registry, query)
 		local toIterate = {}
-		local collection = Mapper.new(system)
+		local mapper = Mapper.new(registry, query)
 
 		for i = 1, 100 do
 			local entity = registry:createEntity()
@@ -62,42 +60,34 @@ return function()
 			end
 
 			if
-				registry:hasAllComponents(entity, unpack(system.required))
-				and not registry:hasAnyComponents(entity, unpack(system.forbidden))
+				registry:hasAllComponents(entity, unpack(query.withAll or {}))
+				and not registry:hasAnyComponents(entity, unpack(query.without or {}))
 			then
 				toIterate[entity] = true
 			end
 		end
 
-		return collection, toIterate
+		return mapper, toIterate
 	end
 
 	describe("new", function()
-		it(
-			"should create a new PureCollection when there are  multiple components",
-			function(context)
-				local collection = Mapper.new({
-					required = { "Test1" },
-					forbidden = { "Test2" },
-					optional = {},
-					registry = context.registry,
-				})
+		it("should create a new Mapper when there are  multiple components", function(context)
+			local mapper = Mapper.new(context.registry, {
+				withAll = { "Test1" },
+				without = { "Test2" },
+			})
 
-				expect(getmetatable(collection)).to.equal(Mapper)
-			end
-		)
+			expect(getmetatable(mapper)).to.equal(Mapper)
+		end)
 
 		it(
-			"should create a new SinglePureCollection when there is only one required component ",
+			"should create a new SingleMapper when there is only one required component ",
 			function(context)
-				local collection = Mapper.new({
-					required = { "Test1" },
-					forbidden = {},
-					optional = {},
-					registry = context.registry,
+				local mapper = Mapper.new(context.registry, {
+					withAll = { "Test1" },
 				})
 
-				expect(getmetatable(collection)).to.equal(SingleMapper)
+				expect(getmetatable(mapper)).to.equal(SingleMapper)
 			end
 		)
 	end)
@@ -108,13 +98,12 @@ return function()
 				"should iterate all and only the entities with at least the required components and pass them plus any optional ones",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = createTestCollection(registry, {
-						required = { "Test1", "Test2" },
-						optional = { "Test3", "Test4" },
-						forbidden = {},
+					local mapper, toIterate = createTestMapper(registry, {
+						withAll = { "Test1", "Test2" },
+						withAny = { "Test3", "Test4" },
 					})
 
-					collection:update(function(entity, test1, test2, test3, test4)
+					mapper:update(function(entity, test1, test2, test3, test4)
 						expect(toIterate[entity]).to.equal(true)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
@@ -133,13 +122,11 @@ return function()
 				"should replace required components with ones returned by the callback",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = createTestCollection(registry, {
-						required = { "Test1", "Test2" },
-						forbidden = {},
-						optional = {},
+					local mapper, toIterate = createTestMapper(registry, {
+						withAll = { "Test1", "Test2" },
 					})
 
-					collection:update(function(entity)
+					mapper:update(function(entity)
 						local newTest1 = {}
 						local newTest2 = {}
 
@@ -148,7 +135,7 @@ return function()
 						return newTest1, newTest2
 					end)
 
-					collection:update(function(entity, test1, test2)
+					mapper:update(function(entity, test1, test2)
 						expect(test1).to.equal(toIterate[entity][1])
 						expect(test2).to.equal(toIterate[entity][2])
 

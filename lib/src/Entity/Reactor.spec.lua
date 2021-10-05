@@ -36,15 +36,13 @@ return function()
 		context.registry = registry
 	end)
 
-	local function createTestCollection(registry, system, callback)
-		system.registry = registry
-
+	local function createTestReactor(registry, query, callback)
 		local len = 0
 		local toIterate = {}
-		local collection = Reactor.new(system)
+		local reactor = Reactor.new(registry, query)
 
 		if callback then
-			collection:attach(callback)
+			reactor:attach(callback)
 		end
 
 		for i = 1, 100 do
@@ -68,90 +66,81 @@ return function()
 			end
 
 			if
-				registry:hasAllComponents(entity, unpack(system.required))
-				and not registry:hasAnyComponents(entity, unpack(system.forbidden))
-				and registry:hasAllComponents(entity, unpack(system.update))
+				registry:hasAllComponents(entity, unpack(query.withAll or {}))
+				and not registry:hasAnyComponents(entity, unpack(query.without or {}))
+				and registry:hasAllComponents(entity, unpack(query.withUpdated or {}))
 			then
 				len += 1
 
-				if next(system.update) then
-					for _, component in ipairs(system.update) do
+				if query.withUpdated and next(query.withUpdated) then
+					for _, component in ipairs(query.withUpdated) do
 						registry:replaceComponent(entity, component, {})
 					end
 
-					toIterate[entity] = registry:getComponents(entity, {}, unpack(system.update))
+					toIterate[entity] = registry:getComponents(
+						entity,
+						{},
+						unpack(query.withUpdated or {})
+					)
 				else
 					toIterate[entity] = true
 				end
 			end
 		end
 
-		return collection, toIterate, len
+		return reactor, toIterate, len
 	end
 
 	describe("new", function()
 		it(
-			"should create a new Collection when there is anything more than one required component",
+			"should create a new Reactor when there is anything more than one required component",
 			function(context)
-				local collection = Reactor.new({
-					required = { "Test1", "Test2" },
-					update = {},
-					optional = {},
-					forbidden = {},
-					registry = context.registry,
+				local reactor = Reactor.new(context.registry, {
+					withAll = { "Test1", "Test2" },
 				})
 
-				expect(getmetatable(collection)).to.equal(Reactor)
+				expect(getmetatable(reactor)).to.equal(Reactor)
 
-				expect(collection._pool).to.be.ok()
-				expect(getmetatable(collection._pool)).to.equal(Pool)
+				expect(reactor._pool).to.be.ok()
+				expect(getmetatable(reactor._pool)).to.equal(Pool)
 
-				expect(collection._updates).to.be.a("table")
-				expect(next(collection._updates)).to.equal(nil)
+				expect(reactor._updates).to.be.a("table")
+				expect(next(reactor._updates)).to.equal(nil)
 			end
 		)
 
 		it(
-			"should create a new SingleCollection when there is exactly one required component and nothing else",
+			"should create a new SingleReactor when there is exactly one required component and nothing else",
 			function(context)
-				local collection = Reactor.new({
-					required = { "Test1" },
-					update = {},
-					optional = {},
-					forbidden = {},
-					registry = context.registry,
+				local reactor = Reactor.new(context.registry, {
+					withAll = { "Test1" },
 				})
 
-				expect(getmetatable(collection)).to.equal(SingleReactor)
+				expect(getmetatable(reactor)).to.equal(SingleReactor)
 			end
 		)
 
 		it("should populate _required, _updated, and _forbidden", function(context)
 			local registry = context.registry
-			local collection = Reactor.new({
-				required = { "Test1", "Test2" },
-				update = { "Test3" },
-				optional = {},
-				forbidden = { "Test4" },
-				registry = context.registry,
+			local reactor = Reactor.new(context.registry, {
+				withAll = { "Test1", "Test2" },
+				withUpdated = { "Test3" },
+				without = { "Test4" },
 			})
 
-			expect(collection._required[1]).to.equal(registry._pools.Test1)
-			expect(collection._required[2]).to.equal(registry._pools.Test2)
-			expect(collection._updated[1]).to.equal(registry._pools.Test3)
-			expect(collection._forbidden[1]).to.equal(registry._pools.Test4)
+			expect(reactor._required[1]).to.equal(registry._pools.Test1)
+			expect(reactor._required[2]).to.equal(registry._pools.Test2)
+			expect(reactor._updated[1]).to.equal(registry._pools.Test3)
+			expect(reactor._forbidden[1]).to.equal(registry._pools.Test4)
 		end)
 
 		it("should correctly instantiate the full update bitset", function(context)
-			local collection = Reactor.new({
-				required = { "Test1" },
-				update = { "Test1", "Test2", "Test3" },
-				optional = {},
-				forbidden = {},
-				registry = context.registry,
+			local reactor = Reactor.new(context.registry, {
+				withAll = { "Test1" },
+				withUpdated = { "Test1", "Test2", "Test3" },
 			})
 
-			expect(collection._allUpdates).to.equal(bit32.rshift(0xFFFFFFFF, 29))
+			expect(reactor._allUpdates).to.equal(bit32.rshift(0xFFFFFFFF, 29))
 		end)
 	end)
 
@@ -161,14 +150,11 @@ return function()
 				"should iterate all and only the entities with at least the required components and pass their data",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = createTestCollection(registry, {
-						required = { "Test1", "Test2", "Test3" },
-						update = {},
-						optional = {},
-						forbidden = {},
+					local reactor, toIterate = createTestReactor(registry, {
+						withAll = { "Test1", "Test2", "Test3" },
 					})
 
-					collection:each(function(entity, test1, test2, test3)
+					reactor:each(function(entity, test1, test2, test3)
 						expect(toIterate[entity]).to.equal(true)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
@@ -186,14 +172,13 @@ return function()
 				"should iterate all the entities with at least the required components and any of the optional components",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = createTestCollection(registry, {
-						required = { "Test1", "Test2" },
-						optional = { "TestTag", "Test4" },
-						forbidden = {},
-						update = {},
+					local reactor, toIterate = createTestReactor(registry, {
+						withAll = { "Test1", "Test2" },
+						withAny = { "TestTag", "Test4" },
+						without = {},
 					})
 
-					collection:each(function(entity, test1, test2, test5)
+					reactor:each(function(entity, test1, test2, test5)
 						expect(toIterate[entity]).to.equal(true)
 						toIterate[entity] = nil
 
@@ -212,14 +197,12 @@ return function()
 				"should iterate all and only the entities with at least the required components and none of the forbidden components and pass their data",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = createTestCollection(registry, {
-						required = { "Test1", "Test2" },
-						update = {},
-						optional = {},
-						forbidden = { "Test3" },
+					local reactor, toIterate = createTestReactor(registry, {
+						withAll = { "Test1", "Test2" },
+						without = { "Test3" },
 					})
 
-					collection:each(function(entity, test1, test2)
+					reactor:each(function(entity, test1, test2)
 						expect(toIterate[entity]).to.equal(true)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
@@ -236,14 +219,13 @@ return function()
 				"should iterate all and only the entities with at least the required components, none of the forbidden components, and all of the updated components, and pass their data",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = createTestCollection(registry, {
-						required = { "Test1" },
-						update = { "Test2", "Test3" },
-						optional = {},
-						forbidden = { "Test4" },
+					local reactor, toIterate = createTestReactor(registry, {
+						withAll = { "Test1" },
+						withUpdated = { "Test2", "Test3" },
+						without = { "Test4" },
 					})
 
-					collection:each(function(entity, test1, test2, test3)
+					reactor:each(function(entity, test1, test2, test3)
 						expect(toIterate[entity]).to.be.ok()
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
@@ -257,20 +239,18 @@ return function()
 
 			it("should capture updates caused during iteration", function(context)
 				local registry = context.registry
-				local collection, toIterate = createTestCollection(registry, {
-					required = { "Test1" },
-					update = { "Test2" },
-					optional = {},
-					forbidden = {},
+				local reactor, toIterate = createTestReactor(registry, {
+					withAll = { "Test1" },
+					withUpdated = { "Test2" },
 				})
 
-				collection:each(function(entity)
+				reactor:each(function(entity)
 					toIterate[entity] = registry:replaceComponent(entity, "Test2", {})
 				end)
 
 				expect(next(toIterate)).to.be.ok()
 
-				collection:each(function(entity, _, test2)
+				reactor:each(function(entity, _, test2)
 					expect(toIterate[entity]).to.equal(test2)
 					toIterate[entity] = nil
 				end)
@@ -288,14 +268,11 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = createTestCollection(registry, {
-						required = { "Test1", "Test2", "Test3" },
-						optional = {},
-						forbidden = {},
-						update = {},
+					local reactor = createTestReactor(registry, {
+						withAll = { "Test1", "Test2", "Test3" },
 					})
 
-					collection.added:connect(function(entity, test1, test2, test3)
+					reactor.added:connect(function(entity, test1, test2, test3)
 						called = true
 						expect(entity).to.equal(testEntity)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
@@ -310,7 +287,7 @@ return function()
 					})
 
 					expect(called).to.equal(true)
-					expect(collection._pool:getIndex(testEntity)).to.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.be.ok()
 				end
 			)
 		end)
@@ -322,14 +299,12 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = createTestCollection(registry, {
-						required = { "Test1", "Test2" },
-						update = {},
-						forbidden = { "Test3" },
-						optional = {},
+					local reactor = createTestReactor(registry, {
+						withAll = { "Test1", "Test2" },
+						without = { "Test3" },
 					})
 
-					collection.added:connect(function(entity, test1, test2)
+					reactor.added:connect(function(entity, test1, test2)
 						called = true
 						expect(entity).to.equal(testEntity)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
@@ -342,12 +317,12 @@ return function()
 					})
 
 					expect(called).to.equal(true)
-					expect(collection._pool:getIndex(testEntity)).to.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.be.ok()
 
 					called = false
 					registry:addComponent(testEntity, "Test3", {})
 					expect(called).to.equal(false)
-					expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
 				end
 			)
 		end)
@@ -359,14 +334,13 @@ return function()
 					local registry = context.registry
 					local testEntity = registry:createEntity()
 					local called = false
-					local collection = createTestCollection(registry, {
-						required = { "Test1" },
-						update = { "Test2", "Test4" },
-						optional = {},
-						forbidden = { "Test3" },
+					local reactor = createTestReactor(registry, {
+						withAll = { "Test1" },
+						withUpdated = { "Test2", "Test4" },
+						without = { "Test3" },
 					})
 
-					collection.added:connect(function(entity, test1, test2, test4)
+					reactor.added:connect(function(entity, test1, test2, test4)
 						called = true
 						expect(entity).to.equal(testEntity)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
@@ -385,30 +359,28 @@ return function()
 					registry:replaceComponent(testEntity, "Test4", {})
 					registry:replaceComponent(testEntity, "Test2", {})
 					expect(called).to.equal(true)
-					expect(collection._pool:getIndex(testEntity)).to.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.be.ok()
 
 					called = false
 					registry:addComponent(testEntity, "Test3", {})
-					expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
 
 					registry:replaceComponent(testEntity, "Test4", {})
 					registry:replaceComponent(testEntity, "Test2", {})
 					expect(called).to.equal(false)
-					expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
 				end
 			)
 
 			it("should not fire twice when a component is updated twice", function(context)
 				local registry = context.registry
 				local called = false
-				local collection = createTestCollection(registry, {
-					required = { "Test1", "Test2" },
-					update = { "Test4" },
-					optional = {},
-					forbidden = {},
+				local reactor = createTestReactor(registry, {
+					withAll = { "Test1", "Test2" },
+					withUpdated = { "Test4" },
 				})
 
-				collection.added:connect(function()
+				reactor.added:connect(function()
 					called = true
 				end)
 
@@ -433,14 +405,12 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = createTestCollection(registry, {
-						required = { "Test1", "Test2" },
-						update = {},
-						forbidden = {},
-						optional = { "Test3", "Test4" },
+					local reactor = createTestReactor(registry, {
+						withAll = { "Test1", "Test2" },
+						withAny = { "Test3", "Test4" },
 					})
 
-					collection.added:connect(function(entity, test1, test2, test3, test4)
+					reactor.added:connect(function(entity, test1, test2, test3, test4)
 						called = true
 						expect(entity).to.equal(testEntity)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
@@ -457,7 +427,7 @@ return function()
 					})
 
 					expect(called).to.equal(true)
-					expect(collection._pool:getIndex(testEntity)).to.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.be.ok()
 				end
 			)
 		end)
@@ -471,14 +441,11 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = createTestCollection(registry, {
-						required = { "Test1", "Test2", "Test3" },
-						update = {},
-						optional = {},
-						forbidden = {},
+					local reactor = createTestReactor(registry, {
+						withAll = { "Test1", "Test2", "Test3" },
 					})
 
-					collection.removed:connect(function(entity, test1, test2, test3)
+					reactor.removed:connect(function(entity, test1, test2, test3)
 						called = true
 						expect(entity).to.equal(testEntity)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
@@ -494,7 +461,7 @@ return function()
 
 					registry:removeComponent(testEntity, "Test2")
 					expect(called).to.equal(true)
-					expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
 				end
 			)
 		end)
@@ -506,14 +473,12 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = createTestCollection(registry, {
-						required = { "Test1", "Test2" },
-						update = {},
-						optional = {},
-						forbidden = { "Test3" },
+					local reactor = createTestReactor(registry, {
+						withAll = { "Test1", "Test2" },
+						without = { "Test3" },
 					})
 
-					collection.removed:connect(function(entity, test1, test2)
+					reactor.removed:connect(function(entity, test1, test2)
 						called = true
 						expect(entity).to.equal(testEntity)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
@@ -527,7 +492,7 @@ return function()
 
 					registry:addComponent(testEntity, "Test3", {})
 					expect(called).to.equal(true)
-					expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
 				end
 			)
 		end)
@@ -539,14 +504,13 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = createTestCollection(registry, {
-						required = { "Test1", "Test2" },
-						update = { "Test4" },
-						optional = {},
-						forbidden = { "Test3" },
+					local reactor = createTestReactor(registry, {
+						withAll = { "Test1", "Test2" },
+						withUpdated = { "Test4" },
+						without = { "Test3" },
 					})
 
-					collection.removed:connect(function(entity, test1, test2, test4)
+					reactor.removed:connect(function(entity, test1, test2, test4)
 						called = true
 						expect(entity).to.equal(testEntity)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
@@ -562,7 +526,7 @@ return function()
 
 					registry:replaceComponent(testEntity, "Test4", {})
 					registry:removeComponent(testEntity, "Test2", {})
-					expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
+					expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
 					expect(called).to.equal(true)
 				end
 			)
@@ -573,11 +537,10 @@ return function()
 			function(context)
 				local registry = context.registry
 				local testEntity = registry:createEntity()
-				local collection = createTestCollection(registry, {
-					required = { "Test1", "Test2" },
-					update = { "Test4" },
-					optional = {},
-					forbidden = { "Test3" },
+				local reactor = createTestReactor(registry, {
+					withAll = { "Test1", "Test2" },
+					withUpdated = { "Test4" },
+					without = { "Test3" },
 				})
 
 				registry:addComponents(testEntity, {
@@ -588,23 +551,20 @@ return function()
 
 				registry:replaceComponent(testEntity, "Test4", {})
 				registry:removeComponent(testEntity, "Test4")
-				expect(collection._pool:getIndex(testEntity)).to.never.be.ok()
-				expect(collection._updates[testEntity]).to.equal(nil)
+				expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
+				expect(reactor._updates[testEntity]).to.equal(nil)
 			end
 		)
 	end)
 
 	describe("attach", function()
-		it("should attach items when an entity enters the collection", function(context)
+		it("should attach items when an entity enters the reactor", function(context)
 			local registry = context.registry
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
 			local holes = {}
-			local collection, _, len = createTestCollection(registry, {
-				required = { "Test1", "Test2" },
-				update = {},
-				optional = {},
-				forbidden = {},
+			local reactor, _, len = createTestReactor(registry, {
+				withAll = { "Test1", "Test2" },
 			}, function()
 				local hole = Instance.new("Hole")
 
@@ -623,7 +583,7 @@ return function()
 			expect(numCalled).to.equal(len)
 			numCalled = 0
 
-			collection:each(function(entity)
+			reactor:each(function(entity)
 				registry:removeComponent(entity, "Test2")
 			end)
 
@@ -639,15 +599,12 @@ return function()
 	end)
 
 	describe("detach", function()
-		it("should detach every item from every entity in the collection", function(context)
+		it("should detach every item from every entity in the reactor", function(context)
 			local registry = context.registry
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
-			local collection = createTestCollection(registry, {
-				required = { "Test1", "Test2" },
-				update = {},
-				optional = {},
-				forbidden = {},
+			local reactor = createTestReactor(registry, {
+				withAll = { "Test1", "Test2" },
 			}, function()
 				return {
 					event.Event:Connect(function()
@@ -656,7 +613,7 @@ return function()
 				}
 			end)
 
-			collection:detach()
+			reactor:detach()
 
 			event:Fire()
 			expect(numCalled).to.equal(0)
@@ -667,21 +624,18 @@ return function()
 		it(
 			"should remove each entity from the pool and clear their update states",
 			function(context)
-				local collection, toIterate = createTestCollection(context.registry, {
-					required = { "Test1" },
-					update = { "Test2" },
-					forbidden = {},
-					optional = {},
+				local reactor, toIterate = createTestReactor(context.registry, {
+					withUpdated = { "Test1" },
 				})
 
-				collection:consumeEach(function(entity)
+				reactor:consumeEach(function(entity)
 					expect(toIterate[entity]).to.be.ok()
 					toIterate[entity] = nil
 				end)
 
 				expect(next(toIterate)).to.equal(nil)
-				expect(next(collection._pool.dense)).to.equal(nil)
-				expect(next(collection._updates)).to.equal(nil)
+				expect(next(reactor._pool.dense)).to.equal(nil)
+				expect(next(reactor._updates)).to.equal(nil)
 			end
 		)
 	end)
@@ -689,11 +643,9 @@ return function()
 	describe("consume", function()
 		it("should remove the entity from the pool and clear its update state", function(context)
 			local registry = context.registry
-			local collection = createTestCollection(registry, {
-				required = { "Test1" },
-				update = { "Test2" },
-				forbidden = {},
-				optional = {},
+			local reactor = createTestReactor(registry, {
+				withAll = { "Test1" },
+				withUpdated = { "Test2" },
 			})
 
 			local entity = registry:addComponents(registry:createEntity(), {
@@ -702,10 +654,10 @@ return function()
 			})
 
 			registry:replaceComponent(entity, "Test2", {})
-			collection:consume(entity)
+			reactor:consume(entity)
 
-			expect(collection._pool:get(entity)).to.equal(nil)
-			expect(collection._updates[entity]).to.equal(nil)
+			expect(reactor._pool:get(entity)).to.equal(nil)
+			expect(reactor._updates[entity]).to.equal(nil)
 		end)
 	end)
 
@@ -714,11 +666,9 @@ return function()
 			"should pack the required and updated components of the entity into _packed",
 			function(context)
 				local registry = context.registry
-				local collection = createTestCollection(registry, {
-					required = { "Test2", "Test3" },
-					update = { "Test3", "Test4" },
-					optional = {},
-					forbidden = {},
+				local reactor = createTestReactor(registry, {
+					withAll = { "Test2", "Test3" },
+					withUpdated = { "Test3", "Test4" },
 				})
 
 				local entity = context.registry:addComponents(context.registry:createEntity(), {
@@ -728,12 +678,12 @@ return function()
 					Test4 = {},
 				})
 
-				collection:_pack(entity)
+				reactor:_pack(entity)
 
-				expect(collection._packed[1]).to.equal(context.registry:getComponent(entity, "Test2"))
-				expect(collection._packed[2]).to.equal(context.registry:getComponent(entity, "Test3"))
-				expect(collection._packed[3]).to.equal(context.registry:getComponent(entity, "Test3"))
-				expect(collection._packed[4]).to.equal(context.registry:getComponent(entity, "Test4"))
+				expect(reactor._packed[1]).to.equal(context.registry:getComponent(entity, "Test2"))
+				expect(reactor._packed[2]).to.equal(context.registry:getComponent(entity, "Test3"))
+				expect(reactor._packed[3]).to.equal(context.registry:getComponent(entity, "Test3"))
+				expect(reactor._packed[4]).to.equal(context.registry:getComponent(entity, "Test4"))
 			end
 		)
 	end)
@@ -743,11 +693,10 @@ return function()
 			"should pack required and optional components and return true if the entity has all of them",
 			function(context)
 				local registry = context.registry
-				local collection = createTestCollection(registry, {
-					required = { "Test1", "Test2" },
-					update = {},
-					optional = { "Test4" },
-					forbidden = { "Test3" },
+				local reactor = createTestReactor(registry, {
+					withAll = { "Test1", "Test2" },
+					withAny = { "Test4" },
+					without = { "Test3" },
 				})
 
 				local entity = registry:addComponents(registry:createEntity(), {
@@ -756,13 +705,13 @@ return function()
 					Test4 = {},
 				})
 
-				expect(collection:_tryPack(entity)).to.equal(true)
+				expect(reactor:_tryPack(entity)).to.equal(true)
 
-				expect(collection._packed[1]).to.equal(registry:getComponent(entity, "Test1"))
-				expect(collection._packed[2]).to.equal(registry:getComponent(entity, "Test2"))
-				expect(collection._packed[3]).to.equal(registry:getComponent(entity, "Test4"))
+				expect(reactor._packed[1]).to.equal(registry:getComponent(entity, "Test1"))
+				expect(reactor._packed[2]).to.equal(registry:getComponent(entity, "Test2"))
+				expect(reactor._packed[3]).to.equal(registry:getComponent(entity, "Test4"))
 
-				expect(collection:_tryPack(registry:addComponents(registry:createEntity(), {
+				expect(reactor:_tryPack(registry:addComponents(registry:createEntity(), {
 					Test1 = {},
 					Test2 = {},
 					Test3 = {},

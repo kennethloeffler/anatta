@@ -3,19 +3,19 @@ return function()
 	local SingleMapper = require(script.Parent.SingleMapper)
 
 	describe("new", function()
-		it("should create a new SinglePureCollection from a pool", function()
+		it("should create a new SingleMapper from a pool", function()
 			local pool = Pool.new("test", {})
-			local collection = SingleMapper.new(pool)
+			local mapper = SingleMapper.new(pool)
 
-			expect(getmetatable(collection)).to.equal(SingleMapper)
-			expect(collection._pool).to.equal(pool)
+			expect(getmetatable(mapper)).to.equal(SingleMapper)
+			expect(mapper._pool).to.equal(pool)
 		end)
 	end)
 
 	describe("each", function()
 		it("should iterate all and only the elements in the pool and pass their data", function()
 			local pool = Pool.new("test", {})
-			local collection = SingleMapper.new(pool)
+			local mapper = SingleMapper.new(pool)
 			local toIterate = {}
 
 			for i = 1, 100 do
@@ -24,7 +24,7 @@ return function()
 				toIterate[i] = obj
 			end
 
-			collection:each(function(entity, obj)
+			mapper:each(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 				toIterate[entity] = nil
 
@@ -38,7 +38,7 @@ return function()
 	describe("update", function()
 		it("should iterate all and only the elements in the pool and pass their data", function()
 			local pool = Pool.new("test", {})
-			local collection = SingleMapper.new(pool)
+			local mapper = SingleMapper.new(pool)
 			local toIterate = {}
 
 			for i = 1, 100 do
@@ -47,7 +47,7 @@ return function()
 				toIterate[i] = obj
 			end
 
-			collection:update(function(entity, obj)
+			mapper:update(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 				toIterate[entity] = nil
 
@@ -59,7 +59,7 @@ return function()
 
 		it("should replace the passed data with the returned data", function()
 			local pool = Pool.new("test", {})
-			local collection = SingleMapper.new(pool)
+			local mapper = SingleMapper.new(pool)
 			local toIterate = {}
 
 			for i = 1, 100 do
@@ -68,7 +68,7 @@ return function()
 				toIterate[i] = obj
 			end
 
-			collection:update(function(entity, obj)
+			mapper:update(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 
 				toIterate[entity] = {}
@@ -76,7 +76,7 @@ return function()
 				return toIterate[entity]
 			end)
 
-			collection:each(function(entity, obj)
+			mapper:each(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 			end)
 		end)

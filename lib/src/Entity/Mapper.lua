@@ -1,29 +1,41 @@
 local SingleMapper = require(script.Parent.SingleMapper)
+local Types = require(script.Parent.Parent.Types)
 local util = require(script.Parent.Parent.util)
 
 local Mapper = {}
 Mapper.__index = Mapper
 
+local ErrCantHaveUpdated = "Mappers cannot track updates to components"
+local ErrNeedComponents = "Mappers need at least one required component type"
+
 local function ErrNeedsRequired()
 	util.jumpAssert("Pure collections can only update required components")
 end
 
-function Mapper.new(system)
-	local registry = system.registry
+function Mapper.new(registry, query)
+	util.jumpAssert(Types.Query(query))
 
-	if #system.forbidden == 0 and #system.optional == 0 and #system.required == 1 then
-		return SingleMapper.new(registry:getPool(system.required[1]))
+	local withAll = query.withAll or {}
+	local withAny = query.withAny or {}
+	local withUpdated = query.withUpdated or {}
+	local without = query.without or {}
+
+	util.jumpAssert(#withUpdated == 0, ErrCantHaveUpdated)
+	util.jumpAssert(#withAll > 0, ErrNeedComponents)
+
+	if #without == 0 and #withAny == 0 and #withAll == 1 then
+		return SingleMapper.new(registry:getPool(query.withAll[1]))
 	end
 
 	return setmetatable({
-		_required = registry:getPools(system.required),
-		_forbidden = registry:getPools(system.forbidden),
-		_optional = registry:getPools(system.optional),
-		_packed = table.create(#system.required + #system.optional),
-		_numPacked = #system.required + #system.optional,
-		_numRequired = #system.required,
+		_required = registry:getPools(withAll),
+		_forbidden = registry:getPools(without),
+		_optional = registry:getPools(withAny),
+		_packed = table.create(#withAll + #withAny),
+		_numPacked = #withAll + #withAny,
+		_numRequired = #withAll,
 
-		update = #system.required > 0 and Mapper.update or ErrNeedsRequired,
+		update = #withAll > 0 and Mapper.update or ErrNeedsRequired,
 	}, Mapper)
 end
 

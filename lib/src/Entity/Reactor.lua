@@ -1,42 +1,51 @@
+local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleReactor = require(script.Parent.SingleReactor)
-local Finalizers = require(script.Parent.Parent.Core.Finalizers)
+local Types = require(script.Parent.Parent.Types)
+
+local util = require(script.Parent.Parent.util)
+
+local ErrNeedComponents = "Reactors need a required, updated, or optional component type"
+local ErrTooManyUpdated = "Reactors can only track up to 32 updated component types"
 
 local Reactor = {}
 Reactor.__index = Reactor
 
-function Reactor.new(system)
-	local registry = system.registry
+function Reactor.new(registry, query)
+	util.jumpAssert(Types.Query(query))
 
-	if
-		#system.required == 1
-		and #system.update == 0
-		and #system.forbidden == 0
-		and #system.optional == 0
-	then
-		return SingleReactor.new(registry:getPool(system.required[1]))
+	local withAll = query.withAll or {}
+	local withUpdated = query.withUpdated or {}
+	local without = query.without or {}
+	local withAny = query.withAny or {}
+
+	util.jumpAssert(#withUpdated <= 32, ErrTooManyUpdated)
+	util.jumpAssert(#withAll > 0 or #withUpdated > 0 or #withAny > 0, ErrNeedComponents)
+
+	if #withAll == 1 and #withUpdated == 0 and #without == 0 and #withAny == 0 then
+		return SingleReactor.new(registry:getPool(query.withAll[1]))
 	end
 
-	local collectionPool = Pool.new("collectionInternal", {})
+	local reactorContents = Pool.new("reactorContents", {})
 
 	local self = setmetatable({
-		added = collectionPool.added,
-		removed = collectionPool.removed,
+		added = reactorContents.added,
+		removed = reactorContents.removed,
 
-		_pool = collectionPool,
+		_pool = reactorContents,
 		_updates = {},
 		_connections = {},
 
-		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #system.update),
-		_numPacked = #system.required + #system.update + #system.optional,
-		_numRequired = #system.required,
-		_numUpdated = #system.update,
+		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #withUpdated),
+		_numPacked = #withAll + #withUpdated + #withAny,
+		_numRequired = #withAll,
+		_numUpdated = #withUpdated,
 
-		_packed = table.create(#system.required + #system.update + #system.optional),
-		_required = registry:getPools(system.required),
-		_forbidden = registry:getPools(system.forbidden),
-		_updated = registry:getPools(system.update),
-		_optional = registry:getPools(system.optional),
+		_packed = table.create(#withAll + #withUpdated + #withAny),
+		_required = registry:getPools(withAll),
+		_forbidden = registry:getPools(without),
+		_updated = registry:getPools(withUpdated),
+		_optional = registry:getPools(withAny),
 	}, Reactor)
 
 	for _, pool in ipairs(self._required) do
