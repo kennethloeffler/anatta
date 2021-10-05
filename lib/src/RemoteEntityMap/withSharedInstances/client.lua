@@ -24,33 +24,32 @@ return function(remoteEntityMap)
 
 			for _, objectValue in ipairs(objectValues) do
 				if objectValue.Value == sharedInstance then
-					-- If the reference is to the shared Instance, then it is definitely
-					-- valid right now. It will remain valid at least until the shared
-					-- Instance is removed (whether by tag removal, being streamed out,
-					-- destruction, etc.), so nothing more must be done in this case.
+					-- If the reference is to the shared Instance itself, then it is
+					-- definitely valid right now. It will remain valid at least until the
+					-- shared Instance is removed (whether by tag removal, being streamed
+					-- out, destruction, etc.), so nothing more must be done in this case.
 					continue
 				end
 
 				-- Otherwise, this ObjectValue must be observed to ensure that the
 				-- Registry never contains an invalid reference.
-				table.insert(
-					connections,
-					objectValue.Changed:Connect(function(ref)
-						if ref == nil then
-							registry:tryRemove(localEntity, componentName)
-						else
-							local success, component = Dom.tryFromAttribute(
-								sharedInstance,
-								componentName,
-								typeDefinition
-							)
+				local connection = objectValue.Changed:Connect(function(ref)
+					if ref == nil then
+						registry:tryRemove(localEntity, componentName)
+					else
+						local success, component = Dom.tryFromAttribute(
+							sharedInstance,
+							componentName,
+							typeDefinition
+						)
 
-							if success then
-								registry:tryAdd(localEntity, componentName, component)
-							end
+						if success then
+							registry:tryAdd(localEntity, componentName, component)
 						end
-					end)
-				)
+					end
+				end)
+
+				table.insert(connections, connection)
 			end
 
 			connectedListeners[sharedInstance] = connections

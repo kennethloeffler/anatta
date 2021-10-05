@@ -6,34 +6,34 @@ RemoteEntityMap.__index = RemoteEntityMap
 function RemoteEntityMap.new(registry)
 	return setmetatable({
 		registry = registry,
-		localEntitiesByRemote = {},
-		remoteEntitiesByLocal = {},
+		remoteFromLocal = {},
+		localFromRemote = {},
 	}, RemoteEntityMap)
 end
 
 function RemoteEntityMap:add(remoteEntity)
 	local localEntity = self.registry:create()
 
-	self.remoteEntitiesByLocal[localEntity] = remoteEntity
-	self.localEntitiesByRemote[remoteEntity] = localEntity
+	self.remoteFromLocal[localEntity] = remoteEntity
+	self.localFromRemote[remoteEntity] = localEntity
 
 	return localEntity
 end
 
 function RemoteEntityMap:remove(remoteEntity)
-	local localEntity = self.localEntitiesByRemote[remoteEntity]
+	local localEntity = self.localFromRemote[remoteEntity]
 
 	self.registry:destroy(localEntity)
-	self.remoteEntitiesByLocal[localEntity] = nil
-	self.localEntitiesByRemote[remoteEntity] = nil
+	self.remoteFromLocal[localEntity] = nil
+	self.localFromRemote[remoteEntity] = nil
 end
 
-function RemoteEntityMap:getLocal(remoteEntity)
-	return self.localEntitiesByRemote[remoteEntity]
+function RemoteEntityMap:getLocalEntity(remoteEntity)
+	return self.localFromRemote[remoteEntity]
 end
 
-function RemoteEntityMap:getRemote(localEntity)
-	return self.remoteEntitiesByLocal[localEntity]
+function RemoteEntityMap:getRemoteEntity(localEntity)
+	return self.remoteFromLocal[localEntity]
 end
 
 function RemoteEntityMap:withSharedInstances()
