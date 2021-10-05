@@ -1,10 +1,10 @@
 return function()
-	local Type = require(script.Parent.Type)
+	local TypeDefinition = require(script.Parent.TypeDefinition)
 	local t = require(script.Parent.Parent.Parent.t)
 
 	describe("new", function()
 		it("should return a primitive definition for first-order functions", function()
-			local ty = Type.Vector3
+			local ty = TypeDefinition.Vector3
 
 			expect(ty).to.be.a("table")
 			expect(ty.check).to.equal(t.Vector3)
@@ -12,7 +12,7 @@ return function()
 		end)
 
 		it("should return a compound definition for second-order functions", function()
-			local ty = Type.instanceIsA("BasePart")
+			local ty = TypeDefinition.instanceIsA("BasePart")
 
 			expect(ty).to.be.a("table")
 			expect(ty.typeParams).to.be.a("table")
@@ -24,7 +24,10 @@ return function()
 		it(
 			"should return a compound definition for second-order functions that take functions as arguments",
 			function()
-				local ty = Type.union(Type.literal("string1"), Type.literal("string2"))
+				local ty = TypeDefinition.union(
+					TypeDefinition.literal("string1"),
+					TypeDefinition.literal("string2")
+				)
 
 				expect(ty).to.be.a("table")
 				expect(ty.typeParams).to.be.a("table")
@@ -49,20 +52,20 @@ return function()
 
 	describe("getConcreteType", function()
 		it("should resolve a primitive", function()
-			local _, concreteType = Type.string:tryGetConcreteType()
+			local _, concreteType = TypeDefinition.string:tryGetConcreteType()
 			expect(concreteType).to.equal("string")
 		end)
 
 		it("should resolve number types", function()
-			local _, concreteType = Type.numberMin(0):tryGetConcreteType()
+			local _, concreteType = TypeDefinition.numberMin(0):tryGetConcreteType()
 			expect(concreteType).to.equal("number")
 		end)
 
 		it("should resolve a strict interface into a dictionary of concrete types", function()
-			local interface = Type.strictInterface({
-				all = Type.Enum,
-				simulacrum = Type.strictInterface({
-					name = Type.string,
+			local interface = TypeDefinition.strictInterface({
+				all = TypeDefinition.Enum,
+				simulacrum = TypeDefinition.strictInterface({
+					name = TypeDefinition.string,
 				}),
 			})
 			local _, concreteInterface = interface:tryGetConcreteType()
@@ -73,12 +76,12 @@ return function()
 		end)
 
 		it("should resolve a union when it contains uniform types", function()
-			local stringUnion = Type.union(
-				Type.literal("Oh"),
-				Type.literal("No"),
-				Type.literal("It's"),
-				Type.literal("A"),
-				Type.literal("Union")
+			local stringUnion = TypeDefinition.union(
+				TypeDefinition.literal("Oh"),
+				TypeDefinition.literal("No"),
+				TypeDefinition.literal("It's"),
+				TypeDefinition.literal("A"),
+				TypeDefinition.literal("Union")
 			)
 
 			local _, concreteType = stringUnion:tryGetConcreteType()

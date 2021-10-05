@@ -1,6 +1,6 @@
 return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
-	local t = require(script.Parent.Parent.Core.Type)
+	local t = require(script.Parent.Parent.Core.TypeDefinition)
 
 	local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 

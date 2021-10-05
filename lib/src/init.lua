@@ -3,7 +3,7 @@ local Entity = require(script.Entity)
 local Loader = require(script.Loader)
 local RemoteEntityMap = require(script.RemoteEntityMap)
 local System = require(script.System)
-local Type = require(script.Core.Type)
+local TypeDefinition = require(script.Core.TypeDefinition)
 
 return {
 	Dom = Dom,
@@ -11,5 +11,5 @@ return {
 	Loader = Loader,
 	RemoteEntityMap = RemoteEntityMap,
 	System = System,
-	t = Type,
+	t = TypeDefinition,
 }

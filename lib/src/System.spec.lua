@@ -1,7 +1,7 @@
 return function()
 	local Entity = require(script.Parent.Entity)
 	local System = require(script.Parent.System)
-	local t = require(script.Parent.Core.Type)
+	local t = require(script.Parent.Core.TypeDefinition)
 
 	local registry = Entity.Registry.new({
 		Test1 = t.table,

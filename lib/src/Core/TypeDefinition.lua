@@ -5,13 +5,8 @@
 
 ]]
 
+local Types = require(script.Parent.Parent.Types)
 local t = require(script.Parent.Parent.Parent.t)
-
-local isTypeParam = t.strictInterface({
-	typeParams = t.table,
-	check = t.callback,
-	typeName = t.string,
-})
 
 local firstOrder = {
 	boolean = true,
@@ -238,7 +233,7 @@ local function unwrap(...)
 	for i = 1, select("#", ...) do
 		local arg = select(i, ...)
 
-		if isTypeParam(arg) then
+		if Types.TypeDefinition(arg) then
 			unwrapped[i] = arg.check
 		elseif typeof(arg) == "table" then
 			local tableArg = {}
@@ -256,18 +251,18 @@ local function unwrap(...)
 	return unpack(unwrapped)
 end
 
-local Type = {}
-Type.__index = Type
+local TypeDefinition = {}
+TypeDefinition.__index = TypeDefinition
 
-function Type._new(typeName, check, ...)
+function TypeDefinition._new(typeName, check, ...)
 	return setmetatable({
 		typeParams = { ... },
 		check = check,
 		typeName = typeName,
-	}, Type)
+	}, TypeDefinition)
 end
 
-function Type:tryDefault()
+function TypeDefinition:tryDefault()
 	local success, concreteType = self:tryGetConcreteType()
 	local value = defaults[concreteType]
 
@@ -286,7 +281,7 @@ function Type:tryDefault()
 	end
 end
 
-function Type:tryGetConcreteType()
+function TypeDefinition:tryGetConcreteType()
 	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
 
 	if concreteType then
@@ -300,12 +295,12 @@ end
 
 for typeName in pairs(t) do
 	if firstOrder[typeName] ~= nil then
-		Type[typeName] = Type._new(typeName, t[typeName])
+		TypeDefinition[typeName] = TypeDefinition._new(typeName, t[typeName])
 	elseif secondOrder[typeName] ~= nil then
-		Type[typeName] = function(...)
-			return Type._new(typeName, t[typeName](unwrap(...)), ...)
+		TypeDefinition[typeName] = function(...)
+			return TypeDefinition._new(typeName, t[typeName](unwrap(...)), ...)
 		end
 	end
 end
 
-return Type
+return TypeDefinition

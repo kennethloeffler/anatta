@@ -2,9 +2,40 @@ return function()
 	local PureCollection = require(script.Parent.PureCollection)
 	local SinglePureCollection = require(script.Parent.SinglePureCollection)
 	local Registry = require(script.Parent.Registry)
-	local t = require(script.Parent.Parent.Core.Type)
+	local t = require(script.Parent.Parent.Core.TypeDefinition)
 
-	local function getCollection(registry, system)
+	beforeEach(function(context)
+		local registry = Registry.new()
+
+		registry:defineComponent({
+			name = "Test1",
+			type = t.table,
+		})
+
+		registry:defineComponent({
+			name = "Test2",
+			type = t.table,
+		})
+
+		registry:defineComponent({
+			name = "Test3",
+			type = t.table,
+		})
+
+		registry:defineComponent({
+			name = "Test4",
+			type = t.table,
+		})
+
+		registry:defineComponent({
+			name = "TestTag",
+			type = t.none,
+		})
+
+		context.registry = registry
+	end)
+
+	local function createTestCollection(registry, system)
 		system.registry = registry
 
 		local toIterate = {}
@@ -15,7 +46,7 @@ return function()
 
 			if i % 2 == 0 then
 				registry:addComponent(entity, "Test1", {})
-				registry:addComponent(entity, "Test5")
+				registry:addComponent(entity, "TestTag")
 			end
 
 			if i % 3 == 0 then
@@ -40,16 +71,6 @@ return function()
 
 		return collection, toIterate
 	end
-
-	beforeEach(function(context)
-		context.registry = Registry.new({
-			Test1 = t.table,
-			Test2 = t.table,
-			Test3 = t.table,
-			Test4 = t.table,
-			Test5 = t.none,
-		})
-	end)
 
 	describe("new", function()
 		it(
@@ -87,7 +108,7 @@ return function()
 				"should iterate all and only the entities with at least the required components and pass them plus any optional ones",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = getCollection(registry, {
+					local collection, toIterate = createTestCollection(registry, {
 						required = { "Test1", "Test2" },
 						optional = { "Test3", "Test4" },
 						forbidden = {},
@@ -112,7 +133,7 @@ return function()
 				"should replace required components with ones returned by the callback",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = getCollection(registry, {
+					local collection, toIterate = createTestCollection(registry, {
 						required = { "Test1", "Test2" },
 						forbidden = {},
 						optional = {},

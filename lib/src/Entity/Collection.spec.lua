@@ -3,9 +3,40 @@ return function()
 	local Registry = require(script.Parent.Registry)
 	local Collection = require(script.Parent.Collection)
 	local SingleCollection = require(script.Parent.SingleCollection)
-	local t = require(script.Parent.Parent.Core.Type)
+	local t = require(script.Parent.Parent.Core.TypeDefinition)
 
-	local function getCollection(registry, system, callback)
+	beforeEach(function(context)
+		local registry = Registry.new()
+
+		registry:defineComponent({
+			name = "Test1",
+			type = t.table,
+		})
+
+		registry:defineComponent({
+			name = "Test2",
+			type = t.table,
+		})
+
+		registry:defineComponent({
+			name = "Test3",
+			type = t.table,
+		})
+
+		registry:defineComponent({
+			name = "Test4",
+			type = t.table,
+		})
+
+		registry:defineComponent({
+			name = "TestTag",
+			type = t.none,
+		})
+
+		context.registry = registry
+	end)
+
+	local function createTestCollection(registry, system, callback)
 		system.registry = registry
 
 		local len = 0
@@ -21,7 +52,7 @@ return function()
 
 			if i % 2 == 0 then
 				registry:addComponent(entity, "Test1", {})
-				registry:addComponent(entity, "Test5")
+				registry:addComponent(entity, "TestTag")
 			end
 
 			if i % 3 == 0 then
@@ -48,7 +79,7 @@ return function()
 						registry:replaceComponent(entity, component, {})
 					end
 
-					toIterate[entity] = registry:multiGet(entity, {}, unpack(system.update))
+					toIterate[entity] = registry:getComponents(entity, {}, unpack(system.update))
 				else
 					toIterate[entity] = true
 				end
@@ -57,16 +88,6 @@ return function()
 
 		return collection, toIterate, len
 	end
-
-	beforeEach(function(context)
-		context.registry = Registry.new({
-			Test1 = t.table,
-			Test2 = t.table,
-			Test3 = t.table,
-			Test4 = t.table,
-			Test5 = t.none,
-		})
-	end)
 
 	describe("new", function()
 		it(
@@ -140,7 +161,7 @@ return function()
 				"should iterate all and only the entities with at least the required components and pass their data",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = getCollection(registry, {
+					local collection, toIterate = createTestCollection(registry, {
 						required = { "Test1", "Test2", "Test3" },
 						update = {},
 						optional = {},
@@ -165,9 +186,9 @@ return function()
 				"should iterate all the entities with at least the required components and any of the optional components",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = getCollection(registry, {
+					local collection, toIterate = createTestCollection(registry, {
 						required = { "Test1", "Test2" },
-						optional = { "Test5", "Test4" },
+						optional = { "TestTag", "Test4" },
 						forbidden = {},
 						update = {},
 					})
@@ -191,7 +212,7 @@ return function()
 				"should iterate all and only the entities with at least the required components and none of the forbidden components and pass their data",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = getCollection(registry, {
+					local collection, toIterate = createTestCollection(registry, {
 						required = { "Test1", "Test2" },
 						update = {},
 						optional = {},
@@ -215,7 +236,7 @@ return function()
 				"should iterate all and only the entities with at least the required components, none of the forbidden components, and all of the updated components, and pass their data",
 				function(context)
 					local registry = context.registry
-					local collection, toIterate = getCollection(registry, {
+					local collection, toIterate = createTestCollection(registry, {
 						required = { "Test1" },
 						update = { "Test2", "Test3" },
 						optional = {},
@@ -236,7 +257,7 @@ return function()
 
 			it("should capture updates caused during iteration", function(context)
 				local registry = context.registry
-				local collection, toIterate = getCollection(registry, {
+				local collection, toIterate = createTestCollection(registry, {
 					required = { "Test1" },
 					update = { "Test2" },
 					optional = {},
@@ -267,7 +288,7 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = getCollection(registry, {
+					local collection = createTestCollection(registry, {
 						required = { "Test1", "Test2", "Test3" },
 						optional = {},
 						forbidden = {},
@@ -282,7 +303,7 @@ return function()
 						expect(test3).to.equal(registry:getComponent(entity, "Test3"))
 					end)
 
-					registry:multiAdd(testEntity, {
+					registry:addComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test3 = {},
@@ -301,7 +322,7 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = getCollection(registry, {
+					local collection = createTestCollection(registry, {
 						required = { "Test1", "Test2" },
 						update = {},
 						forbidden = { "Test3" },
@@ -315,7 +336,7 @@ return function()
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
 					end)
 
-					registry:multiAdd(testEntity, {
+					registry:addComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 					})
@@ -338,7 +359,7 @@ return function()
 					local registry = context.registry
 					local testEntity = registry:createEntity()
 					local called = false
-					local collection = getCollection(registry, {
+					local collection = createTestCollection(registry, {
 						required = { "Test1" },
 						update = { "Test2", "Test4" },
 						optional = {},
@@ -353,7 +374,7 @@ return function()
 						expect(test4).to.equal(registry:getComponent(entity, "Test4"))
 					end)
 
-					registry:multiAdd(testEntity, {
+					registry:addComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test4 = {},
@@ -380,7 +401,7 @@ return function()
 			it("should not fire twice when a component is updated twice", function(context)
 				local registry = context.registry
 				local called = false
-				local collection = getCollection(registry, {
+				local collection = createTestCollection(registry, {
 					required = { "Test1", "Test2" },
 					update = { "Test4" },
 					optional = {},
@@ -393,7 +414,7 @@ return function()
 
 				local testEntity = registry:createEntity()
 
-				registry:multiAdd(testEntity, {
+				registry:addComponents(testEntity, {
 					Test1 = {},
 					Test2 = {},
 					Test4 = {},
@@ -412,7 +433,7 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = getCollection(registry, {
+					local collection = createTestCollection(registry, {
 						required = { "Test1", "Test2" },
 						update = {},
 						forbidden = {},
@@ -428,7 +449,7 @@ return function()
 						expect(test4).to.equal(registry:getComponent(entity, "Test4"))
 					end)
 
-					registry:multiAdd(testEntity, {
+					registry:addComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test3 = {},
@@ -450,7 +471,7 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = getCollection(registry, {
+					local collection = createTestCollection(registry, {
 						required = { "Test1", "Test2", "Test3" },
 						update = {},
 						optional = {},
@@ -465,7 +486,7 @@ return function()
 						expect(test3).to.equal(registry:getComponent(entity, "Test3"))
 					end)
 
-					registry:multiAdd(testEntity, {
+					registry:addComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test3 = {},
@@ -485,7 +506,7 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = getCollection(registry, {
+					local collection = createTestCollection(registry, {
 						required = { "Test1", "Test2" },
 						update = {},
 						optional = {},
@@ -499,7 +520,7 @@ return function()
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
 					end)
 
-					registry:multiAdd(testEntity, {
+					registry:addComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 					})
@@ -518,7 +539,7 @@ return function()
 					local registry = context.registry
 					local called = false
 					local testEntity = registry:createEntity()
-					local collection = getCollection(registry, {
+					local collection = createTestCollection(registry, {
 						required = { "Test1", "Test2" },
 						update = { "Test4" },
 						optional = {},
@@ -533,7 +554,7 @@ return function()
 						expect(test4).to.equal(registry:getComponent(entity, "Test4"))
 					end)
 
-					registry:multiAdd(testEntity, {
+					registry:addComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test4 = {},
@@ -552,14 +573,14 @@ return function()
 			function(context)
 				local registry = context.registry
 				local testEntity = registry:createEntity()
-				local collection = getCollection(registry, {
+				local collection = createTestCollection(registry, {
 					required = { "Test1", "Test2" },
 					update = { "Test4" },
 					optional = {},
 					forbidden = { "Test3" },
 				})
 
-				registry:multiAdd(testEntity, {
+				registry:addComponents(testEntity, {
 					Test1 = {},
 					Test2 = {},
 					Test4 = {},
@@ -579,7 +600,7 @@ return function()
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
 			local holes = {}
-			local collection, _, len = getCollection(registry, {
+			local collection, _, len = createTestCollection(registry, {
 				required = { "Test1", "Test2" },
 				update = {},
 				optional = {},
@@ -622,7 +643,7 @@ return function()
 			local registry = context.registry
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
-			local collection = getCollection(registry, {
+			local collection = createTestCollection(registry, {
 				required = { "Test1", "Test2" },
 				update = {},
 				optional = {},
@@ -646,7 +667,7 @@ return function()
 		it(
 			"should remove each entity from the pool and clear their update states",
 			function(context)
-				local collection, toIterate = getCollection(context.registry, {
+				local collection, toIterate = createTestCollection(context.registry, {
 					required = { "Test1" },
 					update = { "Test2" },
 					forbidden = {},
@@ -668,14 +689,14 @@ return function()
 	describe("consume", function()
 		it("should remove the entity from the pool and clear its update state", function(context)
 			local registry = context.registry
-			local collection = getCollection(registry, {
+			local collection = createTestCollection(registry, {
 				required = { "Test1" },
 				update = { "Test2" },
 				forbidden = {},
 				optional = {},
 			})
 
-			local entity = registry:multiAdd(registry:createEntity(), {
+			local entity = registry:addComponents(registry:createEntity(), {
 				Test1 = {},
 				Test2 = {},
 			})
@@ -693,14 +714,14 @@ return function()
 			"should pack the required and updated components of the entity into _packed",
 			function(context)
 				local registry = context.registry
-				local collection = getCollection(registry, {
+				local collection = createTestCollection(registry, {
 					required = { "Test2", "Test3" },
 					update = { "Test3", "Test4" },
 					optional = {},
 					forbidden = {},
 				})
 
-				local entity = context.registry:multiAdd(context.registry:createEntity(), {
+				local entity = context.registry:addComponents(context.registry:createEntity(), {
 					Test1 = {},
 					Test2 = {},
 					Test3 = {},
@@ -722,14 +743,14 @@ return function()
 			"should pack required and optional components and return true if the entity has all of them",
 			function(context)
 				local registry = context.registry
-				local collection = getCollection(registry, {
+				local collection = createTestCollection(registry, {
 					required = { "Test1", "Test2" },
 					update = {},
 					optional = { "Test4" },
 					forbidden = { "Test3" },
 				})
 
-				local entity = registry:multiAdd(registry:createEntity(), {
+				local entity = registry:addComponents(registry:createEntity(), {
 					Test1 = {},
 					Test2 = {},
 					Test4 = {},
@@ -741,7 +762,7 @@ return function()
 				expect(collection._packed[2]).to.equal(registry:getComponent(entity, "Test2"))
 				expect(collection._packed[3]).to.equal(registry:getComponent(entity, "Test4"))
 
-				expect(collection:_tryPack(registry:multiAdd(registry:createEntity(), {
+				expect(collection:_tryPack(registry:addComponents(registry:createEntity(), {
 					Test1 = {},
 					Test2 = {},
 					Test3 = {},
