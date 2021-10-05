@@ -1,11 +1,11 @@
 local Pool = require(script.Parent.Parent.Core.Pool)
-local SingleCollection = require(script.Parent.SingleCollection)
+local SingleReactor = require(script.Parent.SingleReactor)
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 
-local Collection = {}
-Collection.__index = Collection
+local Reactor = {}
+Reactor.__index = Reactor
 
-function Collection.new(system)
+function Reactor.new(system)
 	local registry = system.registry
 
 	if
@@ -14,7 +14,7 @@ function Collection.new(system)
 		and #system.forbidden == 0
 		and #system.optional == 0
 	then
-		return SingleCollection.new(registry:getPool(system.required[1]))
+		return SingleReactor.new(registry:getPool(system.required[1]))
 	end
 
 	local collectionPool = Pool.new("collectionInternal", {})
@@ -37,7 +37,7 @@ function Collection.new(system)
 		_forbidden = registry:getPools(system.forbidden),
 		_updated = registry:getPools(system.update),
 		_optional = registry:getPools(system.optional),
-	}, Collection)
+	}, Reactor)
 
 	for _, pool in ipairs(self._required) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
@@ -61,7 +61,7 @@ function Collection.new(system)
 	return self
 end
 
-function Collection:attach(callback)
+function Reactor:attach(callback)
 	table.insert(
 		self._connections,
 		self.added:connect(function(entity, ...)
@@ -79,7 +79,7 @@ function Collection:attach(callback)
 	)
 end
 
-function Collection:detach()
+function Reactor:detach()
 	for _, attached in ipairs(self._pool.components) do
 		for _, item in ipairs(attached) do
 			Finalizers[typeof(item)](item)
@@ -96,7 +96,7 @@ end
 	entity first, followed by its required, updated, and optional components (in
 	that order).
 ]]
-function Collection:each(callback)
+function Reactor:each(callback)
 	local dense = self._pool.dense
 	local packed = self._packed
 	local numPacked = self._numPacked
@@ -109,7 +109,7 @@ function Collection:each(callback)
 	end
 end
 
-function Collection:consumeEach(callback)
+function Reactor:consumeEach(callback)
 	local dense = self._pool.dense
 	local packed = self._packed
 	local numPacked = self._numPacked
@@ -127,7 +127,7 @@ function Collection:consumeEach(callback)
 	end
 end
 
-function Collection:consume(entity)
+function Reactor:consume(entity)
 	self._pool:delete(entity)
 	self._updates[entity] = nil
 end
@@ -136,7 +136,7 @@ end
 	Unconditionally fills the collection's _packed field with the entity's required,
 	updated, and optional components.
 ]]
-function Collection:_pack(entity)
+function Reactor:_pack(entity)
 	local numUpdated = self._numUpdated
 	local numRequired = self._numRequired
 	local packed = self._packed
@@ -159,7 +159,7 @@ end
 	updated, and optional components if the entity fully satisfies the required,
 	forbidden and updated predicates. Otherwise, returns false.
 ]]
-function Collection:_tryPack(entity)
+function Reactor:_tryPack(entity)
 	local packed = self._packed
 	local numRequired = self._numRequired
 	local numUpdated = self._numUpdated
@@ -201,7 +201,7 @@ function Collection:_tryPack(entity)
 	return true
 end
 
-function Collection:_tryAdd()
+function Reactor:_tryAdd()
 	return function(entity)
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
@@ -210,7 +210,7 @@ function Collection:_tryAdd()
 	end
 end
 
-function Collection:_tryAddUpdated(offset)
+function Reactor:_tryAddUpdated(offset)
 	local mask = bit32.lshift(1, offset)
 
 	return function(entity)
@@ -223,7 +223,7 @@ function Collection:_tryAddUpdated(offset)
 	end
 end
 
-function Collection:_tryRemove()
+function Reactor:_tryRemove()
 	return function(entity)
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
@@ -233,7 +233,7 @@ function Collection:_tryRemove()
 	end
 end
 
-function Collection:_tryRemoveUpdated(offset)
+function Reactor:_tryRemoveUpdated(offset)
 	local mask = bit32.bnot(bit32.lshift(1, offset))
 
 	return function(entity)
@@ -257,4 +257,4 @@ function Collection:_tryRemoveUpdated(offset)
 	end
 end
 
-return Collection
+return Reactor

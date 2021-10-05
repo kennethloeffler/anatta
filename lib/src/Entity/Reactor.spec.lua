@@ -1,8 +1,8 @@
 return function()
 	local Pool = require(script.Parent.Parent.Core.Pool)
 	local Registry = require(script.Parent.Registry)
-	local Collection = require(script.Parent.Collection)
-	local SingleCollection = require(script.Parent.SingleCollection)
+	local Reactor = require(script.Parent.Reactor)
+	local SingleReactor = require(script.Parent.SingleReactor)
 	local t = require(script.Parent.Parent.Core.TypeDefinition)
 
 	beforeEach(function(context)
@@ -41,7 +41,7 @@ return function()
 
 		local len = 0
 		local toIterate = {}
-		local collection = Collection.new(system)
+		local collection = Reactor.new(system)
 
 		if callback then
 			collection:attach(callback)
@@ -93,7 +93,7 @@ return function()
 		it(
 			"should create a new Collection when there is anything more than one required component",
 			function(context)
-				local collection = Collection.new({
+				local collection = Reactor.new({
 					required = { "Test1", "Test2" },
 					update = {},
 					optional = {},
@@ -101,7 +101,7 @@ return function()
 					registry = context.registry,
 				})
 
-				expect(getmetatable(collection)).to.equal(Collection)
+				expect(getmetatable(collection)).to.equal(Reactor)
 
 				expect(collection._pool).to.be.ok()
 				expect(getmetatable(collection._pool)).to.equal(Pool)
@@ -114,7 +114,7 @@ return function()
 		it(
 			"should create a new SingleCollection when there is exactly one required component and nothing else",
 			function(context)
-				local collection = Collection.new({
+				local collection = Reactor.new({
 					required = { "Test1" },
 					update = {},
 					optional = {},
@@ -122,13 +122,13 @@ return function()
 					registry = context.registry,
 				})
 
-				expect(getmetatable(collection)).to.equal(SingleCollection)
+				expect(getmetatable(collection)).to.equal(SingleReactor)
 			end
 		)
 
 		it("should populate _required, _updated, and _forbidden", function(context)
 			local registry = context.registry
-			local collection = Collection.new({
+			local collection = Reactor.new({
 				required = { "Test1", "Test2" },
 				update = { "Test3" },
 				optional = {},
@@ -143,7 +143,7 @@ return function()
 		end)
 
 		it("should correctly instantiate the full update bitset", function(context)
-			local collection = Collection.new({
+			local collection = Reactor.new({
 				required = { "Test1" },
 				update = { "Test1", "Test2", "Test3" },
 				optional = {},
