@@ -26,7 +26,7 @@ end
 
 function SingleCollection:attach(callback)
 	if not self._pool then
-		self._pool = Pool.new("test", {})
+		self._pool = Pool.new("collectionInternal", {})
 	end
 
 	table.insert(
