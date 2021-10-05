@@ -41,8 +41,8 @@ function Pool:insert(entity, component)
 	local size = self.size
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 
-	self.dense[size] = entity
-	self.components[size] = component
+	table.insert(self.dense, entity)
+	table.insert(self.components, component)
 	self.sparse[entityId] = size
 
 	return component
@@ -55,17 +55,16 @@ function Pool:delete(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 	local denseIdx = self.sparse[entityId]
 
-	self.sparse[entityId] = nil
-
 	if denseIdx < prevSize then
 		local swapped = self.dense[prevSize]
 
-		self.dense[denseIdx] = swapped
 		self.sparse[bit32.band(swapped, ENTITYID_MASK)] = denseIdx
+		self.dense[denseIdx] = swapped
 		self.components[denseIdx] = self.components[prevSize]
 	else
-		self.dense[denseIdx] = nil
-		self.components[denseIdx] = nil
+		self.sparse[entityId] = nil
+		table.remove(self.dense, prevSize)
+		table.remove(self.components, prevSize)
 	end
 end
 
