@@ -1,6 +1,6 @@
 return function()
-	local PureCollection = require(script.Parent.PureCollection)
-	local SinglePureCollection = require(script.Parent.SinglePureCollection)
+	local Mapper = require(script.Parent.Mapper)
+	local SingleMapper = require(script.Parent.SingleMapper)
 	local Registry = require(script.Parent.Registry)
 	local t = require(script.Parent.Parent.Core.TypeDefinition)
 
@@ -39,7 +39,7 @@ return function()
 		system.registry = registry
 
 		local toIterate = {}
-		local collection = PureCollection.new(system)
+		local collection = Mapper.new(system)
 
 		for i = 1, 100 do
 			local entity = registry:createEntity()
@@ -76,28 +76,28 @@ return function()
 		it(
 			"should create a new PureCollection when there are  multiple components",
 			function(context)
-				local collection = PureCollection.new({
+				local collection = Mapper.new({
 					required = { "Test1" },
 					forbidden = { "Test2" },
 					optional = {},
 					registry = context.registry,
 				})
 
-				expect(getmetatable(collection)).to.equal(PureCollection)
+				expect(getmetatable(collection)).to.equal(Mapper)
 			end
 		)
 
 		it(
 			"should create a new SinglePureCollection when there is only one required component ",
 			function(context)
-				local collection = PureCollection.new({
+				local collection = Mapper.new({
 					required = { "Test1" },
 					forbidden = {},
 					optional = {},
 					registry = context.registry,
 				})
 
-				expect(getmetatable(collection)).to.equal(SinglePureCollection)
+				expect(getmetatable(collection)).to.equal(SingleMapper)
 			end
 		)
 	end)

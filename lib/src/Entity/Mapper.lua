@@ -1,18 +1,18 @@
-local SinglePureCollection = require(script.Parent.SinglePureCollection)
+local SingleMapper = require(script.Parent.SingleMapper)
 local util = require(script.Parent.Parent.util)
 
-local PureCollection = {}
-PureCollection.__index = PureCollection
+local Mapper = {}
+Mapper.__index = Mapper
 
 local function ErrNeedsRequired()
 	util.jumpAssert("Pure collections can only update required components")
 end
 
-function PureCollection.new(system)
+function Mapper.new(system)
 	local registry = system.registry
 
 	if #system.forbidden == 0 and #system.optional == 0 and #system.required == 1 then
-		return SinglePureCollection.new(registry:getPool(system.required[1]))
+		return SingleMapper.new(registry:getPool(system.required[1]))
 	end
 
 	return setmetatable({
@@ -23,11 +23,11 @@ function PureCollection.new(system)
 		_numPacked = #system.required + #system.optional,
 		_numRequired = #system.required,
 
-		update = #system.required > 0 and PureCollection.update or ErrNeedsRequired,
-	}, PureCollection)
+		update = #system.required > 0 and Mapper.update or ErrNeedsRequired,
+	}, Mapper)
 end
 
-function PureCollection:update(callback)
+function Mapper:update(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 	local shortest = self:_getShortestPool(self._required)
@@ -39,7 +39,7 @@ function PureCollection:update(callback)
 	end
 end
 
-function PureCollection:each(callback)
+function Mapper:each(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 	local shortest = self:_getShortestPool(self._required)
@@ -51,7 +51,7 @@ function PureCollection:each(callback)
 	end
 end
 
-function PureCollection:_replace(entity, ...)
+function Mapper:_replace(entity, ...)
 	for i, pool in ipairs(self._required) do
 		local newComponent = select(i, ...)
 		local oldComponent = pool:get(entity)
@@ -69,7 +69,7 @@ end
 --[[
 	Returns the required component pool with the least number of elements.
 ]]
-function PureCollection:_getShortestPool(pools)
+function Mapper:_getShortestPool(pools)
 	local size = math.huge
 	local selected
 
@@ -83,7 +83,7 @@ function PureCollection:_getShortestPool(pools)
 	return selected
 end
 
-function PureCollection:_tryPack(entity)
+function Mapper:_tryPack(entity)
 	local packed = self._packed
 
 	for _, pool in ipairs(self._forbidden) do
@@ -111,4 +111,4 @@ function PureCollection:_tryPack(entity)
 	return true
 end
 
-return PureCollection
+return Mapper
