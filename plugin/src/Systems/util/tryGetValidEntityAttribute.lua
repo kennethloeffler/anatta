@@ -5,7 +5,7 @@ local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 return function(registry, instance)
 	local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
-	if typeof(entity) == "number" and registry:valid(entity) then
+	if typeof(entity) == "number" and registry:isValidEntity(entity) then
 		return true, entity
 	else
 		return false

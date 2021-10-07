@@ -11,8 +11,8 @@ return function(system, componentName, pendingValidation, pluginMouse)
 	local dirty = true
 
 	system
-		:all(".anattaInstance", ".anattaValidationListener", componentName)
-		:collect()
+		:entitiesWithAll(".anattaInstance", ".anattaValidationListener", componentName)
+		:collectEntities()
 		:attach(createListener(registry, componentName, pendingValidation, pluginMouse))
 
 	system:on(Selection.SelectionChanged, function()
@@ -31,7 +31,7 @@ return function(system, componentName, pendingValidation, pluginMouse)
 
 			if isValidEntity then
 				previousSelection[instance] = nil
-				registry:tryAdd(entity, ".anattaValidationListener")
+				registry:tryAddComponent(entity, ".anattaValidationListener")
 			end
 		end
 
@@ -40,7 +40,7 @@ return function(system, componentName, pendingValidation, pluginMouse)
 
 			if isValidEntity then
 				previousSelection[instance] = nil
-				registry:tryRemove(entity, ".anattaValidationListener")
+				registry:tryRemoveComponent(entity, ".anattaValidationListener")
 			end
 		end
 

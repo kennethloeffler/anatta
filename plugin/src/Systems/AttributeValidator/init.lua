@@ -4,8 +4,8 @@ local validate = require(script.validate)
 
 return function(system, componentName, pendingComponentValidation)
 	local pendingValidations = system
-		:all(componentName, ".anattaInstance", pendingComponentValidation)
-		:collect()
+		:entitiesWithAll(componentName, ".anattaInstance", pendingComponentValidation)
+		:collectEntities()
 
 	local doValidation = validate(system.registry, componentName, pendingComponentValidation)
 

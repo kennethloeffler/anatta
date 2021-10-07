@@ -1,10 +1,10 @@
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 local Pool = require(script.Parent.Parent.Core.Pool)
 
-local SingleCollection = {}
-SingleCollection.__index = SingleCollection
+local SingleReactor = {}
+SingleReactor.__index = SingleReactor
 
-function SingleCollection.new(componentPool)
+function SingleReactor.new(componentPool)
 	return setmetatable({
 		added = componentPool.added,
 		removed = componentPool.removed,
@@ -12,10 +12,10 @@ function SingleCollection.new(componentPool)
 		_pool = false,
 		_connections = {},
 		_componentPool = componentPool,
-	}, SingleCollection)
+	}, SingleReactor)
 end
 
-function SingleCollection:each(callback)
+function SingleReactor:each(callback)
 	local dense = self._componentPool.dense
 	local components = self._componentPool.components
 
@@ -24,9 +24,9 @@ function SingleCollection:each(callback)
 	end
 end
 
-function SingleCollection:attach(callback)
+function SingleReactor:withAttachments(callback)
 	if not self._pool then
-		self._pool = Pool.new("test", {})
+		self._pool = Pool.new({ name = "reactorContents", type = {} })
 	end
 
 	table.insert(
@@ -46,7 +46,7 @@ function SingleCollection:attach(callback)
 	)
 end
 
-function SingleCollection:detach()
+function SingleReactor:detach()
 	if not self._pool then
 		return
 	end
@@ -62,4 +62,4 @@ function SingleCollection:detach()
 	end
 end
 
-return SingleCollection
+return SingleReactor

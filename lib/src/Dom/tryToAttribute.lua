@@ -66,7 +66,10 @@ function convert(attributeMap, attributeName, concreteType, value, instance)
 	return true, attributeMap
 end
 
-return function(instance, component, componentName, typeDefinition)
+return function(instance, component, componentDefinition)
+	local typeDefinition = componentDefinition.type
+	local componentName = componentDefinition.name
+
 	util.jumpAssert(typeDefinition.check(component))
 
 	local success, concreteType = typeDefinition:tryGetConcreteType()

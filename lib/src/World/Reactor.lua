@@ -1,43 +1,68 @@
-local Pool = require(script.Parent.Parent.Core.Pool)
-local SingleCollection = require(script.Parent.SingleCollection)
+--[=[
+	@class Reactor
+	Provides scoped access to the contents of a [`Registry`](Registry) according to a
+	[`Query`](Anatta#Query).
+
+	A `Reactor` is stateful. In contrast to a [`Mapper`](Mapper), a `Reactor` can track
+	updates to components with [`Query.withUpdated`](Query#withUpdated).
+]=]
+
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
+local Pool = require(script.Parent.Parent.Core.Pool)
+local SingleReactor = require(script.Parent.SingleReactor)
+local Types = require(script.Parent.Parent.Types)
 
-local Collection = {}
-Collection.__index = Collection
+local util = require(script.Parent.Parent.util)
 
-function Collection.new(system)
-	local registry = system.registry
+local ErrNeedComponents = "Reactors need at least one required, updated, or optional component type"
+local ErrTooManyUpdated = "Reactors can only track up to 32 updated component types"
 
-	if
-		#system.required == 1
-		and #system.update == 0
-		and #system.forbidden == 0
-		and #system.optional == 0
-	then
-		return SingleCollection.new(registry:getPool(system.required[1]))
+local Reactor = {}
+Reactor.__index = Reactor
+
+--[=[
+	@param registry Registry
+	@param query Query
+	@private
+
+	Creates a new `Reactor` given a [`Query`](Anatta#Query).
+]=]
+function Reactor.new(registry, query)
+	util.jumpAssert(Types.Query(query))
+
+	local withAll = query.withAll or {}
+	local withUpdated = query.withUpdated or {}
+	local without = query.without or {}
+	local withAny = query.withAny or {}
+
+	util.jumpAssert(#withUpdated <= 32, ErrTooManyUpdated)
+	util.jumpAssert(#withAll > 0 or #withUpdated > 0 or #withAny > 0, ErrNeedComponents)
+
+	if #withAll == 1 and #withUpdated == 0 and #without == 0 and #withAny == 0 then
+		return SingleReactor.new(registry:getPool(query.withAll[1]))
 	end
 
-	local collectionPool = Pool.new("collectionInternal", {})
+	local reactorContents = Pool.new({ name = "reactorInternal", type = {} })
 
 	local self = setmetatable({
-		added = collectionPool.added,
-		removed = collectionPool.removed,
+		added = reactorContents.added,
+		removed = reactorContents.removed,
 
-		_pool = collectionPool,
+		_pool = reactorContents,
 		_updates = {},
 		_connections = {},
 
-		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #system.update),
-		_numPacked = #system.required + #system.update + #system.optional,
-		_numRequired = #system.required,
-		_numUpdated = #system.update,
+		_allUpdates = bit32.rshift(0xFFFFFFFF, 32 - #withUpdated),
+		_numPacked = #withAll + #withUpdated + #withAny,
+		_numRequired = #withAll,
+		_numUpdated = #withUpdated,
 
-		_packed = table.create(#system.required + #system.update + #system.optional),
-		_required = registry:getPools(system.required),
-		_forbidden = registry:getPools(system.forbidden),
-		_updated = registry:getPools(system.update),
-		_optional = registry:getPools(system.optional),
-	}, Collection)
+		_packed = table.create(#withAll + #withUpdated + #withAny),
+		_required = registry:getPools(withAll),
+		_forbidden = registry:getPools(without),
+		_updated = registry:getPools(withUpdated),
+		_optional = registry:getPools(withAny),
+	}, Reactor)
 
 	for _, pool in ipairs(self._required) do
 		table.insert(self._connections, pool.added:connect(self:_tryAdd()))
@@ -61,25 +86,37 @@ function Collection.new(system)
 	return self
 end
 
-function Collection:attach(callback)
-	table.insert(
-		self._connections,
-		self.added:connect(function(entity, ...)
-			self._pool:replace(entity, callback(entity, ...))
-		end)
-	)
+--[=[
+	@param callback (number, ...any) -> {RBXScriptConnection | Instance}
 
-	table.insert(
-		self._connections,
-		self.removed:connect(function(entity)
-			for _, item in ipairs(self._pool:get(entity)) do
-				Finalizers[typeof(item)](item)
-			end
-		end)
-	)
+	Calls the callback every time an entity enters the `Reactor`, passing each entity and
+	its components and attaching the return value to each entity.  The callback should
+	return a list of connections and/or `Instance`s. When the entity later leaves the
+	`Reactor`, attached `Instance`s are destroyed and attached connections are
+	disconnected.
+]=]
+function Reactor:withAttachments(callback)
+	local attachmentsAdded = self.added:connect(function(entity, ...)
+		self._pool:replace(entity, callback(entity, ...))
+	end)
+
+	local attachmentsRemoved = self.removed:connect(function(entity)
+		for _, item in ipairs(self._pool:get(entity)) do
+			Finalizers[typeof(item)](item)
+		end
+	end)
+
+	table.insert(self._connections, attachmentsAdded)
+	table.insert(self._connections, attachmentsRemoved)
 end
 
-function Collection:detach()
+--[=[
+	@private
+
+	Detaches all the attachments made to this `Reactor`, destroying all attached
+	`Instance`s and disconnecting all attached connections.
+]=]
+function Reactor:detach()
 	for _, attached in ipairs(self._pool.components) do
 		for _, item in ipairs(attached) do
 			Finalizers[typeof(item)](item)
@@ -91,12 +128,13 @@ function Collection:detach()
 	end
 end
 
---[[
-	Applies the callback to each tracked entity and its components. Passes the
-	entity first, followed by its required, updated, and optional components (in
-	that order).
-]]
-function Collection:each(callback)
+--[=[
+	@param callback (number, ...any)
+
+	Iterates over the all the entities present in the `Reactor`. Calls the callback for
+	each entity, passing each entity followed by the components specified by the `Query`.
+]=]
+function Reactor:each(callback)
 	local dense = self._pool.dense
 	local packed = self._packed
 	local numPacked = self._numPacked
@@ -109,7 +147,14 @@ function Collection:each(callback)
 	end
 end
 
-function Collection:consumeEach(callback)
+--[=[
+	@param callback (number, ...any)
+
+	Iterates over all the entities present in the `Reactor` and clears each entity's set
+	of updated componants. Calls the callback for each entity, passing each entity followed
+	by the components specified by the `Query`.
+]=]
+function Reactor:consumeEach(callback)
 	local dense = self._pool.dense
 	local packed = self._packed
 	local numPacked = self._numPacked
@@ -127,7 +172,12 @@ function Collection:consumeEach(callback)
 	end
 end
 
-function Collection:consume(entity)
+--[=[
+	@param entity number
+
+	Clears a given entity's set of updated components.
+]=]
+function Reactor:consume(entity)
 	self._pool:delete(entity)
 	self._updates[entity] = nil
 end
@@ -136,7 +186,7 @@ end
 	Unconditionally fills the collection's _packed field with the entity's required,
 	updated, and optional components.
 ]]
-function Collection:_pack(entity)
+function Reactor:_pack(entity)
 	local numUpdated = self._numUpdated
 	local numRequired = self._numRequired
 	local packed = self._packed
@@ -159,7 +209,7 @@ end
 	updated, and optional components if the entity fully satisfies the required,
 	forbidden and updated predicates. Otherwise, returns false.
 ]]
-function Collection:_tryPack(entity)
+function Reactor:_tryPack(entity)
 	local packed = self._packed
 	local numRequired = self._numRequired
 	local numUpdated = self._numUpdated
@@ -201,7 +251,7 @@ function Collection:_tryPack(entity)
 	return true
 end
 
-function Collection:_tryAdd()
+function Reactor:_tryAdd()
 	return function(entity)
 		if not self._pool:getIndex(entity) and self:_tryPack(entity) then
 			self._pool:insert(entity)
@@ -210,7 +260,7 @@ function Collection:_tryAdd()
 	end
 end
 
-function Collection:_tryAddUpdated(offset)
+function Reactor:_tryAddUpdated(offset)
 	local mask = bit32.lshift(1, offset)
 
 	return function(entity)
@@ -223,7 +273,7 @@ function Collection:_tryAddUpdated(offset)
 	end
 end
 
-function Collection:_tryRemove()
+function Reactor:_tryRemove()
 	return function(entity)
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
@@ -233,7 +283,7 @@ function Collection:_tryRemove()
 	end
 end
 
-function Collection:_tryRemoveUpdated(offset)
+function Reactor:_tryRemoveUpdated(offset)
 	local mask = bit32.bnot(bit32.lshift(1, offset))
 
 	return function(entity)
@@ -257,4 +307,4 @@ function Collection:_tryRemoveUpdated(offset)
 	end
 end
 
-return Collection
+return Reactor

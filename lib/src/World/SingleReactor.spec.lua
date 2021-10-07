@@ -1,13 +1,13 @@
 return function()
 	local Pool = require(script.Parent.Parent.Core.Pool)
-	local SingleCollection = require(script.Parent.SingleCollection)
+	local SingleReactor = require(script.Parent.SingleReactor)
 
 	describe("new", function()
 		it("should create a new SingleCollection from a pool", function()
-			local pool = Pool.new("test", {})
-			local collection = SingleCollection.new(pool)
+			local pool = Pool.new({ name = "test", type = {} })
+			local collection = SingleReactor.new(pool)
 
-			expect(getmetatable(collection)).to.equal(SingleCollection)
+			expect(getmetatable(collection)).to.equal(SingleReactor)
 			expect(collection.added).to.equal(pool.added)
 			expect(collection.removed).to.equal(pool.removed)
 			expect(collection._componentPool).to.equal(pool)
@@ -16,9 +16,9 @@ return function()
 
 	describe("each", function()
 		it("should iterate the entire pool and pass each element's data", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local toIterate = {}
-			local collection = SingleCollection.new(pool)
+			local collection = SingleReactor.new(pool)
 
 			for i = 1, 100 do
 				toIterate[i] = true
@@ -34,15 +34,15 @@ return function()
 		end)
 	end)
 
-	describe("attach", function()
-		it("should attach items when an entity enters the collection", function()
-			local pool = Pool.new("test", {})
-			local collection = SingleCollection.new(pool)
+	describe("withAttachments", function()
+		it("should attach attachments when an entity enters the collection", function()
+			local pool = Pool.new({ name = "test", type = {} })
+			local collection = SingleReactor.new(pool)
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
 			local holes = {}
 
-			collection:attach(function()
+			collection:withAttachments(function()
 				local hole = Instance.new("Hole")
 
 				hole.Parent = workspace
@@ -83,12 +83,12 @@ return function()
 
 	describe("detach", function()
 		it("should detach every item from every entity in the collection", function()
-			local pool = Pool.new("test", {})
-			local collection = SingleCollection.new(pool)
+			local pool = Pool.new({ name = "test", type = {} })
+			local collection = SingleReactor.new(pool)
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
 
-			collection:attach(function()
+			collection:withAttachments(function()
 				return {
 					event.Event:Connect(function()
 						numCalled += 1

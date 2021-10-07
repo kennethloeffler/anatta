@@ -5,9 +5,6 @@ local jumpAssert = require(script.Parent.Parent.util.jumpAssert)
 
 local ENTITYID_MASK = Constants.EntityIdMask
 
--- Tries to load any and all entity component data from Instance tags/attributes into an
--- empty Registry. Throws if the registry is not empty. It is not an error for an Instance
--- to fail validation; instead, a warning is printed.
 return function(registry)
 	jumpAssert(registry._size == 0, "Registry must be empty")
 

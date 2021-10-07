@@ -35,3 +35,6 @@ roblox.toml
 /package.json
 /node_modules/
 /include/
+
+# Moonwave build directory
+build

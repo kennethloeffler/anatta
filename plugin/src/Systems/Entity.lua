@@ -8,8 +8,10 @@ local SHARED_INSTANCE_TAG_NAME = Constants.SharedInstanceTagName
 
 return function(system)
 	local registry = system.registry
-	local forcedEntities = system:all(".anattaInstance", ".anattaForceEntityAttribute"):collect()
-	local instances = system:all(".anattaInstance"):collect()
+	local instances = system:entitiesWithAll(".anattaInstance"):collectEntities()
+	local forcedEntities = system
+		:entitiesWithAll(".anattaInstance", ".anattaForceEntityAttribute")
+		:collectEntities()
 
 	system:on(instances.added, function(entity, instance)
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
@@ -23,7 +25,7 @@ return function(system)
 
 	system:on(RunService.Heartbeat, function()
 		forcedEntities:each(function(entity, instance)
-			registry:remove(entity, ".anattaForceEntityAttribute")
+			registry:removeComponent(entity, ".anattaForceEntityAttribute")
 			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 		end)
 	end)

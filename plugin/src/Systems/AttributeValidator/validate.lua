@@ -1,7 +1,7 @@
 local Anatta = require(script:FindFirstAncestor("AnattaPlugin").Anatta)
 
 return function(registry, componentName, pendingComponentValidation)
-	local typeDefinition = registry:getDefinition(componentName)
+	local typeDefinition = registry:getComponentDefinition(componentName)
 
 	return function(entity, component, instance)
 		local success, result = Anatta.Dom.tryFromAttribute(instance, componentName, typeDefinition)
@@ -16,7 +16,7 @@ return function(registry, componentName, pendingComponentValidation)
 				typeDefinition
 			)
 
-			local wasListening = registry:tryRemove(entity, ".anattaValidationListener")
+			local wasListening = registry:tryRemoveComponent(entity, ".anattaValidationListener")
 
 			for name, value in pairs(attributeMap) do
 				if typeof(value) ~= "Instance" then
@@ -27,16 +27,16 @@ return function(registry, componentName, pendingComponentValidation)
 			end
 
 			if wasListening then
-				registry:add(entity, ".anattaValidationListener")
+				registry:addComponent(entity, ".anattaValidationListener")
 			end
 
 			if result then
 				warn(result)
 			end
 		else
-			registry:replace(entity, componentName, result)
+			registry:replaceComponent(entity, componentName, result)
 		end
 
-		registry:remove(entity, pendingComponentValidation)
+		registry:removeComponent(entity, pendingComponentValidation)
 	end
 end
