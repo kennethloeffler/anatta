@@ -45,7 +45,7 @@ local tryFromAttribute = require(script.tryFromAttribute)
 	@param pool Pool
 
 	Attempts to convert attributes on all the `Instance`s with the `CollectionService` tag
-	matching [`Pool.name`](Pool#name) into entities and components.
+	matching the pool's component name into entities and components.
 
 	:::info
 	Encountering an `Instance` that fails attribute validation is a soft error. Such an

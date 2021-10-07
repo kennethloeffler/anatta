@@ -30,8 +30,8 @@ local ComponentDefinition = t.strictInterface({
 	[`Registry`](Registry). A `Query` can be finalized by passing it to
 	[`World:getReactor`](World#getReactor) or [`World:getMapper`](World#getMapper).
 
-	Various [`Reactor`](Reactor) and [`Mapper`](Mapper) accept callbacks that are passed
-	an entity and its components. Such callbacks receive the entity as the first
+	Various [`Reactor`](Reactor) and [`Mapper`](Mapper) methods accept callbacks that are
+	passed an entity and its components. Such callbacks receive the entity as the first
 	argument, followed by the entity's components from `withAll`, then the components from
 	`withUpdated`, and finally the components from `withAny`.
 

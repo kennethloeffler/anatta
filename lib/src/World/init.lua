@@ -42,7 +42,7 @@ function World.new(componentDefinitions)
 end
 
 --[=[
-	Creates a new [`Mapper`](Mapper) given a [`Query`](Anatta#Query).
+	Creates a new [`Mapper`](Mapper) given a [`Query`](#Query).
 
 	@error "Mappers cannot track updates to components"
 	@error "Mappers need at least one component type specified in withAll"
@@ -55,7 +55,7 @@ function World:getMapper(query)
 end
 
 --[=[
-	Creates a new [`Reactor`](Reactor) given a [`Query`](Anatta#Query).
+	Creates a new [`Reactor`](Reactor) given a [`Query`](#Query).
 
 	@error "Reactors need at least one component type specified in withAll, withUpdated, or withAny"
 	@error "Reactors can only track up to 32 updated component types"

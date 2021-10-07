@@ -4,7 +4,7 @@
 	[`Query`](Anatta#Query).
 
 	A `Reactor` is stateful. In contrast to a [`Mapper`](Mapper), a `Reactor` can track
-	updates to components with [`Query.withUpdated`](Query#withUpdated).
+	updates to components with [`Query.withUpdated`](World#Query).
 ]=]
 
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
