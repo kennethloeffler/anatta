@@ -200,7 +200,6 @@ end
 	registry:addComponent(entity, "Health", 100)
 	```
 
-	@private
 	@param componentDefinition ComponentDefinition
 ]=]
 function Registry:defineComponent(componentDefinition)

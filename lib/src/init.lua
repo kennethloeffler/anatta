@@ -15,6 +15,17 @@ local ErrWorldDoenstExist = 'No world named "%s" exists'
 
 local Worlds = {}
 
+--[=[
+	Creates a new [`World`](World) and calls
+	[`Registry:defineComponent`](Registry#defineComponent) on the given
+	[`ComponentDefinition`](#ComponentDefinition)s.
+
+	@function createWorld
+	@within Anatta
+	@param namespace string
+	@param componentDefinitions {ComponentDefinition}
+	@return World
+]=]
 local function createWorld(namespace, componentDefinitions)
 	util.jumpAssert(not Worlds[namespace], ErrWorldAlreadyExists:format(namespace))
 
@@ -40,6 +51,14 @@ local function createWorld(namespace, componentDefinitions)
 	return world
 end
 
+--[=[
+	Returns a [`World`](World) previously defined with the given namespace.
+
+	@function getWorld
+	@within Anatta
+	@param namespace string
+	@return World
+]=]
 local function getWorld(namespace)
 	local world = Worlds[namespace]
 

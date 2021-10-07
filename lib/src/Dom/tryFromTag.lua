@@ -7,12 +7,6 @@ local tryFromAttribute = require(script.Parent.tryFromAttribute)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
--- Attempts to convert attributes from Instances tagged with an empty Pool's name into
--- entities and components of the correct type.
-
--- Throws If an attribute(s) -> component conversion fails (it's likely that the entire
--- set of attributes is bad in this case). It is not a an error for only the entity
--- attribute is invalid; instead, a warning is printed.
 return function(pool)
 	util.jumpAssert(pool.size == 0, "Pool must be empty")
 
