@@ -18,14 +18,18 @@ local ErrWorldDoenstExist = 'No world named "%s" exists'
 local Worlds = {}
 
 --[=[
-	Creates a new [`World`](World) and calls
+
+	Creates a new [`World`](World). If the second argument is a
+	`[`ComponentDefinition`](#ComponentDefinition) calls
 	[`Registry:defineComponent`](Registry#defineComponent) on the given
-	[`ComponentDefinition`](#ComponentDefinition)s.
+	[`ComponentDefinition`](#ComponentDefinition)s. Otherwise, if the second argument is
+	an `Instance`, require all of its `ModuleScript` descendants and attempt to define
+	each result.
 
 	@function createWorld
 	@within Anatta
 	@param namespace string
-	@param componentDefinitions {ComponentDefinition}
+	@param componentDefinitions {ComponentDefinition | Instance}
 	@return World
 ]=]
 local function createWorld(namespace, componentDefinitions)
