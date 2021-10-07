@@ -28,8 +28,8 @@ local ErrComponentNameTaken = "there is already a component named %s"
 --- @within Registry
 --- @private
 --- @readonly
---- The list of all entities. Some of them may be destroyed. This field used to determine
---- if any given entity either exists and or has been destroyed.
+--- The list of all entities. Some of them may be destroyed. This property is used to
+--- determine if any given entity exists or has been destroyed.
 
 --- @prop _pools {[string]: Pool}
 --- @within Registry
@@ -42,7 +42,7 @@ local ErrComponentNameTaken = "there is already a component named %s"
 --- @within Registry
 --- @private
 --- @readonly
---- The next ID to use when creating a new entity. When this field is equal to zero, it
+--- The next ID to use when creating a new entity. When this property is equal to zero, it
 --- means there are no IDs available to recycle.
 
 --- @prop _size number
