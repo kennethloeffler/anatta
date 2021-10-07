@@ -2,9 +2,9 @@ local Constants = require(script.Parent.Parent.Core.Constants)
 
 local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
-local function waitForRefs(instance, attributeName, typeDefinition, objectValues)
+local function waitForRefs(instance, attributeName, typeDefinition, objectValues, refFolder)
 	local _, concreteType = typeDefinition:tryGetConcreteType()
-	local refFolder = instance:WaitForChild(INSTANCE_REF_FOLDER)
+	refFolder = refFolder or instance:WaitForChild(INSTANCE_REF_FOLDER)
 
 	objectValues = objectValues or {}
 
@@ -13,7 +13,14 @@ local function waitForRefs(instance, attributeName, typeDefinition, objectValues
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 			local fieldTypeDefinition = typeDefinition.typeParams[1][field]
 
-			waitForRefs(instance, fieldAttributeName, fieldTypeDefinition, objectValues)
+			task.defer(
+				waitForRefs,
+				instance,
+				fieldAttributeName,
+				fieldTypeDefinition,
+				objectValues,
+				refFolder
+			)
 		end
 	elseif concreteType == "instanceOf" or concreteType == "instanceIsA" then
 		local objectValue = refFolder:WaitForChild(attributeName)
