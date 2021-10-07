@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="generator" content="Docusaurus v2.0.0-beta.6">
 <title data-react-helmet="true">Anatta | Anatta</title><meta data-react-helmet="true" property="og:title" content="Anatta | Anatta"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" name="description" content="The main entry point for the library."><meta data-react-helmet="true" property="og:description" content="The main entry point for the library."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/Anatta"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/Anatta"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Anatta" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Anatta" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.29e98e1d.css">
-<link rel="preload" href="/anatta/assets/js/runtime~main.c7edc2bd.js" as="script">
-<link rel="preload" href="/anatta/assets/js/main.8a888f4c.js" as="script">
+<link rel="preload" href="/anatta/assets/js/runtime~main.264a53ed.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.304ed681.js" as="script">
 </head>
 <body>
 <script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){var t=null;try{t=localStorage.getItem("theme")}catch(t){}return t}();t(null!==e?e:"light")}()</script><div id="__docusaurus">
@@ -14,19 +14,19 @@
 <p>The main entry point for the library.</p>
 </div></header><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="types"></a>Types<a class="hash-link" href="#types" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="ComponentDefinition"></a><code style="text-decoration:none">ComponentDefinition</code><a class="hash-link" href="#ComponentDefinition" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/Types.lua#L15"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code class="purple__nFc">interface</code> <code>ComponentDefinition {</code><div class="inset_2cJr"><div><code>name: </code><code class="blue_2Afy">string</code></div><div><code>type: </code><code class="blue_2Afy">TypeDefinition</code></div><div><code>description: </code><code class="blue_2Afy">string?</code></div></div><code>}</code></div><div>
 <p>A named component type with an optional description.</p>
-</div><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="createWorld"></a><code style="text-decoration:none">createWorld</code><a class="hash-link" href="#createWorld" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/init.lua#L31"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Anatta.</code><code class="green_3LnD">createWorld</code><code>(</code><div class="inset_2cJr"><div><code>namespace: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>componentDefinitions: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code></div></div><code>) → </code><code class="blue_2Afy">World</code></div><div>
+</div><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="createWorld"></a><code style="text-decoration:none">createWorld</code><a class="hash-link" href="#createWorld" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/init.lua#L32"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Anatta.</code><code class="green_3LnD">createWorld</code><code>(</code><div class="inset_2cJr"><div><code>namespace: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>componentDefinitions: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD"> | </code><code class="blue_2Afy">Instance</code><code class="op_1JtD">}</code></div></div><code>) → </code><code class="blue_2Afy">World</code></div><div>
 <p>
-  Creates a new <a href="World"><code>World</code></a> and calls
-  <a href="Registry#defineComponent"><code>Registry:defineComponent</code></a> on the given
-  <a href="#ComponentDefinition"><code>ComponentDefinition</code></a>s.
+  Creates a new <a href="World"><code>World</code></a>. If the second argument is a list of
+  <code>[</code>ComponentDefinition<code>](#ComponentDefinition)s, calls [</code>Registry:defineComponent<code>](Registry#defineComponent) on . Otherwise, if the second argument is an </code>Instance<code>, require all of the </code>Instance<code>'s </code>ModuleScript` descendants
+  and attempt to define each result.
 </p>
-</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getWorld"></a><code style="text-decoration:none">getWorld</code><a class="hash-link" href="#getWorld" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/init.lua#L64"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Anatta.</code><code class="green_3LnD">getWorld</code><code>(</code><code>namespace: </code><code class="blue_2Afy">string</code><code>) → </code><code class="blue_2Afy">World</code></div><div>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getWorld"></a><code style="text-decoration:none">getWorld</code><a class="hash-link" href="#getWorld" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/init.lua#L65"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Anatta.</code><code class="green_3LnD">getWorld</code><code>(</code><code>namespace: </code><code class="blue_2Afy">string</code><code>) → </code><code class="blue_2Afy">World</code></div><div>
 <p>Returns the <a href="World"><code>World</code></a> with the given namespace.</p>
 </div></div></article></div></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a><ul><li><a href="#ComponentDefinition" class="table-of-contents__link">ComponentDefinition</a></li></ul></li><li><a href="#properties" class="table-of-contents__link">Properties</a></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#createWorld" class="table-of-contents__link">.createWorld</a></li><li><a href="#getWorld" class="table-of-contents__link">.getWorld</a></li></ul></li></ul></div></div></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
         {
             &quot;name&quot;: &quot;createWorld&quot;,
-            &quot;desc&quot;: &quot;Creates a new [`World`](World) and calls\n[`Registry:defineComponent`](Registry#defineComponent) on the given\n[`ComponentDefinition`](#ComponentDefinition)s.&quot;,
+            &quot;desc&quot;: &quot;Creates a new [`World`](World). If the second argument is a list of\n`[`ComponentDefinition`](#ComponentDefinition)s, calls\n[`Registry:defineComponent`](Registry#defineComponent) on . Otherwise, if the second\nargument is an `Instance`, require all of the `Instance`&#x27;s `ModuleScript` descendants\nand attempt to define each result.&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;namespace&quot;,
@@ -36,7 +36,7 @@
                 {
                     &quot;name&quot;: &quot;componentDefinitions&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;{ComponentDefinition}&quot;
+                    &quot;lua_type&quot;: &quot;{ComponentDefinition | Instance}&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -47,7 +47,7 @@
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 31,
+                &quot;line&quot;: 32,
                 &quot;path&quot;: &quot;lib/src/init.lua&quot;
             }
         },
@@ -69,7 +69,7 @@
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 64,
+                &quot;line&quot;: 65,
                 &quot;path&quot;: &quot;lib/src/init.lua&quot;
             }
         }
@@ -109,7 +109,7 @@
         &quot;path&quot;: &quot;lib/src/init.lua&quot;
     }
 }</pre></details></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2021 . Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/anatta/assets/js/runtime~main.c7edc2bd.js"></script>
-<script src="/anatta/assets/js/main.8a888f4c.js"></script>
+<script src="/anatta/assets/js/runtime~main.264a53ed.js"></script>
+<script src="/anatta/assets/js/main.304ed681.js"></script>
 </body>
 </html>
