@@ -17,10 +17,6 @@ Mapper.__index = Mapper
 local ErrCantHaveUpdated = "Mappers cannot track updates to components"
 local ErrNeedComponents = "Mappers need at least one required component type"
 
-local function ErrNeedsRequired()
-	util.jumpAssert("Mappers can only update required components")
-end
-
 function Mapper.new(registry, query)
 	util.jumpAssert(Types.Query(query))
 
@@ -43,8 +39,6 @@ function Mapper.new(registry, query)
 		_packed = table.create(#withAll + #withAny),
 		_numPacked = #withAll + #withAny,
 		_numRequired = #withAll,
-
-		map = #withAll == 0 and ErrNeedsRequired or nil,
 	}, Mapper)
 end
 

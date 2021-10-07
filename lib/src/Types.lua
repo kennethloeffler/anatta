@@ -20,7 +20,7 @@ local ComponentDefinition = t.strictInterface({
 
 --[=[
 	@interface Query
-	@within Anatta
+	@within World
 	.withAll {string}?
 	.withUpdated {string}?
 	.withAny {string}?
@@ -30,10 +30,10 @@ local ComponentDefinition = t.strictInterface({
 	[`Registry`](Registry). A `Query` can be finalized by passing it to
 	[`World:getReactor`](World#getReactor) or [`World:getMapper`](World#getMapper).
 
-	Various [`Reactor`](Reactor) and [`Mapper`](Mapper) methods take a callback that is
-	passed an entity and the components specified by a `Query`. The entity is passed as
-	the first argument, followed by the components from `withAll`, then the components
-	from `withUpdated`, and finally the components from `withAny`.
+	Various [`Reactor`](Reactor) and [`Mapper`](Mapper) accept callbacks that are passed
+	an entity and its components. Such callbacks receive the entity as the first
+	argument, followed by the entity's components from `withAll`, then the components from
+	`withUpdated`, and finally the components from `withAny`.
 
 	### `Query.withAll`
 	An entity must have all of the components specified in `withAll` to appear.

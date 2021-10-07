@@ -45,7 +45,7 @@ end
 	Creates a new [`Mapper`](Mapper) given a [`Query`](Anatta#Query).
 
 	@error "Mappers cannot track updates to components"
-	@error "Mappers need at least one required component type"
+	@error "Mappers need at least one component type specified in withAll"
 
 	@param query Query
 	@return Mapper
@@ -57,7 +57,7 @@ end
 --[=[
 	Creates a new [`Reactor`](Reactor) given a [`Query`](Anatta#Query).
 
-	@error "Reactors need a required, updated, or optional component type"
+	@error "Reactors need at least one component type specified in withAll, withUpdated, or withAny"
 	@error "Reactors can only track up to 32 updated component types"
 
 	@param query Query
@@ -79,6 +79,9 @@ end
 
 function World:_removeSystem(script)
 	self._systemReactors[script] = nil
+end
+
+function World:on(script, event, callback)
 end
 
 return World

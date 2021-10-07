@@ -1,8 +1,8 @@
 --[=[
 	@class Registry
 	A `Registry` manages and provides unscoped access to entities and their components. It
-	provides methods to create and destroy entities, and to add, remove, get, or update
-	components on entities.
+	provides methods to create and destroy entities and to add, remove, get, or update
+	components.
 
 	You can get a `Registry` from a [`World`](World).
 ]=]

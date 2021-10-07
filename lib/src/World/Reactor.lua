@@ -14,7 +14,7 @@ local Types = require(script.Parent.Parent.Types)
 
 local util = require(script.Parent.Parent.util)
 
-local ErrNeedComponents = "Reactors need a required, updated, or optional component type"
+local ErrNeedComponents = "Reactors need at least one required, updated, or optional component type"
 local ErrTooManyUpdated = "Reactors can only track up to 32 updated component types"
 
 local Reactor = {}
