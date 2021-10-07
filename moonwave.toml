@@ -1,3 +1,14 @@
+title = "Anatta"
+gitRepoUrl = "https://github.com/kennethloeffler/anatta"
+gitSourceBranch = "master"
+changelog = false
+
+[docusaurus]
+url = "https://kennethloeffler.github.io"
+baseUrl = "/anatta/"
+tagline = "ECS for Roblox Studio"
+onBrokenLinks = "warn"
+
 [home]
 enabled = true
 includeReadme = false
