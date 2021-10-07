@@ -1,6 +1,11 @@
---[[
-	Registry.lua
-]]
+--[=[
+	@class Registry
+	A `Registry` manages entities and their components. It provides methods to create and
+	destroy entities, and to add, remove, get, or update components on entities.
+
+	You'll usually access a `Registry` from a [`World`](World).
+]=]
+
 local Constants = require(script.Parent.Parent.Core.Constants)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local util = require(script.Parent.Parent.util)
@@ -19,16 +24,38 @@ local ErrInvalidEntity = "entity %s either does not exist or it has been destroy
 local ErrMissingComponent = "entity %s does not have a %s"
 local ErrComponentNameTaken = "there is already a component named %s"
 
-local WarnEntityAlreadyExists = "creating a new entity (%08X) because %08X's id is already in use"
+--- @prop _entities {[number]: number}
+--- @within Registry
+--- @private
+--- @readonly
+--- The list of all entities. Some of them may be destroyed. This field used to determine
+--- if any given entity either exists and or has been destroyed.
 
---[=[
-	@class Registry
-]=]
+--- @prop _pools {[string]: Pool}
+--- @within Registry
+--- @private
+--- @readonly
+--- A dictionary mapping component type names to the pools managing instances of the
+--- components.
+
+--- @prop _nextRecyclableEntityId number
+--- @within Registry
+--- @private
+--- @readonly
+--- The next ID to use when creating a new entity. When this field is equal to zero, it
+--- means there are no IDs available to recycle.
+
+--- @prop _size number
+--- @within Registry
+--- @private
+--- @readonly
+--- The total number of entities contained in [`_entities`](#_entities).
+
 local Registry = {}
 Registry.__index = Registry
 
 --[=[
-	Creates and returns an empty registry.
+	Creates and returns a blank, empty registry.
 
 	@return Registry
 ]=]
@@ -44,16 +71,14 @@ end
 --[=[
 	Returns an integer equal to the first `ENTITYID_WIDTH` bits of the
 	entity. The equality
+
 	```lua
 	registry._entities[id] == entity
 	```
+
 	generally holds if the entity is valid.
 
-	Usage:
-	```lua
-	```
-
-	@tag Internal
+	@private
 	@param entity number
 	@return number
 ]=]
@@ -65,11 +90,7 @@ end
 	Returns an integer equal to the last `32 - ENTITYID_WIDTH` bits of the
 	entity.
 
-	Usage:
-	```lua
-	```
-
-	@tag Internal
+	@private
 	@param entity number
 	@return number
 ]=]
@@ -78,39 +99,58 @@ function Registry.getVersion(entity)
 end
 
 --[=[
-	Creates a new registry from an existing registry by making a shallow copy of
-	each component pool. The added signal of each new component pool fires for
-	each component that existed in the old component pool as if added via
-	[`addComponent`](#addComponent) or similar.
+	Creates a shallow copy of an existing registry.
 
-	Usage:
+	Because this function fires the added signal for every copied component, it
+	is equivalent to adding each component to the new registry with
+	[`addComponent`](#addComponent).
+
+	#### Usage:
 	```lua
+	local entity1 = registry:createEntity()
+	local health1 = registry:addComponent(entity1, "Health", 100)
+	local inventory1 = registry:addComponent(entity1, "Inventory", { "Beans" })
+
+	local entity2 = registry:createEntity()
+	local health2 = registry:addComponent(entity1, "Health", 250)
+	local inventory2 = registry:addComponent(entity2, "Inventory", { "Magic Beans", "Bass Guitar" })
+
+	local copied = Registry.fromRegistry(registry)
+
+	-- we now have an exact copy of the original registry
+	assert(copied:isEntityValid(entity1) and copied:isEntityValid(entity2))
+
+	local copiedHealth1, copiedInventory1 = registry:getComponents(entity1, "Health", "Inventory")
+	local copiedHealth2, copiedInventory2 = registry:getComponents(entity1, "Health", "Inventory")
+
+	assert(copiedHealth1 == health1 and copiedInventory1 == inventory1)
+	assert(copiedHealth2 == health2 and copiedInventory2 == inventory2)
 	```
 
-	@tag Internal
-	@param registry Registry
+	@param original Registry
 	@return Registry
 ]=]
-function Registry.fromRegistry(registry)
+function Registry.fromRegistry(original)
 	local newRegistry = Registry.new()
 
-	newRegistry._size = registry._size
-	newRegistry._entities = registry._entities
-	newRegistry._nextRecyclableEntityId = registry._nextRecyclableEntityId
+	newRegistry._size = original._size
+	newRegistry._entities = original._entities
+	newRegistry._nextRecyclableEntityId = original._nextRecyclableEntityId
 
-	for _, otherPool in pairs(registry._pools) do
-		local componentName = otherPool.name
+	for _, originalPool in pairs(original._pools) do
+		local componentName = originalPool.name
 
-		if not newRegistry:isComponentDefined(componentName) then
-			continue
-		end
+		newRegistry:defineComponent({
+			name = originalPool.name,
+			type = original.typeDefinition,
+		})
 
-		local pool = newRegistry:getPool(componentName)
+		local copy = newRegistry:getPool(componentName)
 		local checkSuccess, checkErr, failedEntity = true, "", 0
 
-		for i, component in ipairs(otherPool.components) do
-			local entity = otherPool.dense[i]
-			local success, err = pool.typeCheck(component)
+		for i, component in ipairs(originalPool.components) do
+			local entity = originalPool.dense[i]
+			local success, err = copy.typeCheck(component)
 
 			if not success then
 				checkSuccess, checkErr, failedEntity = false, err, entity
@@ -119,16 +159,23 @@ function Registry.fromRegistry(registry)
 		end
 
 		if checkSuccess then
-			pool.size = otherPool.size
-			pool.sparse = otherPool.sparse
-			pool.dense = otherPool.dense
-			pool.components = otherPool.components
+			copy.size = originalPool.size
 
-			for _, entity in ipairs(pool.dense) do
-				pool.added:dispatch(entity, pool:get(entity))
+			for entity, index in pairs(originalPool.sparse) do
+				copy.sparse[entity] = index
+			end
+
+			copy.dense = table.create(originalPool.size)
+			table.move(originalPool.dense, 1, originalPool.size, 1, copy.dense)
+
+			copy.components = table.create(originalPool.size)
+			table.move(originalPool.components, 1, originalPool.size, 1, copy.components)
+
+			for _, entity in ipairs(copy.dense) do
+				copy.added:dispatch(entity, copy:get(entity))
 			end
 		else
-			warn(("Type check for entity %s's %s failed: %s"):format(
+			warn(("Type check for entity %s's %s failed: %s;\n\nSkipping component pool..."):format(
 				failedEntity,
 				componentName,
 				checkErr
@@ -141,10 +188,19 @@ end
 --[=[
 	Registers a new component type for the registry.
 
-	Usage:
+	#### Usage:
 	```lua
+	registry:defineComponent({
+		name = "Health",
+		type = t.number
+	})
+
+	local entity = registry:createEntity()
+
+	registry:addComponent(entity, "Health", 100)
 	```
 
+	@private
 	@param componentDefinition ComponentDefinition
 ]=]
 function Registry:defineComponent(componentDefinition)
@@ -160,7 +216,19 @@ function Registry:defineComponent(componentDefinition)
 end
 
 --[=[
-	Creates and returns a new entity.
+	Creates and returns a unique identifier that represents a game object.
+
+	#### Usage:
+	```lua
+	local entity = registry:createEntity()
+	assert(entity == 1)
+
+	entity = registry:createEntity()
+	assert(entity == 2)
+
+	entity = registry:createEntity()
+	assert(entity == 3)
+	```
 
 	@return number
 ]=]
@@ -189,20 +257,33 @@ function Registry:createEntity()
 end
 
 --[=[
-	Returns a new entity equal to the given entity if the given entity's ID is
-	free to use. Otherwise, returns a new entity created via
-	[`Registry:createEntity`](Registry#createEntity).
+	Returns an entity equal to the given entity.
 
+	#### Usage:
+	```lua
+	local entity1 = registry:createEntity()
+	registry:destroyEntity(entity1)
+	assert(registry:createEntityFrom(entity1) == entity1)
+
+	-- if entity with the same ID already exists, the existing entity is destroyed first
+	local entity2 = registry:createEntity()
+	registry:addComponent(entity2, "PrettyFly")
+
+	entity2 = registry:createEntityFrom(entity2)
+	assert(registry:entityHas(entity2, "PrettyFly") == false)
+	```
+
+	@private
 	@param entity number
 	@return number
 ]=]
-function Registry:createFrom(entity)
+function Registry:createEntityFrom(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 	local entities = self._entities
 	local existingEntityId = bit32.band(entities[entityId] or NULL_ENTITYID, ENTITYID_MASK)
 
 	if existingEntityId == NULL_ENTITYID then
-		-- The given id is out of range.
+		-- The given id is out of range, so we'll have to backfill.
 		local nextRecyclableEntityId = self._nextRecyclableEntityId
 
 		-- _entities mustn't contain any gaps. If necessary, create the entities on the
@@ -219,63 +300,62 @@ function Registry:createFrom(entity)
 		entities[entityId] = entity
 
 		return entity
-	elseif existingEntityId == entityId then
-		-- The id is currently in use. We should create new entity normally and print
-		-- out a warning because this is probably a mistake!
-		local newEntity = self:createEntity()
+	end
 
-		if DEBUG then
-			warn(debug.traceback(WarnEntityAlreadyExists:format(newEntity, entity), 3))
-		end
+	if existingEntityId == entityId then
+		-- The id is currently in use. We should destroy the existing entity before continuing.
+		self:destroyEntity(entity)
+	end
 
-		return newEntity
-	else
-		-- The id is currently available for recycling.
-		local nextRecyclableEntityId = self._nextRecyclableEntityId
+	-- The id is currently available for recycling.
+	local nextRecyclableEntityId = self._nextRecyclableEntityId
 
-		if nextRecyclableEntityId == entityId then
-			-- Pop the recyclable list. Done.
-			self._nextRecyclableEntityId = bit32.band(entities[entityId], ENTITYID_MASK)
-			entities[entityId] = entity
-			return entity
-		end
-
-		-- Do a linear search of the recyclable list for entityId and take note of the
-		-- previous element.
-		local prevRecyclableEntityId
-
-		while nextRecyclableEntityId ~= entityId do
-			prevRecyclableEntityId = nextRecyclableEntityId
-			nextRecyclableEntityId = bit32.band(
-				self._entities[nextRecyclableEntityId],
-				ENTITYID_MASK
-			)
-		end
-
-		-- Make the previous element point to the next element, effectively removing
-		-- entityId from the recyclable list.
-		entities[prevRecyclableEntityId] = bit32.bor(
-			bit32.band(entities[entityId], ENTITYID_MASK),
-			bit32.lshift(
-				bit32.rshift(entities[prevRecyclableEntityId], ENTITYID_WIDTH),
-				ENTITYID_WIDTH
-			)
-		)
-
+	if nextRecyclableEntityId == entityId then
+		-- Pop the recyclable list. Done.
+		self._nextRecyclableEntityId = bit32.band(entities[entityId], ENTITYID_MASK)
 		entities[entityId] = entity
-
 		return entity
 	end
+
+	-- Do a linear search of the recyclable list for entityId and take note of the
+	-- previous element.
+	local prevRecyclableEntityId
+
+	while nextRecyclableEntityId ~= entityId do
+		prevRecyclableEntityId = nextRecyclableEntityId
+		nextRecyclableEntityId = bit32.band(self._entities[nextRecyclableEntityId], ENTITYID_MASK)
+	end
+
+	-- Make the previous element point to the next element, effectively removing
+	-- entityId from the recyclable list.
+	entities[prevRecyclableEntityId] = bit32.bor(
+		bit32.band(entities[entityId], ENTITYID_MASK),
+		bit32.lshift(bit32.rshift(entities[prevRecyclableEntityId], ENTITYID_WIDTH), ENTITYID_WIDTH)
+	)
+
+	entities[entityId] = entity
+
+	return entity
 end
 
 --[=[
-	Destroys an entity (and by extension, all of its components) and frees its ID.
+	Removes all of an entity's components and frees its ID.
+
+	#### Usage:
+	```lua
+	local entity = registry:create()
+
+	registry:destroyEntity(entity)
+
+	-- the entity is no longer valid and functions like getComponent or addComponent will throw
+	assert(registry:isEntityValid(entity) == false)
+	```
 
 	@param entity number
 ]=]
 function Registry:destroyEntity(entity)
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 	end
 
 	local entityId = bit32.band(entity, ENTITYID_MASK)
@@ -298,13 +378,25 @@ function Registry:destroyEntity(entity)
 end
 
 --[=[
-
 	Returns `true` if the entity exists. Otherwise, returns `false`.
+
+	#### Usage:
+	```lua
+	assert(registry:isEntityValid(0) == false)
+
+	local entity = registry:createEntity()
+
+	assert(registry:isEntityValid(entity) == true)
+
+	registry:destroyEntity(entity)
+
+	assert(registry:isEntityValid(entity) == false)
+	```
 
 	@param entity number
 	@return boolean
 ]=]
-function Registry:isValidEntity(entity)
+function Registry:isEntityValid(entity)
 	if DEBUG then
 		local ty = type(entity)
 		jumpAssert(ty == "number", ErrBadEntityType:format(ty))
@@ -316,12 +408,26 @@ end
 --[=[
 	Returns `true` if the entity has no components. Otherwise, returns `false`.
 
+	#### Usage
+	```lua
+	local entity = registry:createEntity()
+
+	assert(self:isEntityOrphaned(entity) == true)
+
+	registry:addComponent(entity, "Car", {
+		model = game.ReplicatedStorage.Car:Clone(),
+		color = "Red",
+	})
+
+	assert(registry:isEntityOrphaned(entity) == false)
+	```
+
 	@param entity number
 	@return boolean
 ]=]
-function Registry:isStubEntity(entity)
+function Registry:isEntityOrphaned(entity)
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 	end
 
 	for _, pool in pairs(self._pools) do
@@ -346,7 +452,7 @@ end
 function Registry:visitComponents(callback, entity)
 	if entity ~= nil then
 		if DEBUG then
-			jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+			jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 		end
 
 		for componentName, pool in pairs(self._pools) do
@@ -376,9 +482,9 @@ end
 	@param ...componentNames string
 	@return boolean
 ]=]
-function Registry:hasAllComponents(entity, ...)
+function Registry:entityHas(entity, ...)
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 
 		for i = 1, select("#", ...) do
 			jumpAssert(self._pools[select(i, ...)], ErrBadComponentName:format(select(i, ...)))
@@ -402,9 +508,9 @@ end
 	@param ...componentNames string
 	@return boolean
 ]=]
-function Registry:hasAnyComponents(entity, ...)
+function Registry:entityHasAny(entity, ...)
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 
 		for i = 1, select("#", ...) do
 			jumpAssert(self._pools[select(i, ...)], ErrBadComponentName:format(select(i, ...)))
@@ -427,13 +533,13 @@ end
 
 	@param entity number
 	@param componentName string
-	@return Component<Type>
+	@return any
 ]=]
 function Registry:getComponent(entity, componentName)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 	end
 
@@ -446,7 +552,7 @@ end
 	@param entity number
 	@param output table
 	@param ...componentNames string
-	@return ...Component<Type>
+	@return ...any
 ]=]
 function Registry:getComponents(entity, output, ...)
 	for i = 1, select("#", ...) do
@@ -463,14 +569,14 @@ end
 
 	@param entity number
 	@param componentName string
-	@param component Component<Type>
-	@return Component<Type>
+	@param component any
+	@return any
 ]=]
 function Registry:addComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent:format(entity, componentName))
 		jumpAssert(pool.typeCheck(component))
@@ -486,11 +592,11 @@ end
 	Adds the given components to the entity and returns the entity.
 
 	@param entity number
-	@param componentMap {[string]: Component<Type>}
+	@param components {[string]: any}
 	@return number
 ]=]
-function Registry:addComponents(entity, componentMap)
-	for componentName, component in pairs(componentMap) do
+function Registry:withComponents(entity, components)
+	for componentName, component in pairs(components) do
 		self:addComponent(entity, componentName, component)
 	end
 
@@ -503,8 +609,8 @@ end
 
 	@param entity number
 	@param componentName string
-	@param component Component<Type>
-	@return Component<Type> | nil
+	@param component any
+	@return any
 ]=]
 function Registry:tryAddComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
@@ -514,7 +620,7 @@ function Registry:tryAddComponent(entity, componentName, component)
 		jumpAssert(pool.typeCheck(component))
 	end
 
-	if not self:isValidEntity(entity) or pool:getIndex(entity) then
+	if not self:isEntityValid(entity) or pool:getIndex(entity) then
 		return nil
 	end
 
@@ -530,13 +636,13 @@ end
 
 	@param entity number
 	@param componentName string
-	@param component Component<Type>
+	@param component any
 ]=]
 function Registry:getOrAddComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 		jumpAssert(pool.typeCheck(component))
 	end
@@ -560,14 +666,14 @@ end
 
 	@param entity number
 	@param componentName string
-	@param component Component<Type>
-	@return Component<Type>
+	@param component any
+	@return any
 ]=]
 function Registry:replaceComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 		jumpAssert(pool.typeCheck(component))
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
@@ -586,14 +692,14 @@ end
 
 	@param entity number
 	@param componentName string
-	@param component Component<Type>
-	@return Component<Type>
+	@param component any
+	@return any
 ]=]
 function Registry:addOrReplaceComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 		jumpAssert(pool.typeCheck(component))
 	end
@@ -624,7 +730,7 @@ function Registry:removeComponent(entity, componentName)
 	local pool = self._pools[componentName]
 
 	if DEBUG then
-		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
 	end
@@ -650,7 +756,7 @@ function Registry:tryRemoveComponent(entity, componentName)
 		jumpAssert(pool, ErrBadComponentName:format(componentName))
 	end
 
-	if self:isValidEntity(entity) and pool:getIndex(entity) then
+	if self:isEntityValid(entity) and pool:getIndex(entity) then
 		pool.removed:dispatch(entity, pool:get(entity))
 		pool:delete(entity)
 		return true
@@ -722,7 +828,12 @@ function Registry:isComponentDefined(componentName)
 	return not not self._pools[componentName]
 end
 
-function Registry:getComponentDefinition(componentName)
+--[=[
+	Returns the type definition of a component.
+
+	@param componentName string
+]=]
+function Registry:getTypeDefinition(componentName)
 	local pool = self._pools[componentName]
 
 	jumpAssert(pool, ErrBadComponentName:format(componentName))
@@ -734,9 +845,8 @@ end
 	Returns a list of pools containing the specified components in the same order as
 	the given list of component names.
 
-	@tag Internal
 	@param componentNames {string}
-	@return {Pool<Type>}
+	@return {Pool}
 ]=]
 function Registry:getPools(componentNames)
 	local output = table.create(#componentNames)
@@ -757,9 +867,8 @@ end
 --[=[
 	Returns the pool containing the specified components.
 
-	@tag Internal
 	@param componentName string
-	@return Pool<Type>
+	@return Pool
 ]=]
 function Registry:getPool(componentName)
 	local pool = self._pools[componentName]

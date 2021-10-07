@@ -58,7 +58,7 @@ return function()
 	describe("createEntity", function()
 		it("should return a valid entity identifier", function(context)
 			for _, entity in ipairs(makeEntities(context.registry, 100)) do
-				expect(context.registry:isValidEntity(entity)).to.equal(true)
+				expect(context.registry:isEntityValid(entity)).to.equal(true)
 			end
 		end)
 
@@ -102,11 +102,11 @@ return function()
 		end)
 	end)
 
-	describe("createFrom", function()
+	describe("createEntityFrom", function()
 		it(
 			"should return an entity identifier equal to hint when hint's entity id is not in use",
 			function(context)
-				expect(context.registry:createFrom(0xDEADBEEF)).to.equal(0xDEADBEEF)
+				expect(context.registry:createEntityFrom(0xDEADBEEF)).to.equal(0xDEADBEEF)
 			end
 		)
 
@@ -122,7 +122,7 @@ return function()
 					registry:destroyEntity(registry:createEntity())
 				end
 
-				expect(registry:createFrom(entity)).to.equal(entity)
+				expect(registry:createEntityFrom(entity)).to.equal(entity)
 			end
 		)
 
@@ -131,7 +131,7 @@ return function()
 
 			makeEntities(registry, 100)
 
-			-- We need to make sure createFrom correctly removes ids from the middle of
+			-- We need to make sure createEntityFrom correctly removes ids from the middle of
 			-- the free list. First we populate it with some ids:
 			-- 64, 32, 16, 4, 2
 			registry:destroyEntity(2)
@@ -143,7 +143,7 @@ return function()
 			-- Next we create entity 16, which is in the middle of the free
 			-- list. After this operation, the free list should look like this:
 			-- 64, 32, 4, 2
-			local e16 = registry:createFrom(16)
+			local e16 = registry:createEntityFrom(16)
 			expect(Registry.getId(e16)).to.equal(16)
 			expect(Registry.getVersion(e16)).to.equal(0)
 
@@ -151,13 +151,16 @@ return function()
 			-- now look like this:
 			-- 32, 4, 2
 			local version = 16
-			local entity = registry:createFrom(bit32.bor(64, bit32.lshift(version, ENTITYID_WIDTH)))
+			local entity = registry:createEntityFrom(bit32.bor(
+				64,
+				bit32.lshift(version, ENTITYID_WIDTH)
+			))
 			expect(Registry.getId(entity)).to.equal(64)
 			expect(Registry.getVersion(entity)).to.equal(16)
 
 			-- ...
 			-- 32, 2
-			local e4 = registry:createFrom(4)
+			local e4 = registry:createEntityFrom(4)
 			expect(Registry.getId(e4)).to.equal(4)
 			expect(Registry.getVersion(e4)).to.equal(0)
 
@@ -172,11 +175,18 @@ return function()
 			expect(Registry.getVersion(e2)).to.equal(1)
 		end)
 
-		it("should return a new entity identifier when the entity id is in use", function(context)
-			local entity = makeEntities(context.registry, 100)[60]
+		it(
+			"should return destroy the existing entity and return the same identifier when the entity id is in use",
+			function(context)
+				local entities = makeEntities(context.registry, 100)
+				local entity = entities[38]
 
-			expect(context.registry:createFrom(entity)).to.equal(context.registry._size)
-		end)
+				context.registry:addComponent(entity, "tag")
+
+				expect(context.registry:createEntityFrom(entity)).to.equal(entity)
+				expect(context.registry:entityHas(entity, "tag")).to.equal(false)
+			end
+		)
 	end)
 
 	describe("destroyEntity", function()
@@ -228,12 +238,12 @@ return function()
 		end)
 	end)
 
-	describe("isValidEntity", function()
+	describe("isEntityValid", function()
 		it("should return true if the entity identifier is valid", function(context)
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			expect(registry:isValidEntity(entity)).to.equal(true)
+			expect(registry:isEntityValid(entity)).to.equal(true)
 		end)
 
 		it("should return false if the entity identifier is not valid", function(context)
@@ -242,20 +252,20 @@ return function()
 
 			registry:destroyEntity(entity)
 
-			expect(registry:isValidEntity(entity)).to.equal(false)
-			expect(registry:isValidEntity(NULL_ENTITYID)).to.equal(false)
+			expect(registry:isEntityValid(entity)).to.equal(false)
+			expect(registry:isEntityValid(NULL_ENTITYID)).to.equal(false)
 		end)
 
 		it("should error if entity is not a number", function(context)
 			expect(function()
-				context.registry:isValidEntity("entity")
+				context.registry:isEntityValid("entity")
 			end).to.throw()
 		end)
 	end)
 
-	describe("isStubEntity", function()
+	describe("isEntityOrphaned", function()
 		it("should return true if the entity has no components", function(context)
-			expect(context.registry:isStubEntity(context.registry:createEntity())).to.equal(true)
+			expect(context.registry:isEntityOrphaned(context.registry:createEntity())).to.equal(true)
 		end)
 
 		it("should return false if the entity has any components", function(context)
@@ -264,12 +274,12 @@ return function()
 
 			registry:addComponent(entity, "number", 10)
 
-			expect(context.registry:isStubEntity(entity)).to.equal(false)
+			expect(context.registry:isEntityOrphaned(entity)).to.equal(false)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:isStubEntity(0)
+				context.registry:isEntityOrphaned(0)
 			end).to.throw()
 		end)
 	end)
@@ -318,11 +328,11 @@ return function()
 		end)
 	end)
 
-	describe("hasAllComponents", function()
+	describe("entityHas", function()
 		it("should return false if the entity does not have the components", function(context)
 			local registry = context.registry
 
-			expect(registry:hasAllComponents(registry:createEntity(), "instance", "number")).to.equal(false)
+			expect(registry:entityHas(registry:createEntity(), "instance", "number")).to.equal(false)
 		end)
 
 		it("should return true if the entity has the components", function(context)
@@ -332,29 +342,29 @@ return function()
 			registry._pools.instance:insert(entity, Instance.new("Part"))
 			registry._pools.number:insert(entity, 10)
 
-			expect(registry:hasAllComponents(entity, "instance", "number")).to.equal(true)
+			expect(registry:entityHas(entity, "instance", "number")).to.equal(true)
 		end)
 
 		it("should error if give an invalid entity", function(context)
 			expect(function()
-				context.registry:hasAllComponents(0, "number")
+				context.registry:entityHas(0, "number")
 			end).to.throw()
 		end)
 
 		it("should error if given an invalid component name", function(context)
 			expect(function()
-				context.registry:hasAllComponents(context.registry:createEntity(), "")
+				context.registry:entityHas(context.registry:createEntity(), "")
 			end).to.throw()
 		end)
 	end)
 
-	describe("hasAnyComponents", function()
+	describe("entityHasAny", function()
 		it(
 			"should return false if the entity does not have any of the components",
 			function(context)
 				local registry = context.registry
 
-				expect(registry:hasAnyComponents(registry:createEntity(), "instance", "number")).to.equal(false)
+				expect(registry:entityHasAny(registry:createEntity(), "instance", "number")).to.equal(false)
 			end
 		)
 
@@ -365,18 +375,18 @@ return function()
 			registry._pools.instance:insert(entity, Instance.new("Part"))
 			registry._pools.number:insert(entity, 10)
 
-			expect(registry:hasAnyComponents(entity, "number", "instance")).to.equal(true)
+			expect(registry:entityHasAny(entity, "number", "instance")).to.equal(true)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:hasAnyComponents(0, "number")
+				context.registry:entityHasAny(0, "number")
 			end).to.throw()
 		end)
 
 		it("should error if given an invalid component name", function(context)
 			expect(function()
-				context.registry:hasAnyComponents(context.registry:createEntity(), "")
+				context.registry:entityHasAny(context.registry:createEntity(), "")
 			end).to.throw()
 		end)
 	end)

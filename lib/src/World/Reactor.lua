@@ -1,3 +1,7 @@
+--[=[
+	@class Reactor
+]=]
+
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local SingleReactor = require(script.Parent.SingleReactor)
@@ -70,22 +74,19 @@ function Reactor.new(registry, query)
 	return self
 end
 
-function Reactor:attach(callback)
-	table.insert(
-		self._connections,
-		self.added:connect(function(entity, ...)
-			self._pool:replace(entity, callback(entity, ...))
-		end)
-	)
+function Reactor:withAttachments(callback)
+	local attachmentsAdded = self.added:connect(function(entity, ...)
+		self._pool:replace(entity, callback(entity, ...))
+	end)
 
-	table.insert(
-		self._connections,
-		self.removed:connect(function(entity)
-			for _, item in ipairs(self._pool:get(entity)) do
-				Finalizers[typeof(item)](item)
-			end
-		end)
-	)
+	local attachmentsRemoved = self.removed:connect(function(entity)
+		for _, item in ipairs(self._pool:get(entity)) do
+			Finalizers[typeof(item)](item)
+		end
+	end)
+
+	table.insert(self._connections, attachmentsAdded)
+	table.insert(self._connections, attachmentsRemoved)
 end
 
 function Reactor:detach()

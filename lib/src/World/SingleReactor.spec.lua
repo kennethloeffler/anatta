@@ -34,15 +34,15 @@ return function()
 		end)
 	end)
 
-	describe("attach", function()
-		it("should attach items when an entity enters the collection", function()
+	describe("withAttachments", function()
+		it("should attach attachments when an entity enters the collection", function()
 			local pool = Pool.new("test", {})
 			local collection = SingleReactor.new(pool)
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
 			local holes = {}
 
-			collection:attach(function()
+			collection:withAttachments(function()
 				local hole = Instance.new("Hole")
 
 				hole.Parent = workspace
@@ -88,7 +88,7 @@ return function()
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
 
-			collection:attach(function()
+			collection:withAttachments(function()
 				return {
 					event.Event:Connect(function()
 						numCalled += 1

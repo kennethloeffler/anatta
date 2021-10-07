@@ -1,13 +1,13 @@
-local SinglePureCollection = {}
-SinglePureCollection.__index = SinglePureCollection
+local SingleMapper = {}
+SingleMapper.__index = SingleMapper
 
-function SinglePureCollection.new(pool)
+function SingleMapper.new(pool)
 	return setmetatable({
 		_pool = pool,
-	}, SinglePureCollection)
+	}, SingleMapper)
 end
 
-function SinglePureCollection:update(callback)
+function SingleMapper:update(callback)
 	local components = self._pool.components
 	local updated = self._pool.updated
 
@@ -22,7 +22,7 @@ function SinglePureCollection:update(callback)
 	end
 end
 
-function SinglePureCollection:each(callback)
+function SingleMapper:each(callback)
 	local components = self._pool.components
 
 	for i, entity in ipairs(self._pool.dense) do
@@ -30,4 +30,4 @@ function SinglePureCollection:each(callback)
 	end
 end
 
-return SinglePureCollection
+return SingleMapper

@@ -1,9 +1,17 @@
---[[
+--[=[
+	@class TypeDefinition
 
-	Wrapper around t that lets us inspect detailed type information after the
-	fact.
+	`TypeDefinition` is a wrapper around `t` that enables detailed inspection of type
+	information after the fact. [See `t`'s documentation for a listing of all the
+	functions present in this module.](https://github.com/osyrisrblx/t#crash-course)
+]=]
 
-]]
+--- @interface TypeDefinition
+--- @within TypeDefinition
+--- .typeParams { TypeDefinition }
+--- .check (...)
+--- .typeName string
+--- A wrapped `t` check returned by each member function.
 
 local Types = require(script.Parent.Parent.Types)
 local t = require(script.Parent.Parent.Parent.t)

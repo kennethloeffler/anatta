@@ -60,8 +60,8 @@ return function()
 			end
 
 			if
-				registry:hasAllComponents(entity, unpack(query.withAll or {}))
-				and not registry:hasAnyComponents(entity, unpack(query.without or {}))
+				registry:entityHas(entity, unpack(query.withAll or {}))
+				and not registry:entityHasAny(entity, unpack(query.without or {}))
 			then
 				toIterate[entity] = true
 			end

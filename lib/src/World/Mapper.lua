@@ -1,3 +1,7 @@
+--[=[
+	@class Mapper
+]=]
+
 local SingleMapper = require(script.Parent.SingleMapper)
 local Types = require(script.Parent.Parent.Types)
 local util = require(script.Parent.Parent.util)

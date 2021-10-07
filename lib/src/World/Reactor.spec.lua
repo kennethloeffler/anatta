@@ -42,7 +42,7 @@ return function()
 		local reactor = Reactor.new(registry, query)
 
 		if callback then
-			reactor:attach(callback)
+			reactor:withAttachments(callback)
 		end
 
 		for i = 1, 100 do
@@ -66,9 +66,9 @@ return function()
 			end
 
 			if
-				registry:hasAllComponents(entity, unpack(query.withAll or {}))
-				and not registry:hasAnyComponents(entity, unpack(query.without or {}))
-				and registry:hasAllComponents(entity, unpack(query.withUpdated or {}))
+				registry:entityHas(entity, unpack(query.withAll or {}))
+				and not registry:entityHasAny(entity, unpack(query.without or {}))
+				and registry:entityHas(entity, unpack(query.withUpdated or {}))
 			then
 				len += 1
 
@@ -280,7 +280,7 @@ return function()
 						expect(test3).to.equal(registry:getComponent(entity, "Test3"))
 					end)
 
-					registry:addComponents(testEntity, {
+					registry:withComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test3 = {},
@@ -311,7 +311,7 @@ return function()
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
 					end)
 
-					registry:addComponents(testEntity, {
+					registry:withComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 					})
@@ -348,7 +348,7 @@ return function()
 						expect(test4).to.equal(registry:getComponent(entity, "Test4"))
 					end)
 
-					registry:addComponents(testEntity, {
+					registry:withComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test4 = {},
@@ -386,7 +386,7 @@ return function()
 
 				local testEntity = registry:createEntity()
 
-				registry:addComponents(testEntity, {
+				registry:withComponents(testEntity, {
 					Test1 = {},
 					Test2 = {},
 					Test4 = {},
@@ -419,7 +419,7 @@ return function()
 						expect(test4).to.equal(registry:getComponent(entity, "Test4"))
 					end)
 
-					registry:addComponents(testEntity, {
+					registry:withComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test3 = {},
@@ -453,7 +453,7 @@ return function()
 						expect(test3).to.equal(registry:getComponent(entity, "Test3"))
 					end)
 
-					registry:addComponents(testEntity, {
+					registry:withComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test3 = {},
@@ -485,7 +485,7 @@ return function()
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
 					end)
 
-					registry:addComponents(testEntity, {
+					registry:withComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 					})
@@ -518,7 +518,7 @@ return function()
 						expect(test4).to.equal(registry:getComponent(entity, "Test4"))
 					end)
 
-					registry:addComponents(testEntity, {
+					registry:withComponents(testEntity, {
 						Test1 = {},
 						Test2 = {},
 						Test4 = {},
@@ -543,7 +543,7 @@ return function()
 					without = { "Test3" },
 				})
 
-				registry:addComponents(testEntity, {
+				registry:withComponents(testEntity, {
 					Test1 = {},
 					Test2 = {},
 					Test4 = {},
@@ -557,8 +557,8 @@ return function()
 		)
 	end)
 
-	describe("attach", function()
-		it("should attach items when an entity enters the reactor", function(context)
+	describe("withAttachments", function()
+		it("should attach attachments when an entity enters the reactor", function(context)
 			local registry = context.registry
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
@@ -648,7 +648,7 @@ return function()
 				withUpdated = { "Test2" },
 			})
 
-			local entity = registry:addComponents(registry:createEntity(), {
+			local entity = registry:withComponents(registry:createEntity(), {
 				Test1 = {},
 				Test2 = {},
 			})
@@ -671,7 +671,7 @@ return function()
 					withUpdated = { "Test3", "Test4" },
 				})
 
-				local entity = context.registry:addComponents(context.registry:createEntity(), {
+				local entity = context.registry:withComponents(context.registry:createEntity(), {
 					Test1 = {},
 					Test2 = {},
 					Test3 = {},
@@ -699,7 +699,7 @@ return function()
 					without = { "Test3" },
 				})
 
-				local entity = registry:addComponents(registry:createEntity(), {
+				local entity = registry:withComponents(registry:createEntity(), {
 					Test1 = {},
 					Test2 = {},
 					Test4 = {},
@@ -711,7 +711,7 @@ return function()
 				expect(reactor._packed[2]).to.equal(registry:getComponent(entity, "Test2"))
 				expect(reactor._packed[3]).to.equal(registry:getComponent(entity, "Test4"))
 
-				expect(reactor:_tryPack(registry:addComponents(registry:createEntity(), {
+				expect(reactor:_tryPack(registry:withComponents(registry:createEntity(), {
 					Test1 = {},
 					Test2 = {},
 					Test3 = {},

@@ -24,7 +24,7 @@ function SingleReactor:each(callback)
 	end
 end
 
-function SingleReactor:attach(callback)
+function SingleReactor:withAttachments(callback)
 	if not self._pool then
 		self._pool = Pool.new("collectionInternal", {})
 	end
