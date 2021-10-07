@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="generator" content="Docusaurus v2.0.0-beta.6">
+<title data-react-helmet="true">Registry | Anatta</title><meta data-react-helmet="true" property="og:title" content="Registry | Anatta"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" name="description" content="A `Registry` manages and provides unscoped access to entities and their components. It
+provides methods to create and destroy entities and to add, remove, get, or update
+components.
+
+You can get a `Registry` from a [`World`](World)."><meta data-react-helmet="true" property="og:description" content="A `Registry` manages and provides unscoped access to entities and their components. It
+provides methods to create and destroy entities and to add, remove, get, or update
+components.
+
+You can get a `Registry` from a [`World`](World)."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/Registry"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/Registry"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Registry" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Registry" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.29e98e1d.css">
+<link rel="preload" href="/anatta/assets/js/runtime~main.c7edc2bd.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.8a888f4c.js" as="script">
+</head>
+<body>
+<script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){var t=null;try{t=localStorage.getItem("theme")}catch(t){}return t}();t(null!==e?e:"light")}()</script><div id="__docusaurus">
+<div><a href="#" class="skipToContent_1oUP">Skip to main content</a></div><nav class="navbar navbar--fixed-top"><div class="navbar__inner"><div class="navbar__items"><button aria-label="Navigation bar toggle" class="navbar__toggle clean-btn" type="button" tabindex="0"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/anatta/"><b class="navbar__title">Anatta</b></a><a class="navbar__item navbar__link" href="/anatta/docs/intro">Docs</a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/anatta/api/">API</a></div><div class="navbar__items navbar__items--right"><a href="https://github.com/kennethloeffler/anatta" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><span>GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_3J9K"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></span></a><div class="react-toggle toggle_3Zt9 react-toggle--disabled"><div class="react-toggle-track" role="button" tabindex="-1"><div class="react-toggle-track-check"><span class="toggle_71bT">🌜</span></div><div class="react-toggle-track-x"><span class="toggle_71bT">🌞</span></div><div class="react-toggle-thumb"></div></div><input type="checkbox" class="react-toggle-screenreader-only" aria-label="Switch between dark and light mode"></div><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input type="search" id="search_input_react" placeholder="Press S to Search..." aria-label="Search" class="navbar__search-input search-bar"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div class="main-wrapper docPageContainer_2Kz0"><div class="docPage_1bdk"><div class="docSidebarContainer_1ykS"><div class="sidebar_15mo"><nav class="menu thin-scrollbar menu_Bmed menuWithAnnouncementBar_2WvA"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link menu__list-item"><a class="menu__link" href="/anatta/api/Anatta">Anatta</a></li><li class="theme-doc-sidebar-item-link menu__list-item"><a class="menu__link" href="/anatta/api/Dom">Dom</a></li><li class="theme-doc-sidebar-item-link menu__list-item"><a class="menu__link" href="/anatta/api/Mapper">Mapper</a></li><li class="theme-doc-sidebar-item-link menu__list-item"><a class="menu__link" href="/anatta/api/Reactor">Reactor</a></li><li class="theme-doc-sidebar-item-link menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/anatta/api/Registry">Registry</a></li><li class="theme-doc-sidebar-item-link menu__list-item"><a class="menu__link" href="/anatta/api/t">t</a></li><li class="theme-doc-sidebar-item-link menu__list-item"><a class="menu__link" href="/anatta/api/World">World</a></li></ul></nav><button type="button" title="Collapse sidebar" aria-label="Collapse sidebar" class="button button--secondary button--outline collapseSidebarButton_1CGd"><svg width="20" height="20" aria-hidden="true" class="collapseSidebarButtonIcon_3E-R"><g fill="#7a7a7a"><path d="M9.992 10.023c0 .2-.062.399-.172.547l-4.996 7.492a.982.982 0 01-.828.454H1c-.55 0-1-.453-1-1 0-.2.059-.403.168-.551l4.629-6.942L.168 3.078A.939.939 0 010 2.528c0-.548.45-.997 1-.997h2.996c.352 0 .649.18.828.45L9.82 9.472c.11.148.172.347.172.55zm0 0"></path><path d="M19.98 10.023c0 .2-.058.399-.168.547l-4.996 7.492a.987.987 0 01-.828.454h-3c-.547 0-.996-.453-.996-1 0-.2.059-.403.168-.551l4.625-6.942-4.625-6.945a.939.939 0 01-.168-.55 1 1 0 01.996-.997h3c.348 0 .649.18.828.45l4.996 7.492c.11.148.168.347.168.55zm0 0"></path></g></svg></button></div></div><main class="docMainContainer_28N5"><div class="container padding-vert--lg"><div class="row" style="flex-wrap:nowrap"><div class="col docItemCol_3WPG"><div class="docItemContainer_3XDu"><article><div class="member_qHIL markdown"><div class="tocCollapsible_1PrD theme-doc-toc-mobile tocMobile_3ryM"><button type="button" class="clean-btn tocCollapsibleButton_2O1e">On this page</button></div><header><h1 class="docTitle_1ddc">Registry</h1><div class="luaClassTags_2Zrs"></div><label class="privateToggle_392d"><span class="privateCheckboxContainer_3byV"><input type="checkbox" class="privateCheckboxInternal_1EDc" name="checkbox"><span class="privateCheckboxControl_puPe"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="3" d="M4 11.91l5.37 5.37L19.79 5.59"></path></svg></span></span><span class="privateCheckboxLabel_3To7">Show Private</span></label><div>
+<p>
+  A <code>Registry</code> manages and provides unscoped access to entities and their components. It
+  provides methods to create and destroy entities and to add, remove, get, or update
+  components.
+</p>
+<p>You can get a <code>Registry</code> from a <a href="World"><code>World</code></a>.</p>
+</div></header><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="addComponent"></a><code style="text-decoration:none">addComponent</code><a class="hash-link" href="#addComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L607"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">addComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+<p>Adds a component to the entity and returns the component.</p>
+<div class="admonition admonition-info alert alert--info">
+  <div class="admonition-heading">
+    <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16">
+          <path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path>
+        </svg></span>info</h5>
+  </div>
+  <div class="admonition-content">
+    <p>An entity can only have one component of each type at a time.</p>
+  </div>
+</div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>&quot;entity %d already has a %s&quot;</td><td>The entity already has that component.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="addOrReplaceComponent"></a><code style="text-decoration:none">addOrReplaceComponent</code><a class="hash-link" href="#addOrReplaceComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L755"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">addOrReplaceComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+<p>
+  If the entity has the component, replaces it with the given component and returns the
+  new component. Otherwise, adds the component to the entity and returns the new
+  component.
+</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="countComponents"></a><code style="text-decoration:none">countComponents</code><a class="hash-link" href="#countComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L856"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">countComponents</code><code>(</code><code>componentName: </code><code class="blue_2Afy">string</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
+<p>Returns the total number of entities with the given component.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="countEntities"></a><code style="text-decoration:none">countEntities</code><a class="hash-link" href="#countEntities" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L836"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">countEntities</code><code>(</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
+<p>Returns the total number of entities currently in use by the registry.</p>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="createEntity"></a><code style="text-decoration:none">createEntity</code><a class="hash-link" href="#createEntity" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L235"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">createEntity</code><code>(</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
+<p>Creates and returns a unique identifier that represents a game object.</p>
+<h4>Usage:</h4>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token function">assert</span><span class="token punctuation">(</span>entity <span class="token operator">==</span> <span class="token number">1</span><span class="token punctuation">)</span>
+
+entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token function">assert</span><span class="token punctuation">(</span>entity <span class="token operator">==</span> <span class="token number">2</span><span class="token punctuation">)</span>
+
+entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token function">assert</span><span class="token punctuation">(</span>entity <span class="token operator">==</span> <span class="token number">3</span><span class="token punctuation">)</span>
+</code></pre>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="defineComponent"></a><code style="text-decoration:none">defineComponent</code><a class="hash-link" href="#defineComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L210"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">defineComponent</code><code>(</code><code>componentDefinition: </code><code class="blue_2Afy">ComponentDefinition</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Registers a new component type for the registry.</p>
+<h4>Usage:</h4>
+<pre class="language-lua"><code class="language-lua">registry<span class="token punctuation">:</span><span class="token function">defineComponent</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+	name <span class="token operator">=</span> <span class="token string">"Health"</span><span class="token punctuation">,</span>
+	type <span class="token operator">=</span> t<span class="token punctuation">.</span>number
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+<span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+registry<span class="token punctuation">:</span><span class="token function">addComponent</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> <span class="token string">"Health"</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span>
+</code></pre>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;there is already a component type named %s&quot;</td><td>The name is already being used.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="destroyEntity"></a><code style="text-decoration:none">destroyEntity</code><a class="hash-link" href="#destroyEntity" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L359"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">destroyEntity</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Removes all of an entity's components and frees its ID.</p>
+<h4>Usage:</h4>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+registry<span class="token punctuation">:</span><span class="token function">destroyEntity</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span>
+
+<span class="token comment">-- the entity is no longer valid and functions like getComponent or addComponent will throw</span>
+<span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityValid</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">false</span><span class="token punctuation">)</span>
+</code></pre>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="each"></a><code style="text-decoration:none">each</code><a class="hash-link" href="#each" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L871"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">each</code><code>(</code><code>callback: </code><code class="green_3LnD">(</code><code>entity: </code><code class="blue_2Afy">number</code><code class="green_3LnD">)</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Passes each entity currently in use by the registry to the given callback.</p>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="entityHas"></a><code style="text-decoration:none">entityHas</code><a class="hash-link" href="#entityHas" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L500"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">entityHas</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>...componentNames: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+<p>Returns <code>true</code> if the entity all of the given components. Otherwise, returns <code>false</code>.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="entityHasAny"></a><code style="text-decoration:none">entityHasAny</code><a class="hash-link" href="#entityHasAny" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L530"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">entityHasAny</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>...componentNames: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+<p>
+  Returns <code>true</code> if the entity has any of the given components. Otherwise, returns
+  <code>false</code>.
+</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getComponent"></a><code style="text-decoration:none">getComponent</code><a class="hash-link" href="#getComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L559"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+<p>Returns the component of the given type on the entity.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getComponentDefinition"></a><code style="text-decoration:none">getComponentDefinition</code><a class="hash-link" href="#getComponentDefinition" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L903"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getComponentDefinition</code><code>(</code><code>componentName: </code><code class="blue_2Afy">string</code><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Returns the <a href="t#TypeDefinition"><code>ComponentDefinition</code></a> with the given name.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getComponents"></a><code style="text-decoration:none">getComponents</code><a class="hash-link" href="#getComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L582"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getComponents</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>output: </code><code class="blue_2Afy">table</code><code>,</code></div><div><code>...componentNames: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">...any</code></div><div>
+<p>Returns all of the given components on the entity.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getOrAddComponent"></a><code style="text-decoration:none">getOrAddComponent</code><a class="hash-link" href="#getOrAddComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L689"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getOrAddComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+<p>
+  If the entity has the component, returns the component. Otherwise adds the component
+  to the entity and returns the component.
+</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getPool"></a><code style="text-decoration:none">getPool</code><a class="hash-link" href="#getPool" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L944"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getPool</code><code>(</code><code>componentName: </code><code class="blue_2Afy">string</code><code>) → </code><code class="blue_2Afy">Pool</code></div><div>
+<p>Returns the pool containing the specified components.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getPools"></a><code style="text-decoration:none">getPools</code><a class="hash-link" href="#getPools" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L920"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getPools</code><code>(</code><code>componentNames: </code><code class="op_1JtD">{</code><code class="blue_2Afy">string</code><code class="op_1JtD">}</code><code>) → </code><code class="op_1JtD">{</code><code class="blue_2Afy">Pool</code><code class="op_1JtD">}</code></div><div>
+<p>
+  Returns a list of pools containing the specified components in the same order as
+  the given list of component names.
+</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isComponentDefined"></a><code style="text-decoration:none">isComponentDefined</code><a class="hash-link" href="#isComponentDefined" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L892"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isComponentDefined</code><code>(</code><code>componentName: </code><code class="blue_2Afy">string</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+<p>
+  Returns <code>true</code> if the registry has a component type with the given name. Otherwise,
+  returns <code>false</code>.
+</p>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isEntityOrphaned"></a><code style="text-decoration:none">isEntityOrphaned</code><a class="hash-link" href="#isEntityOrphaned" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L436"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isEntityOrphaned</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+<p>Returns <code>true</code> if the entity has no components. Otherwise, returns <code>false</code>.</p>
+<h4>Usage</h4>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token function">assert</span><span class="token punctuation">(</span>self<span class="token punctuation">:</span><span class="token function">isEntityOrphaned</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">true</span><span class="token punctuation">)</span>
+
+registry<span class="token punctuation">:</span><span class="token function">addComponent</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> <span class="token string">"Car"</span><span class="token punctuation">,</span> <span class="token punctuation">{</span>
+	model <span class="token operator">=</span> game<span class="token punctuation">.</span>ReplicatedStorage<span class="token punctuation">.</span>Car<span class="token punctuation">:</span><span class="token function">Clone</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+	color <span class="token operator">=</span> <span class="token string">"Red"</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+<span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityOrphaned</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">false</span><span class="token punctuation">)</span>
+</code></pre>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isEntityValid"></a><code style="text-decoration:none">isEntityValid</code><a class="hash-link" href="#isEntityValid" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L404"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isEntityValid</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+<p>Returns <code>true</code> if the entity exists. Otherwise, returns <code>false</code>.</p>
+<h4>Usage:</h4>
+<pre class="language-lua"><code class="language-lua"><span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityValid</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">false</span><span class="token punctuation">)</span>
+
+<span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityValid</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">true</span><span class="token punctuation">)</span>
+
+registry<span class="token punctuation">:</span><span class="token function">destroyEntity</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span>
+
+<span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityValid</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">false</span><span class="token punctuation">)</span>
+</code></pre>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="removeComponent"></a><code style="text-decoration:none">removeComponent</code><a class="hash-link" href="#removeComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L789"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">removeComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Removes the component from the entity.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>&quot;entity %d does not have a %s&quot;</td><td>The entity is expected to have this component.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="replaceComponent"></a><code style="text-decoration:none">replaceComponent</code><a class="hash-link" href="#replaceComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L724"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">replaceComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+<p>Replaces the given component on the entity and returns the new component.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr><tr><td>&quot;entity %d does not have a %s&quot;</td><td>The entity is expected to have this component.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="tryAddComponent"></a><code style="text-decoration:none">tryAddComponent</code><a class="hash-link" href="#tryAddComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L658"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">tryAddComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+<p>
+  If the entity does not have the component, adds and returns the component. Otherwise,
+  returns <code>nil</code>.
+</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="tryRemoveComponent"></a><code style="text-decoration:none">tryRemoveComponent</code><a class="hash-link" href="#tryRemoveComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L815"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">tryRemoveComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+<p>
+  If the entity has the component, removes it and returns <code>true</code>. Otherwise, returns
+  <code>false</code>.
+</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="visitComponents"></a><code style="text-decoration:none">visitComponents</code><a class="hash-link" href="#visitComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L463"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">visitComponents</code><code>(</code><div class="inset_2cJr"><div><code>callback: </code><code class="green_3LnD">(</code><code>componentName: </code><code class="blue_2Afy">string</code><code class="green_3LnD">)</code><code class="green_3LnD"> → </code><code class="blue_2Afy">boolean</code><code>,</code></div><div><code>entity: </code><code class="blue_2Afy">number?</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+<p>
+  Passes all the component names defined on the registry to the given callback. The
+  iteration continues until the callback returns <code>nil</code>.
+</p>
+<p>If an entity is given, passes only the components that the entity has.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="withComponents"></a><code style="text-decoration:none">withComponents</code><a class="hash-link" href="#withComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L636"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">withComponents</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>components: </code><code class="op_1JtD">{</code><code>[string]: </code><code class="blue_2Afy">any</code><code class="op_1JtD">}</code></div></div><code>) → </code><code class="blue_2Afy">number</code></div><div>
+<p>Adds the given components to the entity and returns the entity.</p>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>&quot;entity %d already has a %s&quot;</td><td>The entity already has that component.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table></div></article></div></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a></li><li><a href="#properties" class="table-of-contents__link">Properties</a></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#addComponent" class="table-of-contents__link">:addComponent</a></li><li><a href="#addOrReplaceComponent" class="table-of-contents__link">:addOrReplaceComponent</a></li><li><a href="#countComponents" class="table-of-contents__link">:countComponents</a></li><li><a href="#countEntities" class="table-of-contents__link">:countEntities</a></li><li><a href="#createEntity" class="table-of-contents__link">:createEntity</a></li><li><a href="#defineComponent" class="table-of-contents__link">:defineComponent</a></li><li><a href="#destroyEntity" class="table-of-contents__link">:destroyEntity</a></li><li><a href="#each" class="table-of-contents__link">:each</a></li><li><a href="#entityHas" class="table-of-contents__link">:entityHas</a></li><li><a href="#entityHasAny" class="table-of-contents__link">:entityHasAny</a></li><li><a href="#getComponent" class="table-of-contents__link">:getComponent</a></li><li><a href="#getComponentDefinition" class="table-of-contents__link">:getComponentDefinition</a></li><li><a href="#getComponents" class="table-of-contents__link">:getComponents</a></li><li><a href="#getOrAddComponent" class="table-of-contents__link">:getOrAddComponent</a></li><li><a href="#getPool" class="table-of-contents__link">:getPool</a></li><li><a href="#getPools" class="table-of-contents__link">:getPools</a></li><li><a href="#isComponentDefined" class="table-of-contents__link">:isComponentDefined</a></li><li><a href="#isEntityOrphaned" class="table-of-contents__link">:isEntityOrphaned</a></li><li><a href="#isEntityValid" class="table-of-contents__link">:isEntityValid</a></li><li><a href="#removeComponent" class="table-of-contents__link">:removeComponent</a></li><li><a href="#replaceComponent" class="table-of-contents__link">:replaceComponent</a></li><li><a href="#tryAddComponent" class="table-of-contents__link">:tryAddComponent</a></li><li><a href="#tryRemoveComponent" class="table-of-contents__link">:tryRemoveComponent</a></li><li><a href="#visitComponents" class="table-of-contents__link">:visitComponents</a></li><li><a href="#withComponents" class="table-of-contents__link">:withComponents</a></li></ul></li></ul></div></div></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;new&quot;,
+            &quot;desc&quot;: &quot;Creates and returns a blank, empty registry.&quot;,
+            &quot;params&quot;: [],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Registry&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;ignore&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 64,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getId&quot;,
+            &quot;desc&quot;: &quot;Returns an integer equal to the first `ENTITYID_WIDTH` bits of the\nentity. The equality\n\n```lua\nregistry._entities[id] == entity\n```\n\ngenerally holds if the entity is valid.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;private&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 87,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getVersion&quot;,
+            &quot;desc&quot;: &quot;Returns an integer equal to the last `32 - ENTITYID_WIDTH` bits of the\nentity.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;private&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 99,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;fromRegistry&quot;,
+            &quot;desc&quot;: &quot;Creates a shallow copy of an existing registry.\n\nBecause this function fires the added signal for every copied component, it\nis equivalent to adding each component to the new registry with\n[`addComponent`](#addComponent).\n\n#### Usage:\n```lua\nlocal entity1 = registry:createEntity()\nlocal health1 = registry:addComponent(entity1, \&quot;Health\&quot;, 100)\nlocal inventory1 = registry:addComponent(entity1, \&quot;Inventory\&quot;, { \&quot;Beans\&quot; })\n\nlocal entity2 = registry:createEntity()\nlocal health2 = registry:addComponent(entity1, \&quot;Health\&quot;, 250)\nlocal inventory2 = registry:addComponent(entity2, \&quot;Inventory\&quot;, { \&quot;Magic Beans\&quot;, \&quot;Bass Guitar\&quot; })\n\nlocal copied = Registry.fromRegistry(registry)\n\n-- we now have an exact copy of the original registry\nassert(copied:isEntityValid(entity1) and copied:isEntityValid(entity2))\n\nlocal copiedHealth1, copiedInventory1 = registry:getComponents(entity1, \&quot;Health\&quot;, \&quot;Inventory\&quot;)\nlocal copiedHealth2, copiedInventory2 = registry:getComponents(entity1, \&quot;Health\&quot;, \&quot;Inventory\&quot;)\n\nassert(copiedHealth1 == health1 and copiedInventory1 == inventory1)\nassert(copiedHealth2 == health2 and copiedInventory2 == inventory2)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;original&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Registry&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Registry&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;ignore&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 136,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;defineComponent&quot;,
+            &quot;desc&quot;: &quot;Registers a new component type for the registry.\n\n#### Usage:\n```lua\nregistry:defineComponent({\n\tname = \&quot;Health\&quot;,\n\ttype = t.number\n})\n\nlocal entity = registry:createEntity()\n\nregistry:addComponent(entity, \&quot;Health\&quot;, 100)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;componentDefinition&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;there is already a component type named %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The name is already being used.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 210,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;createEntity&quot;,
+            &quot;desc&quot;: &quot;Creates and returns a unique identifier that represents a game object.\n\n#### Usage:\n```lua\nlocal entity = registry:createEntity()\nassert(entity == 1)\n\nentity = registry:createEntity()\nassert(entity == 2)\n\nentity = registry:createEntity()\nassert(entity == 3)\n```&quot;,
+            &quot;params&quot;: [],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 235,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;createEntityFrom&quot;,
+            &quot;desc&quot;: &quot;Returns an entity equal to the given entity.\n\n#### Usage:\n```lua\nlocal entity1 = registry:createEntity()\nregistry:destroyEntity(entity1)\nassert(registry:createEntityFrom(entity1) == entity1)\n\n-- if entity with the same ID already exists, the existing entity is destroyed first\nlocal entity2 = registry:createEntity()\nregistry:addComponent(entity2, \&quot;PrettyFly\&quot;)\n\nentity2 = registry:createEntityFrom(entity2)\nassert(registry:entityHas(entity2, \&quot;PrettyFly\&quot;) == false)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;private&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 280,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;destroyEntity&quot;,
+            &quot;desc&quot;: &quot;Removes all of an entity&#x27;s components and frees its ID.\n\n#### Usage:\n```lua\nlocal entity = registry:create()\n\nregistry:destroyEntity(entity)\n\n-- the entity is no longer valid and functions like getComponent or addComponent will throw\nassert(registry:isEntityValid(entity) == false)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 359,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;isEntityValid&quot;,
+            &quot;desc&quot;: &quot;Returns `true` if the entity exists. Otherwise, returns `false`.\n\n#### Usage:\n```lua\nassert(registry:isEntityValid(0) == false)\n\nlocal entity = registry:createEntity()\n\nassert(registry:isEntityValid(entity) == true)\n\nregistry:destroyEntity(entity)\n\nassert(registry:isEntityValid(entity) == false)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 404,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;isEntityOrphaned&quot;,
+            &quot;desc&quot;: &quot;Returns `true` if the entity has no components. Otherwise, returns `false`.\n\n#### Usage\n```lua\nlocal entity = registry:createEntity()\n\nassert(self:isEntityOrphaned(entity) == true)\n\nregistry:addComponent(entity, \&quot;Car\&quot;, {\n\tmodel = game.ReplicatedStorage.Car:Clone(),\n\tcolor = \&quot;Red\&quot;,\n})\n\nassert(registry:isEntityOrphaned(entity) == false)\n```&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 436,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;visitComponents&quot;,
+            &quot;desc&quot;: &quot;Passes all the component names defined on the registry to the given callback. The\niteration continues until the callback returns `nil`.\n\nIf an entity is given, passes only the components that the entity has.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;callback&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;(componentName: string) -&gt; boolean&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number?&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 463,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;entityHas&quot;,
+            &quot;desc&quot;: &quot;Returns `true` if the entity all of the given components. Otherwise, returns `false`.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;...componentNames&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 500,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;entityHasAny&quot;,
+            &quot;desc&quot;: &quot;Returns `true` if the entity has any of the given components. Otherwise, returns\n`false`.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;...componentNames&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 530,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getComponent&quot;,
+            &quot;desc&quot;: &quot;Returns the component of the given type on the entity.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 559,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getComponents&quot;,
+            &quot;desc&quot;: &quot;Returns all of the given components on the entity.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;output&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;table&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;...componentNames&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;...any&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 582,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;addComponent&quot;,
+            &quot;desc&quot;: &quot;Adds a component to the entity and returns the component.\n\n:::info\nAn entity can only have one component of each type at a time.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;component&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d already has a %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity already has that component.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;Failed type check&quot;,
+                    &quot;desc&quot;: &quot;The given component has the wrong type.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 607,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;withComponents&quot;,
+            &quot;desc&quot;: &quot;Adds the given components to the entity and returns the entity.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;components&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{[string]: any}&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d already has a %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity already has that component.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;Failed type check&quot;,
+                    &quot;desc&quot;: &quot;The given component has the wrong type.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 636,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;tryAddComponent&quot;,
+            &quot;desc&quot;: &quot;If the entity does not have the component, adds and returns the component. Otherwise,\nreturns `nil`.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;component&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;Failed type check&quot;,
+                    &quot;desc&quot;: &quot;The given component has the wrong type.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 658,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getOrAddComponent&quot;,
+            &quot;desc&quot;: &quot;If the entity has the component, returns the component. Otherwise adds the component\nto the entity and returns the component.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;component&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;Failed type check&quot;,
+                    &quot;desc&quot;: &quot;The given component has the wrong type.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 689,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;replaceComponent&quot;,
+            &quot;desc&quot;: &quot;Replaces the given component on the entity and returns the new component.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;component&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;Failed type check&quot;,
+                    &quot;desc&quot;: &quot;The given component has the wrong type.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not have a %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is expected to have this component.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 724,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;addOrReplaceComponent&quot;,
+            &quot;desc&quot;: &quot;If the entity has the component, replaces it with the given component and returns the\nnew component. Otherwise, adds the component to the entity and returns the new\ncomponent.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;component&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;Failed type check&quot;,
+                    &quot;desc&quot;: &quot;The given component has the wrong type.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 755,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;removeComponent&quot;,
+            &quot;desc&quot;: &quot;Removes the component from the entity.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not have a %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is expected to have this component.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 789,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;tryRemoveComponent&quot;,
+            &quot;desc&quot;: &quot;If the entity has the component, removes it and returns `true`. Otherwise, returns\n`false`.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;entity&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity must be a number (got %s)\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is not a number.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;entity %d does not exist or has been destroyed\&quot;&quot;,
+                    &quot;desc&quot;: &quot;The entity is invalid.&quot;
+                },
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 815,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;countEntities&quot;,
+            &quot;desc&quot;: &quot;Returns the total number of entities currently in use by the registry.&quot;,
+            &quot;params&quot;: [],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 836,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;countComponents&quot;,
+            &quot;desc&quot;: &quot;Returns the total number of entities with the given component.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;number&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 856,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;each&quot;,
+            &quot;desc&quot;: &quot;Passes each entity currently in use by the registry to the given callback.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;callback&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;(entity: number)&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 871,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;isComponentDefined&quot;,
+            &quot;desc&quot;: &quot;Returns `true` if the registry has a component type with the given name. Otherwise,\nreturns `false`.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;boolean&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 892,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getComponentDefinition&quot;,
+            &quot;desc&quot;: &quot;Returns the [`ComponentDefinition`](t#TypeDefinition) with the given name.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 903,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getPools&quot;,
+            &quot;desc&quot;: &quot;Returns a list of pools containing the specified components in the same order as\nthe given list of component names.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;componentNames&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{string}&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;{Pool}&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 920,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;getPool&quot;,
+            &quot;desc&quot;: &quot;Returns the pool containing the specified components.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Pool&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;method&quot;,
+            &quot;errors&quot;: [
+                {
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                }
+            ],
+            &quot;source&quot;: {
+                &quot;line&quot;: 944,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [
+        {
+            &quot;name&quot;: &quot;_entities&quot;,
+            &quot;desc&quot;: &quot;The list of all entities. Some of them may be destroyed. This property is used to\ndetermine if any given entity exists or has been destroyed.&quot;,
+            &quot;lua_type&quot;: &quot;{[number]: number}&quot;,
+            &quot;private&quot;: true,
+            &quot;readonly&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 34,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;_pools&quot;,
+            &quot;desc&quot;: &quot;A dictionary mapping component type names to the pools managing instances of the\ncomponents.&quot;,
+            &quot;lua_type&quot;: &quot;{[string]: Pool}&quot;,
+            &quot;private&quot;: true,
+            &quot;readonly&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 41,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;_nextRecyclableEntityId&quot;,
+            &quot;desc&quot;: &quot;The next ID to use when creating a new entity. When this property is equal to zero, it\nmeans there are no IDs available to recycle.&quot;,
+            &quot;lua_type&quot;: &quot;number&quot;,
+            &quot;private&quot;: true,
+            &quot;readonly&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 48,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;_size&quot;,
+            &quot;desc&quot;: &quot;The total number of entities contained in [`_entities`](#_entities).&quot;,
+            &quot;lua_type&quot;: &quot;number&quot;,
+            &quot;private&quot;: true,
+            &quot;readonly&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 54,
+                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+            }
+        }
+    ],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;Registry&quot;,
+    &quot;desc&quot;: &quot;A `Registry` manages and provides unscoped access to entities and their components. It\nprovides methods to create and destroy entities and to add, remove, get, or update\ncomponents.\n\nYou can get a `Registry` from a [`World`](World).&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 9,
+        &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
+    }
+}</pre></details></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2021 . Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+<script src="/anatta/assets/js/runtime~main.c7edc2bd.js"></script>
+<script src="/anatta/assets/js/main.8a888f4c.js"></script>
+</body>
+</html>
