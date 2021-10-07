@@ -1,13 +1,13 @@
 --[=[
-	@class TypeDefinition
+	@class t
 
-	`TypeDefinition` is a wrapper around `t` that enables detailed inspection of type
-	information after the fact. [See `t`'s documentation for a listing of all the
-	functions present in this module.](https://github.com/osyrisrblx/t#crash-course)
+	Wrapper around `t` that enables detailed inspection of type information after the
+	fact. [See `t`'s documentation for a listing of all the functions present in this
+	module.](https://github.com/osyrisrblx/t#crash-course)
 ]=]
 
 --- @interface TypeDefinition
---- @within TypeDefinition
+--- @within t
 --- .typeParams { TypeDefinition }
 --- .check (...)
 --- .typeName string
