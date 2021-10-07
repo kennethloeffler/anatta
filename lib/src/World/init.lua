@@ -37,7 +37,7 @@ function World.new(componentDefinitions)
 
 	return setmetatable({
 		registry = registry,
-		_systemReactors = {},
+		_reactorSystems = {},
 	}, World)
 end
 
@@ -73,15 +73,12 @@ function World:getReactor(query, script)
 	return reactor
 end
 
-function World:_addSystem(script)
-	self._systemReactors[script] = {}
+function World:addSystem(script)
+	self._reactorSystems[script] = {}
 end
 
-function World:_removeSystem(script)
-	self._systemReactors[script] = nil
-end
-
-function World:on(script, event, callback)
+function World:removeSystem(script)
+	self._reactorSystems[script] = nil
 end
 
 return World

@@ -5,10 +5,8 @@
 ]=]
 
 local Dom = require(script.Dom)
-local Registry = require(script.Registry)
-local System = require(script.System)
 local TypeDefinition = require(script.Core.TypeDefinition)
-local Types = require(script.Parent.Types)
+local Types = require(script.Types)
 local World = require(script.World)
 local util = require(script.util)
 
@@ -19,12 +17,11 @@ local Worlds = {}
 
 --[=[
 
-	Creates a new [`World`](World). If the second argument is a
-	`[`ComponentDefinition`](#ComponentDefinition) calls
-	[`Registry:defineComponent`](Registry#defineComponent) on the given
-	[`ComponentDefinition`](#ComponentDefinition)s. Otherwise, if the second argument is
-	an `Instance`, require all of its `ModuleScript` descendants and attempt to define
-	each result.
+	Creates a new [`World`](World). If the second argument is a list of
+	`[`ComponentDefinition`](#ComponentDefinition)s, calls
+	[`Registry:defineComponent`](Registry#defineComponent) on . Otherwise, if the second
+	argument is an `Instance`, require all of the `Instance`'s `ModuleScript` descendants
+	and attempt to define each result.
 
 	@function createWorld
 	@within Anatta
@@ -44,9 +41,9 @@ local function createWorld(namespace, componentDefinitions)
 			if instance:IsA("ModuleScript") and not instance.Name:find("%.spec$") then
 				local componentDefinition = require(instance)
 
-				util.jumpAssert(Types.ComponentType(componentDefinition))
-
-				table.insert(componentDefinitions, componentDefinition)
+				if Types.ComponentType(componentDefinition) then
+					table.insert(componentDefinitions, componentDefinition)
+				end
 			end
 		end
 	end
@@ -68,19 +65,19 @@ end
 local function getWorld(namespace, script)
 	local world = Worlds[namespace]
 
-	util.jumpAssert(world, ErrWorldDoenstExist:format(world))
+	util.jumpAssert(world, ErrWorldDoenstExist:format(namespace))
 
-	world:addSystem(script)
+	if script then
+		world:addSystem(script)
+	end
 
 	return world
 end
 
 return {
+	Dom = Dom,
+	t = TypeDefinition,
+
 	createWorld = createWorld,
 	getWorld = getWorld,
-
-	Dom = Dom,
-	Registry = Registry,
-	System = System,
-	t = TypeDefinition,
 }
