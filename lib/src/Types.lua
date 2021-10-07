@@ -28,7 +28,7 @@ local ComponentDefinition = t.strictInterface({
 
 	A `Query` represents a component aggregation to retrieve from a
 	[`Registry`](Registry). A `Query` can be finalized by passing it to
-	[`World:getReactor`](World#getReactor) or [`World:getMapper`](World#getMapper).
+	[`World:getReactor`](#getReactor) or [`World:getMapper`](#getMapper).
 
 	Various [`Reactor`](Reactor) and [`Mapper`](Mapper) methods accept callbacks that are
 	passed an entity and its components. Such callbacks receive the entity as the first

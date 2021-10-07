@@ -1,7 +1,7 @@
 --[=[
 	@class Reactor
 	Provides scoped access to the contents of a [`Registry`](Registry) according to a
-	[`Query`](Anatta#Query).
+	[`Query`](World#Query).
 
 	A `Reactor` is stateful. In contrast to a [`Mapper`](Mapper), a `Reactor` can track
 	updates to components with [`Query.withUpdated`](World#Query).
