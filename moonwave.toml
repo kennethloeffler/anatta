@@ -3,6 +3,16 @@ gitRepoUrl = "https://github.com/kennethloeffler/anatta"
 gitSourceBranch = "master"
 changelog = false
 
+classOrder = [
+	"Anatta",
+	"World",
+	"Registry",
+	"Reactor",
+	"Mapper",
+	"Dom",
+	"t"
+]
+
 [docusaurus]
 url = "https://kennethloeffler.github.io"
 baseUrl = "/anatta/"
