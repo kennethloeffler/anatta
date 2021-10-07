@@ -4,7 +4,7 @@ return function()
 
 	describe("new", function()
 		it("should create a new SingleCollection from a pool", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local collection = SingleReactor.new(pool)
 
 			expect(getmetatable(collection)).to.equal(SingleReactor)
@@ -16,7 +16,7 @@ return function()
 
 	describe("each", function()
 		it("should iterate the entire pool and pass each element's data", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local toIterate = {}
 			local collection = SingleReactor.new(pool)
 
@@ -36,7 +36,7 @@ return function()
 
 	describe("withAttachments", function()
 		it("should attach attachments when an entity enters the collection", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local collection = SingleReactor.new(pool)
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
@@ -83,7 +83,7 @@ return function()
 
 	describe("detach", function()
 		it("should detach every item from every entity in the collection", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local collection = SingleReactor.new(pool)
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0

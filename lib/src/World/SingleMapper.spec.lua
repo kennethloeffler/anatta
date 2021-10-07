@@ -4,7 +4,7 @@ return function()
 
 	describe("new", function()
 		it("should create a new SingleMapper from a pool", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local mapper = SingleMapper.new(pool)
 
 			expect(getmetatable(mapper)).to.equal(SingleMapper)
@@ -14,7 +14,7 @@ return function()
 
 	describe("each", function()
 		it("should iterate all and only the elements in the pool and pass their data", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local mapper = SingleMapper.new(pool)
 			local toIterate = {}
 
@@ -35,9 +35,9 @@ return function()
 		end)
 	end)
 
-	describe("update", function()
+	describe("map", function()
 		it("should iterate all and only the elements in the pool and pass their data", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local mapper = SingleMapper.new(pool)
 			local toIterate = {}
 
@@ -47,7 +47,7 @@ return function()
 				toIterate[i] = obj
 			end
 
-			mapper:update(function(entity, obj)
+			mapper:map(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 				toIterate[entity] = nil
 
@@ -58,7 +58,7 @@ return function()
 		end)
 
 		it("should replace the passed data with the returned data", function()
-			local pool = Pool.new("test", {})
+			local pool = Pool.new({ name = "test", type = {} })
 			local mapper = SingleMapper.new(pool)
 			local toIterate = {}
 
@@ -68,7 +68,7 @@ return function()
 				toIterate[i] = obj
 			end
 
-			mapper:update(function(entity, obj)
+			mapper:map(function(entity, obj)
 				expect(obj).to.equal(toIterate[entity])
 
 				toIterate[entity] = {}

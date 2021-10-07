@@ -92,7 +92,7 @@ return function()
 		)
 	end)
 
-	describe("update", function()
+	describe("map", function()
 		describe("all", function()
 			it(
 				"should iterate all and only the entities with at least the required components and pass them plus any optional ones",
@@ -103,7 +103,7 @@ return function()
 						withAny = { "Test3", "Test4" },
 					})
 
-					mapper:update(function(entity, test1, test2, test3, test4)
+					mapper:map(function(entity, test1, test2, test3, test4)
 						expect(toIterate[entity]).to.equal(true)
 						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
 						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
@@ -126,7 +126,7 @@ return function()
 						withAll = { "Test1", "Test2" },
 					})
 
-					mapper:update(function(entity)
+					mapper:map(function(entity)
 						local newTest1 = {}
 						local newTest2 = {}
 
@@ -135,7 +135,7 @@ return function()
 						return newTest1, newTest2
 					end)
 
-					mapper:update(function(entity, test1, test2)
+					mapper:map(function(entity, test1, test2)
 						expect(test1).to.equal(toIterate[entity][1])
 						expect(test2).to.equal(toIterate[entity][2])
 

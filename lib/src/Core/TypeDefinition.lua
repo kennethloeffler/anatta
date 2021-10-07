@@ -8,8 +8,8 @@
 
 --- @interface TypeDefinition
 --- @within t
---- .typeParams { TypeDefinition }
 --- .check (...)
+--- .typeParams { TypeDefinition }
 --- .typeName string
 --- A wrapped `t` check returned by each member function.
 

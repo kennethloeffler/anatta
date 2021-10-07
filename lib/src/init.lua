@@ -1,5 +1,7 @@
 --[=[
 	@class Anatta
+
+	The main entry point for the library.
 ]=]
 
 local Dom = require(script.Dom)
@@ -52,17 +54,19 @@ local function createWorld(namespace, componentDefinitions)
 end
 
 --[=[
-	Returns a [`World`](World) previously defined with the given namespace.
+	Returns the [`World`](World) with the given namespace.
 
 	@function getWorld
 	@within Anatta
 	@param namespace string
 	@return World
 ]=]
-local function getWorld(namespace)
+local function getWorld(namespace, script)
 	local world = Worlds[namespace]
 
 	util.jumpAssert(world, ErrWorldDoenstExist:format(world))
+
+	world:addSystem(script)
 
 	return world
 end

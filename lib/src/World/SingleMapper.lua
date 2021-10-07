@@ -7,7 +7,7 @@ function SingleMapper.new(pool)
 	}, SingleMapper)
 end
 
-function SingleMapper:update(callback)
+function SingleMapper:map(callback)
 	local components = self._pool.components
 	local updated = self._pool.updated
 

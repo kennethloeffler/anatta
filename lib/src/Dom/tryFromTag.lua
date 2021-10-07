@@ -26,22 +26,20 @@ return function(pool)
 			continue
 		end
 
-		local success, component = tryFromAttribute(instance, componentName, typeDefinition)
+		local componentSuccess, componentResult = tryFromAttribute(
+			instance,
+			componentName,
+			typeDefinition
+		)
 
-		if not success then
-			pool.size = 0
-			pool.sparse = {}
-
-			return false, (("Type check failed for entity %s's %s: %s"):format(
-				entity,
-				componentName,
-				component
+		if not componentSuccess then
+			warn(("Instance %s failed attribute validation for %s"):format(
+				instance:GetFullName(),
+				componentName
 			))
-		else
-			local conversion = pool.meta and pool.meta.plugin and pool.meta.plugin.conversion
-
-			pool:insert(entity, component)
 		end
+
+		pool:insert(entity, componentResult)
 	end
 
 	return true, pool

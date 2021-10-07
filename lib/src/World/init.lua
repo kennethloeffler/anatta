@@ -1,14 +1,16 @@
 --[=[
 	@class World
 
-	A `World` contains a `Registry` and provides methods to get scoped access via
-	[`Reactor`](Reactor)s and [`Mapper`](Mapper) and exposes a property to access the
-	`Registry` directly.
+	A `World` contains a [`Registry`](Registry) and provides means for both scoped and
+	unscoped access to entities and components.
+
+	You can get or create a `World` with [`Anatta.getWorld`](Anatta#getWorld) and
+	[`Anatta.createWorld`](Anatta#createWorld).
 ]=]
 
 --- @prop registry Registry
 --- @within World
---- The `World`'s [`Registry`](Registry).
+--- Provides direct, unscoped access to a `World`'s [`Registry`](Registry).
 
 local Mapper = require(script.Mapper)
 local Reactor = require(script.Reactor)
@@ -22,6 +24,7 @@ World.__index = World
 	[`Registry:defineComponent`](Registry#defineComponent) for each
 	[`ComponentDefinition`](Anatta#ComponentDefinition) in the given list.
 
+	@ignore
 	@param componentDefinitions {ComponentDefinition}
 	@return World
 ]=]
@@ -34,11 +37,16 @@ function World.new(componentDefinitions)
 
 	return setmetatable({
 		registry = registry,
+		_systemReactors = {},
 	}, World)
 end
 
 --[=[
 	Creates a new [`Mapper`](Mapper) given a [`Query`](Anatta#Query).
+
+	@error "Mappers cannot track updates to components"
+	@error "Mappers need at least one required component type"
+
 	@param query Query
 	@return Mapper
 ]=]
@@ -48,11 +56,29 @@ end
 
 --[=[
 	Creates a new [`Reactor`](Reactor) given a [`Query`](Anatta#Query).
+
+	@error "Reactors need a required, updated, or optional component type"
+	@error "Reactors can only track up to 32 updated component types"
+
 	@param query Query
 	@return Reactor
 ]=]
-function World:getReactor(query)
-	return Reactor.new(self.registry, query)
+function World:getReactor(query, script)
+	local reactor = Reactor.new(self.registry, query)
+
+	if self._systemReactors[script] then
+		table.insert(self._systemReactors[script], reactor)
+	end
+
+	return reactor
+end
+
+function World:_addSystem(script)
+	self._systemReactors[script] = {}
+end
+
+function World:_removeSystem(script)
+	self._systemReactors[script] = nil
 end
 
 return World

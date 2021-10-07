@@ -1,5 +1,10 @@
 --[=[
 	@class Mapper
+
+	Provides scoped access to a [`Registry`](Registry) according to a [`Query`](Anatta#Query).
+
+	A `Mapper` is stateless. In contrast to a [`Reactor`](Reactor), a `Mapper` cannot
+	track components with [`Query.withUpdated`](Anatta#Query).
 ]=]
 
 local SingleMapper = require(script.Parent.SingleMapper)
@@ -13,7 +18,7 @@ local ErrCantHaveUpdated = "Mappers cannot track updates to components"
 local ErrNeedComponents = "Mappers need at least one required component type"
 
 local function ErrNeedsRequired()
-	util.jumpAssert("Pure collections can only update required components")
+	util.jumpAssert("Mappers can only update required components")
 end
 
 function Mapper.new(registry, query)
@@ -39,11 +44,18 @@ function Mapper.new(registry, query)
 		_numPacked = #withAll + #withAny,
 		_numRequired = #withAll,
 
-		update = #withAll > 0 and Mapper.update or ErrNeedsRequired,
+		map = #withAll == 0 and ErrNeedsRequired or nil,
 	}, Mapper)
 end
 
-function Mapper:update(callback)
+--[=[
+	@param callback (number, ...any) -> ...any
+
+	Maps over entities that satisfy the `Query`. Calls the callback for each entity,
+	passing each entity followed by the components specified by the `Query` and replacing
+	the components in `Query.withAll` with the callback's return value.
+]=]
+function Mapper:map(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked
 	local shortest = self:_getShortestPool(self._required)
@@ -55,6 +67,12 @@ function Mapper:update(callback)
 	end
 end
 
+--[=[
+	@param callback (number, ...any)
+
+	Iterates over all entities that satisfy the `Query`. Calls the callback for each
+	entity, passing each entity followed by the components specified by the `Query`.
+]=]
 function Mapper:each(callback)
 	local packed = self._packed
 	local numPacked = self._numPacked

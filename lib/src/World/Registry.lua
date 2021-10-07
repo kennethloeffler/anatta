@@ -1,9 +1,10 @@
 --[=[
 	@class Registry
-	A `Registry` manages entities and their components. It provides methods to create and
-	destroy entities, and to add, remove, get, or update components on entities.
+	A `Registry` manages and provides unscoped access to entities and their components. It
+	provides methods to create and destroy entities, and to add, remove, get, or update
+	components on entities.
 
-	You'll usually access a `Registry` from a [`World`](World).
+	You can get a `Registry` from a [`World`](World).
 ]=]
 
 local Constants = require(script.Parent.Parent.Core.Constants)
@@ -18,11 +19,11 @@ local ENTITYID_WIDTH = Constants.EntityIdWidth
 local NULL_ENTITYID = Constants.NullEntityId
 
 local ErrBadEntityType = "entity must be a number (got %s)"
-local ErrAlreadyHasComponent = "entity %s already has a %s"
-local ErrBadComponentName = "invalid component identifier: %s"
-local ErrInvalidEntity = "entity %s either does not exist or it has been destroyed"
-local ErrMissingComponent = "entity %s does not have a %s"
-local ErrComponentNameTaken = "there is already a component named %s"
+local ErrAlreadyHasComponent = "entity %d already has a %s"
+local ErrBadComponentName = 'invalid component name: "%s"'
+local ErrInvalidEntity = "entity %d does not exist or has been destroyed"
+local ErrMissingComponent = "entity %d does not have a %s"
+local ErrComponentNameTaken = "there is already a component type named %s"
 
 --- @prop _entities {[number]: number}
 --- @within Registry
@@ -57,6 +58,7 @@ Registry.__index = Registry
 --[=[
 	Creates and returns a blank, empty registry.
 
+	@ignore
 	@return Registry
 ]=]
 function Registry.new()
@@ -127,6 +129,7 @@ end
 	assert(copiedHealth2 == health2 and copiedInventory2 == inventory2)
 	```
 
+	@ignore
 	@param original Registry
 	@return Registry
 ]=]
@@ -200,6 +203,8 @@ end
 	registry:addComponent(entity, "Health", 100)
 	```
 
+	@error "there is already a component type named %s" -- The name is already being used.
+
 	@param componentDefinition ComponentDefinition
 ]=]
 function Registry:defineComponent(componentDefinition)
@@ -207,11 +212,7 @@ function Registry:defineComponent(componentDefinition)
 
 	jumpAssert(not self._pools[componentName], ErrComponentNameTaken:format(componentName))
 
-	self._pools[componentName] = Pool.new(
-		componentName,
-		componentDefinition.type,
-		componentDefinition.meta
-	)
+	self._pools[componentName] = Pool.new(componentDefinition)
 end
 
 --[=[
@@ -350,6 +351,9 @@ end
 	assert(registry:isEntityValid(entity) == false)
 	```
 
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+
 	@param entity number
 ]=]
 function Registry:destroyEntity(entity)
@@ -392,6 +396,8 @@ end
 	assert(registry:isEntityValid(entity) == false)
 	```
 
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+
 	@param entity number
 	@return boolean
 ]=]
@@ -421,6 +427,9 @@ end
 	assert(registry:isEntityOrphaned(entity) == false)
 	```
 
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+
 	@param entity number
 	@return boolean
 ]=]
@@ -443,6 +452,9 @@ end
 	iteration continues until the callback returns `nil`.
 
 	If an entity is given, passes only the components that the entity has.
+
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 
 	@param callback (componentName: string) -> boolean
 	@param entity number?
@@ -477,6 +489,10 @@ end
 --[=[
 	Returns `true` if the entity all of the given components. Otherwise, returns `false`.
 
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+
 	@param entity number
 	@param ...componentNames string
 	@return boolean
@@ -503,6 +519,10 @@ end
 	Returns `true` if the entity has any of the given components. Otherwise, returns
 	`false`.
 
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+
 	@param entity number
 	@param ...componentNames string
 	@return boolean
@@ -528,7 +548,9 @@ end
 --[=[
 	Returns the component of the given type on the entity.
 
-	Throws if the entity does not have the component.
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param entity number
 	@param componentName string
@@ -548,6 +570,10 @@ end
 --[=[
 	Returns all of the given components on the entity.
 
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+
 	@param entity number
 	@param output table
 	@param ...componentNames string
@@ -562,9 +588,16 @@ function Registry:getComponents(entity, output, ...)
 end
 
 --[=[
-	Adds the component to the entity and returns the component. An entity may only have
-	one component of each type at a time. Throws upon an attempt to add multiple
-	components of the same type to an entity.
+	Adds a component to the entity and returns the component.
+
+	:::info
+	An entity can only have one component of each type at a time.
+
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+	@error "entity %d already has a %s" -- The entity already has that component.
+	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
 	@param componentName string
@@ -590,6 +623,12 @@ end
 --[=[
 	Adds the given components to the entity and returns the entity.
 
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+	@error "entity %d already has a %s" -- The entity already has that component.
+	@error Failed type check -- The given component has the wrong type.
+
 	@param entity number
 	@param components {[string]: any}
 	@return number
@@ -605,6 +644,11 @@ end
 --[=[
 	If the entity does not have the component, adds and returns the component. Otherwise,
 	returns `nil`.
+
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
 	@param componentName string
@@ -632,6 +676,11 @@ end
 --[=[
 	If the entity has the component, returns the component. Otherwise adds the component
 	to the entity and returns the component.
+
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
 	@param componentName string
@@ -661,7 +710,11 @@ end
 --[=[
 	Replaces the given component on the entity and returns the new component.
 
-	Throws if the entity does not have the component.
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+	@error Failed type check -- The given component has the wrong type.
+	@error "entity %d does not have a %s" -- The entity is expected to have this component.
 
 	@param entity number
 	@param componentName string
@@ -688,6 +741,11 @@ end
 	If the entity has the component, replaces it with the given component and returns the
 	new component. Otherwise, adds the component to the entity and returns the new
 	component.
+
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
 	@param componentName string
@@ -720,7 +778,10 @@ end
 --[=[
 	Removes the component from the entity.
 
-	Throws if the entity does not have the component.
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
+	@error "entity %d does not have a %s" -- The entity is expected to have this component.
 
 	@param entity number
 	@param componentName string
@@ -740,9 +801,12 @@ function Registry:removeComponent(entity, componentName)
 end
 
 --[=[
-
 	If the entity has the component, removes it and returns `true`. Otherwise, returns
 	`false`.
+
+	@error "entity must be a number (got %s)" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param entity number
 	@param componentName string
@@ -784,6 +848,8 @@ end
 --[=[
 	Returns the total number of entities with the given component.
 
+	@error "invalid component name: %s" -- No component goes by that name.
+
 	@param componentName string
 	@return number
 ]=]
@@ -817,7 +883,7 @@ function Registry:each(callback)
 end
 
 --[=[
-	Returns `true` if the registry has a component named componentName. Otherwise,
+	Returns `true` if the registry has a component type with the given name. Otherwise,
 	returns `false`.
 
 	@param componentName string
@@ -828,21 +894,25 @@ function Registry:isComponentDefined(componentName)
 end
 
 --[=[
-	Returns the type definition of a component.
+	Returns the [`ComponentDefinition`](t#TypeDefinition) with the given name.
+
+	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param componentName string
 ]=]
-function Registry:getTypeDefinition(componentName)
+function Registry:getComponentDefinition(componentName)
 	local pool = self._pools[componentName]
 
 	jumpAssert(pool, ErrBadComponentName:format(componentName))
 
-	return pool.typeDefinition
+	return pool.componentDefinition
 end
 
 --[=[
 	Returns a list of pools containing the specified components in the same order as
 	the given list of component names.
+
+	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param componentNames {string}
 	@return {Pool}
@@ -865,6 +935,8 @@ end
 
 --[=[
 	Returns the pool containing the specified components.
+
+	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param componentName string
 	@return Pool

@@ -16,7 +16,7 @@ local function instanceConversion(instance, attributeName, typeDefinition)
 	local refFolder = instance:FindFirstChild(INSTANCE_REF_FOLDER)
 
 	if not refFolder or not refFolder:IsA("Folder") then
-		return false, ("Expected ref folder under %s, got %s"):format(
+		return false, ("Expected ref folder as a child of %s, got %s"):format(
 			instance:GetFullName(),
 			tostring(refFolder)
 		)
@@ -95,7 +95,7 @@ function convert(instance, attributeName, typeDefinition)
 	local success, concreteType = typeDefinition:tryGetConcreteType()
 
 	if not success then
-		return false, ("Error converting %s: %s"):format(attributeName, concreteType)
+		return false, concreteType
 	end
 
 	if typeof(concreteType) == "table" then
@@ -130,4 +130,6 @@ function convert(instance, attributeName, typeDefinition)
 	end
 end
 
-return convert
+return function(instance, componentDefinition)
+	return convert(instance, componentDefinition.name, componentDefinition.type)
+end

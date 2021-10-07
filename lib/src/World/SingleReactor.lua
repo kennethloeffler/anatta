@@ -26,7 +26,7 @@ end
 
 function SingleReactor:withAttachments(callback)
 	if not self._pool then
-		self._pool = Pool.new("collectionInternal", {})
+		self._pool = Pool.new({ name = "reactorContents", type = {} })
 	end
 
 	table.insert(

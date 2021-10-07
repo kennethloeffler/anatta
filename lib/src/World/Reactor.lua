@@ -1,5 +1,10 @@
 --[=[
 	@class Reactor
+	Provides scoped access to the contents of a [`Registry`](Registry) according to a
+	[`Query`](Anatta#Query).
+
+	A `Reactor` is stateful. In contrast to a [`Mapper`](Mapper), a `Reactor` can track
+	updates to components with [`Query.withUpdated`](Query#withUpdated).
 ]=]
 
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
@@ -15,6 +20,13 @@ local ErrTooManyUpdated = "Reactors can only track up to 32 updated component ty
 local Reactor = {}
 Reactor.__index = Reactor
 
+--[=[
+	@param registry Registry
+	@param query Query
+	@private
+
+	Creates a new `Reactor` given a [`Query`](Anatta#Query).
+]=]
 function Reactor.new(registry, query)
 	util.jumpAssert(Types.Query(query))
 
@@ -30,7 +42,7 @@ function Reactor.new(registry, query)
 		return SingleReactor.new(registry:getPool(query.withAll[1]))
 	end
 
-	local reactorContents = Pool.new("reactorContents", {})
+	local reactorContents = Pool.new({ name = "reactorInternal", type = {} })
 
 	local self = setmetatable({
 		added = reactorContents.added,
@@ -74,6 +86,15 @@ function Reactor.new(registry, query)
 	return self
 end
 
+--[=[
+	@param callback (number, ...any) -> {RBXScriptConnection | Instance}
+
+	Calls the callback every time an entity enters the `Reactor`, passing each entity and
+	its components and attaching the return value to each entity.  The callback should
+	return a list of connections and/or `Instance`s. When the entity later leaves the
+	`Reactor`, attached `Instance`s are destroyed and attached connections are
+	disconnected.
+]=]
 function Reactor:withAttachments(callback)
 	local attachmentsAdded = self.added:connect(function(entity, ...)
 		self._pool:replace(entity, callback(entity, ...))
@@ -89,6 +110,12 @@ function Reactor:withAttachments(callback)
 	table.insert(self._connections, attachmentsRemoved)
 end
 
+--[=[
+	@private
+
+	Detaches all the attachments made to this `Reactor`, destroying all attached
+	`Instance`s and disconnecting all attached connections.
+]=]
 function Reactor:detach()
 	for _, attached in ipairs(self._pool.components) do
 		for _, item in ipairs(attached) do
@@ -101,11 +128,12 @@ function Reactor:detach()
 	end
 end
 
---[[
-	Applies the callback to each tracked entity and its components. Passes the
-	entity first, followed by its required, updated, and optional components (in
-	that order).
-]]
+--[=[
+	@param callback (number, ...any)
+
+	Iterates over the all the entities present in the `Reactor`. Calls the callback for
+	each entity, passing each entity followed by the components specified by the `Query`.
+]=]
 function Reactor:each(callback)
 	local dense = self._pool.dense
 	local packed = self._packed
@@ -119,6 +147,13 @@ function Reactor:each(callback)
 	end
 end
 
+--[=[
+	@param callback (number, ...any)
+
+	Iterates over all the entities present in the `Reactor` and clears each entity's set
+	of updated componants. Calls the callback for each entity, passing each entity followed
+	by the components specified by the `Query`.
+]=]
 function Reactor:consumeEach(callback)
 	local dense = self._pool.dense
 	local packed = self._packed
@@ -137,6 +172,11 @@ function Reactor:consumeEach(callback)
 	end
 end
 
+--[=[
+	@param entity number
+
+	Clears a given entity's set of updated components.
+]=]
 function Reactor:consume(entity)
 	self._pool:delete(entity)
 	self._updates[entity] = nil

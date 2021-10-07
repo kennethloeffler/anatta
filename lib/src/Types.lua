@@ -10,17 +10,45 @@ local TypeDefinition = t.strictInterface({
 --- @within Anatta
 --- .name string
 --- .type TypeDefinition
+--- .description string?
+--- A named component type with an optional description.
 local ComponentDefinition = t.strictInterface({
+	description = t.optional(t.string),
 	name = t.string,
 	type = TypeDefinition,
 })
 
---- @interface Query
---- @within Anatta
---- .withAll {string}?
---- .withUpdated {string}?
---- .withAny {string}?
---- .without {string}?
+--[=[
+	@interface Query
+	@within Anatta
+	.withAll {string}?
+	.withUpdated {string}?
+	.withAny {string}?
+	.without {string}?
+
+	A `Query` represents a component aggregation to retrieve from a
+	[`Registry`](Registry). A `Query` can be finalized by passing it to
+	[`World:getReactor`](World#getReactor) or [`World:getMapper`](World#getMapper).
+
+	Various [`Reactor`](Reactor) and [`Mapper`](Mapper) methods take a callback that is
+	passed an entity and the components specified by a `Query`. The entity is passed as
+	the first argument, followed by the components from `withAll`, then the components
+	from `withUpdated`, and finally the components from `withAny`.
+
+	### `Query.withAll`
+	An entity must have all of the components specified in `withAll` to appear.
+
+	### `Query.withUpdated`
+	An entity must have an updated copy of all the components specified in `withUpdated`
+	to appear.
+
+	### `Query.withAny`
+	An entity may have any or none of the components specified in `withAny` and still
+	appear.
+
+	### `Query.without`
+	An entity must not have any of the components specified in `without` to appear.
+]=]
 local Query = t.strictInterface({
 	withAll = t.optional(t.array(t.string)),
 	withUpdated = t.optional(t.array(t.string)),
