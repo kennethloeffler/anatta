@@ -36,18 +36,21 @@ local ComponentDefinition = t.strictInterface({
 	`withUpdated`, and finally the components from `withAny`.
 
 	### `Query.withAll`
-	An entity must have all of the components specified in `withAll` to appear.
+	An entity must have all of the components specified in `withAll` to appear in the
+	query.
 
 	### `Query.withUpdated`
 	An entity must have an updated copy of all the components specified in `withUpdated`
-	to appear.
+	to appear in the query.
 
 	### `Query.withAny`
 	An entity may have any or none of the components specified in `withAny` and still
-	appear.
+	appear in the query.
 
 	### `Query.without`
-	An entity must not have any of the components specified in `without` to appear.
+	An entity must not have any of the components specified in `without` to appear in the
+	query.
+
 ]=]
 local Query = t.strictInterface({
 	withAll = t.optional(t.array(t.string)),

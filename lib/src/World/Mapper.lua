@@ -1,7 +1,7 @@
 --[=[
 	@class Mapper
 
-	Provides scoped access to a [`Registry`](Registry) according to a [`Query`](Anatta#Query).
+	Provides scoped access to a [`Registry`](Registry) according to a [`Query`](World#Query).
 
 	A `Mapper` is stateless. In contrast to a [`Reactor`](Reactor), a `Mapper` cannot
 	track components with [`Query.withUpdated`](World#Query).
