@@ -21,59 +21,91 @@ local ErrComponentNameTaken = "there is already a component named %s"
 
 local WarnEntityAlreadyExists = "creating a new entity (%08X) because %08X's id is already in use"
 
+--[=[
+	@class Registry
+]=]
 local Registry = {}
 Registry.__index = Registry
 
-function Registry.new(components)
-	local pools = {}
+--[=[
+	Creates and returns an empty registry.
 
-	if components then
-		for componentName, typeDefinition in pairs(components) do
-			pools[componentName] = Pool.new(componentName, typeDefinition)
-		end
-	end
-
+	@return Registry
+]=]
+function Registry.new()
 	return setmetatable({
 		_entities = {},
-		_pools = pools,
+		_pools = {},
 		_nextRecyclableEntityId = NULL_ENTITYID,
 		_size = 0,
 	}, Registry)
 end
 
---[[
-	Returns an integer equal to the first ENTITYID_WIDTH bits of the entity. The equality
-
+--[=[
+	Returns an integer equal to the first `ENTITYID_WIDTH` bits of the
+	entity. The equality
+	```lua
 	registry._entities[id] == entity
-
+	```
 	generally holds if the entity is valid.
-]]
+
+	Usage:
+	```lua
+	```
+
+	@tag Internal
+	@param entity number
+	@return number
+]=]
 function Registry.getId(entity)
 	return bit32.band(entity, ENTITYID_MASK)
 end
 
---[[
-	Returns an integer equal the last (32 - ENTITYID_WIDTH) bits of the entity.
-]]
+--[=[
+	Returns an integer equal to the last `32 - ENTITYID_WIDTH` bits of the
+	entity.
+
+	Usage:
+	```lua
+	```
+
+	@tag Internal
+	@param entity number
+	@return number
+]=]
 function Registry.getVersion(entity)
 	return bit32.rshift(entity, ENTITYID_WIDTH)
 end
 
-function Registry:loadFromRegistry(registry)
-	jumpAssert(self._size == 0)
+--[=[
+	Creates a new registry from an existing registry by making a shallow copy of
+	each component pool. The added signal of each new component pool fires for
+	each component that existed in the old component pool as if added via
+	[`addComponent`](#addComponent) or similar.
 
-	self._size = registry._size
-	self._entities = registry._entities
-	self._nextRecyclableEntityId = registry._nextRecyclableEntityId
+	Usage:
+	```lua
+	```
+
+	@tag Internal
+	@param registry Registry
+	@return Registry
+]=]
+function Registry.fromRegistry(registry)
+	local newRegistry = Registry.new()
+
+	newRegistry._size = registry._size
+	newRegistry._entities = registry._entities
+	newRegistry._nextRecyclableEntityId = registry._nextRecyclableEntityId
 
 	for _, otherPool in pairs(registry._pools) do
 		local componentName = otherPool.name
 
-		if not self:isComponentDefined(componentName) then
+		if not newRegistry:isComponentDefined(componentName) then
 			continue
 		end
 
-		local pool = self:getPool(componentName)
+		local pool = newRegistry:getPool(componentName)
 		local checkSuccess, checkErr, failedEntity = true, "", 0
 
 		for i, component in ipairs(otherPool.components) do
@@ -106,18 +138,32 @@ function Registry:loadFromRegistry(registry)
 	end
 end
 
---[[
-	Defines a component for the registry.
-]]
-function Registry:define(componentName, typeDefinition, meta)
+--[=[
+	Registers a new component type for the registry.
+
+	Usage:
+	```lua
+	```
+
+	@param componentDefinition ComponentDefinition
+]=]
+function Registry:defineComponent(componentDefinition)
+	local componentName = componentDefinition.name
+
 	jumpAssert(not self._pools[componentName], ErrComponentNameTaken:format(componentName))
 
-	self._pools[componentName] = Pool.new(componentName, typeDefinition, meta)
+	self._pools[componentName] = Pool.new(
+		componentName,
+		componentDefinition.type,
+		componentDefinition.meta
+	)
 end
 
---[[
-	Returns a new entity.
-]]
+--[=[
+	Creates and returns a new entity.
+
+	@return number
+]=]
 function Registry:createEntity()
 	if self._nextRecyclableEntityId == NULL_ENTITYID then
 		-- no entityIds to recycle
@@ -142,10 +188,14 @@ function Registry:createEntity()
 	end
 end
 
---[[
-	Returns a new entity equal to the given entity if and only if the given entity id is
-	not in use by the registry. Otherwise, returns a new entity created normally.
-]]
+--[=[
+	Returns a new entity equal to the given entity if the given entity's ID is
+	free to use. Otherwise, returns a new entity created via
+	[`Registry:createEntity`](Registry#createEntity).
+
+	@param entity number
+	@return number
+]=]
 function Registry:createFrom(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 	local entities = self._entities
@@ -218,9 +268,11 @@ function Registry:createFrom(entity)
 	end
 end
 
---[[
-	Destroys an entity (and by extension, all of its components) and frees its id.
-]]
+--[=[
+	Destroys an entity (and by extension, all of its components) and frees its ID.
+
+	@param entity number
+]=]
 function Registry:destroyEntity(entity)
 	if DEBUG then
 		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
@@ -245,10 +297,13 @@ function Registry:destroyEntity(entity)
 	self._nextRecyclableEntityId = entityId
 end
 
---[[
-	Returns true if the entity identifier corresponds to a valid entity. Otherwise,
-	returns false.
-]]
+--[=[
+
+	Returns `true` if the entity exists. Otherwise, returns `false`.
+
+	@param entity number
+	@return boolean
+]=]
 function Registry:isValidEntity(entity)
 	if DEBUG then
 		local ty = type(entity)
@@ -258,9 +313,12 @@ function Registry:isValidEntity(entity)
 	return self._entities[bit32.band(entity, ENTITYID_MASK)] == entity
 end
 
---[[
-	Returns true if the entity has no assigned components. Otherwise, returns false.
-]]
+--[=[
+	Returns `true` if the entity has no components. Otherwise, returns `false`.
+
+	@param entity number
+	@return boolean
+]=]
 function Registry:isStubEntity(entity)
 	if DEBUG then
 		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
@@ -275,12 +333,17 @@ function Registry:isStubEntity(entity)
 	return true
 end
 
---[[
-	Passes all the component type names in use to the given function.
+--[=[
+	Passes all the component names defined on the registry to the given callback. The
+	iteration continues until the callback returns `nil`.
 
-	If an entity is given, passes only the names for which the entity has a component.
-]]
-function Registry:visitComponents(func, entity)
+	If an entity is given, passes only the components that the entity has.
+
+	@param callback (componentName: string) -> boolean
+	@param entity number?
+	@return boolean
+]=]
+function Registry:visitComponents(callback, entity)
 	if entity ~= nil then
 		if DEBUG then
 			jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
@@ -288,28 +351,31 @@ function Registry:visitComponents(func, entity)
 
 		for componentName, pool in pairs(self._pools) do
 			if pool:getIndex(entity) then
-				local result = func(componentName)
+				local shouldContinue = callback(componentName)
 
-				if result ~= nil then
-					return result
+				if shouldContinue ~= nil then
+					return shouldContinue
 				end
 			end
 		end
 	else
 		for componentName in pairs(self._pools) do
-			local result = func(componentName)
+			local shouldContinue = callback(componentName)
 
-			if result ~= nil then
-				return result
+			if shouldContinue ~= nil then
+				return shouldContinue
 			end
 		end
 	end
 end
 
---[[
-	Returns true if the entity has a component of all of the given types. Otherwise,
-	returns false.
-]]
+--[=[
+	Returns `true` if the entity all of the given components. Otherwise, returns `false`.
+
+	@param entity number
+	@param ...componentNames string
+	@return boolean
+]=]
 function Registry:hasAllComponents(entity, ...)
 	if DEBUG then
 		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
@@ -328,10 +394,14 @@ function Registry:hasAllComponents(entity, ...)
 	return true
 end
 
---[[
-	Returns true if the entity has a component of any of the given types. Otherwise,
-	returns false.
-]]
+--[=[
+	Returns `true` if the entity has any of the given components. Otherwise, returns
+	`false`.
+
+	@param entity number
+	@param ...componentNames string
+	@return boolean
+]=]
 function Registry:hasAnyComponents(entity, ...)
 	if DEBUG then
 		jumpAssert(self:isValidEntity(entity), ErrInvalidEntity:format(entity))
@@ -350,11 +420,15 @@ function Registry:hasAnyComponents(entity, ...)
 	return false
 end
 
---[[
+--[=[
 	Returns the component of the given type on the entity.
 
 	Throws if the entity does not have the component.
-]]
+
+	@param entity number
+	@param componentName string
+	@return Component<Type>
+]=]
 function Registry:getComponent(entity, componentName)
 	local pool = self._pools[componentName]
 
@@ -366,10 +440,15 @@ function Registry:getComponent(entity, componentName)
 	return self._pools[componentName]:get(entity)
 end
 
---[[
-	Returns all components of the given types on the entity.
-]]
-function Registry:multiGet(entity, output, ...)
+--[=[
+	Returns all of the given components on the entity.
+
+	@param entity number
+	@param output table
+	@param ...componentNames string
+	@return ...Component<Type>
+]=]
+function Registry:getComponents(entity, output, ...)
 	for i = 1, select("#", ...) do
 		output[i] = self:getComponent(entity, select(i, ...))
 	end
@@ -377,11 +456,16 @@ function Registry:multiGet(entity, output, ...)
 	return unpack(output)
 end
 
---[[
+--[=[
 	Adds the component to the entity and returns the component. An entity may only have
 	one component of each type at a time. Throws upon an attempt to add multiple
 	components of the same type to an entity.
-]]
+
+	@param entity number
+	@param componentName string
+	@param component Component<Type>
+	@return Component<Type>
+]=]
 function Registry:addComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
@@ -398,7 +482,14 @@ function Registry:addComponent(entity, componentName, component)
 	return component
 end
 
-function Registry:multiAdd(entity, componentMap)
+--[=[
+	Adds the given components to the entity and returns the entity.
+
+	@param entity number
+	@param componentMap {[string]: Component<Type>}
+	@return number
+]=]
+function Registry:addComponents(entity, componentMap)
 	for componentName, component in pairs(componentMap) do
 		self:addComponent(entity, componentName, component)
 	end
@@ -406,10 +497,15 @@ function Registry:multiAdd(entity, componentMap)
 	return entity
 end
 
---[[
+--[=[
 	If the entity does not have the component, adds and returns the component. Otherwise,
-	does nothing.
-]]
+	returns `nil`.
+
+	@param entity number
+	@param componentName string
+	@param component Component<Type>
+	@return Component<Type> | nil
+]=]
 function Registry:tryAddComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
@@ -428,10 +524,14 @@ function Registry:tryAddComponent(entity, componentName, component)
 	return component
 end
 
---[[
+--[=[
 	If the entity has the component, returns the component. Otherwise adds the component
 	to the entity and returns the component.
-]]
+
+	@param entity number
+	@param componentName string
+	@param component Component<Type>
+]=]
 function Registry:getOrAddComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
@@ -453,11 +553,16 @@ function Registry:getOrAddComponent(entity, componentName, component)
 	end
 end
 
---[[
-	Replaces the component on the entity with the given component.
+--[=[
+	Replaces the given component on the entity and returns the new component.
 
-	Throws upon an attempt to replace a component that the entity does not have.
-]]
+	Throws if the entity does not have the component.
+
+	@param entity number
+	@param componentName string
+	@param component Component<Type>
+	@return Component<Type>
+]=]
 function Registry:replaceComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
@@ -474,11 +579,16 @@ function Registry:replaceComponent(entity, componentName, component)
 	return component
 end
 
---[[
+--[=[
 	If the entity has the component, replaces it with the given component and returns the
 	new component. Otherwise, adds the component to the entity and returns the new
 	component.
-]]
+
+	@param entity number
+	@param componentName string
+	@param component Component<Type>
+	@return Component<Type>
+]=]
 function Registry:addOrReplaceComponent(entity, componentName, component)
 	local pool = self._pools[componentName]
 
@@ -502,12 +612,14 @@ function Registry:addOrReplaceComponent(entity, componentName, component)
 	return component
 end
 
---[[
+--[=[
 	Removes the component from the entity.
 
-	Throws upon an attempt to remove a component which the entity does not
-	have.
-]]
+	Throws if the entity does not have the component.
+
+	@param entity number
+	@param componentName string
+]=]
 function Registry:removeComponent(entity, componentName)
 	local pool = self._pools[componentName]
 
@@ -522,9 +634,15 @@ function Registry:removeComponent(entity, componentName)
 	pool.removed:dispatch(entity, component)
 end
 
---[[
-	If the entity has the component, removes it. Otherwise, does nothing.
-]]
+--[=[
+
+	If the entity has the component, removes it and returns `true`. Otherwise, returns
+	`false`.
+
+	@param entity number
+	@param componentName string
+	@return boolean
+]=]
 function Registry:tryRemoveComponent(entity, componentName)
 	local pool = self._pools[componentName]
 
@@ -541,9 +659,11 @@ function Registry:tryRemoveComponent(entity, componentName)
 	return false
 end
 
---[[
-	Returns the number of entities currently in use.
-]]
+--[=[
+	Returns the total number of entities currently in use by the registry.
+
+	@return number
+]=]
 function Registry:countEntities()
 	local curr = self._nextRecyclableEntityId
 	local num = self._size
@@ -556,6 +676,12 @@ function Registry:countEntities()
 	return num
 end
 
+--[=[
+	Returns the total number of entities with the given component.
+
+	@param componentName string
+	@return number
+]=]
 function Registry:countComponents(componentName)
 	local pool = self._pools[componentName]
 
@@ -566,27 +692,32 @@ function Registry:countComponents(componentName)
 	return pool.size
 end
 
---[[
-	Pases each entity currently in use to the given function.
-]]
-function Registry:each(func)
+--[=[
+	Passes each entity currently in use by the registry to the given callback.
+
+	@param callback (entity: number)
+]=]
+function Registry:each(callback)
 	if self._nextRecyclableEntityId == NULL_ENTITYID then
 		for _, entity in ipairs(self._entities) do
-			func(entity)
+			callback(entity)
 		end
 	else
 		for id, entity in ipairs(self._entities) do
 			if bit32.band(entity, ENTITYID_MASK) == id then
-				func(entity)
+				callback(entity)
 			end
 		end
 	end
 end
 
---[[
-	Returns true if the registry manages a component named componentName. Otherwise,
-	returns false.
-]]
+--[=[
+	Returns `true` if the registry has a component named componentName. Otherwise,
+	returns `false`.
+
+	@param componentName string
+	@return boolean
+]=]
 function Registry:isComponentDefined(componentName)
 	return not not self._pools[componentName]
 end
@@ -599,10 +730,14 @@ function Registry:getComponentDefinition(componentName)
 	return pool.typeDefinition
 end
 
---[[
-	Returns a list of pools used to manage the specified components in the same order as
-	the given tuple.
-]]
+--[=[
+	Returns a list of pools containing the specified components in the same order as
+	the given list of component names.
+
+	@tag Internal
+	@param componentNames {string}
+	@return {Pool<Type>}
+]=]
 function Registry:getPools(componentNames)
 	local output = table.create(#componentNames)
 
@@ -619,6 +754,13 @@ function Registry:getPools(componentNames)
 	return output
 end
 
+--[=[
+	Returns the pool containing the specified components.
+
+	@tag Internal
+	@param componentName string
+	@return Pool<Type>
+]=]
 function Registry:getPool(componentName)
 	local pool = self._pools[componentName]
 
