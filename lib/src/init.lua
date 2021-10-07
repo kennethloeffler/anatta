@@ -3,7 +3,6 @@
 ]=]
 
 local Dom = require(script.Dom)
-local RemoteEntityMap = require(script.RemoteEntityMap)
 local Registry = require(script.Registry)
 local System = require(script.System)
 local TypeDefinition = require(script.Core.TypeDefinition)
@@ -55,7 +54,6 @@ return {
 
 	Dom = Dom,
 	Registry = Registry,
-	RemoteEntityMap = RemoteEntityMap,
 	System = System,
 	t = TypeDefinition,
 }
