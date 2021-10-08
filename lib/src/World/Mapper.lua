@@ -5,6 +5,8 @@
 
 	A `Mapper` is stateless. In contrast to a [`Reactor`](Reactor), a `Mapper` cannot
 	track components with [`Query.withUpdated`](World#Query).
+
+	You can create a `Mapper` using [`World:getMapper`](World#getMapper).
 ]=]
 
 local SingleMapper = require(script.Parent.SingleMapper)

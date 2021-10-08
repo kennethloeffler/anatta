@@ -1,7 +1,8 @@
 --[=[
 	@class Anatta
 
-	The main entry point for the library.
+	`Anatta` is the main entry point to the library and is used to manage
+	[`World`](World)s.
 ]=]
 
 local Dom = require(script.Dom)

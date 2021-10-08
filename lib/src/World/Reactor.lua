@@ -5,6 +5,8 @@
 
 	A `Reactor` is stateful. In contrast to a [`Mapper`](Mapper), a `Reactor` can track
 	updates to components with [`Query.withUpdated`](World#Query).
+
+	You can create a `Reactor` using [`World:getReactor`](World#getReactor).
 ]=]
 
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)

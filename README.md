@@ -10,4 +10,4 @@ The entity component system (aka ECS, entity system) is an architectural pattern
 
 # Motivation
 
-An entity component system for use on Roblox was mainly motivated by the inadequacy of the `DataModel` to elegantly solve problems with state and identity - particularly when `Workspace.StreamingEnabled` is set, when uniquely replicating `Instance`s via `PlayerGui` (where each client in a typical setup has their own copy of the `Instance`), or in other cases when there is not necessarily a one-to-one correspondence between an `Instance` and a logical game object.
+An entity component system for use on Roblox was originally motivated by the inadequacy of the `DataModel` to elegantly solve problems with state and identity - particularly when `Workspace.StreamingEnabled` is set, when uniquely replicating `Instance`s via `PlayerGui` (where each client in a typical setup has their own copy of the `Instance`), or in other cases when there is not necessarily a one-to-one correspondence between an `Instance` and a logical game object.
