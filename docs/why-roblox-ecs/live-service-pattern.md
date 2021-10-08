@@ -8,4 +8,4 @@ Sometimes a new piece of content requires a piece of game logic to change or wor
 
 As experiences grow larger and more complex, there is an ever-increasing amount of data to worry about persisting. This may bring to mind things like players' storyline progress, collectibles, stats, and lifetime achievements, but it also includes things like item types, ability types, and even different areas and zones in the game. On a live-service game, all of it might be important someday, so it should be kept in a format that's easy to transport, inspect, and transform.
 
-To keep it short, content is data, and properly dealing with it can have outsized impact on ease of development. Scott Bilas discovered this in 2004's in *Dungeon Siege*, and now we're rediscovering it for Roblox.
+To keep it short, content is data, and properly dealing with it can have outsized impact on ease of development. [Scott Bilas discovered this in 2002's *Dungeon Siege*](https://neil3d.github.io/reading/assets/slides/data-driven-game-object-system.pdf), and now we're rediscovering it for Roblox.
