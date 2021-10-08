@@ -16,8 +16,8 @@
 	Attempts to load entity-component data from attributes and tags existing on all Roblox
 	`Instance`s in the `DataModel` into an empty [`Registry`](Registry).
 
-	Components defined on the given [`Registry`](Registry) determine what tags names
-	are used to find `Instance`s to convert.
+	Components defined on the given [`Registry`](Registry) determine what tag names are
+	used to find `Instance`s to convert.
 
 	:::info
 	Encountering an `Instance` that fails attribute validation is a soft error. Such an

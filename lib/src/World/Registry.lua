@@ -189,7 +189,7 @@ function Registry.fromRegistry(original)
 end
 
 --[=[
-	Registers a new component type for the registry.
+	Defines a new component type for the registry.
 
 	#### Usage:
 	```lua
