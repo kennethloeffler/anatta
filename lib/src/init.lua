@@ -12,7 +12,7 @@ local World = require(script.World)
 local util = require(script.util)
 
 local ErrWorldAlreadyExists = 'A world named "%s" already exists'
-local ErrWorldDoenstExist = 'No world named "%s" exists'
+local ErrWorldDoesntExist = 'No world named "%s" exists'
 
 local Worlds = {}
 
@@ -66,7 +66,7 @@ end
 local function getWorld(namespace, script)
 	local world = Worlds[namespace]
 
-	util.jumpAssert(world, ErrWorldDoenstExist:format(namespace))
+	util.jumpAssert(world, ErrWorldDoesntExist:format(namespace))
 
 	if script then
 		world:addSystem(script)
