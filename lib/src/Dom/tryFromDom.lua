@@ -1,6 +1,6 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
 
-local tryFromTag = require(script.Parent.tryFromTag)
+local tryFromTagged = require(script.Parent.tryFromTagged)
 local jumpAssert = require(script.Parent.Parent.util.jumpAssert)
 
 local ENTITYID_MASK = Constants.EntityIdMask
@@ -15,7 +15,7 @@ return function(registry)
 			continue
 		end
 
-		local success, result = tryFromTag(pool, componentName, pool.typeDefinition)
+		local success, result = tryFromTagged(pool)
 
 		if success then
 			for _, entity in ipairs(pool.dense) do
@@ -27,16 +27,16 @@ return function(registry)
 	end
 
 	-- There is a bit of trickery going on here. A simple traversal over entitySet,
-	-- calling createFrom on each entity, does work - but it is unordered. If createFrom
-	-- is given an entity that is out of range, it must backfill _entities with recyclable
-	-- IDs. When entities with the same ID are later encountered at some point later
-	-- during the iteration, createFrom linearly searches the recyclable list. It likely
-	-- contains many elements in such a scenario, so this can become fairly costly
-	-- overall.
+	-- calling createEntityFrom on each entity, does work - but it is unordered. If
+	-- createFrom is given an entity that is out of range, it must backfill _entities with
+	-- recyclable IDs. When entities with the same ID are later encountered at some point
+	-- later during the iteration, createEntityFrom linearly searches the recyclable
+	-- list. It likely contains many elements in such a scenario, so this can become
+	-- fairly costly overall.
 
 	-- To get around this, we create an intermediate list of entities and sort it by its
 	-- entity ID field. This results in an ordering identical to the eventual registry. In
-	-- this scenario, createFrom backfills less often and the recyclable list is kept
+	-- this scenario, createEntityFrom backfills less often and the recyclable list is kept
 	-- smaller.
 	local entities = {}
 
@@ -49,7 +49,7 @@ return function(registry)
 	end)
 
 	for _, entity in ipairs(entities) do
-		registry:createFrom(entity)
+		registry:createEntityFrom(entity)
 	end
 
 	for _, pool in pairs(registry._pools) do

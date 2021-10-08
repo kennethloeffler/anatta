@@ -3,15 +3,15 @@ local CollectionService = game:GetService("CollectionService")
 local Constants = require(script.Parent.Parent.Core.Constants)
 local util = require(script.Parent.Parent.util)
 
-local tryFromAttribute = require(script.Parent.tryFromAttribute)
+local tryFromAttributes = require(script.Parent.tryFromAttributes)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 return function(pool)
 	util.jumpAssert(pool.size == 0, "Pool must be empty")
 
-	local componentName = pool.name
-	local typeDefinition = pool.typeDefinition
+	local componentName = pool.componentDefinition.name
+	local typeDefinition = pool.componentDefinition.type
 	local tagged = CollectionService:GetTagged(componentName)
 	local taggedCount = #tagged
 
@@ -26,7 +26,7 @@ return function(pool)
 			continue
 		end
 
-		local componentSuccess, componentResult = tryFromAttribute(
+		local componentSuccess, componentResult = tryFromAttributes(
 			instance,
 			componentName,
 			typeDefinition

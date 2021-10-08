@@ -1,8 +1,8 @@
 --[=[
 	@class Dom
 
-	Utility module to convert components to and from attributes and `CollectionService`
-	tags on `Instance`s.
+	`Dom` is a utility module used to convert components to and from attributes and
+	`CollectionService` tags on `Instance`s.
 ]=]
 
 --[=[
@@ -13,8 +13,8 @@
 
 	@param registry Registry
 
-	Attempts to load all available entity-component data from attributes and tags on
-	Roblox `Instance`s into an empty [`Registry`](Registry).
+	Attempts to load entity-component data from attributes and tags existing on all Roblox
+	`Instance`s in the `DataModel` into an empty [`Registry`](Registry).
 
 	Components defined on the given [`Registry`](Registry) determine what tags names
 	are used to find `Instance`s to convert.
@@ -22,12 +22,12 @@
 	:::info
 	Encountering an `Instance` that fails attribute validation is a soft error. Such an
 	`Instance` is skipped and the reason for the failure is logged. Consumers with more
-	granular requirements should use [`tryFromAttribute`](#tryFromAttribute) instead.
+	granular requirements should use [`tryFromAttributes`](#tryFromAttributes) instead.
 ]=]
 local tryFromDom = require(script.tryFromDom)
 
 --[=[
-	@function tryFromAttribute
+	@function tryFromAttributes
 	@within Dom
 	@param instance Instance
 	@param componentDefinition ComponentDefinition
@@ -37,10 +37,10 @@ local tryFromDom = require(script.tryFromDom)
 	type. Returns a success value followed by the converted component (if successful) or
 	an error message (if unsuccessful).
 ]=]
-local tryFromAttribute = require(script.tryFromAttribute)
+local tryFromAttributes = require(script.tryFromAttributes)
 
 --[=[
-	@function tryFromTag
+	@function tryFromTagged
 	@within Dom
 	@param pool Pool
 
@@ -50,21 +50,21 @@ local tryFromAttribute = require(script.tryFromAttribute)
 	:::info
 	Encountering an `Instance` that fails attribute validation is a soft error. Such an
 	`Instance` is skipped and the reason for the failure is logged. Consumers with more
-	granular requirements should use [`tryFromAttribute`](#tryFromAttribute) instead.
+	granular requirements should use [`tryFromAttributes`](#tryFromAttributes) instead.
 ]=]
-local tryFromTag = require(script.tryFromTag)
+local tryFromTagged = require(script.tryFromTagged)
 
 --[=[
-	@function tryToAttribute
+	@function tryToAttributes
 	@within Dom
 	@param instance Instance
 	@param component any
 	@param componentDefinition ComponentDefinition
 	@return boolean, {[string]: any]}
 
-	Attempts to convert the given component into an attribute dictionary. The keys are the
-	names of the requested attributes, while the values correspond to the value of the
-	component.
+	Attempts to convert the given component into a dictionary that can be used to set
+	attributes on an `Instance`. The keys of the returned dictionary are the names of the
+	requested attributes, while the values correspond to the value of the component.
 
 	Returns a success value followed by the attribute dictionary (if successful) or an
 	error message (if unsuccessful).
@@ -74,7 +74,7 @@ local tryFromTag = require(script.tryFromTag)
 	this is the case, a `Folder` is created under the given `Instance` and an
 	`ObjectValue` under that `Folder` for each `Instance` reference.
 ]=]
-local tryToAttribute = require(script.tryToAttribute)
+local tryToAttributes = require(script.tryToAttributes)
 
 --[=[
 	@function waitForRefs
@@ -84,9 +84,9 @@ local tryToAttribute = require(script.tryToAttribute)
 local waitForRefs = require(script.waitForRefs)
 
 return {
-	tryFromAttribute = tryFromAttribute,
+	tryFromAttributes = tryFromAttributes,
 	tryFromDom = tryFromDom,
-	tryFromTag = tryFromTag,
-	tryToAttribute = tryToAttribute,
+	tryFromTagged = tryFromTagged,
+	tryToAttributes = tryToAttributes,
 	waitForRefs = waitForRefs,
 }

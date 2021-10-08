@@ -4,7 +4,7 @@ return function()
 
 	local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
-	local tryFromAttribute = require(script.Parent.tryFromAttribute)
+	local tryFromAttributes = require(script.Parent.tryFromAttributes)
 
 	describe("basic types", function()
 		it(
@@ -14,7 +14,7 @@ return function()
 
 				instance:SetAttribute("Test", Vector3.new(1, 1, 1))
 
-				local success, result = tryFromAttribute(
+				local success, result = tryFromAttributes(
 					instance,
 					{ name = "Test", type = t.Vector3 }
 				)
@@ -26,7 +26,7 @@ return function()
 
 		it("should return false for an unresolvable type", function()
 			local instance = Instance.new("Folder")
-			local success, result = tryFromAttribute(instance, { name = "Test", type = t.Random })
+			local success, result = tryFromAttributes(instance, { name = "Test", type = t.Random })
 
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
@@ -37,13 +37,13 @@ return function()
 
 			instance:SetAttribute("Test", 2.7182818284)
 
-			local success, result = tryFromAttribute(instance, { name = "Test", type = t.Vector3 })
+			local success, result = tryFromAttributes(instance, { name = "Test", type = t.Vector3 })
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
 		end)
 
 		it("should return false when the instance does not have the attribute", function()
-			local success, result = tryFromAttribute(Instance.new("Hole"), {
+			local success, result = tryFromAttributes(Instance.new("Hole"), {
 				name = "Test",
 				type = t.Vector3,
 			})
@@ -61,7 +61,7 @@ return function()
 				instance:SetAttribute("Test_Field2", true)
 				instance:SetAttribute("Test_Field3", -273.15)
 
-				local success, result = tryFromAttribute(instance, {
+				local success, result = tryFromAttributes(instance, {
 					name = "Test",
 					type = t.strictInterface({
 						Field1 = t.UDim2,
@@ -97,7 +97,7 @@ return function()
 
 				instanceWithAttribute:SetAttribute("Test", true)
 
-				local success, result = tryFromAttribute(instanceWithAttribute, {
+				local success, result = tryFromAttributes(instanceWithAttribute, {
 					name = "Test",
 					type = t.Instance,
 				})
@@ -116,7 +116,7 @@ return function()
 
 			instanceWithAttribute:SetAttribute("Test", true)
 
-			local success, result = tryFromAttribute(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
 				type = t.Instance,
 			})
@@ -130,7 +130,7 @@ return function()
 
 			instanceWithAttribute:SetAttribute("Test", true)
 
-			local success, result = tryFromAttribute(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
 				type = t.Instance,
 			})
@@ -144,7 +144,7 @@ return function()
 
 			instanceWithAttribute:SetAttribute("Test", false)
 
-			local success, result = tryFromAttribute(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
 				type = t.Instance,
 			})
@@ -170,7 +170,7 @@ return function()
 
 			instanceWithAttribute:SetAttribute("Test", true)
 
-			local success, result = tryFromAttribute(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
 				type = t.instanceOf("Part"),
 			})
@@ -196,7 +196,7 @@ return function()
 
 			instanceWithAttribute:SetAttribute("Test", true)
 
-			local success, result = tryFromAttribute(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
 				type = t.instanceIsA("BasePart"),
 			})
