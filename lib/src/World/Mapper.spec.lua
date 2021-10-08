@@ -2,34 +2,34 @@ return function()
 	local Mapper = require(script.Parent.Mapper)
 	local SingleMapper = require(script.Parent.SingleMapper)
 	local Registry = require(script.Parent.Registry)
-	local t = require(script.Parent.Parent.Core.TypeDefinition)
+	local T = require(script.Parent.Parent.Core.T)
 
 	beforeEach(function(context)
 		local registry = Registry.new()
 
 		registry:defineComponent({
 			name = "Test1",
-			type = t.table,
+			type = T.table,
 		})
 
 		registry:defineComponent({
 			name = "Test2",
-			type = t.table,
+			type = T.table,
 		})
 
 		registry:defineComponent({
 			name = "Test3",
-			type = t.table,
+			type = T.table,
 		})
 
 		registry:defineComponent({
 			name = "Test4",
-			type = t.table,
+			type = T.table,
 		})
 
 		registry:defineComponent({
 			name = "TestTag",
-			type = t.none,
+			type = T.none,
 		})
 
 		context.registry = registry

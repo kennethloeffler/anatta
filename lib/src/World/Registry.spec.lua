@@ -1,7 +1,7 @@
 return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
 	local Registry = require(script.Parent.Registry)
-	local t = require(script.Parent.Parent.Core.TypeDefinition)
+	local T = require(script.Parent.Parent.Core.T)
 
 	local ENTITYID_WIDTH = Constants.EntityIdWidth
 	local NULL_ENTITYID = Constants.NullEntityId
@@ -21,21 +21,21 @@ return function()
 
 		registry:defineComponent({
 			name = "interface",
-			type = t.interface({ instance = t.Instance }),
+			type = T.interface({ instance = T.Instance }),
 		})
 
 		registry:defineComponent({
 			name = "instance",
-			type = t.Instance,
+			type = T.Instance,
 		})
 
 		registry:defineComponent({
 			name = "number",
-			type = t.number,
+			type = T.number,
 		})
 		registry:defineComponent({
 			name = "tag",
-			type = t.none,
+			type = T.none,
 		})
 
 		context.registry = registry

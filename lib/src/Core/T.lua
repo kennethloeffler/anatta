@@ -1,13 +1,14 @@
 --[=[
-	@class t
+	@class T
 
-	Wrapper around `t` that enables detailed inspection of type information after the
-	fact. [See `t`'s documentation for a listing of all the functions present in this
+	`T` is a wrapper around `t` that enables detailed inspection of type information after
+	the fact and the ability to construct default values for many kinds of types. [See
+	`t`'s documentation for a listing of all the functions present in this
 	module.](https://github.com/osyrisrblx/t#crash-course)
 ]=]
 
 --- @interface TypeDefinition
---- @within t
+--- @within T
 --- .check (...)
 --- .typeParams { TypeDefinition }
 --- .typeName string

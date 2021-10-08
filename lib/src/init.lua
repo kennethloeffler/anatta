@@ -6,7 +6,7 @@
 ]=]
 
 local Dom = require(script.Dom)
-local TypeDefinition = require(script.Core.TypeDefinition)
+local T = require(script.Core.T)
 local Types = require(script.Types)
 local World = require(script.World)
 local util = require(script.util)
@@ -77,7 +77,7 @@ end
 
 return {
 	Dom = Dom,
-	t = TypeDefinition,
+	T = T,
 
 	createWorld = createWorld,
 	getWorld = getWorld,

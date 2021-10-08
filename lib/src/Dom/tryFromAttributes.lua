@@ -1,15 +1,15 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
-local t = require(script.Parent.Parent.Core.TypeDefinition)
+local T = require(script.Parent.Parent.Core.T)
 
 local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
-local TweenInfoType = t.strictInterface({
-	Time = t.number,
-	EasingStyle = t.enum(Enum.EasingStyle),
-	EasingDirection = t.enum(Enum.EasingDirection),
-	RepeatCount = t.number,
-	Reverses = t.boolean,
-	DelayTime = t.number,
+local TweenInfoType = T.strictInterface({
+	Time = T.number,
+	EasingStyle = T.enum(Enum.EasingStyle),
+	EasingDirection = T.enum(Enum.EasingDirection),
+	RepeatCount = T.number,
+	Reverses = T.boolean,
+	DelayTime = T.number,
 })
 
 local function instanceConversion(instance, attributeName, typeDefinition)

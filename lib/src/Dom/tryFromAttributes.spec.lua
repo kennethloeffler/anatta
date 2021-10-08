@@ -1,6 +1,6 @@
 return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
-	local t = require(script.Parent.Parent.Core.TypeDefinition)
+	local T = require(script.Parent.Parent.Core.T)
 
 	local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
@@ -16,7 +16,7 @@ return function()
 
 				local success, result = tryFromAttributes(
 					instance,
-					{ name = "Test", type = t.Vector3 }
+					{ name = "Test", type = T.Vector3 }
 				)
 
 				expect(success).to.equal(true)
@@ -26,7 +26,7 @@ return function()
 
 		it("should return false for an unresolvable type", function()
 			local instance = Instance.new("Folder")
-			local success, result = tryFromAttributes(instance, { name = "Test", type = t.Random })
+			local success, result = tryFromAttributes(instance, { name = "Test", type = T.Random })
 
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
@@ -37,7 +37,7 @@ return function()
 
 			instance:SetAttribute("Test", 2.7182818284)
 
-			local success, result = tryFromAttributes(instance, { name = "Test", type = t.Vector3 })
+			local success, result = tryFromAttributes(instance, { name = "Test", type = T.Vector3 })
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
 		end)
@@ -45,7 +45,7 @@ return function()
 		it("should return false when the instance does not have the attribute", function()
 			local success, result = tryFromAttributes(Instance.new("Hole"), {
 				name = "Test",
-				type = t.Vector3,
+				type = T.Vector3,
 			})
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
@@ -63,10 +63,10 @@ return function()
 
 				local success, result = tryFromAttributes(instance, {
 					name = "Test",
-					type = t.strictInterface({
-						Field1 = t.UDim2,
-						Field2 = t.boolean,
-						Field3 = t.number,
+					type = T.strictInterface({
+						Field1 = T.UDim2,
+						Field2 = T.boolean,
+						Field3 = T.number,
 					}),
 				})
 
@@ -99,7 +99,7 @@ return function()
 
 				local success, result = tryFromAttributes(instanceWithAttribute, {
 					name = "Test",
-					type = t.Instance,
+					type = T.Instance,
 				})
 
 				expect(success).to.equal(true)
@@ -118,7 +118,7 @@ return function()
 
 			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
-				type = t.Instance,
+				type = T.Instance,
 			})
 
 			expect(success).to.equal(false)
@@ -132,7 +132,7 @@ return function()
 
 			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
-				type = t.Instance,
+				type = T.Instance,
 			})
 
 			expect(success).to.equal(false)
@@ -146,7 +146,7 @@ return function()
 
 			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
-				type = t.Instance,
+				type = T.Instance,
 			})
 
 			expect(success).to.equal(false)
@@ -172,7 +172,7 @@ return function()
 
 			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
-				type = t.instanceOf("Part"),
+				type = T.instanceOf("Part"),
 			})
 
 			expect(success).to.equal(false)
@@ -198,7 +198,7 @@ return function()
 
 			local success, result = tryFromAttributes(instanceWithAttribute, {
 				name = "Test",
-				type = t.instanceIsA("BasePart"),
+				type = T.instanceIsA("BasePart"),
 			})
 
 			expect(success).to.equal(false)

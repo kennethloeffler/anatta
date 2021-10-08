@@ -1,17 +1,17 @@
 return function()
 	local Anatta = require(script.Parent)
-	local t = Anatta.t
+	local T = Anatta.T
 
 	describe("createWorld", function()
 		it("should define a list of ComponentDefinitions for the world's registry", function()
 			local world = Anatta.createWorld("TestWorld1", {
 				{
 					name = "Loooooooook",
-					type = t.table,
+					type = T.table,
 				},
 				{
 					name = "Heeeeeeerree",
-					type = t.table,
+					type = T.table,
 				},
 			})
 
