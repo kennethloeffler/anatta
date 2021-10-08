@@ -4,3 +4,6 @@
 [submodule "vendor/t"]
 	path = vendor/t
 	url = https://github.com/osyrisrblx/t
+[submodule "vendor/StudioComponents"]
+	path = vendor/StudioComponents
+	url = https://github.com/sircfenner/StudioComponents
