@@ -1,16 +1,50 @@
 --[=[
 	@class World
 
-	A `World` contains a [`Registry`](Registry) and provides means for both scoped and
+	A `World` contains a [`Registry`](/api/Registry) and provides means for both scoped and
 	unscoped access to entities and components.
 
-	You can get or create a `World` with [`Anatta.getWorld`](Anatta#getWorld) and
-	[`Anatta.createWorld`](Anatta#createWorld).
+	You can get or create a `World` with [`Anatta.getWorld`](/api/Anatta#getWorld) and
+	[`Anatta.createWorld`](/api/Anatta#createWorld).
 ]=]
 
 --- @prop registry Registry
 --- @within World
---- Provides direct, unscoped access to a `World`'s [`Registry`](Registry).
+--- Provides direct, unscoped access to a `World`'s [`Registry`](/api/Registry).
+
+--[=[
+	@interface Query
+	@within World
+	.withAll {string}?
+	.withUpdated {string}?
+	.withAny {string}?
+	.without {string}?
+
+	A `Query` represents a component aggregation to retrieve from a
+	[`Registry`](/api/Registry). A `Query` can be finalized by passing it to
+	[`World:getReactor`](#getReactor) or [`World:getMapper`](#getMapper).
+
+	Various [`Reactor`](/api/Reactor) and [`Mapper`](/api/Mapper) methods accept callbacks
+	that are passed an entity and its components. Such callbacks receive the entity as the
+	first argument, followed by the entity's components from `withAll`, then the
+	components from `withUpdated`, and finally the components from `withAny`.
+
+	### `Query.withAll`
+	An entity must have all of the components specified in `withAll` to appear in the
+	query.
+
+	### `Query.withUpdated`
+	An entity must have an updated copy of all the components specified in `withUpdated`
+	to appear in the query.
+
+	### `Query.withAny`
+	An entity may have any or none of the components specified in `withAny` and still
+	appear in the query.
+
+	### `Query.without`
+	An entity must not have any of the components specified in `without` to appear in the
+	query.
+]=]
 
 local Mapper = require(script.Mapper)
 local Reactor = require(script.Reactor)
@@ -20,9 +54,9 @@ local World = {}
 World.__index = World
 
 --[=[
-	Creates a new `World` containing an empty [`Registry`](Registry) and calls
-	[`Registry:defineComponent`](Registry#defineComponent) for each
-	[`ComponentDefinition`](Anatta#ComponentDefinition) in the given list.
+	Creates a new `World` containing an empty [`Registry`](/api/Registry) and calls
+	[`Registry:defineComponent`](/api/Registry#defineComponent) for each
+	[`ComponentDefinition`](/api/Anatta#ComponentDefinition) in the given list.
 
 	@ignore
 	@param componentDefinitions {ComponentDefinition}
@@ -42,7 +76,7 @@ function World.new(componentDefinitions)
 end
 
 --[=[
-	Creates a new [`Mapper`](Mapper) given a [`Query`](#Query).
+	Creates a new [`Mapper`](/api/Mapper) given a [`Query`](#Query).
 
 	@error "Mappers cannot track updates to components"
 	@error "Mappers need at least one component type specified in withAll"
@@ -55,7 +89,7 @@ function World:getMapper(query)
 end
 
 --[=[
-	Creates a new [`Reactor`](Reactor) given a [`Query`](#Query).
+	Creates a new [`Reactor`](/api/Reactor) given a [`Query`](#Query).
 
 	@error "Reactors need at least one component type specified in withAll, withUpdated, or withAny"
 	@error "Reactors can only track up to 32 updated component types"

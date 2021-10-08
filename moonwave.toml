@@ -10,7 +10,7 @@ classOrder = [
 	"Reactor",
 	"Mapper",
 	"Dom",
-	"t"
+	"T"
 ]
 
 [docusaurus]

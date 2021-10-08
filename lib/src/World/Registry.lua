@@ -4,7 +4,7 @@
 	provides methods to create and destroy entities and to add, remove, get, or update
 	components.
 
-	You can get a `Registry` from a [`World`](World).
+	You can get a `Registry` from a [`World`](/api/World).
 ]=]
 
 local Constants = require(script.Parent.Parent.Core.Constants)
@@ -189,7 +189,8 @@ function Registry.fromRegistry(original)
 end
 
 --[=[
-	Defines a new component type for the registry.
+	Defines a new component type for the registry using the given
+	[`ComponentDefinition`](/api/Anatta#ComponentDefinition).
 
 	#### Usage:
 	```lua
@@ -894,11 +895,13 @@ function Registry:isComponentDefined(componentName)
 end
 
 --[=[
-	Returns the [`ComponentDefinition`](t#TypeDefinition) with the given name.
+	Returns the [`ComponentDefinition`](/api/Anatta#ComponentDefinition) with the given
+	name.
 
 	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param componentName string
+	@return ComponentDefinition
 ]=]
 function Registry:getComponentDefinition(componentName)
 	local pool = self._pools[componentName]
@@ -914,6 +917,7 @@ end
 
 	@error "invalid component name: %s" -- No component goes by that name.
 
+	@private
 	@param componentNames {string}
 	@return {Pool}
 ]=]
@@ -938,6 +942,7 @@ end
 
 	@error "invalid component name: %s" -- No component goes by that name.
 
+	@private
 	@param componentName string
 	@return Pool
 ]=]

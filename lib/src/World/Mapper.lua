@@ -1,12 +1,13 @@
 --[=[
 	@class Mapper
 
-	Provides scoped access to a [`Registry`](Registry) according to a [`Query`](World#Query).
+	Provides scoped access to a [`Registry`](/api/Registry) according to a
+	[`Query`](/api/World#Query).
 
-	A `Mapper` is stateless. In contrast to a [`Reactor`](Reactor), a `Mapper` cannot
-	track components with [`Query.withUpdated`](World#Query).
+	A `Mapper` is stateless. In contrast to a [`Reactor`](/api/Reactor), a `Mapper` cannot
+	track components with [`Query.withUpdated`](/api/World#Query).
 
-	You can create a `Mapper` using [`World:getMapper`](World#getMapper).
+	You can create a `Mapper` using [`World:getMapper`](/api/World#getMapper).
 ]=]
 
 local SingleMapper = require(script.Parent.SingleMapper)

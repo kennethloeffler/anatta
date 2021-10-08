@@ -14,9 +14,9 @@
 	@param registry Registry
 
 	Attempts to load entity-component data from attributes and tags existing on all Roblox
-	`Instance`s in the `DataModel` into an empty [`Registry`](Registry).
+	`Instance`s in the `DataModel` into an empty [`Registry`](/api/Registry).
 
-	Components defined on the given [`Registry`](Registry) determine what tag names are
+	Components defined on the given [`Registry`](/api/Registry) determine what tag names are
 	used to find `Instance`s to convert.
 
 	:::info
@@ -34,8 +34,8 @@ local tryFromDom = require(script.tryFromDom)
 	@return boolean, any
 
 	Attempts to convert the attributes of a given `Instance` into a component of the given
-	type. Returns a success value followed by the converted component (if successful) or
-	an error message (if unsuccessful).
+	[`ComponentDefinition`](/api/Anatta#ComponentDefinition). Returns a success value followed
+	by the converted component (if successful) or an error message (if unsuccessful).
 ]=]
 local tryFromAttributes = require(script.tryFromAttributes)
 
@@ -62,9 +62,11 @@ local tryFromTagged = require(script.tryFromTagged)
 	@param componentDefinition ComponentDefinition
 	@return boolean, {[string]: any]}
 
-	Attempts to convert the given component into a dictionary that can be used to set
-	attributes on an `Instance`. The keys of the returned dictionary are the names of the
-	requested attributes, while the values correspond to the value of the component.
+	Takes a component and the component's
+	[`ComponentDefinition`](/api/Anatta#ComponentDefinition) and attempts to convert the
+	component into a dictionary that can be used to set attributes on an `Instance`. The
+	keys of the returned dictionary are the names of the requested attributes, while the
+	values correspond to the value of the component.
 
 	Returns a success value followed by the attribute dictionary (if successful) or an
 	error message (if unsuccessful).

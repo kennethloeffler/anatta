@@ -27,7 +27,7 @@ Reactor.__index = Reactor
 	@param query Query
 	@private
 
-	Creates a new `Reactor` given a [`Query`](Anatta#Query).
+	Creates a new `Reactor` given a [`Query`](/api/Anatta#Query).
 ]=]
 function Reactor.new(registry, query)
 	util.jumpAssert(Types.Query(query))
@@ -134,7 +134,8 @@ end
 	@param callback (number, ...any)
 
 	Iterates over the all the entities present in the `Reactor`. Calls the callback for
-	each entity, passing each entity followed by the components specified by the `Query`.
+	each entity, passing each entity followed by the components specified by the
+	[`Query`](/api/World#Query).
 ]=]
 function Reactor:each(callback)
 	local dense = self._pool.dense
@@ -154,7 +155,7 @@ end
 
 	Iterates over all the entities present in the `Reactor` and clears each entity's set
 	of updated componants. Calls the callback for each entity, passing each entity followed
-	by the components specified by the `Query`.
+	by the components specified by the [`Query`](/api/World#Query).
 ]=]
 function Reactor:consumeEach(callback)
 	local dense = self._pool.dense

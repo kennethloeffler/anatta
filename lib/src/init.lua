@@ -2,7 +2,7 @@
 	@class Anatta
 
 	`Anatta` is the main entry point to the library and is used to manage
-	[`World`](World)s.
+	[`World`](/api/World)s.
 ]=]
 
 local Dom = require(script.Dom)
@@ -14,13 +14,20 @@ local util = require(script.util)
 local ErrWorldAlreadyExists = 'A world named "%s" already exists'
 local ErrWorldDoesntExist = 'No world named "%s" exists'
 
+--- @interface ComponentDefinition
+--- @within Anatta
+--- .name string
+--- .type TypeDefinition
+--- .description string?
+--- A named [`TypeDefinition`](/api/T#TypeDefinition) with an optional description.
+
 local Worlds = {}
 
 --[=[
 
 	Creates a new [`World`](World). If the second argument is a list of
 	[`ComponentDefinition`](#ComponentDefinition)s, calls
-	[`Registry:defineComponent`](Registry#defineComponent) on each member of the
+	[`Registry:defineComponent`](/api/Registry#defineComponent) on each member of the
 	list. Otherwise, if the second argument is an `Instance`, require all of the
 	`Instance`'s `ModuleScript` descendants and attempt to define each result.
 
