@@ -7,3 +7,12 @@
 [submodule "vendor/StudioComponents"]
 	path = vendor/StudioComponents
 	url = https://github.com/sircfenner/StudioComponents
+[submodule "vendor/roact"]
+	path = vendor/roact
+	url = https://github.com/roblox/roact
+[submodule "vendor/roact-rodux"]
+	path = vendor/roact-rodux
+	url = https://github.com/roblox/roact-rodux
+[submodule "vendor/rodux"]
+	path = vendor/rodux
+	url = https://github.com/roblox/rodux
