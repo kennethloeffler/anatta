@@ -1,12 +1,16 @@
 --[=[
 	@class Reactor
-	Provides scoped access to the contents of a [`Registry`](Registry) according to a
-	[`Query`](World#Query).
+	Provides scoped access to the contents of a [`Registry`](/api/World#Registry)
+	according to a [`Query`](/api/World#Query).
 
-	A `Reactor` is stateful. In contrast to a [`Mapper`](Mapper), a `Reactor` can track
-	updates to components with [`Query.withUpdated`](World#Query).
+	A `Reactor` is stateful and observes a [`World`'s registry](/api/World#registry). When
+	an entity matches the [`Query`](/api/World#Query), the entity enters the `Reactor` and
+	remains present until the entity fails to match the [`Query`](/api/World#Query).
 
-	You can create a `Reactor` using [`World:getReactor`](World#getReactor).
+	In contrast to a [`Mapper`](/api/Mapper), a `Reactor` can track updates to components
+	named in [`Query.withUpdated`](/api/World#Query).
+
+	You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor).
 ]=]
 
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
@@ -134,7 +138,7 @@ end
 	@param callback (number, ...any)
 
 	Iterates over the all the entities present in the `Reactor`. Calls the callback for
-	each entity, passing each entity followed by the components specified by the
+	each entity, passing each entity followed by the components named in the
 	[`Query`](/api/World#Query).
 ]=]
 function Reactor:each(callback)
@@ -153,9 +157,14 @@ end
 --[=[
 	@param callback (number, ...any)
 
-	Iterates over all the entities present in the `Reactor` and clears each entity's set
-	of updated componants. Calls the callback for each entity, passing each entity followed
-	by the components specified by the [`Query`](/api/World#Query).
+	Iterates over all the entities present in the `Reactor` and clears each entity's
+	update status. Calls the callback for each entity visited during the iteration,
+	passing the entity followed by the components named in the
+	[`Query`](/api/World#Query).
+
+	This function effectively "consumes" all updates made to components named in
+	[`Query.withUpdated`](/api/World#Query), emptying the `Reactor`. A consumer that wants
+	to selectively consume updates should use [`consume`](#consume) instead.
 ]=]
 function Reactor:consumeEach(callback)
 	local dense = self._pool.dense
@@ -178,7 +187,7 @@ end
 --[=[
 	@param entity number
 
-	Clears a given entity's set of updated components.
+	Clears a given entity's updated status.
 ]=]
 function Reactor:consume(entity)
 	self._pool:delete(entity)

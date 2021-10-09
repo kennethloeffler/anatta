@@ -20,32 +20,37 @@
 	.withAny {string}?
 	.without {string}?
 
-	A `Query` represents a component aggregation to retrieve from a
+	A `Query` represents a set of entities to retrieve from a
 	[`Registry`](/api/Registry). A `Query` can be finalized by passing it to
 	[`World:getReactor`](#getReactor) or [`World:getMapper`](#getMapper).
 
-	Various [`Reactor`](/api/Reactor) and [`Mapper`](/api/Mapper) methods accept callbacks
-	that are passed an entity and its components. Such callbacks receive the entity as the
-	first argument, followed by the entity's components from `withAll`, then the
-	components from `withUpdated`, and finally the components from `withAny`.
+	The fields of a `Query` determine which entities are yielded. Each field is an
+	optional list of component names that corresponds to one of the following rules:
 
 	### `Query.withAll`
-	An entity must have all of the components specified in `withAll` to appear in the
-	query.
+	An entity must have all of these components.
 
 	### `Query.withUpdated`
-	An entity must have an updated copy of all the components specified in `withUpdated`
-	to appear in the query.
+	An entity must have an updated copy of all of these components.
+
+	:::warning
+	A [`Mapper`](/api/Mapper) cannot track updates to
+	components. [`World:getMapper`](#getMapper) throws an error when this field is
+	included.
+	:::
 
 	### `Query.withAny`
-	An entity may have any or none of the components specified in `withAny` and still
-	appear in the query.
+	An entity may have any or none of these components.
 
 	### `Query.without`
-	An entity must not have any of the components specified in `without` to appear in the
-	query.
-]=]
+	An entity must not have any of these components.
 
+	Methods like [`Reactor:withAttachments`](/api/Reactor#withAttachments) and
+	[`Mapper:each`](/api/Mapper#each) take callbacks that are passed an entity and its
+	components. Such callbacks receive an entity as their first argument, followed in
+	order by the entity's components from `withAll`, then the components from
+	`withUpdated`, and finally the components from `withAny`.
+]=]
 local Mapper = require(script.Mapper)
 local Reactor = require(script.Reactor)
 local Registry = require(script.Registry)
