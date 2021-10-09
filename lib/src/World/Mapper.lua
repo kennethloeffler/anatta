@@ -12,24 +12,18 @@
 
 local SingleMapper = require(script.Parent.SingleMapper)
 local Types = require(script.Parent.Parent.Types)
+
 local util = require(script.Parent.Parent.util)
 
 local Mapper = {}
 Mapper.__index = Mapper
-
-local ErrCantHaveUpdated = "Mappers cannot track updates to components"
-local ErrNeedComponents = "Mappers need at least one required component type"
 
 function Mapper.new(registry, query)
 	util.jumpAssert(Types.Query(query))
 
 	local withAll = query.withAll or {}
 	local withAny = query.withAny or {}
-	local withUpdated = query.withUpdated or {}
 	local without = query.without or {}
-
-	util.jumpAssert(#withUpdated == 0, ErrCantHaveUpdated)
-	util.jumpAssert(#withAll > 0, ErrNeedComponents)
 
 	if #without == 0 and #withAny == 0 and #withAll == 1 then
 		return SingleMapper.new(registry:getPool(query.withAll[1]))
