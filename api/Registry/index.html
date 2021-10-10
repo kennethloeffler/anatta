@@ -13,8 +13,8 @@ provides methods to create and destroy entities and to add, remove, get, or upda
 components.
 
 You can get a `Registry` from a [`World`](/api/World)."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/Registry"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/Registry"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Registry" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Registry" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.dd1dc258.css">
-<link rel="preload" href="/anatta/assets/js/runtime~main.2ee3c525.js" as="script">
-<link rel="preload" href="/anatta/assets/js/main.239f01e0.js" as="script">
+<link rel="preload" href="/anatta/assets/js/runtime~main.4caec683.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.26f1ba41.js" as="script">
 </head>
 <body>
 <script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){var t=null;try{t=localStorage.getItem("theme")}catch(t){}return t}();t(null!==e?e:"light")}()</script><div id="__docusaurus">
@@ -25,7 +25,7 @@ You can get a `Registry` from a [`World`](/api/World)."><meta data-react-helmet=
   components.
 </p>
 <p>You can get a <code>Registry</code> from a <a href="/anatta/api/World"><code>World</code></a>.</p>
-</div></header><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="addComponent"></a><code style="text-decoration:none">addComponent</code><a class="hash-link" href="#addComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L608"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">addComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+</div></header><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="addComponent"></a><code style="text-decoration:none">addComponent</code><a class="hash-link" href="#addComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L622"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">addComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
 <p>Adds a component to the entity and returns the component.</p>
 <div class="admonition admonition-info alert alert--info">
   <div class="admonition-heading">
@@ -37,17 +37,17 @@ You can get a `Registry` from a [`World`](/api/World)."><meta data-react-helmet=
     <p>An entity can only have one component of each type at a time.</p>
   </div>
 </div>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>&quot;entity %d already has a %s&quot;</td><td>The entity already has that component.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="addOrReplaceComponent"></a><code style="text-decoration:none">addOrReplaceComponent</code><a class="hash-link" href="#addOrReplaceComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L756"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">addOrReplaceComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr><tr><td>&quot;entity %d already has a %s&quot;</td><td>The entity already has that component.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="addOrReplaceComponent"></a><code style="text-decoration:none">addOrReplaceComponent</code><a class="hash-link" href="#addOrReplaceComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L770"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">addOrReplaceComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
 <p>
   If the entity has the component, replaces it with the given component and returns the
   new component. Otherwise, adds the component to the entity and returns the new
   component.
 </p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="countComponents"></a><code style="text-decoration:none">countComponents</code><a class="hash-link" href="#countComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L857"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">countComponents</code><code>(</code><code>componentName: </code><code class="blue_2Afy">string</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="countComponents"></a><code style="text-decoration:none">countComponents</code><a class="hash-link" href="#countComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L871"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">countComponents</code><code>(</code><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
 <p>Returns the total number of entities with the given component.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="countEntities"></a><code style="text-decoration:none">countEntities</code><a class="hash-link" href="#countEntities" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L837"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">countEntities</code><code>(</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="countEntities"></a><code style="text-decoration:none">countEntities</code><a class="hash-link" href="#countEntities" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L851"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">countEntities</code><code>(</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
 <p>Returns the total number of entities currently in use by the registry.</p>
-</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="createEntity"></a><code style="text-decoration:none">createEntity</code><a class="hash-link" href="#createEntity" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L236"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">createEntity</code><code>(</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="createEntity"></a><code style="text-decoration:none">createEntity</code><a class="hash-link" href="#createEntity" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L250"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">createEntity</code><code>(</code><code>) → </code><code class="blue_2Afy">number</code></div><div>
 <p>Creates and returns a unique identifier that represents a game object.</p>
 <h4>Usage:</h4>
 <pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
@@ -59,7 +59,7 @@ entity <span class="token operator">=</span> registry<span class="token punctuat
 entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
 <span class="token function">assert</span><span class="token punctuation">(</span>entity <span class="token operator">==</span> <span class="token number">3</span><span class="token punctuation">)</span>
 </code></pre>
-</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="defineComponent"></a><code style="text-decoration:none">defineComponent</code><a class="hash-link" href="#defineComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L211"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">defineComponent</code><code>(</code><code>componentDefinition: </code><code class="blue_2Afy">ComponentDefinition</code><code>) → </code><code>(</code><code>)</code></div><div>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="defineComponent"></a><code style="text-decoration:none">defineComponent</code><a class="hash-link" href="#defineComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L215"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">defineComponent</code><code>(</code><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>
   Defines a new component type for the registry using the given
   <a href="/anatta/api/Anatta#ComponentDefinition"><code>ComponentDefinition</code></a>.
@@ -74,7 +74,7 @@ entity <span class="token operator">=</span> registry<span class="token punctuat
 
 registry<span class="token punctuation">:</span><span class="token function">addComponent</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> <span class="token string">"Health"</span><span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">)</span>
 </code></pre>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;there is already a component type named %s&quot;</td><td>The name is already being used.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="destroyEntity"></a><code style="text-decoration:none">destroyEntity</code><a class="hash-link" href="#destroyEntity" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L360"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">destroyEntity</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code>(</code><code>)</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;there is already a component type named %s&quot;</td><td>The name is already being used.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="destroyEntity"></a><code style="text-decoration:none">destroyEntity</code><a class="hash-link" href="#destroyEntity" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L374"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">destroyEntity</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>Removes all of an entity's components and frees its ID.</p>
 <h4>Usage:</h4>
 <pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
@@ -84,35 +84,30 @@ registry<span class="token punctuation">:</span><span class="token function">des
 <span class="token comment">-- the entity is no longer valid and functions like getComponent or addComponent will throw</span>
 <span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityValid</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">false</span><span class="token punctuation">)</span>
 </code></pre>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="each"></a><code style="text-decoration:none">each</code><a class="hash-link" href="#each" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L872"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">each</code><code>(</code><code>callback: </code><code class="green_3LnD">(</code><code>entity: </code><code class="blue_2Afy">number</code><code class="green_3LnD">)</code><code>) → </code><code>(</code><code>)</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="each"></a><code style="text-decoration:none">each</code><a class="hash-link" href="#each" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L886"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">each</code><code>(</code><code>callback: </code><code class="green_3LnD">(</code><code>entity: </code><code class="blue_2Afy">number</code><code class="green_3LnD">)</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>Passes each entity currently in use by the registry to the given callback.</p>
-</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="entityHas"></a><code style="text-decoration:none">entityHas</code><a class="hash-link" href="#entityHas" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L501"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">entityHas</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>...componentNames: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="entityHas"></a><code style="text-decoration:none">entityHas</code><a class="hash-link" href="#entityHas" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L515"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">entityHas</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>...: </code><code class="blue_2Afy">ComponentDefinition</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
 <p>Returns <code>true</code> if the entity all of the given components. Otherwise, returns <code>false</code>.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="entityHasAny"></a><code style="text-decoration:none">entityHasAny</code><a class="hash-link" href="#entityHasAny" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L531"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">entityHasAny</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>...componentNames: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="entityHasAny"></a><code style="text-decoration:none">entityHasAny</code><a class="hash-link" href="#entityHasAny" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L545"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">entityHasAny</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>...: </code><code class="blue_2Afy">ComponentDefinition</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
 <p>
   Returns <code>true</code> if the entity has any of the given components. Otherwise, returns
   <code>false</code>.
 </p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getComponent"></a><code style="text-decoration:none">getComponent</code><a class="hash-link" href="#getComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L560"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getComponent"></a><code style="text-decoration:none">getComponent</code><a class="hash-link" href="#getComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L574"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
 <p>Returns the component of the given type on the entity.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getComponentDefinition"></a><code style="text-decoration:none">getComponentDefinition</code><a class="hash-link" href="#getComponentDefinition" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L906"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getComponentDefinition</code><code>(</code><code>componentName: </code><code class="blue_2Afy">string</code><code>) → </code><code class="blue_2Afy">ComponentDefinition</code></div><div>
-<p>
-  Returns the <a href="/anatta/api/Anatta#ComponentDefinition"><code>ComponentDefinition</code></a> with the given
-  name.
-</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getComponents"></a><code style="text-decoration:none">getComponents</code><a class="hash-link" href="#getComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L583"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getComponents</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>output: </code><code class="blue_2Afy">table</code><code>,</code></div><div><code>...componentNames: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">...any</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getComponents"></a><code style="text-decoration:none">getComponents</code><a class="hash-link" href="#getComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L597"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getComponents</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>output: </code><code class="blue_2Afy">table</code><code>,</code></div><div><code>...: </code><code class="blue_2Afy">ComponentDefinition</code></div></div><code>) → </code><code class="blue_2Afy">...any</code></div><div>
 <p>Returns all of the given components on the entity.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getOrAddComponent"></a><code style="text-decoration:none">getOrAddComponent</code><a class="hash-link" href="#getOrAddComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L690"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getOrAddComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getOrAddComponent"></a><code style="text-decoration:none">getOrAddComponent</code><a class="hash-link" href="#getOrAddComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L704"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">getOrAddComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code>(</code><code>)</code></div><div>
 <p>
   If the entity has the component, returns the component. Otherwise adds the component
   to the entity and returns the component.
 </p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isComponentDefined"></a><code style="text-decoration:none">isComponentDefined</code><a class="hash-link" href="#isComponentDefined" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L893"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isComponentDefined</code><code>(</code><code>componentName: </code><code class="blue_2Afy">string</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isComponentDefined"></a><code style="text-decoration:none">isComponentDefined</code><a class="hash-link" href="#isComponentDefined" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L907"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isComponentDefined</code><code>(</code><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
 <p>
   Returns <code>true</code> if the registry has a component type with the given name. Otherwise,
   returns <code>false</code>.
 </p>
-</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isEntityOrphaned"></a><code style="text-decoration:none">isEntityOrphaned</code><a class="hash-link" href="#isEntityOrphaned" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L437"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isEntityOrphaned</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isEntityOrphaned"></a><code style="text-decoration:none">isEntityOrphaned</code><a class="hash-link" href="#isEntityOrphaned" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L451"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isEntityOrphaned</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
 <p>Returns <code>true</code> if the entity has no components. Otherwise, returns <code>false</code>.</p>
 <h4>Usage</h4>
 <pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
@@ -126,7 +121,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
 
 <span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityOrphaned</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">false</span><span class="token punctuation">)</span>
 </code></pre>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isEntityValid"></a><code style="text-decoration:none">isEntityValid</code><a class="hash-link" href="#isEntityValid" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L405"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isEntityValid</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="isEntityValid"></a><code style="text-decoration:none">isEntityValid</code><a class="hash-link" href="#isEntityValid" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L419"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">isEntityValid</code><code>(</code><code>entity: </code><code class="blue_2Afy">number</code><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
 <p>Returns <code>true</code> if the entity exists. Otherwise, returns <code>false</code>.</p>
 <h4>Usage:</h4>
 <pre class="language-lua"><code class="language-lua"><span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityValid</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">false</span><span class="token punctuation">)</span>
@@ -139,29 +134,29 @@ registry<span class="token punctuation">:</span><span class="token function">des
 
 <span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">isEntityValid</span><span class="token punctuation">(</span>entity<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">false</span><span class="token punctuation">)</span>
 </code></pre>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="removeComponent"></a><code style="text-decoration:none">removeComponent</code><a class="hash-link" href="#removeComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L790"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">removeComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="removeComponent"></a><code style="text-decoration:none">removeComponent</code><a class="hash-link" href="#removeComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L804"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">removeComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code></div></div><code>) → </code><code>(</code><code>)</code></div><div>
 <p>Removes the component from the entity.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>&quot;entity %d does not have a %s&quot;</td><td>The entity is expected to have this component.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="replaceComponent"></a><code style="text-decoration:none">replaceComponent</code><a class="hash-link" href="#replaceComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L725"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">replaceComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr><tr><td>&quot;entity %d does not have a %s&quot;</td><td>The entity is expected to have this component.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="replaceComponent"></a><code style="text-decoration:none">replaceComponent</code><a class="hash-link" href="#replaceComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L739"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">replaceComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
 <p>Replaces the given component on the entity and returns the new component.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr><tr><td>&quot;entity %d does not have a %s&quot;</td><td>The entity is expected to have this component.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="tryAddComponent"></a><code style="text-decoration:none">tryAddComponent</code><a class="hash-link" href="#tryAddComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L659"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">tryAddComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr><tr><td>&quot;entity %d does not have a %s&quot;</td><td>The entity is expected to have this component.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="tryAddComponent"></a><code style="text-decoration:none">tryAddComponent</code><a class="hash-link" href="#tryAddComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L673"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">tryAddComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">any</code></div><div>
 <p>
   If the entity does not have the component, adds and returns the component. Otherwise,
   returns <code>nil</code>.
 </p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="tryRemoveComponent"></a><code style="text-decoration:none">tryRemoveComponent</code><a class="hash-link" href="#tryRemoveComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L816"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">tryRemoveComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentName: </code><code class="blue_2Afy">string</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="tryRemoveComponent"></a><code style="text-decoration:none">tryRemoveComponent</code><a class="hash-link" href="#tryRemoveComponent" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L830"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">tryRemoveComponent</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
 <p>
   If the entity has the component, removes it and returns <code>true</code>. Otherwise, returns
   <code>false</code>.
 </p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="visitComponents"></a><code style="text-decoration:none">visitComponents</code><a class="hash-link" href="#visitComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L464"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">visitComponents</code><code>(</code><div class="inset_2cJr"><div><code>callback: </code><code class="green_3LnD">(</code><code>componentName: </code><code class="blue_2Afy">string</code><code class="green_3LnD">)</code><code class="green_3LnD"> → </code><code class="blue_2Afy">boolean</code><code>,</code></div><div><code>entity: </code><code class="blue_2Afy">number?</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="visitComponents"></a><code style="text-decoration:none">visitComponents</code><a class="hash-link" href="#visitComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L478"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">visitComponents</code><code>(</code><div class="inset_2cJr"><div><code>callback: </code><code class="green_3LnD">(</code><code>definition: </code><code class="blue_2Afy">ComponentDefinition</code><code class="green_3LnD">)</code><code class="green_3LnD"> → </code><code class="blue_2Afy">boolean</code><code>,</code></div><div><code>entity: </code><code class="blue_2Afy">number?</code></div></div><code>) → </code><code class="blue_2Afy">boolean</code></div><div>
 <p>
   Passes all the component names defined on the registry to the given callback. The
   iteration continues until the callback returns <code>nil</code>.
 </p>
 <p>If an entity is given, passes only the components that the entity has.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="withComponents"></a><code style="text-decoration:none">withComponents</code><a class="hash-link" href="#withComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L637"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">withComponents</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>components: </code><code class="op_1JtD">{</code><code>[string]: </code><code class="blue_2Afy">any</code><code class="op_1JtD">}</code></div></div><code>) → </code><code class="blue_2Afy">number</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="withComponents"></a><code style="text-decoration:none">withComponents</code><a class="hash-link" href="#withComponents" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Registry.lua#L651"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Registry:</code><code class="green_3LnD">withComponents</code><code>(</code><div class="inset_2cJr"><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>components: </code><code class="op_1JtD">{</code><code>[ComponentDefinition]: </code><code class="blue_2Afy">any</code><code class="op_1JtD">}</code></div></div><code>) → </code><code class="blue_2Afy">number</code></div><div>
 <p>Adds the given components to the entity and returns the entity.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&quot;invalid component name: %s&quot;</td><td>No component goes by that name.</td></tr><tr><td>&quot;entity %d already has a %s&quot;</td><td>The entity already has that component.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table></div></article></div></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a></li><li><a href="#properties" class="table-of-contents__link">Properties</a></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#addComponent" class="table-of-contents__link">:addComponent</a></li><li><a href="#addOrReplaceComponent" class="table-of-contents__link">:addOrReplaceComponent</a></li><li><a href="#countComponents" class="table-of-contents__link">:countComponents</a></li><li><a href="#countEntities" class="table-of-contents__link">:countEntities</a></li><li><a href="#createEntity" class="table-of-contents__link">:createEntity</a></li><li><a href="#defineComponent" class="table-of-contents__link">:defineComponent</a></li><li><a href="#destroyEntity" class="table-of-contents__link">:destroyEntity</a></li><li><a href="#each" class="table-of-contents__link">:each</a></li><li><a href="#entityHas" class="table-of-contents__link">:entityHas</a></li><li><a href="#entityHasAny" class="table-of-contents__link">:entityHasAny</a></li><li><a href="#getComponent" class="table-of-contents__link">:getComponent</a></li><li><a href="#getComponentDefinition" class="table-of-contents__link">:getComponentDefinition</a></li><li><a href="#getComponents" class="table-of-contents__link">:getComponents</a></li><li><a href="#getOrAddComponent" class="table-of-contents__link">:getOrAddComponent</a></li><li><a href="#isComponentDefined" class="table-of-contents__link">:isComponentDefined</a></li><li><a href="#isEntityOrphaned" class="table-of-contents__link">:isEntityOrphaned</a></li><li><a href="#isEntityValid" class="table-of-contents__link">:isEntityValid</a></li><li><a href="#removeComponent" class="table-of-contents__link">:removeComponent</a></li><li><a href="#replaceComponent" class="table-of-contents__link">:replaceComponent</a></li><li><a href="#tryAddComponent" class="table-of-contents__link">:tryAddComponent</a></li><li><a href="#tryRemoveComponent" class="table-of-contents__link">:tryRemoveComponent</a></li><li><a href="#visitComponents" class="table-of-contents__link">:visitComponents</a></li><li><a href="#withComponents" class="table-of-contents__link">:withComponents</a></li></ul></li></ul></div></div></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity must be a number (got %s)&quot;</td><td>The entity is not a number.</td></tr><tr><td>&quot;entity %d does not exist or has been destroyed&quot;</td><td>The entity is invalid.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this registry&#x27;</td><td>No component matches that definition.</td></tr><tr><td>&quot;entity %d already has a %s&quot;</td><td>The entity already has that component.</td></tr><tr><td>Failed type check</td><td>The given component has the wrong type.</td></tr></tbody></table></div></article></div></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a></li><li><a href="#properties" class="table-of-contents__link">Properties</a></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#addComponent" class="table-of-contents__link">:addComponent</a></li><li><a href="#addOrReplaceComponent" class="table-of-contents__link">:addOrReplaceComponent</a></li><li><a href="#countComponents" class="table-of-contents__link">:countComponents</a></li><li><a href="#countEntities" class="table-of-contents__link">:countEntities</a></li><li><a href="#createEntity" class="table-of-contents__link">:createEntity</a></li><li><a href="#defineComponent" class="table-of-contents__link">:defineComponent</a></li><li><a href="#destroyEntity" class="table-of-contents__link">:destroyEntity</a></li><li><a href="#each" class="table-of-contents__link">:each</a></li><li><a href="#entityHas" class="table-of-contents__link">:entityHas</a></li><li><a href="#entityHasAny" class="table-of-contents__link">:entityHasAny</a></li><li><a href="#getComponent" class="table-of-contents__link">:getComponent</a></li><li><a href="#getComponents" class="table-of-contents__link">:getComponents</a></li><li><a href="#getOrAddComponent" class="table-of-contents__link">:getOrAddComponent</a></li><li><a href="#isComponentDefined" class="table-of-contents__link">:isComponentDefined</a></li><li><a href="#isEntityOrphaned" class="table-of-contents__link">:isEntityOrphaned</a></li><li><a href="#isEntityValid" class="table-of-contents__link">:isEntityValid</a></li><li><a href="#removeComponent" class="table-of-contents__link">:removeComponent</a></li><li><a href="#replaceComponent" class="table-of-contents__link">:replaceComponent</a></li><li><a href="#tryAddComponent" class="table-of-contents__link">:tryAddComponent</a></li><li><a href="#tryRemoveComponent" class="table-of-contents__link">:tryRemoveComponent</a></li><li><a href="#visitComponents" class="table-of-contents__link">:visitComponents</a></li><li><a href="#withComponents" class="table-of-contents__link">:withComponents</a></li></ul></li></ul></div></div></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
         {
             &quot;name&quot;: &quot;new&quot;,
@@ -176,7 +171,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;ignore&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 64,
+                &quot;line&quot;: 71,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -199,7 +194,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 87,
+                &quot;line&quot;: 94,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -222,7 +217,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 99,
+                &quot;line&quot;: 106,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -245,7 +240,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;ignore&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 136,
+                &quot;line&quot;: 143,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -254,7 +249,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;desc&quot;: &quot;Defines a new component type for the registry using the given\n[`ComponentDefinition`](/api/Anatta#ComponentDefinition).\n\n#### Usage:\n```lua\nregistry:defineComponent({\n\tname = \&quot;Health\&quot;,\n\ttype = t.number\n})\n\nlocal entity = registry:createEntity()\n\nregistry:addComponent(entity, \&quot;Health\&quot;, 100)\n```&quot;,
             &quot;params&quot;: [
                 {
-                    &quot;name&quot;: &quot;componentDefinition&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
                     &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
@@ -268,7 +263,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 211,
+                &quot;line&quot;: 215,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -284,7 +279,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 236,
+                &quot;line&quot;: 250,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -307,7 +302,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 281,
+                &quot;line&quot;: 295,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -334,7 +329,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 360,
+                &quot;line&quot;: 374,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -362,7 +357,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 405,
+                &quot;line&quot;: 419,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -394,7 +389,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 437,
+                &quot;line&quot;: 451,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -405,7 +400,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 {
                     &quot;name&quot;: &quot;callback&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;(componentName: string) -&gt; boolean&quot;
+                    &quot;lua_type&quot;: &quot;(definition: ComponentDefinition) -&gt; boolean&quot;
                 },
                 {
                     &quot;name&quot;: &quot;entity&quot;,
@@ -431,7 +426,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 464,
+                &quot;line&quot;: 478,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -445,9 +440,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;...componentNames&quot;,
+                    &quot;name&quot;: &quot;...&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -467,12 +462,12 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 501,
+                &quot;line&quot;: 515,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -486,9 +481,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;...componentNames&quot;,
+                    &quot;name&quot;: &quot;...&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -508,12 +503,12 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 531,
+                &quot;line&quot;: 545,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -527,9 +522,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -549,12 +544,12 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 560,
+                &quot;line&quot;: 574,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -573,9 +568,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;table&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;...componentNames&quot;,
+                    &quot;name&quot;: &quot;...&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -595,12 +590,12 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 583,
+                &quot;line&quot;: 597,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -614,9 +609,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 },
                 {
                     &quot;name&quot;: &quot;component&quot;,
@@ -641,8 +636,8 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 },
                 {
                     &quot;lua_type&quot;: &quot;\&quot;entity %d already has a %s\&quot;&quot;,
@@ -654,7 +649,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 608,
+                &quot;line&quot;: 622,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -670,7 +665,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 {
                     &quot;name&quot;: &quot;components&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;{[string]: any}&quot;
+                    &quot;lua_type&quot;: &quot;{[ComponentDefinition]: any}&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -690,8 +685,8 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 },
                 {
                     &quot;lua_type&quot;: &quot;\&quot;entity %d already has a %s\&quot;&quot;,
@@ -703,7 +698,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 637,
+                &quot;line&quot;: 651,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -717,9 +712,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 },
                 {
                     &quot;name&quot;: &quot;component&quot;,
@@ -744,8 +739,8 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 },
                 {
                     &quot;lua_type&quot;: &quot;Failed type check&quot;,
@@ -753,7 +748,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 659,
+                &quot;line&quot;: 673,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -767,9 +762,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 },
                 {
                     &quot;name&quot;: &quot;component&quot;,
@@ -789,8 +784,8 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 },
                 {
                     &quot;lua_type&quot;: &quot;Failed type check&quot;,
@@ -798,7 +793,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 690,
+                &quot;line&quot;: 704,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -812,9 +807,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 },
                 {
                     &quot;name&quot;: &quot;component&quot;,
@@ -839,8 +834,8 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 },
                 {
                     &quot;lua_type&quot;: &quot;Failed type check&quot;,
@@ -852,7 +847,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 725,
+                &quot;line&quot;: 739,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -866,9 +861,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 },
                 {
                     &quot;name&quot;: &quot;component&quot;,
@@ -893,8 +888,8 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 },
                 {
                     &quot;lua_type&quot;: &quot;Failed type check&quot;,
@@ -902,7 +897,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 756,
+                &quot;line&quot;: 770,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -916,9 +911,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [],
@@ -933,8 +928,8 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 },
                 {
                     &quot;lua_type&quot;: &quot;\&quot;entity %d does not have a %s\&quot;&quot;,
@@ -942,7 +937,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 790,
+                &quot;line&quot;: 804,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -956,9 +951,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -978,12 +973,12 @@ registry<span class="token punctuation">:</span><span class="token function">des
                     &quot;desc&quot;: &quot;The entity is invalid.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 816,
+                &quot;line&quot;: 830,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -999,7 +994,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 837,
+                &quot;line&quot;: 851,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -1008,9 +1003,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;desc&quot;: &quot;Returns the total number of entities with the given component.&quot;,
             &quot;params&quot;: [
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -1022,12 +1017,12 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;errors&quot;: [
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 857,
+                &quot;line&quot;: 871,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -1044,7 +1039,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 872,
+                &quot;line&quot;: 886,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -1053,9 +1048,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;desc&quot;: &quot;Returns `true` if the registry has a component type with the given name. Otherwise,\nreturns `false`.&quot;,
             &quot;params&quot;: [
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -1066,35 +1061,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             ],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 893,
-                &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
-            }
-        },
-        {
-            &quot;name&quot;: &quot;getComponentDefinition&quot;,
-            &quot;desc&quot;: &quot;Returns the [`ComponentDefinition`](/api/Anatta#ComponentDefinition) with the given\nname.&quot;,
-            &quot;params&quot;: [
-                {
-                    &quot;name&quot;: &quot;componentName&quot;,
-                    &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
-                }
-            ],
-            &quot;returns&quot;: [
-                {
-                    &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
-                }
-            ],
-            &quot;function_type&quot;: &quot;method&quot;,
-            &quot;errors&quot;: [
-                {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
-                }
-            ],
-            &quot;source&quot;: {
-                &quot;line&quot;: 906,
+                &quot;line&quot;: 907,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -1103,7 +1070,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;desc&quot;: &quot;Returns a list of pools containing the specified components in the same order as\nthe given list of component names.&quot;,
             &quot;params&quot;: [
                 {
-                    &quot;name&quot;: &quot;componentNames&quot;,
+                    &quot;name&quot;: &quot;definitions&quot;,
                     &quot;desc&quot;: &quot;&quot;,
                     &quot;lua_type&quot;: &quot;{string}&quot;
                 }
@@ -1117,13 +1084,13 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;errors&quot;: [
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 }
             ],
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 924,
+                &quot;line&quot;: 921,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -1132,9 +1099,9 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;desc&quot;: &quot;Returns the pool containing the specified components.&quot;,
             &quot;params&quot;: [
                 {
-                    &quot;name&quot;: &quot;componentName&quot;,
+                    &quot;name&quot;: &quot;definition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;string&quot;
+                    &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -1146,13 +1113,13 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;errors&quot;: [
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;invalid component name: %s\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
+                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this registry&#x27;&quot;,
+                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
                 }
             ],
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 949,
+                &quot;line&quot;: 946,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         }
@@ -1165,18 +1132,18 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;private&quot;: true,
             &quot;readonly&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 34,
+                &quot;line&quot;: 41,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
         {
             &quot;name&quot;: &quot;_pools&quot;,
             &quot;desc&quot;: &quot;A dictionary mapping component type names to the pools managing instances of the\ncomponents.&quot;,
-            &quot;lua_type&quot;: &quot;{[string]: Pool}&quot;,
+            &quot;lua_type&quot;: &quot;{[ComponentDefinition]: Pool}&quot;,
             &quot;private&quot;: true,
             &quot;readonly&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 41,
+                &quot;line&quot;: 48,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -1187,7 +1154,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;private&quot;: true,
             &quot;readonly&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 48,
+                &quot;line&quot;: 55,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         },
@@ -1198,7 +1165,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
             &quot;private&quot;: true,
             &quot;readonly&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 54,
+                &quot;line&quot;: 61,
                 &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
             }
         }
@@ -1211,7 +1178,7 @@ registry<span class="token punctuation">:</span><span class="token function">des
         &quot;path&quot;: &quot;lib/src/World/Registry.lua&quot;
     }
 }</pre></details></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2021 . Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/anatta/assets/js/runtime~main.2ee3c525.js"></script>
-<script src="/anatta/assets/js/main.239f01e0.js"></script>
+<script src="/anatta/assets/js/runtime~main.4caec683.js"></script>
+<script src="/anatta/assets/js/main.26f1ba41.js"></script>
 </body>
 </html>
