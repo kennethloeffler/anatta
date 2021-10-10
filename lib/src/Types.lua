@@ -13,10 +13,10 @@ local ComponentDefinition = t.strictInterface({
 })
 
 local Query = t.strictInterface({
-	withAll = t.optional(t.array(t.string)),
-	withUpdated = t.optional(t.array(t.string)),
-	withAny = t.optional(t.array(t.string)),
-	without = t.optional(t.array(t.string)),
+	withAll = t.optional(t.array(ComponentDefinition)),
+	withUpdated = t.optional(t.array(ComponentDefinition)),
+	withAny = t.optional(t.array(ComponentDefinition)),
+	without = t.optional(t.array(ComponentDefinition)),
 })
 
 return {

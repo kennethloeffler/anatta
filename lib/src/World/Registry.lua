@@ -9,6 +9,7 @@
 
 local Constants = require(script.Parent.Parent.Core.Constants)
 local Pool = require(script.Parent.Parent.Core.Pool)
+local Types = require(script.Parent.Parent.Types)
 local util = require(script.Parent.Parent.util)
 
 local jumpAssert = util.jumpAssert
@@ -20,10 +21,16 @@ local NULL_ENTITYID = Constants.NullEntityId
 
 local ErrBadEntityType = "entity must be a number (got %s)"
 local ErrAlreadyHasComponent = "entity %d already has a %s"
-local ErrBadComponentName = 'invalid component name: "%s"'
+local ErrBadComponentDefinition = 'the component type "%s" is not defined for this registry'
 local ErrInvalidEntity = "entity %d does not exist or has been destroyed"
 local ErrMissingComponent = "entity %d does not have a %s"
 local ErrComponentNameTaken = "there is already a component type named %s"
+
+local ComponentDefinitionToString = {
+	__tostring = function(definition)
+		return ("%s: %s"):format(definition.name, definition.type.typeName)
+	end,
+}
 
 --- @prop _entities {[number]: number}
 --- @within Registry
@@ -32,7 +39,7 @@ local ErrComponentNameTaken = "there is already a component type named %s"
 --- The list of all entities. Some of them may be destroyed. This property is used to
 --- determine if any given entity exists or has been destroyed.
 
---- @prop _pools {[string]: Pool}
+--- @prop _pools {[ComponentDefinition]: Pool}
 --- @within Registry
 --- @private
 --- @readonly
@@ -141,14 +148,11 @@ function Registry.fromRegistry(original)
 	newRegistry._nextRecyclableEntityId = original._nextRecyclableEntityId
 
 	for _, originalPool in pairs(original._pools) do
-		local componentName = originalPool.name
+		local definition = originalPool.definition
 
-		newRegistry:defineComponent({
-			name = originalPool.name,
-			type = original.typeDefinition,
-		})
+		newRegistry:defineComponent(definition)
 
-		local copy = newRegistry:getPool(componentName)
+		local copy = newRegistry:getPool(definition)
 		local checkSuccess, checkErr, failedEntity = true, "", 0
 
 		for i, component in ipairs(originalPool.components) do
@@ -180,7 +184,7 @@ function Registry.fromRegistry(original)
 		else
 			warn(("Type check for entity %s's %s failed: %s;\n\nSkipping component pool..."):format(
 				failedEntity,
-				componentName,
+				definition,
 				checkErr
 			))
 			continue
@@ -206,14 +210,24 @@ end
 
 	@error "there is already a component type named %s" -- The name is already being used.
 
-	@param componentDefinition ComponentDefinition
+	@param definition ComponentDefinition
 ]=]
-function Registry:defineComponent(componentDefinition)
-	local componentName = componentDefinition.name
+function Registry:defineComponent(definition)
+	jumpAssert(Types.ComponentDefinition(definition))
 
-	jumpAssert(not self._pools[componentName], ErrComponentNameTaken:format(componentName))
+	local isNameUnique = true
 
-	self._pools[componentName] = Pool.new(componentDefinition)
+	for existingDefinition in pairs(self._pools) do
+		if existingDefinition.name == definition.name then
+			isNameUnique = false
+			break
+		end
+	end
+
+	jumpAssert(isNameUnique, ErrComponentNameTaken, definition.name)
+
+	setmetatable(definition, ComponentDefinitionToString)
+	self._pools[definition] = Pool.new(definition)
 end
 
 --[=[
@@ -359,7 +373,7 @@ end
 ]=]
 function Registry:destroyEntity(entity)
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
 	end
 
 	local entityId = bit32.band(entity, ENTITYID_MASK)
@@ -405,7 +419,7 @@ end
 function Registry:isEntityValid(entity)
 	if DEBUG then
 		local ty = type(entity)
-		jumpAssert(ty == "number", ErrBadEntityType:format(ty))
+		jumpAssert(ty == "number", ErrBadEntityType, ty)
 	end
 
 	return self._entities[bit32.band(entity, ENTITYID_MASK)] == entity
@@ -436,7 +450,7 @@ end
 ]=]
 function Registry:isEntityOrphaned(entity)
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
 	end
 
 	for _, pool in pairs(self._pools) do
@@ -457,19 +471,19 @@ end
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 
-	@param callback (componentName: string) -> boolean
+	@param callback (definition: ComponentDefinition) -> boolean
 	@param entity number?
 	@return boolean
 ]=]
 function Registry:visitComponents(callback, entity)
 	if entity ~= nil then
 		if DEBUG then
-			jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
+			jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
 		end
 
-		for componentName, pool in pairs(self._pools) do
+		for definition, pool in pairs(self._pools) do
 			if pool:getIndex(entity) then
-				local shouldContinue = callback(componentName)
+				local shouldContinue = callback(definition)
 
 				if shouldContinue ~= nil then
 					return shouldContinue
@@ -477,8 +491,8 @@ function Registry:visitComponents(callback, entity)
 			end
 		end
 	else
-		for componentName in pairs(self._pools) do
-			local shouldContinue = callback(componentName)
+		for definition in pairs(self._pools) do
+			local shouldContinue = callback(definition)
 
 			if shouldContinue ~= nil then
 				return shouldContinue
@@ -495,15 +509,15 @@ end
 	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param entity number
-	@param ...componentNames string
+	@param ... ComponentDefinition
 	@return boolean
 ]=]
 function Registry:entityHas(entity, ...)
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
 
 		for i = 1, select("#", ...) do
-			jumpAssert(self._pools[select(i, ...)], ErrBadComponentName:format(select(i, ...)))
+			jumpAssert(self._pools[select(i, ...)], ErrBadComponentDefinition, select(i, ...))
 		end
 	end
 
@@ -525,15 +539,15 @@ end
 	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param entity number
-	@param ...componentNames string
+	@param ... ComponentDefinition
 	@return boolean
 ]=]
 function Registry:entityHasAny(entity, ...)
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
 
 		for i = 1, select("#", ...) do
-			jumpAssert(self._pools[select(i, ...)], ErrBadComponentName:format(select(i, ...)))
+			jumpAssert(self._pools[select(i, ...)], ErrBadComponentDefinition, select(i, ...))
 		end
 	end
 
@@ -554,18 +568,18 @@ end
 	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param entity number
-	@param componentName string
+	@param definition
 	@return any
 ]=]
-function Registry:getComponent(entity, componentName)
-	local pool = self._pools[componentName]
+function Registry:getComponent(entity, definition)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
 	end
 
-	return self._pools[componentName]:get(entity)
+	return self._pools[definition]:get(entity)
 end
 
 --[=[
@@ -577,7 +591,7 @@ end
 
 	@param entity number
 	@param output table
-	@param ...componentNames string
+	@param ...definitions ComponentDefinition
 	@return ...any
 ]=]
 function Registry:getComponents(entity, output, ...)
@@ -601,17 +615,17 @@ end
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
-	@param componentName string
+	@param definition ComponentDefinition
 	@param component any
 	@return any
 ]=]
-function Registry:addComponent(entity, componentName, component)
-	local pool = self._pools[componentName]
+function Registry:addComponent(entity, definition, component)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
-		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent:format(entity, componentName))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
+		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent, entity, definition)
 		jumpAssert(pool.typeCheck(component))
 	end
 
@@ -631,12 +645,12 @@ end
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
-	@param components {[string]: any}
+	@param components {[ComponentDefinition]: any}
 	@return number
 ]=]
 function Registry:withComponents(entity, components)
-	for componentName, component in pairs(components) do
-		self:addComponent(entity, componentName, component)
+	for definition, component in pairs(components) do
+		self:addComponent(entity, definition, component)
 	end
 
 	return entity
@@ -652,15 +666,15 @@ end
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
-	@param componentName string
+	@param definition ComponentDefinition
 	@param component any
 	@return any
 ]=]
-function Registry:tryAddComponent(entity, componentName, component)
-	local pool = self._pools[componentName]
+function Registry:tryAddComponent(entity, definition, component)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 	end
 
@@ -684,15 +698,15 @@ end
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
-	@param componentName string
+	@param definition ComponentDefinition
 	@param component any
 ]=]
-function Registry:getOrAddComponent(entity, componentName, component)
-	local pool = self._pools[componentName]
+function Registry:getOrAddComponent(entity, definition, component)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 	end
 
@@ -718,18 +732,18 @@ end
 	@error "entity %d does not have a %s" -- The entity is expected to have this component.
 
 	@param entity number
-	@param componentName string
+	@param definition ComponentDefinition
 	@param component any
 	@return any
 ]=]
-function Registry:replaceComponent(entity, componentName, component)
-	local pool = self._pools[componentName]
+function Registry:replaceComponent(entity, definition, component)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
-		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
+		jumpAssert(pool:getIndex(entity), ErrMissingComponent, entity, definition)
 	end
 
 	pool.updated:dispatch(entity, component)
@@ -749,16 +763,16 @@ end
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
-	@param componentName string
+	@param definition ComponentDefinition
 	@param component any
 	@return any
 ]=]
-function Registry:addOrReplaceComponent(entity, componentName, component)
-	local pool = self._pools[componentName]
+function Registry:addOrReplaceComponent(entity, definition, component)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 	end
 
@@ -785,15 +799,15 @@ end
 	@error "entity %d does not have a %s" -- The entity is expected to have this component.
 
 	@param entity number
-	@param componentName string
+	@param definition ComponentDefinition
 ]=]
-function Registry:removeComponent(entity, componentName)
-	local pool = self._pools[componentName]
+function Registry:removeComponent(entity, definition)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity:format(entity))
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
-		jumpAssert(pool:getIndex(entity), ErrMissingComponent:format(entity, componentName))
+		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
+		jumpAssert(pool:getIndex(entity), ErrMissingComponent, entity, definition)
 	end
 
 	local component = pool:get(entity)
@@ -810,14 +824,14 @@ end
 	@error "invalid component name: %s" -- No component goes by that name.
 
 	@param entity number
-	@param componentName string
+	@param definition ComponentDefinition
 	@return boolean
 ]=]
-function Registry:tryRemoveComponent(entity, componentName)
-	local pool = self._pools[componentName]
+function Registry:tryRemoveComponent(entity, definition)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
 	end
 
 	if self:isEntityValid(entity) and pool:getIndex(entity) then
@@ -851,14 +865,14 @@ end
 
 	@error "invalid component name: %s" -- No component goes by that name.
 
-	@param componentName string
+	@param definition ComponentDefinition
 	@return number
 ]=]
-function Registry:countComponents(componentName)
-	local pool = self._pools[componentName]
+function Registry:countComponents(definition)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
 	end
 
 	return pool.size
@@ -887,28 +901,11 @@ end
 	Returns `true` if the registry has a component type with the given name. Otherwise,
 	returns `false`.
 
-	@param componentName string
+	@param definition ComponentDefinition
 	@return boolean
 ]=]
-function Registry:isComponentDefined(componentName)
-	return not not self._pools[componentName]
-end
-
---[=[
-	Returns the [`ComponentDefinition`](/api/Anatta#ComponentDefinition) with the given
-	name.
-
-	@error "invalid component name: %s" -- No component goes by that name.
-
-	@param componentName string
-	@return ComponentDefinition
-]=]
-function Registry:getComponentDefinition(componentName)
-	local pool = self._pools[componentName]
-
-	jumpAssert(pool, ErrBadComponentName:format(componentName))
-
-	return pool.componentDefinition
+function Registry:isComponentDefined(definition)
+	return not not self._pools[definition]
 end
 
 --[=[
@@ -918,17 +915,17 @@ end
 	@error "invalid component name: %s" -- No component goes by that name.
 
 	@private
-	@param componentNames {string}
+	@param definitions {string}
 	@return {Pool}
 ]=]
-function Registry:getPools(componentNames)
-	local output = table.create(#componentNames)
+function Registry:getPools(definitions)
+	local output = table.create(#definitions)
 
-	for i, componentName in ipairs(componentNames) do
-		local pool = self._pools[componentName]
+	for i, definition in ipairs(definitions) do
+		local pool = self._pools[definition]
 
 		if DEBUG then
-			jumpAssert(pool, ErrBadComponentName:format(componentName))
+			jumpAssert(pool, ErrBadComponentDefinition, definition)
 		end
 
 		output[i] = pool
@@ -943,17 +940,17 @@ end
 	@error "invalid component name: %s" -- No component goes by that name.
 
 	@private
-	@param componentName string
+	@param definition string
 	@return Pool
 ]=]
-function Registry:getPool(componentName)
-	local pool = self._pools[componentName]
+function Registry:getPool(definition)
+	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(pool, ErrBadComponentName:format(componentName))
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
 	end
 
-	return self._pools[componentName]
+	return self._pools[definition]
 end
 
 return Registry

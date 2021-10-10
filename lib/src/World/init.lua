@@ -15,10 +15,10 @@
 --[=[
 	@interface Query
 	@within World
-	.withAll {string}?
-	.withUpdated {string}?
-	.withAny {string}?
-	.without {string}?
+	.withAll {ComponentDefinition}?
+	.withUpdated {ComponentDefinition}?
+	.withAny {ComponentDefinition}?
+	.without {ComponentDefinition}?
 
 	A `Query` represents a set of entities to retrieve from a
 	[`Registry`](/api/Registry). A `Query` can be finalized by passing it to
@@ -64,17 +64,21 @@ World.__index = World
 	[`ComponentDefinition`](/api/Anatta#ComponentDefinition) in the given list.
 
 	@ignore
-	@param componentDefinitions {ComponentDefinition}
+	@param definitions {ComponentDefinition}
 	@return World
 ]=]
-function World.new(componentDefinitions)
+function World.new(definitions)
 	local registry = Registry.new()
 
-	for _, componentDefinition in ipairs(componentDefinitions) do
-		registry:defineComponent(componentDefinition)
+	local component = {}
+
+	for _, definition in ipairs(definitions) do
+		registry:defineComponent(definition)
+		component[definition.name] = definition
 	end
 
 	return setmetatable({
+		component = component,
 		registry = registry,
 		_reactorSystems = {},
 	}, World)
