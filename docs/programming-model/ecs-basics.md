@@ -49,7 +49,9 @@ We'll see in the following sections how we can use these ideas and improve upon 
 
 ## The binder pattern
 
-The binder pattern leverage `CollectionService` to implement OOP-style object composition that provides benefits with respect to Roblox Content Streaming, . It "binds" Lua classes to `CollectionService` tags.
+The binder pattern leverages `CollectionService` to enable the creation of composite game objects. It "binds" Lua classes to `CollectionService` tags, constructing and destroying instances of these classes as tags are added to and removed from Roblox `Instance`s.
+
+Binders provide benefits to games using content streaming. Signals from `GetInstanceAddedSignal` and `GetInstanceRemovedSignal` fire when tagged `BasePart`s stream in and out, allowing binders to tie the lifetime of component objects to the lifetime of the tagged `BasePart`s.
 
 ## Supercharging `CollectionService`
 
@@ -76,12 +78,8 @@ This helps when debugging simple problems like typos in tag names.
 
 ### Getting the data we want
 
-
-
 ### Making expressive queries
 
 ## Now what?
-We have our new and improved `CollectionService` API - now what can we do with it?
 
 ### `Instance` and object identity
-There's still one key difference
