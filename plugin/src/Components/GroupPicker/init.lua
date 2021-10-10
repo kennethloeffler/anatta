@@ -23,7 +23,7 @@ local function GroupPicker(props)
 	children.Default = Roact.createElement(GroupItem, {
 		Name = "Default",
 		Group = nil,
-		Active = props.tagGroup == nil,
+		Active = props.componentGroup == nil,
 		LayoutOrder = -1,
 	})
 
@@ -33,7 +33,7 @@ local function GroupPicker(props)
 		children["Group " .. group] = Roact.createElement(GroupItem, {
 			Name = group,
 			Group = group,
-			Active = props.tagGroup == group,
+			Active = props.componentGroup == group,
 			LayoutOrder = i,
 		})
 	end
@@ -53,7 +53,7 @@ local function GroupPicker(props)
 	return Roact.createElement(Page, {
 		visible = props.groupPicker ~= nil,
 		title = tostring(props.groupPicker) .. " - Select a Group",
-		titleIcon = props.tagIcon,
+		titleIcon = props.componentIcon,
 
 		close = props.close,
 	}, {
@@ -65,15 +65,15 @@ local function GroupPicker(props)
 end
 
 local function mapStateToProps(state)
-	local tag = state.GroupPicker
-		and Util.findIf(state.TagData, function(item)
+	local component = state.GroupPicker
+		and Util.findIf(state.ComponentData, function(item)
 			return item.Name == state.GroupPicker
 		end)
 
 	return {
 		groupPicker = state.GroupPicker,
-		tagIcon = tag and tag.Icon or nil,
-		tagGroup = tag and tag.Group or nil,
+		componentIcon = component and component.Icon or nil,
+		componentGroup = component and component.Group or nil,
 		groups = state.GroupData,
 	}
 end

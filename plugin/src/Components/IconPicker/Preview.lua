@@ -33,11 +33,11 @@ local function mapStateToProps(state)
 	local icon = state.HoveredIcon
 
 	if icon == nil then
-		local tagName = state.IconPicker
+		local componentName = state.IconPicker
 
-		for _, tag in pairs(state.TagData) do
-			if tag.Name == tagName then
-				icon = tag.Icon
+		for _, component in pairs(state.ComponentData) do
+			if component.Name == componentName then
+				icon = component.Icon
 				break
 			end
 		end

@@ -41,7 +41,7 @@ local function formatColorAttr(color: Color3): string
 	return string.format('color="rgb(%d, %d, %d)"', color.R * 255, color.G * 255, color.B * 255)
 end
 
-local function escapeTagName(name: string, theme: StudioTheme): string
+local function escapeComponentName(name: string, theme: StudioTheme): string
 	local dimmedColor = theme:GetColor(Enum.StudioStyleGuideColor.DimmedText)
 	local errorColor = theme:GetColor(Enum.StudioStyleGuideColor.ErrorText)
 	local escapeFmt = "<font " .. formatColorAttr(dimmedColor) .. ">%s</font>"
@@ -115,6 +115,6 @@ end
 
 return {
 	findIf = findIf,
-	escapeTagName = escapeTagName,
+	escapeComponentName = escapeComponentName,
 	merge = merge,
 }

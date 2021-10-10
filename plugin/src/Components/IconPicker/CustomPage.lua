@@ -63,7 +63,7 @@ function CustomPage:render()
 			leftClick = function()
 				local url = validate(self.state.text)
 				if url then
-					ComponentManager.Get():SetIcon(self.props.tagName, url)
+					ComponentManager.Get():SetIcon(self.props.componentName, url)
 					self.props.closeFunc()
 				end
 			end,

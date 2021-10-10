@@ -1,5 +1,5 @@
 --[[
-	RootPortal allows rendering elements into the root of the tag editor's UI tree safely.
+	RootPortal allows rendering elements into the root of the component editor's UI tree safely.
 	Using portals alone would cause an error because Roact doesn't update refs until after
 	children have been mounted, and portals cannot have a target of nil. For example, this
 	code would break on initial render (but work for all subsequent renders):

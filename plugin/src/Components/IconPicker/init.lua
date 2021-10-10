@@ -24,16 +24,17 @@ function IconPicker:init()
 end
 
 function IconPicker:shouldUpdate(newProps)
-	return self.props.tagName ~= newProps.tagName or self.props.search ~= newProps.search
+	return self.props.componentName ~= newProps.componentName
+		or self.props.search ~= newProps.search
 end
 
 function IconPicker:render()
 	local props = self.props
 
 	return Roact.createElement(Page, {
-		visible = props.tagName ~= nil,
-		title = tostring(props.tagName) .. " - Select an Icon",
-		titleIcon = props.tagIcon,
+		visible = props.componentName ~= nil,
+		title = tostring(props.componentName) .. " - Select an Icon",
+		titleIcon = props.componentIcon,
 
 		close = function()
 			props.close()
@@ -47,7 +48,7 @@ function IconPicker:render()
 					name = "Icons",
 					render = function()
 						return Roact.createElement(IconsPage, {
-							tagName = props.tagName,
+							componentName = props.componentName,
 							search = props.search,
 							closeFunc = self.closeFunc,
 							onHoverFunc = self.onHoverFunc,
@@ -58,7 +59,7 @@ function IconPicker:render()
 					name = "Emoji",
 					render = function()
 						return Roact.createElement(EmojiPage, {
-							tagName = props.tagName,
+							componentName = props.componentName,
 							search = props.search,
 							closeFunc = self.closeFunc,
 							onHoverFunc = self.onHoverFunc,
@@ -69,7 +70,7 @@ function IconPicker:render()
 					name = "Custom",
 					render = function()
 						return Roact.createElement(CustomPage, {
-							tagName = props.tagName,
+							componentName = props.componentName,
 							search = props.search,
 							closeFunc = self.closeFunc,
 							onHoverFunc = self.onHoverFunc,
@@ -112,18 +113,18 @@ function IconPicker:render()
 end
 
 local function mapStateToProps(state, props)
-	local tagName = state.IconPicker
-	local tagIcon
-	for _, tag in pairs(state.TagData) do
-		if tag.Name == tagName then
-			tagIcon = tag.Icon
+	local componentName = state.IconPicker
+	local componentIcon
+	for _, component in pairs(state.ComponentData) do
+		if component.Name == componentName then
+			componentIcon = component.Icon
 			break
 		end
 	end
 
 	return {
-		tagName = tagName,
-		tagIcon = tagIcon,
+		componentName = componentName,
+		componentIcon = componentIcon,
 		search = state.IconSearch,
 	}
 end

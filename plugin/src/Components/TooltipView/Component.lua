@@ -6,9 +6,9 @@ local TextLabel = require(Modules.Plugin.Components.TextLabel)
 local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccessor)
 local Util = require(Modules.Plugin.Util)
 
-local function Tag(props)
+local function Component(props)
 	return StudioThemeAccessor.withTheme(function(theme)
-		local text = Util.escapeTagName(props.Tag, theme)
+		local text = Util.escapeComponentName(props.Component, theme)
 
 		return Roact.createElement("Frame", {
 			Size = UDim2.fromScale(1, 0),
@@ -42,7 +42,7 @@ local function Tag(props)
 					Name = props.Icon,
 					LayoutOrder = 1,
 				}),
-				Tag = Roact.createElement(TextLabel, {
+				Component = Roact.createElement(TextLabel, {
 					Text = text,
 					RichText = true,
 					LayoutOrder = 2,
@@ -55,4 +55,4 @@ local function Tag(props)
 	end)
 end
 
-return Tag
+return Component

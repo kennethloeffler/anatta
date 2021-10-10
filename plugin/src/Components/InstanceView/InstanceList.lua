@@ -48,9 +48,9 @@ local function InstanceList(props)
 	end
 
 	return Roact.createElement(Page, {
-		visible = props.tagName ~= nil,
-		titleIcon = props.tagIcon,
-		title = tostring(props.tagName),
+		visible = props.componentName ~= nil,
+		titleIcon = props.componentIcon,
+		title = tostring(props.componentName),
 
 		close = props.close,
 	}, {

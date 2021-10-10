@@ -10,7 +10,7 @@ local RoactRodux = require(Modules.RoactRodux)
 local Constants = require(Modules.Plugin.Constants)
 
 local TextLabel = require(script.Parent.TextLabel)
-local Tag = require(script.Tag)
+local Component = require(script.Component)
 
 local TooltipGrey = Color3.fromRGB(238, 238, 238)
 
@@ -21,7 +21,7 @@ function TooltipView:didMount()
 	self.steppedConn = self:_runRunServiceEvent():Connect(function()
 		local camera = workspace.CurrentCamera
 		local part = false
-		local tags = {}
+		local components = {}
 		if camera and not self.mouseSunk then
 			local mouse = UserInput:GetMouseLocation()
 			local ray = camera:ViewportPointToRay(mouse.X, mouse.Y)
@@ -35,23 +35,23 @@ function TooltipView:didMount()
 				params.FilterDescendantsInstances = ignore
 				local result = workspace:Raycast(ray.Origin, direction, params)
 				local obj = result and result.Instance
-				local objTags = obj and Collection:GetTags(obj)
-				if objTags then
-					for i = #objTags, 1, -1 do
-						if objTags[i]:sub(1, 1) == "." then
-							table.remove(objTags, i)
+				local objComponents = obj and Collection:GetTags(obj)
+				if objComponents then
+					for i = #objComponents, 1, -1 do
+						if objComponents[i]:sub(1, 1) == "." then
+							table.remove(objComponents, i)
 						end
 					end
 				end
 				local model = obj and obj.Parent and obj.Parent:IsA("Model") and obj.Parent or nil
-				local modelTags = model and Collection:GetTags(model)
-				if objTags and #objTags > 0 then
+				local modelComponents = model and Collection:GetTags(model)
+				if objComponents and #objComponents > 0 then
 					part = obj
-					tags = objTags
+					components = objComponents
 					break
-				elseif modelTags and #modelTags > 0 then
+				elseif modelComponents and #modelComponents > 0 then
 					part = model
-					tags = modelTags
+					components = modelComponents
 					break
 				elseif obj and obj:IsA("Part") and obj.Transparency >= 0.9 then
 					ignore[#ignore + 1] = obj
@@ -62,7 +62,7 @@ function TooltipView:didMount()
 		end
 		self:setState({
 			Part = part,
-			Tags = tags,
+			Components = components,
 		})
 	end)
 	self.inputChangedConn = UserInput.InputChanged:Connect(function(input, gameProcessed)
@@ -120,20 +120,20 @@ function TooltipView:render()
 		}),
 	})
 
-	local tags = self.state.Tags or {}
-	table.sort(tags)
+	local components = self.state.Components or {}
+	table.sort(components)
 
-	for i = 1, #tags do
-		local tag = tags[i]
+	for i = 1, #components do
+		local component = components[i]
 		local icon = "computer_error"
-		for _, entry in pairs(props.tagData) do
-			if entry.Name == tag then
+		for _, entry in pairs(props.componentData) do
+			if entry.Name == component then
 				icon = entry.Icon or icon
 				break
 			end
 		end
-		children[tag] = Roact.createElement(Tag, {
-			Tag = tag,
+		children[component] = Roact.createElement(Component, {
+			Component = component,
 			Icon = icon,
 		})
 	end
@@ -141,7 +141,7 @@ function TooltipView:render()
 	return Roact.createElement(Roact.Portal, {
 		target = CoreGui,
 	}, {
-		TagEditorTooltip = Roact.createElement("ScreenGui", {
+		ComponentEditorTooltip = Roact.createElement("ScreenGui", {
 			ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 		}, {
 			Window = Roact.createElement("Frame", {
@@ -193,7 +193,7 @@ end
 
 local function mapStateToProps(state)
 	return {
-		tagData = state.TagData,
+		componentData = state.ComponentData,
 		worldView = state.WorldView,
 	}
 end

@@ -12,7 +12,7 @@ local DeleteButton = require(script.DeleteButton)
 local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccessor)
 local Dropdown = require(Modules.Plugin.Components.Dropdown)
 
-local function TagSettings(props)
+local function ComponentSettings(props)
 	return Roact.createElement("Frame", {
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 1, 0),
@@ -39,7 +39,7 @@ local function TagSettings(props)
 				Size = UDim2.new(1, 0, 0, 30),
 				Text = "Change icon",
 				leftClick = function()
-					props.iconPicker(props.tagMenu)
+					props.iconPicker(props.componentMenu)
 				end,
 			}),
 			ChangeGroup = Roact.createElement(Button, {
@@ -47,15 +47,15 @@ local function TagSettings(props)
 				Size = UDim2.new(1, 0, 0, 30),
 				Text = "Change group",
 				leftClick = function()
-					props.groupPicker(props.tagMenu)
+					props.groupPicker(props.componentMenu)
 				end,
 			}),
-			TaggedInstances = Roact.createElement(Button, {
+			Entities = Roact.createElement(Button, {
 				LayoutOrder = 3,
 				Size = UDim2.new(1, 0, 0, 30),
-				Text = "Tagged instances",
+				Text = "Entities",
 				leftClick = function()
-					props.instanceView(props.tagMenu)
+					props.instanceView(props.componentMenu)
 				end,
 			}),
 			Delete = Roact.createElement(DeleteButton, {
@@ -63,7 +63,7 @@ local function TagSettings(props)
 				Size = UDim2.new(1, 0, 0, 30),
 				Text = "Delete",
 				leftClick = function()
-					ComponentManager.Get():DelTag(props.tagMenu)
+					ComponentManager.Get():DelComponent(props.componentMenu)
 					props.close()
 				end,
 			}),
@@ -87,7 +87,7 @@ local function TagSettings(props)
 			Title = Roact.createElement(TextLabel, {
 				Size = UDim2.new(1, 0, 0, 30),
 				LayoutOrder = 1,
-				Text = "Tag Visualization",
+				Text = "Component Visualization",
 				TextSize = 20,
 			}),
 			ChangeColor = Roact.createElement(Button, {
@@ -95,7 +95,7 @@ local function TagSettings(props)
 				Size = UDim2.new(1, 0, 0, 30),
 				Text = "Change color",
 				leftClick = function()
-					props.colorPicker(props.tagMenu)
+					props.colorPicker(props.componentMenu)
 				end,
 			}, {
 				ColorVisualization = StudioThemeAccessor.withTheme(function(theme)
@@ -103,7 +103,7 @@ local function TagSettings(props)
 						Size = UDim2.new(1, -10, 1, -10),
 						Position = UDim2.new(1, -5, 0.5, 0),
 						AnchorPoint = Vector2.new(1, 0.5),
-						BackgroundColor3 = props.tagColor,
+						BackgroundColor3 = props.componentColor,
 						BorderColor3 = theme:GetColor("Border"),
 					}, {
 						ARConstraint = Roact.createElement("UIAspectRatioConstraint", {
@@ -119,7 +119,10 @@ local function TagSettings(props)
 				Size = UDim2.new(1, 0, 0, 30),
 				Position = UDim2.new(0, 0, 0, 40),
 				[Roact.Event.MouseButton1Click] = function()
-					ComponentManager.Get():SetAlwaysOnTop(props.tagMenu, not props.tagAlwaysOnTop)
+					ComponentManager.Get():SetAlwaysOnTop(
+						props.componentMenu,
+						not props.componentAlwaysOnTop
+					)
 				end,
 			}, {
 				Padding = Roact.createElement("UIPadding", {
@@ -127,11 +130,11 @@ local function TagSettings(props)
 					PaddingBottom = UDim.new(0, 5),
 				}),
 				Check = Roact.createElement(Checkbox, {
-					Checked = props.tagAlwaysOnTop,
+					Checked = props.componentAlwaysOnTop,
 					leftClick = function()
 						ComponentManager.Get():SetAlwaysOnTop(
-							props.tagMenu,
-							not props.tagAlwaysOnTop
+							props.componentMenu,
+							not props.componentAlwaysOnTop
 						)
 					end,
 				}),
@@ -169,9 +172,9 @@ local function TagSettings(props)
 						"Sphere",
 						"Text",
 					},
-					CurrentOption = props.tagDrawType,
+					CurrentOption = props.componentDrawType,
 					onOptionSelected = function(option)
-						ComponentManager.Get():SetDrawType(props.tagMenu, option)
+						ComponentManager.Get():SetDrawType(props.componentMenu, option)
 					end,
 				}),
 			}),
@@ -184,8 +187,8 @@ local function mapStateToProps(state)
 	local drawType
 	local color
 	local alwaysOnTop = false
-	for _, v in pairs(state.TagData) do
-		if v.Name == state.TagMenu then
+	for _, v in pairs(state.ComponentData) do
+		if v.Name == state.ComponentMenu then
 			icon = v.Icon
 			drawType = v.DrawType or "Box"
 			color = v.Color
@@ -194,34 +197,34 @@ local function mapStateToProps(state)
 	end
 
 	return {
-		tagMenu = state.TagMenu,
-		tagIcon = icon or "tag_green",
-		tagColor = color,
-		tagDrawType = drawType,
-		tagAlwaysOnTop = alwaysOnTop,
+		componentMenu = state.ComponentMenu,
+		componentIcon = icon or "component_green",
+		componentColor = color,
+		componentDrawType = drawType,
+		componentAlwaysOnTop = alwaysOnTop,
 	}
 end
 
 local function mapDispatchToProps(dispatch)
 	return {
 		close = function()
-			dispatch(Actions.OpenTagMenu(nil))
+			dispatch(Actions.OpenComponentMenu(nil))
 		end,
-		iconPicker = function(tagMenu)
-			dispatch(Actions.ToggleIconPicker(tagMenu))
+		iconPicker = function(componentMenu)
+			dispatch(Actions.ToggleIconPicker(componentMenu))
 		end,
-		colorPicker = function(tagMenu)
-			PluginGlobals.promptPickColor(dispatch, tagMenu)
+		colorPicker = function(componentMenu)
+			PluginGlobals.promptPickColor(dispatch, componentMenu)
 		end,
-		groupPicker = function(tagMenu)
-			dispatch(Actions.ToggleGroupPicker(tagMenu))
+		groupPicker = function(componentMenu)
+			dispatch(Actions.ToggleGroupPicker(componentMenu))
 		end,
-		instanceView = function(tagMenu)
-			dispatch(Actions.OpenInstanceView(tagMenu))
+		instanceView = function(componentMenu)
+			dispatch(Actions.OpenInstanceView(componentMenu))
 		end,
 	}
 end
 
-TagSettings = RoactRodux.connect(mapStateToProps, mapDispatchToProps)(TagSettings)
+ComponentSettings = RoactRodux.connect(mapStateToProps, mapDispatchToProps)(ComponentSettings)
 
-return TagSettings
+return ComponentSettings

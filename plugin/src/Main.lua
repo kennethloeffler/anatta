@@ -23,19 +23,19 @@ end
 return function(plugin, savedState)
 	local displaySuffix, nameSuffix = getSuffix(plugin)
 
-	local toolbar = plugin:toolbar("Instance Tagging" .. displaySuffix)
+	local toolbar = plugin:toolbar("Anatta" .. displaySuffix)
 
 	local toggleButton = plugin:button(
 		toolbar,
-		"Tag Window",
-		"Manipulate CollectionService tags",
+		"Component Window",
+		"Manipulate components",
 		"http://www.roblox.com/asset/?id=1367281857"
 	)
 
 	local worldViewButton = plugin:button(
 		toolbar,
 		"World View",
-		"Visualize tagged objects in the 3D view",
+		"Visualize entities and their components in the 3D view",
 		"http://www.roblox.com/asset/?id=1367285594"
 	)
 
@@ -51,9 +51,9 @@ return function(plugin, savedState)
 	end)
 
 	local info = DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Right, false, false, 0, 0)
-	local gui = plugin:createDockWidgetPluginGui("TagEditor" .. nameSuffix, info)
-	gui.Name = "TagEditor" .. nameSuffix
-	gui.Title = "Tag Editor" .. displaySuffix
+	local gui = plugin:createDockWidgetPluginGui("ComponentEditor" .. nameSuffix, info)
+	gui.Name = "ComponentEditor" .. nameSuffix
+	gui.Title = "Component Editor" .. displaySuffix
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	toggleButton:SetActive(gui.Enabled)
 
@@ -62,44 +62,44 @@ return function(plugin, savedState)
 		toggleButton:SetActive(gui.Enabled)
 	end)
 
-	local prefix = "TagEditor" .. nameSuffix .. "_"
+	local prefix = "ComponentEditor" .. nameSuffix .. "_"
 
 	local changeIconAction = plugin:createAction(
 		prefix .. "ChangeIcon",
 		"Change icon...",
-		"Change the icon of the tag."
+		"Change the icon of the component."
 	)
 
 	local changeGroupAction = plugin:createAction(
 		prefix .. "ChangeGroup",
 		"Change group...",
-		"Change the sorting group of the tag."
+		"Change the sorting group of the component."
 	)
 
 	local changeColorAction = plugin:createAction(
 		prefix .. "ChangeColor",
 		"Change color...",
-		"Change the color of the tag."
+		"Change the color of the component."
 	)
 
 	local renameAction = plugin:createAction(
 		prefix .. "Rename",
 		"Rename",
-		"Rename the tag, updating every instance currently tagged."
+		"Rename the component, updating every entity currently possessing it."
 	)
 
 	local deleteAction = plugin:createAction(
 		prefix .. "Delete",
 		"Delete",
-		"Delete the tag and remove it from all instances.",
+		"Delete the component and remove it from all instances.",
 		nil,
 		false
 	)
 
-	local viewTaggedAction = plugin:createAction(
-		prefix .. "ViewTagged",
-		"View tagged instances",
-		"Show a list of instances that have this tag.",
+	local viewComponentizedAction = plugin:createAction(
+		prefix .. "ViewComponentized",
+		"View entities",
+		"Show a list of instances that have this component.",
 		nil,
 		false
 	)
@@ -107,21 +107,23 @@ return function(plugin, savedState)
 	local selectAllAction: PluginAction = plugin:createAction(
 		prefix .. "SelectAll",
 		"Select all",
-		"Select all instances with this tag."
+		"Select all instances with this component."
 	)
 
 	local selectAllConn = selectAllAction.Triggered:Connect(function()
 		local state = store:getState()
-		local tag = state.InstanceView or PluginGlobals.currentTagMenu or state.TagMenu
-		if tag then
-			ComponentManager.Get():SelectAll(tag)
+		local component = state.InstanceView
+			or PluginGlobals.currentComponentMenu
+			or state.ComponentMenu
+		if component then
+			ComponentManager.Get():SelectAll(component)
 		end
 	end)
 
 	local visualizeBox = plugin:createAction(
 		prefix .. "Visualize_Box",
 		"Box",
-		"Render this tag as a box when the overlay is enabled.",
+		"Render this component as a box when the overlay is enabled.",
 		nil,
 		false
 	)
@@ -129,7 +131,7 @@ return function(plugin, savedState)
 	local visualizeSphere = plugin:createAction(
 		prefix .. "Visualize_Sphere",
 		"Sphere",
-		"Render this tag as a sphere when the overlay is enabled.",
+		"Render this component as a sphere when the overlay is enabled.",
 		nil,
 		false
 	)
@@ -137,7 +139,7 @@ return function(plugin, savedState)
 	local visualizeOutline = plugin:createAction(
 		prefix .. "Visualize_Outline",
 		"Outline",
-		"Render this tag as an outline around parts when the overlay is enabled.",
+		"Render this component as an outline around parts when the overlay is enabled.",
 		nil,
 		false
 	)
@@ -145,7 +147,7 @@ return function(plugin, savedState)
 	local visualizeText = plugin:createAction(
 		prefix .. "Visualize_Text",
 		"Text",
-		"Render this tag as a floating text label when the overlay is enabled.",
+		"Render this component as a floating text label when the overlay is enabled.",
 		nil,
 		false
 	)
@@ -153,13 +155,13 @@ return function(plugin, savedState)
 	local visualizeIcon = plugin:createAction(
 		prefix .. "Visualize_Icon",
 		"Icon",
-		"Render the tag's icon when the overlay is enabled.",
+		"Render the component's icon when the overlay is enabled.",
 		nil,
 		false
 	)
 
 	local visualizeMenu: PluginMenu = plugin:createMenu(
-		prefix .. "TagMenu_VisualizeAs",
+		prefix .. "ComponentMenu_VisualizeAs",
 		"Change draw mode"
 	)
 	visualizeMenu:AddAction(visualizeBox)
@@ -168,25 +170,25 @@ return function(plugin, savedState)
 	visualizeMenu:AddAction(visualizeText)
 	visualizeMenu:AddAction(visualizeIcon)
 
-	local tagMenu: PluginMenu = plugin:createMenu(prefix .. "TagMenu")
-	tagMenu:AddAction(viewTaggedAction)
-	tagMenu:AddAction(selectAllAction)
-	tagMenu:AddMenu(visualizeMenu)
-	tagMenu:AddSeparator()
-	tagMenu:AddAction(renameAction)
-	tagMenu:AddAction(changeIconAction)
-	tagMenu:AddAction(changeColorAction)
-	tagMenu:AddAction(changeGroupAction)
-	tagMenu:AddAction(deleteAction)
+	local componentMenu: PluginMenu = plugin:createMenu(prefix .. "ComponentMenu")
+	componentMenu:AddAction(viewComponentizedAction)
+	componentMenu:AddAction(selectAllAction)
+	componentMenu:AddMenu(visualizeMenu)
+	componentMenu:AddSeparator()
+	componentMenu:AddAction(renameAction)
+	componentMenu:AddAction(changeIconAction)
+	componentMenu:AddAction(changeColorAction)
+	componentMenu:AddAction(changeGroupAction)
+	componentMenu:AddAction(deleteAction)
 
-	PluginGlobals.TagMenu = tagMenu
+	PluginGlobals.ComponentMenu = componentMenu
 	PluginGlobals.changeIconAction = changeIconAction
 	PluginGlobals.changeGroupAction = changeGroupAction
 	PluginGlobals.changeColorAction = changeColorAction
 	PluginGlobals.renameAction = renameAction
 	PluginGlobals.deleteAction = deleteAction
 	PluginGlobals.selectAllAction = selectAllAction
-	PluginGlobals.viewTaggedAction = viewTaggedAction
+	PluginGlobals.viewComponentizedAction = viewComponentizedAction
 	PluginGlobals.visualizeBox = visualizeBox
 	PluginGlobals.visualizeSphere = visualizeSphere
 	PluginGlobals.visualizeOutline = visualizeOutline
@@ -201,7 +203,7 @@ return function(plugin, savedState)
 		}),
 	})
 
-	local instance = Roact.mount(element, gui, "TagEditor")
+	local instance = Roact.mount(element, gui, "ComponentEditor")
 
 	plugin:beforeUnload(function()
 		Roact.unmount(instance)

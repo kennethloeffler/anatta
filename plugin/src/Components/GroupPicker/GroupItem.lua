@@ -13,7 +13,7 @@ local function GroupItem(props)
 		LayoutOrder = props.LayoutOrder,
 
 		leftClick = function(_rbx)
-			ComponentManager.Get():SetGroup(props.Tag, props.Group)
+			ComponentManager.Get():SetGroup(props.Component, props.Group)
 			props.close()
 		end,
 
@@ -25,7 +25,7 @@ end
 
 local function mapStateToProps(state)
 	return {
-		Tag = state.GroupPicker,
+		Component = state.GroupPicker,
 	}
 end
 

@@ -1,8 +1,8 @@
 local Search = require(script.Search)
 local IconSearch = require(script.IconSearch)
-local TagMenu = require(script.TagMenu)
-local TagData = require(script.TagData)
-local UnknownTags = require(script.UnknownTags)
+local ComponentMenu = require(script.ComponentMenu)
+local ComponentData = require(script.ComponentData)
+local UnknownComponents = require(script.UnknownComponents)
 local GroupData = require(script.GroupData)
 local IconPicker = require(script.IconPicker)
 local ColorPicker = require(script.ColorPicker)
@@ -12,16 +12,16 @@ local Dropdown = require(script.Dropdown)
 local InstanceView = require(script.InstanceView)
 local HoveredIcon = require(script.HoveredIcon)
 local SelectionActive = require(script.SelectionActive)
-local RenamingTag = require(script.RenamingTag)
+local RenamingComponent = require(script.RenamingComponent)
 
 return function(state, action)
 	state = state or {}
 	return {
 		IconSearch = IconSearch(state.IconSearch, action),
 		Search = Search(state.Search, action),
-		TagMenu = TagMenu(state.TagMenu, action),
-		TagData = TagData(state.TagData, action),
-		UnknownTags = UnknownTags(state.UnknownTags, action),
+		ComponentMenu = ComponentMenu(state.ComponentMenu, action),
+		ComponentData = ComponentData(state.ComponentData, action),
+		UnknownComponents = UnknownComponents(state.UnknownComponents, action),
 		GroupData = GroupData(state.GroupData, action),
 		IconPicker = IconPicker(state.IconPicker, action),
 		ColorPicker = ColorPicker(state.ColorPicker, action),
@@ -31,6 +31,6 @@ return function(state, action)
 		InstanceView = InstanceView(state.InstanceView, action),
 		HoveredIcon = HoveredIcon(state.HoveredIcon, action),
 		SelectionActive = SelectionActive(state.SelectionActive, action),
-		RenamingTag = RenamingTag(state.RenamingTag, action),
+		RenamingComponent = RenamingComponent(state.RenamingComponent, action),
 	}
 end

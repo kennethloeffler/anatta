@@ -33,7 +33,7 @@ local function WorldVisual(props)
 			Adornee = entry.Part,
 			Icon = entry.Icon,
 			Color = entry.Color,
-			TagName = entry.TagName,
+			ComponentName = entry.ComponentName,
 			AlwaysOnTop = entry.AlwaysOnTop,
 		})
 	end
@@ -41,7 +41,7 @@ local function WorldVisual(props)
 	return Roact.createElement(Roact.Portal, {
 		target = CoreGui,
 	}, {
-		TagEditorWorldView = Roact.createElement("Folder", {}, children),
+		ComponentEditorWorldView = Roact.createElement("Folder", {}, children),
 	})
 end
 

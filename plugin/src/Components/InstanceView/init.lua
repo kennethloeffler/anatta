@@ -5,18 +5,18 @@ local Actions = require(Modules.Plugin.Actions)
 local Util = require(Modules.Plugin.Util)
 
 local InstanceList = require(script.InstanceList)
-local TaggedInstanceProvider = require(script.TaggedInstanceProvider)
+local ComponentizedInstanceProvider = require(script.ComponentizedInstanceProvider)
 
 local function InstanceView(props)
-	return Roact.createElement(TaggedInstanceProvider, {
-		tagName = props.tagName,
+	return Roact.createElement(ComponentizedInstanceProvider, {
+		componentName = props.componentName,
 	}, {
 		render = function(parts, selected)
 			return Roact.createElement(InstanceList, {
 				parts = parts,
 				selected = selected,
-				tagName = props.tagName,
-				tagIcon = props.tagIcon,
+				componentName = props.componentName,
+				componentIcon = props.componentIcon,
 				close = props.close,
 			})
 		end,
@@ -24,14 +24,14 @@ local function InstanceView(props)
 end
 
 local function mapStateToProps(state)
-	local tag = state.InstanceView
-		and Util.findIf(state.TagData, function(item)
+	local component = state.InstanceView
+		and Util.findIf(state.ComponentData, function(item)
 			return item.Name == state.InstanceView
 		end)
 
 	return {
-		tagName = state.InstanceView,
-		tagIcon = tag and tag.Icon or nil,
+		componentName = state.InstanceView,
+		componentIcon = component and component.Icon or nil,
 	}
 end
 

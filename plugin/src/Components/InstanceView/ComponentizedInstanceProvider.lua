@@ -4,14 +4,14 @@ local Selection = game:GetService("Selection")
 local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 
-local TaggedInstanceProvider = Roact.PureComponent:extend("TaggedInstanceProvider")
+local ComponentizedInstanceProvider = Roact.PureComponent:extend("ComponentizedInstanceProvider")
 
-function TaggedInstanceProvider:init()
+function ComponentizedInstanceProvider:init()
 	self.nextId = 1
 	self.partIds = {}
 
 	self.selectionChangedConn = Selection.SelectionChanged:Connect(function()
-		self:updateState(self.props.tagName)
+		self:updateState(self.props.componentName)
 	end)
 	self.ancestryChangedConns = {}
 	self.nameChangedConns = {}
@@ -22,15 +22,15 @@ function TaggedInstanceProvider:init()
 	}
 end
 
-function TaggedInstanceProvider:updateState(tagName)
+function ComponentizedInstanceProvider:updateState(componentName)
 	local selected = {}
 	for _, instance in pairs(Selection:Get()) do
 		selected[instance] = true
 	end
 
 	local parts = {}
-	if tagName then
-		parts = Collection:GetTagged(tagName)
+	if componentName then
+		parts = Collection:GetTagged(componentName)
 	end
 
 	for i, part in pairs(parts) do
@@ -87,11 +87,11 @@ function TaggedInstanceProvider:updateState(tagName)
 	return parts, selected
 end
 
-function TaggedInstanceProvider:didUpdate(prevProps, prevState)
-	local tagName = self.props.tagName
+function ComponentizedInstanceProvider:didUpdate(prevProps, prevState)
+	local componentName = self.props.componentName
 
-	if tagName ~= prevProps.tagName then
-		local parts = self:updateState(tagName)
+	if componentName ~= prevProps.componentName then
+		local parts = self:updateState(componentName)
 
 		-- Setup signals
 		if self.instanceAddedConn then
@@ -110,38 +110,44 @@ function TaggedInstanceProvider:didUpdate(prevProps, prevState)
 		end
 		self.ancestryChangedConns = {}
 		self.nameChangedConns = {}
-		if tagName then
-			self.instanceAddedConn = Collection:GetInstanceAddedSignal(tagName):Connect(function(inst)
-				self.nameChangedConns[inst] = inst:GetPropertyChangedSignal("Name"):Connect(function()
-					self:updateState(tagName)
+		if componentName then
+			self.instanceAddedConn = Collection
+				:GetInstanceAddedSignal(componentName)
+				:Connect(function(inst)
+					self.nameChangedConns[inst] = inst
+						:GetPropertyChangedSignal("Name")
+						:Connect(function()
+							self:updateState(componentName)
+						end)
+					self.ancestryChangedConns[inst] = inst.AncestryChanged:Connect(function()
+						self:updateState(componentName)
+					end)
+					self:updateState(componentName)
 				end)
-				self.ancestryChangedConns[inst] = inst.AncestryChanged:Connect(function()
-					self:updateState(tagName)
+			self.instanceRemovedConn = Collection
+				:GetInstanceRemovedSignal(componentName)
+				:Connect(function(inst)
+					self.nameChangedConns[inst]:Disconnect()
+					self.nameChangedConns[inst] = nil
+					self.ancestryChangedConns[inst]:Disconnect()
+					self.ancestryChangedConns[inst] = nil
+					self:updateState(componentName)
 				end)
-				self:updateState(tagName)
-			end)
-			self.instanceRemovedConn = Collection:GetInstanceRemovedSignal(tagName):Connect(function(inst)
-				self.nameChangedConns[inst]:Disconnect()
-				self.nameChangedConns[inst] = nil
-				self.ancestryChangedConns[inst]:Disconnect()
-				self.ancestryChangedConns[inst] = nil
-				self:updateState(tagName)
-			end)
 		end
 
 		for _, entry in pairs(parts) do
 			local part = entry.instance
 			self.nameChangedConns[part] = part:GetPropertyChangedSignal("Name"):Connect(function()
-				self:updateState(tagName)
+				self:updateState(componentName)
 			end)
 			self.ancestryChangedConns[part] = part.AncestryChanged:Connect(function()
-				self:updateState(tagName)
+				self:updateState(componentName)
 			end)
 		end
 	end
 end
 
-function TaggedInstanceProvider:willUnmount()
+function ComponentizedInstanceProvider:willUnmount()
 	if self.instanceAddedConn then
 		self.instanceAddedConn:Disconnect()
 	end
@@ -157,10 +163,10 @@ function TaggedInstanceProvider:willUnmount()
 	end
 end
 
-function TaggedInstanceProvider:render()
+function ComponentizedInstanceProvider:render()
 	local props = self.props
 
 	return Roact.oneChild(props[Roact.Children])(self.state.parts, self.state.selected)
 end
 
-return TaggedInstanceProvider
+return ComponentizedInstanceProvider

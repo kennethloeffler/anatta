@@ -11,7 +11,7 @@ local function WorldView(props)
 			render = function(partsList)
 				return Roact.createElement(WorldVisual, {
 					partsList = partsList,
-					tags = props.tags,
+					components = props.components,
 				})
 			end,
 		})
@@ -23,7 +23,7 @@ end
 local function mapStateToProps(state)
 	return {
 		enabled = state.WorldView,
-		tags = state.TagData,
+		components = state.ComponentData,
 	}
 end
 

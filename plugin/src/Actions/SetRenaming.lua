@@ -1,7 +1,7 @@
-local function setRenaming(tag: string, renaming: boolean)
+local function setRenaming(component: string, renaming: boolean)
 	return {
 		type = "SetRenaming",
-		tag = tag,
+		component = component,
 		renaming = renaming,
 	}
 end

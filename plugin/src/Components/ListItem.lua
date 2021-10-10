@@ -78,7 +78,12 @@ function Item:render()
 						Util.merge({
 							BackgroundTransparency = 1.0,
 							TextXAlignment = Enum.TextXAlignment.Left,
-							Position = props.Icon and UDim2.new(0, 48 + 16, 0, 0) or UDim2.new(0, 14, 0, 0),
+							Position = props.Icon and UDim2.new(0, 48 + 16, 0, 0) or UDim2.new(
+								0,
+								14,
+								0,
+								0
+							),
 							Size = UDim2.new(1, -40, 1, 0),
 							Text = props.IsInput and (props.TextBoxText or "") or props.Text,
 							ClearTextOnFocus = (function()
@@ -157,7 +162,7 @@ end
 
 local function mapStateToProps(state)
 	return {
-		menuOpen = state.TagMenu and not state.GroupPicker,
+		menuOpen = state.ComponentMenu and not state.GroupPicker,
 	}
 end
 

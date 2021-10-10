@@ -58,7 +58,7 @@ function EmojiPage:render()
 			LayoutOrder = i,
 			CategoryName = name,
 			Icons = items,
-			tagName = props.tagName,
+			componentName = props.componentName,
 			search = props.search,
 			close = props.closeFunc,
 			onHover = props.onHoverFunc,

@@ -1,6 +1,6 @@
-return function(tagName)
+return function(componentName)
 	return {
 		type = "OpenInstanceView",
-		view = tagName,
+		view = componentName,
 	}
 end

@@ -18,6 +18,6 @@ local function mapDispatchToProps(dispatch)
 	}
 end
 
-local TagSearch = RoactRodux.connect(mapStateToProps, mapDispatchToProps)(Search)
+local ComponentSearch = RoactRodux.connect(mapStateToProps, mapDispatchToProps)(Search)
 
-return TagSearch
+return ComponentSearch

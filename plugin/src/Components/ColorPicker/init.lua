@@ -22,7 +22,7 @@ function ColorPicker:init()
 end
 
 function ColorPicker.getDerivedStateFromProps(nextProps, lastState)
-	if nextProps.tagColor == nil then
+	if nextProps.componentColor == nil then
 		return {
 			h = 0,
 			s = 0,
@@ -30,15 +30,15 @@ function ColorPicker.getDerivedStateFromProps(nextProps, lastState)
 		}
 	end
 
-	if lastState.tagColor ~= nextProps.tagColor then
-		lastState.tagColor = nextProps.tagColor
-		local h, s, v = Color3.toHSV(nextProps.tagColor)
+	if lastState.componentColor ~= nextProps.componentColor then
+		lastState.componentColor = nextProps.componentColor
+		local h, s, v = Color3.toHSV(nextProps.componentColor)
 		return {
-			-- When we open a fresh color picker, it should default to the color that the tag already was
+			-- When we open a fresh color picker, it should default to the color that the component already was
 			h = h,
 			s = s,
 			v = v,
-			tagColor = nextProps.tagColor,
+			componentColor = nextProps.componentColor,
 		}
 	end
 end
@@ -51,9 +51,9 @@ function ColorPicker:render()
 
 	return StudioThemeAccessor.withTheme(function(theme)
 		return Roact.createElement(Page, {
-			visible = props.tagName ~= nil,
-			title = tostring(props.tagName) .. " - Select a Color",
-			titleIcon = props.tagIcon,
+			visible = props.componentName ~= nil,
+			title = tostring(props.componentName) .. " - Select a Color",
+			titleIcon = props.componentIcon,
 
 			close = function()
 				props.close()
@@ -277,7 +277,7 @@ function ColorPicker:render()
 							Size = UDim2.new(0.5, 0, 0, 24),
 							leftClick = function()
 								ComponentManager.Get():SetColor(
-									props.tagName,
+									props.componentName,
 									Color3.fromHSV(self.state.h, self.state.s, self.state.v)
 								)
 								props.close()
@@ -291,21 +291,21 @@ function ColorPicker:render()
 end
 
 local function mapStateToProps(state)
-	local tag = state.ColorPicker
-	local tagIcon
-	local tagColor
-	for _, entry in pairs(state.TagData) do
-		if entry.Name == tag then
-			tagIcon = entry.Icon
-			tagColor = entry.Color
+	local component = state.ColorPicker
+	local componentIcon
+	local componentColor
+	for _, entry in pairs(state.ComponentData) do
+		if entry.Name == component then
+			componentIcon = entry.Icon
+			componentColor = entry.Color
 			break
 		end
 	end
 
 	return {
-		tagName = tag,
-		tagIcon = tagIcon,
-		tagColor = tagColor,
+		componentName = component,
+		componentIcon = componentIcon,
+		componentColor = componentColor,
 	}
 end
 

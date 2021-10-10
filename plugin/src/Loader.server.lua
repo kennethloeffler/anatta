@@ -28,7 +28,7 @@ if useDevSource then
 		source = devSource
 		currentRoot = source
 	else
-		warn("Tag editor development source is not present, running using built-in source.")
+		warn("Component editor development source is not present, running using built-in source.")
 	end
 end
 

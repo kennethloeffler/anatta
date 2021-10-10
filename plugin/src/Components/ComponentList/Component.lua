@@ -4,17 +4,17 @@ local RoactRodux = require(Modules.RoactRodux)
 local Actions = require(Modules.Plugin.Actions)
 local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Item = require(Modules.Plugin.Components.ListItem)
-local TagSettings = require(Modules.Plugin.Components.TagList.TagSettings)
+local ComponentSettings = require(Modules.Plugin.Components.ComponentList.ComponentSettings)
 local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccessor)
 local Util = require(Modules.Plugin.Util)
 local PluginGlobals = require(Modules.Plugin.PluginGlobals)
 
-local function Tag(props)
+local function Component(props)
 	local function openMenu(_rbx)
 		if not props.isMenuOpen then
-			props.openTagMenu(props.Tag)
+			props.openComponentMenu(props.Component)
 		else
-			props.openTagMenu(nil)
+			props.openComponentMenu(nil)
 		end
 	end
 
@@ -31,13 +31,13 @@ local function Tag(props)
 
 	return StudioThemeAccessor.withTheme(function(theme)
 		return Roact.createElement(Item, {
-			Text = Util.escapeTagName(props.Tag, theme),
+			Text = Util.escapeComponentName(props.Component, theme),
 			RichText = true,
 			Icon = props.Icon,
 			IsInput = props.isBeingRenamed,
 			ClearTextOnFocus = false,
 			CaptureFocusOnBecomeInput = true,
-			TextBoxText = props.Tag,
+			TextBoxText = props.Component,
 			LayoutOrder = props.LayoutOrder,
 			Visible = props.Visible,
 			Checked = checked,
@@ -47,50 +47,50 @@ local function Tag(props)
 			Height = props.isMenuOpen and 171 or 26,
 
 			onSetVisible = function()
-				ComponentManager.Get():SetVisible(props.Tag, not props.Visible)
+				ComponentManager.Get():SetVisible(props.Component, not props.Visible)
 			end,
 
 			onCheck = function(_rbx)
-				ComponentManager.Get():SetTag(props.Tag, not props.HasAll)
+				ComponentManager.Get():SetComponent(props.Component, not props.HasAll)
 			end,
 
 			onSubmit = function(_rbx, newName)
 				props.stopRenaming()
-				ComponentManager.Get():Rename(props.Tag, newName)
+				ComponentManager.Get():Rename(props.Component, newName)
 			end,
 
 			onFocusLost = props.stopRenaming,
 			leftClick = openMenu,
 			rightClick = function(_rbx)
-				props.showContextMenu(props.Tag)
+				props.showContextMenu(props.Component)
 			end,
 		}, {
-			Settings = props.isMenuOpen and Roact.createElement(TagSettings, {}),
+			Settings = props.isMenuOpen and Roact.createElement(ComponentSettings, {}),
 		})
 	end)
 end
 
 local function mapStateToProps(state, props)
 	return {
-		isMenuOpen = state.TagMenu == props.Tag,
-		isBeingRenamed = state.RenamingTag == props.Tag,
+		isMenuOpen = state.ComponentMenu == props.Component,
+		isBeingRenamed = state.RenamingComponent == props.Component,
 	}
 end
 
 local function mapDispatchToProps(dispatch)
 	return {
-		openTagMenu = function(tag)
-			dispatch(Actions.OpenTagMenu(tag))
+		openComponentMenu = function(component)
+			dispatch(Actions.OpenComponentMenu(component))
 		end,
-		showContextMenu = function(tag)
-			PluginGlobals.showTagMenu(dispatch, tag)
+		showContextMenu = function(component)
+			PluginGlobals.showComponentMenu(dispatch, component)
 		end,
-		stopRenaming = function(tag)
-			dispatch(Actions.SetRenaming(tag, false))
+		stopRenaming = function(component)
+			dispatch(Actions.SetRenaming(component, false))
 		end,
 	}
 end
 
-Tag = RoactRodux.connect(mapStateToProps, mapDispatchToProps)(Tag)
+Component = RoactRodux.connect(mapStateToProps, mapDispatchToProps)(Component)
 
-return Tag
+return Component

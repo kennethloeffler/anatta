@@ -1,6 +1,6 @@
 return function(name)
 	return {
 		type = "ToggleGroupPicker",
-		tag = name,
+		component = name,
 	}
 end

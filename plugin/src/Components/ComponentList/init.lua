@@ -7,14 +7,14 @@ local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Util = require(Modules.Plugin.Util)
 
 local Item = require(script.Parent.ListItem)
-local Tag = require(script.Tag)
+local Component = require(script.Component)
 local Group = require(script.Group)
 local ScrollingFrame = require(Modules.Plugin.Components.ScrollingFrame)
 local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccessor)
 
-local TagList = Roact.PureComponent:extend("TagList")
+local ComponentList = Roact.PureComponent:extend("ComponentList")
 
-function TagList:render()
+function ComponentList:render()
 	local props = self.props
 
 	local function toggleGroup(group)
@@ -23,8 +23,8 @@ function TagList:render()
 		})
 	end
 
-	local tags = props.Tags
-	table.sort(tags, function(a, b)
+	local components = props.Components
+	table.sort(components, function(a, b)
 		local ag = a.Group or ""
 		local bg = b.Group or ""
 		if ag < bg then
@@ -64,10 +64,10 @@ function TagList:render()
 
 	local lastGroup
 	local itemCount = 1
-	for i = 1, #tags do
-		local groupName = tags[i].Group or "Default"
-		if tags[i].Group ~= lastGroup then
-			lastGroup = tags[i].Group
+	for i = 1, #components do
+		local groupName = components[i].Group or "Default"
+		if components[i].Group ~= lastGroup then
+			lastGroup = components[i].Group
 			children["Group" .. groupName] = Roact.createElement(Group, {
 				Name = groupName,
 				LayoutOrder = itemCount,
@@ -76,25 +76,28 @@ function TagList:render()
 			})
 			itemCount = itemCount + 1
 		end
-		children[tags[i].Name] = Roact.createElement(
-			Tag,
-			Util.merge(tags[i], {
+		children[components[i].Name] = Roact.createElement(
+			Component,
+			Util.merge(components[i], {
 				Hidden = self.state["Hide" .. groupName],
 				Disabled = not props.selectionActive,
-				Tag = tags[i].Name,
+				Component = components[i].Name,
 				LayoutOrder = itemCount,
 			})
 		)
 		itemCount = itemCount + 1
 	end
 
-	local unknownTags = props.unknownTags
+	local unknownComponents = props.unknownComponents
 
-	for i = 1, #unknownTags do
-		local tag = unknownTags[i]
-		children[tag] = StudioThemeAccessor.withTheme(function(theme)
+	for i = 1, #unknownComponents do
+		local component = unknownComponents[i]
+		children[component] = StudioThemeAccessor.withTheme(function(theme)
 			return Roact.createElement(Item, {
-				Text = string.format("%s (click to import)", Util.escapeTagName(tag, theme)),
+				Text = string.format(
+					"%s (click to import)",
+					Util.escapeComponentName(component, theme)
+				),
 				RichText = true,
 				Icon = "help",
 				ButtonColor = Constants.LightRed,
@@ -104,14 +107,14 @@ function TagList:render()
 				},
 
 				leftClick = function(_rbx)
-					ComponentManager.Get():AddTag(tag)
+					ComponentManager.Get():AddComponent(component)
 				end,
 			})
 		end)
 		itemCount = itemCount + 1
 	end
 
-	if #tags == 0 then
+	if #components == 0 then
 		children.NoResults = Roact.createElement(Item, {
 			LayoutOrder = itemCount,
 			Text = "No search results found.",
@@ -123,33 +126,22 @@ function TagList:render()
 		itemCount = itemCount + 1
 	end
 
-	local searchTagExists = false
-	for i = 1, #tags do
-		if tags[i] == props.searchTerm then
-			searchTagExists = true
+	local searchComponentExists = false
+	for i = 1, #components do
+		if components[i] == props.searchTerm then
+			searchComponentExists = true
 			break
 		end
 	end
-	if props.searchTerm and #props.searchTerm > 0 and not searchTagExists then
+	if props.searchTerm and #props.searchTerm > 0 and not searchComponentExists then
 		children.AddNew = Roact.createElement(Item, {
 			LayoutOrder = itemCount,
-			Text = string.format("Add tag %q...", props.searchTerm),
-			Icon = "tag_blue_add",
+			Text = string.format("Add component %q...", props.searchTerm),
+			Icon = "component_blue_add",
 
 			leftClick = function(_rbx)
-				ComponentManager.Get():AddTag(props.searchTerm)
+				ComponentManager.Get():AddComponent(props.searchTerm)
 				props.setSearch("")
-			end,
-		})
-	else
-		children.AddNew = Roact.createElement(Item, {
-			LayoutOrder = itemCount,
-			Text = "Add new tag...",
-			Icon = "tag_blue_add",
-			IsInput = true,
-
-			onSubmit = function(_rbx, text)
-				ComponentManager.Get():AddTag(text)
 			end,
 		})
 	end
@@ -160,29 +152,30 @@ function TagList:render()
 end
 
 local function mapStateToProps(state)
-	local tags = {}
+	local components = {}
 
-	for _, tag in pairs(state.TagData) do
+	for _, component in pairs(state.ComponentData) do
 		-- todo: LCS
-		local passSearch = not state.Search or tag.Name:lower():find(state.Search:lower(), 1, true)
+		local passSearch = not state.Search
+			or component.Name:lower():find(state.Search:lower(), 1, true)
 		if passSearch then
-			tags[#tags + 1] = tag
+			components[#components + 1] = component
 		end
 	end
 
-	local unknownTags = {}
-	for _, tag in pairs(state.UnknownTags) do
+	local unknownComponents = {}
+	for _, component in pairs(state.UnknownComponents) do
 		-- todo: LCS
-		local passSearch = not state.Search or tag:lower():find(state.Search:lower(), 1, true)
+		local passSearch = not state.Search or component:lower():find(state.Search:lower(), 1, true)
 		if passSearch then
-			unknownTags[#unknownTags + 1] = tag
+			unknownComponents[#unknownComponents + 1] = component
 		end
 	end
 
 	return {
-		Tags = tags,
+		Components = components,
 		searchTerm = state.Search,
-		unknownTags = unknownTags,
+		unknownComponents = unknownComponents,
 		selectionActive = state.SelectionActive,
 	}
 end
@@ -195,6 +188,6 @@ local function mapDispatchToProps(dispatch)
 	}
 end
 
-TagList = RoactRodux.connect(mapStateToProps, mapDispatchToProps)(TagList)
+ComponentList = RoactRodux.connect(mapStateToProps, mapDispatchToProps)(ComponentList)
 
-return TagList
+return ComponentList

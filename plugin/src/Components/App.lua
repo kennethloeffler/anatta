@@ -1,8 +1,8 @@
 local Modules = script.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 
-local TagList = require(script.Parent.TagList)
-local TagSearch = require(script.Parent.TagSearch)
+local ComponentList = require(script.Parent.ComponentList)
+local ComponentSearch = require(script.Parent.ComponentSearch)
 local IconPicker = require(script.Parent.IconPicker)
 local ColorPicker = require(script.Parent.ColorPicker)
 local WorldView = require(script.Parent.WorldView)
@@ -57,10 +57,10 @@ function App:render()
 				PaddingBottom = UDim.new(0, 4),
 			}),
 
-			TagList = Roact.createElement(TagList, {
+			ComponentList = Roact.createElement(ComponentList, {
 				Size = UDim2.new(1, 0, 1, -40),
 			}),
-			TagSearch = Roact.createElement(TagSearch, {
+			ComponentSearch = Roact.createElement(ComponentSearch, {
 				Size = UDim2.new(1, 0, 0, 40),
 			}),
 		}),

@@ -16,7 +16,7 @@ function WorldProvider:init()
 	self.nextId = 0
 	self.partIds = {}
 	self.trackedParts = {}
-	self.trackedTags = {}
+	self.trackedComponents = {}
 	self.instanceAddedConns = Maid.new()
 	self.instanceRemovedConns = Maid.new()
 	self.instanceAncestryChangedConns = Maid.new()
@@ -44,40 +44,41 @@ end
 function WorldProvider:didMount()
 	local manager = ComponentManager.Get()
 
-	for _, tag in pairs(manager:GetTags()) do
-		if tag.Visible == false or tag.DrawType == "None" then
+	for _, component in pairs(manager:GetComponents()) do
+		if component.Visible == false or component.DrawType == "None" then
 			continue
 		end
-		self:tagAdded(tag.Name)
+		self:componentAdded(component.Name)
 	end
-	self.onTagsUpdatedConn = manager:OnTagsUpdated(function(newTags, oldTags)
-		local added = {}
-		local removed = {}
-		for _, tag in pairs(newTags) do
-			if tag.Visible == false or tag.DrawType == "None" then
-				continue
+	self.onComponentsUpdatedConn =
+		manager:OnComponentsUpdated(function(newComponents, oldComponents)
+			local added = {}
+			local removed = {}
+			for _, component in pairs(newComponents) do
+				if component.Visible == false or component.DrawType == "None" then
+					continue
+				end
+				added[component.Name] = component
 			end
-			added[tag.Name] = tag
-		end
-		for _, tag in pairs(oldTags) do
-			if tag.Visible == false or tag.DrawType == "None" then
-				continue
+			for _, component in pairs(oldComponents) do
+				if component.Visible == false or component.DrawType == "None" then
+					continue
+				end
+				if added[component.Name] then
+					added[component.Name] = nil
+				else
+					removed[component.Name] = component
+				end
 			end
-			if added[tag.Name] then
-				added[tag.Name] = nil
-			else
-				removed[tag.Name] = tag
-			end
-		end
 
-		for name in pairs(added) do
-			self:tagAdded(name)
-		end
-		for name in pairs(removed) do
-			self:tagRemoved(name)
-		end
-		self:updateParts()
-	end)
+			for name in pairs(added) do
+				self:componentAdded(name)
+			end
+			for name in pairs(removed) do
+				self:componentRemoved(name)
+			end
+			self:updateParts()
+		end)
 
 	self:updateParts()
 end
@@ -99,7 +100,7 @@ local function sortedInsert(array, value, lessThan)
 end
 
 function WorldProvider:updateParts()
-	debug.profilebegin("[Tag Editor] Update WorldProvider")
+	debug.profilebegin("[Component Editor] Update WorldProvider")
 
 	local newList = {}
 
@@ -157,36 +158,36 @@ function WorldProvider:updateParts()
 		end
 	end
 
-	local tagsMap = {}
-	for _, tag in pairs(ComponentManager.Get():GetTags()) do
-		tagsMap[tag.Name] = tag
+	local componentsMap = {}
+	for _, component in pairs(ComponentManager.Get():GetComponents()) do
+		componentsMap[component.Name] = component
 	end
 
 	local adornMap = {}
 	for i = 1, #newList do
-		local tags = Collection:GetTags(newList[i].Instance)
+		local components = Collection:GetComponents(newList[i].Instance)
 		local outlines = {}
 		local boxes = {}
 		local icons = {}
 		local labels = {}
 		local spheres = {}
 		local anyAlwaysOnTop = false
-		for j = 1, #tags do
-			local tagName = tags[j]
-			local tag = tagsMap[tagName]
-			if self.trackedTags[tagName] and tag then
-				if tag.DrawType == "Outline" then
-					outlines[#outlines + 1] = tag.Color
-				elseif tag.DrawType == "Box" then
-					boxes[#boxes + 1] = tag.Color
-				elseif tag.DrawType == "Icon" then
-					icons[#icons + 1] = tag.Icon
-				elseif tag.DrawType == "Text" then
-					labels[#labels + 1] = tagName
-				elseif tag.DrawType == "Sphere" then
-					spheres[#spheres + 1] = tag.Color
+		for j = 1, #components do
+			local componentName = components[j]
+			local component = componentsMap[componentName]
+			if self.trackedComponents[componentName] and component then
+				if component.DrawType == "Outline" then
+					outlines[#outlines + 1] = component.Color
+				elseif component.DrawType == "Box" then
+					boxes[#boxes + 1] = component.Color
+				elseif component.DrawType == "Icon" then
+					icons[#icons + 1] = component.Icon
+				elseif component.DrawType == "Text" then
+					labels[#labels + 1] = componentName
+				elseif component.DrawType == "Sphere" then
+					spheres[#spheres + 1] = component.Color
 				end
-				if tag.AlwaysOnTop then
+				if component.AlwaysOnTop then
 					anyAlwaysOnTop = true
 				end
 			end
@@ -253,7 +254,7 @@ function WorldProvider:updateParts()
 				Id = partId,
 				Part = newList[i].Instance,
 				DrawType = "Text",
-				TagName = labels,
+				ComponentName = labels,
 				AlwaysOnTop = anyAlwaysOnTop,
 			}
 		end
@@ -287,7 +288,7 @@ function WorldProvider:updateParts()
 		"Id",
 		"DrawType",
 		"Color",
-		"TagName",
+		"ComponentName",
 		"AlwaysOnTop",
 	}
 	local oldMap = self.state.partsList
@@ -364,10 +365,13 @@ local function isTypeAllowed(instance)
 	return false
 end
 
-function WorldProvider:tagAdded(tagName)
-	assert(not self.trackedTags[tagName], "Newly added tag must not already be tracked")
-	self.trackedTags[tagName] = true
-	for _, obj in pairs(Collection:GetTagged(tagName)) do
+function WorldProvider:componentAdded(componentName)
+	assert(
+		not self.trackedComponents[componentName],
+		"Newly added component must not already be tracked"
+	)
+	self.trackedComponents[componentName] = true
+	for _, obj in pairs(Collection:GetTagged(componentName)) do
 		if isTypeAllowed(obj) then
 			if obj:IsDescendantOf(workspace) then
 				self:instanceAdded(obj)
@@ -385,8 +389,8 @@ function WorldProvider:tagAdded(tagName)
 			end
 		end
 	end
-	self.instanceAddedConns[tagName] = Collection
-		:GetInstanceAddedSignal(tagName)
+	self.instanceAddedConns[componentName] = Collection
+		:GetInstanceAddedSignal(componentName)
 		:Connect(function(obj)
 			if not isTypeAllowed(obj) then
 				return
@@ -407,8 +411,8 @@ function WorldProvider:tagAdded(tagName)
 				end)
 			end
 		end)
-	self.instanceRemovedConns[tagName] = Collection
-		:GetInstanceRemovedSignal(tagName)
+	self.instanceRemovedConns[componentName] = Collection
+		:GetInstanceRemovedSignal(componentName)
 		:Connect(function(obj)
 			if not isTypeAllowed(obj) then
 				return
@@ -418,20 +422,23 @@ function WorldProvider:tagAdded(tagName)
 		end)
 end
 
-function WorldProvider:tagRemoved(tagName)
-	assert(self.trackedTags[tagName], "Attempted to remove a tag that isn't tracked")
-	self.trackedTags[tagName] = nil
-	for _, obj in pairs(Collection:GetTagged(tagName)) do
+function WorldProvider:componentRemoved(componentName)
+	assert(
+		self.trackedComponents[componentName],
+		"Attempted to remove a component that isn't tracked"
+	)
+	self.trackedComponents[componentName] = nil
+	for _, obj in pairs(Collection:GetTagged(componentName)) do
 		if obj:IsDescendantOf(workspace) then
 			self:instanceRemoved(obj)
 		end
 	end
-	self.instanceAddedConns[tagName] = nil
-	self.instanceRemovedConns[tagName] = nil
+	self.instanceAddedConns[componentName] = nil
+	self.instanceRemovedConns[componentName] = nil
 end
 
 function WorldProvider:willUnmount()
-	self.onTagsUpdatedConn:Disconnect()
+	self.onComponentsUpdatedConn:Disconnect()
 
 	self.instanceAddedConns:clean()
 	self.instanceRemovedConns:clean()

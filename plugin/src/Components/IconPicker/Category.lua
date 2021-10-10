@@ -35,7 +35,7 @@ function Category:render()
 			Visible = matches,
 			LayoutOrder = i,
 			[Roact.Event.MouseButton1Click] = function(_rbx)
-				ComponentManager.Get():SetIcon(props.tagName, icon)
+				ComponentManager.Get():SetIcon(props.componentName, icon)
 				props.close()
 			end,
 

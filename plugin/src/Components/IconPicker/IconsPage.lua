@@ -35,7 +35,7 @@ local function IconsPage(props)
 			LayoutOrder = i,
 			CategoryName = name,
 			Icons = icons,
-			tagName = props.tagName,
+			componentName = props.componentName,
 			search = props.search,
 			close = props.closeFunc,
 			onHover = props.onHoverFunc,

@@ -359,7 +359,7 @@ return {
 		"chart_organisation",
 		"chart_pie",
 	},
-	Tags = {
+	Components = {
 		"tag_blue",
 		"tag_blue_add",
 		"tag_blue_delete",
