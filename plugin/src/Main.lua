@@ -1,124 +1,214 @@
-local CollectionService = game:GetService("CollectionService")
+local Modules = script.Parent.Parent
+local Roact = require(Modules.Roact)
+local Rodux = require(Modules.Rodux)
+local RoactRodux = require(Modules.RoactRodux)
 
-local Anatta = require(script.Parent.Parent.Anatta)
-local PluginComponents = require(script.Parent.PluginComponents)
-local Constants = require(script.Parent.Constants)
-local Systems = script.Parent.Systems
-local t = Anatta.t
+local App = require(script.Parent.Components.App)
+local Reducer = require(script.Parent.Reducer)
+local ComponentManager = require(script.Parent.ComponentManager)
+local Actions = require(script.Parent.Actions)
+local Config = require(script.Parent.Config)
+local PluginGlobals = require(script.Parent.PluginGlobals)
 
-local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
-local DEFINITION_CONTAINER_TAG_NAME = Constants.DefinitionModuleTagName
-local PENDING_VALIDATION = Constants.PendingValidation
-local SHARED_INSTANCE_TAG_NAME = Constants.SharedInstanceTagName
-
-local function loadDefinition(plugin, loader, moduleScript)
-	if not moduleScript:IsA("ModuleScript") then
-		warn(("Components definition instance %s must be a ModuleScript"):format(moduleScript:GetFullName()))
-		return
+local function getSuffix(plugin)
+	if plugin.isDev then
+		return " [DEV]", "Dev"
+	elseif Config.betaRelease then
+		return " [BETA]", "Beta"
 	end
 
-	local clone = moduleScript:Clone()
-	local componentDefinition = require(clone)
-	local name = componentDefinition.name
-	local type
-
-	if componentDefinition.meta ~= nil and componentDefinition.meta.plugin ~= nil then
-		type = componentDefinition.meta.plugin.type
-		--createTagEditorConfiguration(componentDefinition.meta.plugin)
-	else
-		type = componentDefinition.type
-	end
-
-	if not loader.registry:isComponentDefined(name) then
-		local pendingValidation = PENDING_VALIDATION:format(name)
-
-		loader.registry:define(name, type)
-		loader.registry:define(pendingValidation, t.none)
-
-		loader:loadSystem(Systems.AttributeValidator, name, pendingValidation)
-		loader:loadSystem(Systems.AttributeListener, name, pendingValidation, plugin:getMouse())
-		loader:loadSystem(Systems.Component, name, pendingValidation)
-	else
-		warn(("Found duplicate component name %s in %s; skipping"):format(
-			name,
-			moduleScript:GetFullName()
-		))
-	end
+	return "", ""
 end
 
-local function loadDefinitionContainer(plugin, loader, container, connections)
-	for _, moduleScript in ipairs(container:GetChildren()) do
-		loadDefinition(plugin, loader, moduleScript)
+return function(plugin, savedState)
+	local displaySuffix, nameSuffix = getSuffix(plugin)
 
-		table.insert(
-			connections,
-			moduleScript.Changed:Connect(function(propertyName)
-				if propertyName == "Source" then
-					plugin:reload()
-				end
-			end)
-		)
-	end
+	local toolbar = plugin:toolbar("Instance Tagging" .. displaySuffix)
 
-	table.insert(
-		connections,
-		container.ChildAdded:Connect(function(moduleScript)
-			loadDefinition(plugin, loader, moduleScript)
-		end)
-	)
-end
-
-return function(plugin, saveState)
-	local loader = Anatta.Loader.new(PluginComponents)
-	local definitionContainerAdded =
-		CollectionService:GetInstanceAddedSignal(DEFINITION_CONTAINER_TAG_NAME)
-	local connections = {}
-
-	plugin:activate(false)
-
-	for _, container in ipairs(CollectionService:GetTagged(DEFINITION_CONTAINER_TAG_NAME)) do
-		loadDefinitionContainer(plugin, loader, container, connections)
-	end
-
-	table.insert(
-		connections,
-		definitionContainerAdded:Connect(function(container)
-			loadDefinitionContainer(plugin, loader, container, connections)
-		end)
+	local toggleButton = plugin:button(
+		toolbar,
+		"Tag Window",
+		"Manipulate CollectionService tags",
+		"http://www.roblox.com/asset/?id=1367281857"
 	)
 
-	loader:loadSystem(Systems.Entity)
+	local worldViewButton = plugin:button(
+		toolbar,
+		"World View",
+		"Visualize tagged objects in the 3D view",
+		"http://www.roblox.com/asset/?id=1367285594"
+	)
 
-	if saveState then
-		loader.registry:load(saveState)
+	local store = Rodux.Store.new(Reducer, savedState)
 
-		loader.registry:each(function(entity)
-			loader.registry:tryRemoveComponent(entity, ".anattaValidationListener")
-		end)
-	else
-		local success, result = Anatta.Dom.tryFromDom(loader.registry)
+	local manager = ComponentManager.new(store)
 
-		if not success then
-			warn(result)
-		else
-			for _, instance in ipairs(CollectionService:GetTagged(SHARED_INSTANCE_TAG_NAME)) do
-				local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+	local worldViewConnection = worldViewButton.Click:Connect(function()
+		local state = store:getState()
+		local newValue = not state.WorldView
+		store:dispatch(Actions.ToggleWorldView(newValue))
+		worldViewButton:SetActive(newValue)
+	end)
 
-				if loader.registry:isValidEntity(entity) then
-					loader.registry:addComponent(entity, ".anattaInstance", instance)
-				end
-			end
+	local info = DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Right, false, false, 0, 0)
+	local gui = plugin:createDockWidgetPluginGui("TagEditor" .. nameSuffix, info)
+	gui.Name = "TagEditor" .. nameSuffix
+	gui.Title = "Tag Editor" .. displaySuffix
+	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	toggleButton:SetActive(gui.Enabled)
+
+	local connection = toggleButton.Click:Connect(function()
+		gui.Enabled = not gui.Enabled
+		toggleButton:SetActive(gui.Enabled)
+	end)
+
+	local prefix = "TagEditor" .. nameSuffix .. "_"
+
+	local changeIconAction = plugin:createAction(
+		prefix .. "ChangeIcon",
+		"Change icon...",
+		"Change the icon of the tag."
+	)
+
+	local changeGroupAction = plugin:createAction(
+		prefix .. "ChangeGroup",
+		"Change group...",
+		"Change the sorting group of the tag."
+	)
+
+	local changeColorAction = plugin:createAction(
+		prefix .. "ChangeColor",
+		"Change color...",
+		"Change the color of the tag."
+	)
+
+	local renameAction = plugin:createAction(
+		prefix .. "Rename",
+		"Rename",
+		"Rename the tag, updating every instance currently tagged."
+	)
+
+	local deleteAction = plugin:createAction(
+		prefix .. "Delete",
+		"Delete",
+		"Delete the tag and remove it from all instances.",
+		nil,
+		false
+	)
+
+	local viewTaggedAction = plugin:createAction(
+		prefix .. "ViewTagged",
+		"View tagged instances",
+		"Show a list of instances that have this tag.",
+		nil,
+		false
+	)
+
+	local selectAllAction: PluginAction = plugin:createAction(
+		prefix .. "SelectAll",
+		"Select all",
+		"Select all instances with this tag."
+	)
+
+	local selectAllConn = selectAllAction.Triggered:Connect(function()
+		local state = store:getState()
+		local tag = state.InstanceView or PluginGlobals.currentTagMenu or state.TagMenu
+		if tag then
+			ComponentManager.Get():SelectAll(tag)
 		end
-	end
+	end)
+
+	local visualizeBox = plugin:createAction(
+		prefix .. "Visualize_Box",
+		"Box",
+		"Render this tag as a box when the overlay is enabled.",
+		nil,
+		false
+	)
+
+	local visualizeSphere = plugin:createAction(
+		prefix .. "Visualize_Sphere",
+		"Sphere",
+		"Render this tag as a sphere when the overlay is enabled.",
+		nil,
+		false
+	)
+
+	local visualizeOutline = plugin:createAction(
+		prefix .. "Visualize_Outline",
+		"Outline",
+		"Render this tag as an outline around parts when the overlay is enabled.",
+		nil,
+		false
+	)
+
+	local visualizeText = plugin:createAction(
+		prefix .. "Visualize_Text",
+		"Text",
+		"Render this tag as a floating text label when the overlay is enabled.",
+		nil,
+		false
+	)
+
+	local visualizeIcon = plugin:createAction(
+		prefix .. "Visualize_Icon",
+		"Icon",
+		"Render the tag's icon when the overlay is enabled.",
+		nil,
+		false
+	)
+
+	local visualizeMenu: PluginMenu = plugin:createMenu(
+		prefix .. "TagMenu_VisualizeAs",
+		"Change draw mode"
+	)
+	visualizeMenu:AddAction(visualizeBox)
+	visualizeMenu:AddAction(visualizeSphere)
+	visualizeMenu:AddAction(visualizeOutline)
+	visualizeMenu:AddAction(visualizeText)
+	visualizeMenu:AddAction(visualizeIcon)
+
+	local tagMenu: PluginMenu = plugin:createMenu(prefix .. "TagMenu")
+	tagMenu:AddAction(viewTaggedAction)
+	tagMenu:AddAction(selectAllAction)
+	tagMenu:AddMenu(visualizeMenu)
+	tagMenu:AddSeparator()
+	tagMenu:AddAction(renameAction)
+	tagMenu:AddAction(changeIconAction)
+	tagMenu:AddAction(changeColorAction)
+	tagMenu:AddAction(changeGroupAction)
+	tagMenu:AddAction(deleteAction)
+
+	PluginGlobals.TagMenu = tagMenu
+	PluginGlobals.changeIconAction = changeIconAction
+	PluginGlobals.changeGroupAction = changeGroupAction
+	PluginGlobals.changeColorAction = changeColorAction
+	PluginGlobals.renameAction = renameAction
+	PluginGlobals.deleteAction = deleteAction
+	PluginGlobals.selectAllAction = selectAllAction
+	PluginGlobals.viewTaggedAction = viewTaggedAction
+	PluginGlobals.visualizeBox = visualizeBox
+	PluginGlobals.visualizeSphere = visualizeSphere
+	PluginGlobals.visualizeOutline = visualizeOutline
+	PluginGlobals.visualizeText = visualizeText
+	PluginGlobals.visualizeIcon = visualizeIcon
+
+	local element = Roact.createElement(RoactRodux.StoreProvider, {
+		store = store,
+	}, {
+		App = Roact.createElement(App, {
+			root = gui,
+		}),
+	})
+
+	local instance = Roact.mount(element, gui, "TagEditor")
 
 	plugin:beforeUnload(function()
-		for _, connection in ipairs(connections) do
-			connection:Disconnect()
-		end
-
-		plugin:deactivate()
-		loader:unloadAllSystems()
-
-		return loader.registry
+		Roact.unmount(instance)
+		connection:Disconnect()
+		worldViewConnection:Disconnect()
+		manager:Destroy()
+		selectAllConn:Disconnect()
+		return store:getState()
 	end)
 end
