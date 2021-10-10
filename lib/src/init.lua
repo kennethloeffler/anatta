@@ -34,29 +34,36 @@ local Worlds = {}
 	@function createWorld
 	@within Anatta
 	@param namespace string
-	@param componentDefinitions {ComponentDefinition | Instance}
+	@param componentDefinitions {ComponentDefinition} | Instance
 	@return World
 ]=]
 local function createWorld(namespace, componentDefinitions)
-	util.jumpAssert(not Worlds[namespace], ErrWorldAlreadyExists:format(namespace))
+	local definitions = {}
+
+	util.jumpAssert(not Worlds[namespace], ErrWorldAlreadyExists, namespace)
 
 	if typeof(componentDefinitions) == "table" then
-		util.jumpAssert(Types.ComponentDefinition)
+		for _, definition in pairs(componentDefinitions) do
+			util.jumpAssert(Types.ComponentDefinition(definition))
+			table.insert(definitions, definition)
+		end
 	elseif typeof(componentDefinitions) == "Instance" then
+		local instance = componentDefinitions
+
 		componentDefinitions = {}
 
-		for _, instance in ipairs(componentDefinitions:GetDescendants()) do
-			if instance:IsA("ModuleScript") and not instance.Name:find("%.spec$") then
-				local componentDefinition = require(instance)
+		for _, descendant in ipairs(instance:GetDescendants()) do
+			if descendant:IsA("ModuleScript") and not descendant.Name:find("%.spec$") then
+				local definition = require(descendant)
 
-				if Types.ComponentType(componentDefinition) then
-					table.insert(componentDefinitions, componentDefinition)
+				if Types.ComponentType(definition) then
+					table.insert(definitions, definition)
 				end
 			end
 		end
 	end
 
-	local world = World.new(componentDefinitions or {})
+	local world = World.new(definitions)
 	Worlds[namespace] = world
 
 	return world
@@ -73,7 +80,7 @@ end
 local function getWorld(namespace, script)
 	local world = Worlds[namespace]
 
-	util.jumpAssert(world, ErrWorldDoesntExist:format(namespace))
+	util.jumpAssert(world, ErrWorldDoesntExist, namespace)
 
 	if script then
 		world:addSystem(script)

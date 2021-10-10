@@ -4,19 +4,21 @@ return function()
 
 	describe("createWorld", function()
 		it("should define a list of ComponentDefinitions for the world's registry", function()
-			local world = Anatta.createWorld("TestWorld1", {
-				{
+			local Component = {
+				Loooooooook = {
 					name = "Loooooooook",
 					type = T.table,
 				},
-				{
+				Heeeeeeerree = {
 					name = "Heeeeeeerree",
 					type = T.table,
 				},
-			})
+			}
 
-			expect(world.registry:isComponentDefined("Loooooooook")).to.equal(true)
-			expect(world.registry:isComponentDefined("Heeeeeeerree")).to.equal(true)
+			local world = Anatta.createWorld("TestWorld1", Component)
+
+			expect(world.registry:isComponentDefined(Component.Loooooooook)).to.equal(true)
+			expect(world.registry:isComponentDefined(Component.Heeeeeeerree)).to.equal(true)
 		end)
 	end)
 

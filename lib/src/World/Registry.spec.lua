@@ -6,6 +6,25 @@ return function()
 	local ENTITYID_WIDTH = Constants.EntityIdWidth
 	local NULL_ENTITYID = Constants.NullEntityId
 
+	local Component = {
+		interface = {
+			name = "interface",
+			type = T.interface({ instance = T.Instance }),
+		},
+		instance = {
+			name = "instance",
+			type = T.Instance,
+		},
+		number = {
+			name = "number",
+			type = T.number,
+		},
+		tag = {
+			name = "tag",
+			type = T.none,
+		},
+	}
+
 	local function makeEntities(registry, num)
 		local entities = table.create(num)
 
@@ -19,24 +38,9 @@ return function()
 	beforeEach(function(context)
 		local registry = Registry.new()
 
-		registry:defineComponent({
-			name = "interface",
-			type = T.interface({ instance = T.Instance }),
-		})
-
-		registry:defineComponent({
-			name = "instance",
-			type = T.Instance,
-		})
-
-		registry:defineComponent({
-			name = "number",
-			type = T.number,
-		})
-		registry:defineComponent({
-			name = "tag",
-			type = T.none,
-		})
+		for _, definition in pairs(Component) do
+			registry:defineComponent(definition)
+		end
 
 		context.registry = registry
 	end)
@@ -181,10 +185,10 @@ return function()
 				local entities = makeEntities(context.registry, 100)
 				local entity = entities[38]
 
-				context.registry:addComponent(entity, "tag")
+				context.registry:addComponent(entity, Component.tag)
 
 				expect(context.registry:createEntityFrom(entity)).to.equal(entity)
-				expect(context.registry:entityHas(entity, "tag")).to.equal(false)
+				expect(context.registry:entityHas(entity, Component.tag)).to.equal(false)
 			end
 		)
 	end)
@@ -192,8 +196,8 @@ return function()
 	describe("destroyEntity", function()
 		it("should remove all components that are on the entity", function(context)
 			local registry = context.registry
-			local numberPool = registry._pools.number
-			local instancePool = registry._pools.instance
+			local numberPool = registry._pools[Component.number]
+			local instancePool = registry._pools[Component.instance]
 			local entity = registry:createEntity()
 
 			numberPool:insert(entity, 10)
@@ -272,7 +276,7 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry:addComponent(entity, "number", 10)
+			registry:addComponent(entity, Component.number, 10)
 
 			expect(context.registry:isEntityOrphaned(entity)).to.equal(false)
 		end)
@@ -305,16 +309,16 @@ return function()
 			local entity = registry:createEntity()
 
 			local components = {
-				number = true,
-				instance = true,
+				[Component.number] = true,
+				[Component.instance] = true,
 			}
 
-			registry._pools.number:insert(entity, 10)
-			registry._pools.instance:insert(entity, Instance.new("Hole"))
+			registry._pools[Component.number]:insert(entity, 10)
+			registry._pools[Component.instance]:insert(entity, Instance.new("Hole"))
 
-			registry:visitComponents(function(name)
-				expect(components[name]).to.equal(true)
-				components[name] = nil
+			registry:visitComponents(function(definition)
+				expect(components[definition]).to.equal(true)
+				components[definition] = nil
 			end, entity)
 
 			expect(next(components)).to.equal(nil)
@@ -332,22 +336,22 @@ return function()
 		it("should return false if the entity does not have the components", function(context)
 			local registry = context.registry
 
-			expect(registry:entityHas(registry:createEntity(), "instance", "number")).to.equal(false)
+			expect(registry:entityHas(registry:createEntity(), Component.instance, Component.number)).to.equal(false)
 		end)
 
 		it("should return true if the entity has the components", function(context)
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry._pools.instance:insert(entity, Instance.new("Part"))
-			registry._pools.number:insert(entity, 10)
+			registry._pools[Component.instance]:insert(entity, Instance.new("Part"))
+			registry._pools[Component.number]:insert(entity, 10)
 
-			expect(registry:entityHas(entity, "instance", "number")).to.equal(true)
+			expect(registry:entityHas(entity, Component.instance, Component.number)).to.equal(true)
 		end)
 
 		it("should error if give an invalid entity", function(context)
 			expect(function()
-				context.registry:entityHas(0, "number")
+				context.registry:entityHas(0, Component.number)
 			end).to.throw()
 		end)
 
@@ -364,7 +368,11 @@ return function()
 			function(context)
 				local registry = context.registry
 
-				expect(registry:entityHasAny(registry:createEntity(), "instance", "number")).to.equal(false)
+				expect(registry:entityHasAny(
+					registry:createEntity(),
+					Component.instance,
+					Component.number
+				)).to.equal(false)
 			end
 		)
 
@@ -372,15 +380,15 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry._pools.instance:insert(entity, Instance.new("Part"))
-			registry._pools.number:insert(entity, 10)
+			registry._pools[Component.instance]:insert(entity, Instance.new("Part"))
+			registry._pools[Component.number]:insert(entity, 10)
 
-			expect(registry:entityHasAny(entity, "number", "instance")).to.equal(true)
+			expect(registry:entityHasAny(entity, Component.number, Component.instance)).to.equal(true)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:entityHasAny(0, "number")
+				context.registry:entityHasAny(0, Component.number)
 			end).to.throw()
 		end)
 
@@ -397,18 +405,18 @@ return function()
 			local entity = registry:createEntity()
 			local obj = Instance.new("Hole")
 
-			registry._pools.instance:insert(entity, obj)
-			expect(registry:getComponent(entity, "instance")).to.equal(obj)
+			registry._pools[Component.instance]:insert(entity, obj)
+			expect(registry:getComponent(entity, Component.instance)).to.equal(obj)
 		end)
 
 		it("should return nil if the entity does not have the component", function(context)
 			local registry = context.registry
-			expect(registry:getComponent(registry:createEntity(), "number")).to.equal(nil)
+			expect(registry:getComponent(registry:createEntity(), Component.number)).to.equal(nil)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:getComponent(0, "number")
+				context.registry:getComponent(0, Component.number)
 			end).to.throw()
 		end)
 
@@ -424,9 +432,9 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 			local component = Instance.new("Script")
-			local obj = registry:addComponent(entity, "instance", component)
+			local obj = registry:addComponent(entity, Component.instance, component)
 
-			expect(registry._pools.instance:getIndex(entity)).to.be.ok()
+			expect(registry._pools[Component.instance]:getIndex(entity)).to.be.ok()
 			expect(component).to.equal(obj)
 		end)
 
@@ -434,11 +442,11 @@ return function()
 			local registry = context.registry
 			local ranCallback
 
-			registry._pools.instance.added:connect(function()
+			registry._pools[Component.instance].added:connect(function()
 				ranCallback = true
 			end)
 
-			registry:addComponent(registry:createEntity(), "instance", Instance.new("Hole"))
+			registry:addComponent(registry:createEntity(), Component.instance, Instance.new("Hole"))
 			expect(ranCallback).to.equal(true)
 		end)
 
@@ -451,7 +459,7 @@ return function()
 				registry:destroyEntity(entity)
 				entity = registry:createEntity()
 
-				expect(registry:addComponent(entity, "instance", Instance.new("Part"))).to.equal(registry._pools.instance:get(entity))
+				expect(registry:addComponent(entity, Component.instance, Instance.new("Part"))).to.equal(registry._pools[Component.instance]:get(entity))
 			end
 		)
 
@@ -459,15 +467,15 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry:addComponent(entity, "tag")
+			registry:addComponent(entity, Component.tag)
 
-			expect(registry._pools.tag:getIndex(entity)).to.be.ok()
-			expect(registry._pools.tag:get(entity)).to.equal(nil)
+			expect(registry._pools[Component.tag]:getIndex(entity)).to.be.ok()
+			expect(registry._pools[Component.tag]:get(entity)).to.equal(nil)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:addComponent(0, "number", 1)
+				context.registry:addComponent(0, Component.number, 1)
 			end).to.throw()
 		end)
 
@@ -483,9 +491,9 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry._pools.number:insert(entity, 100)
+			registry._pools[Component.number]:insert(entity, 100)
 
-			expect(registry:tryAddComponent(entity, "number", 10)).to.equal(nil)
+			expect(registry:tryAddComponent(entity, Component.number, 10)).to.equal(nil)
 		end)
 
 		it(
@@ -494,9 +502,9 @@ return function()
 				local registry = context.registry
 				local entity = registry:createEntity()
 				local component = Instance.new("Hole")
-				local obj = registry:tryAddComponent(entity, "instance", component)
+				local obj = registry:tryAddComponent(entity, Component.instance, component)
 
-				expect(registry._pools.instance:getIndex(entity)).to.be.ok()
+				expect(registry._pools[Component.instance]:getIndex(entity)).to.be.ok()
 				expect(component).to.equal(obj)
 			end
 		)
@@ -505,11 +513,11 @@ return function()
 			local registry = context.registry
 			local ranCallback
 
-			registry._pools.number.added:connect(function()
+			registry._pools[Component.number].added:connect(function()
 				ranCallback = true
 			end)
 
-			registry:tryAddComponent(registry:createEntity(), "number", 10)
+			registry:tryAddComponent(registry:createEntity(), Component.number, 10)
 			expect(ranCallback).to.equal(true)
 		end)
 
@@ -522,7 +530,7 @@ return function()
 				registry:destroyEntity(entity)
 				entity = registry:createEntity()
 
-				expect(registry:tryAddComponent(entity, "instance", Instance.new("Hole"))).to.equal(registry._pools.instance:get(entity))
+				expect(registry:tryAddComponent(entity, Component.instance, Instance.new("Hole"))).to.equal(registry._pools[Component.instance]:get(entity))
 			end
 		)
 
@@ -530,14 +538,14 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry:tryAddComponent(entity, "tag")
+			registry:tryAddComponent(entity, Component.tag)
 
-			expect(registry._pools.tag:getIndex(entity)).to.be.ok()
-			expect(registry._pools.tag:get(entity)).to.equal(nil)
+			expect(registry._pools[Component.tag]:getIndex(entity)).to.be.ok()
+			expect(registry._pools[Component.tag]:get(entity)).to.equal(nil)
 		end)
 
 		it("should do nothing if given an invalid entity", function(context)
-			context.registry:tryAddComponent(0, "number", 0)
+			context.registry:tryAddComponent(0, Component.number, 0)
 		end)
 
 		it("should error if given an invalid component name", function(context)
@@ -552,32 +560,32 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			expect(registry:getOrAddComponent(entity, "number", 10)).to.equal(10)
+			expect(registry:getOrAddComponent(entity, Component.number, 10)).to.equal(10)
 		end)
 
 		it("should return the component instance if the entity already has it", function(context)
 			local registry = context.registry
 			local entity = registry:createEntity()
-			local obj = registry._pools.instance:insert(entity, Instance.new("Hole"))
+			local obj = registry._pools[Component.instance]:insert(entity, Instance.new("Hole"))
 
-			expect(registry:getOrAddComponent(entity, "instance", Instance.new("Hole"))).to.equal(obj)
+			expect(registry:getOrAddComponent(entity, Component.instance, Instance.new("Hole"))).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's added signal", function(context)
 			local registry = context.registry
 			local ranCallback
 
-			registry._pools.number.added:connect(function()
+			registry._pools[Component.number].added:connect(function()
 				ranCallback = true
 			end)
 
-			registry:getOrAddComponent(registry:createEntity(), "number", 10)
+			registry:getOrAddComponent(registry:createEntity(), Component.number, 10)
 			expect(ranCallback).to.equal(true)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:getOrAddComponent(0, "number", 0)
+				context.registry:getOrAddComponent(0, Component.number, 0)
 			end).to.throw()
 		end)
 
@@ -594,9 +602,9 @@ return function()
 			local entity = registry:createEntity()
 			local obj = Instance.new("Hole")
 
-			registry._pools.instance:insert(entity, Instance.new("Hole"))
-			expect(registry:replaceComponent(entity, "instance", obj)).to.equal(obj)
-			expect(registry._pools.instance:get(entity)).to.equal(obj)
+			registry._pools[Component.instance]:insert(entity, Instance.new("Hole"))
+			expect(registry:replaceComponent(entity, Component.instance, obj)).to.equal(obj)
+			expect(registry._pools[Component.instance]:get(entity)).to.equal(obj)
 		end)
 
 		it("should dispatch the component pool's update signal", function(context)
@@ -604,21 +612,21 @@ return function()
 			local new = 11
 			local ranCallback
 
-			registry._pools.number.updated:connect(function(_, newComponent)
+			registry._pools[Component.number].updated:connect(function(_, newComponent)
 				expect(newComponent).to.equal(new)
 				ranCallback = true
 			end)
 
 			local entity = registry:createEntity()
-			registry._pools.number:insert(entity, 10)
-			registry:replaceComponent(entity, "number", 11)
+			registry._pools[Component.number]:insert(entity, 10)
+			registry:replaceComponent(entity, Component.number, 11)
 
 			expect(ranCallback).to.equal(true)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:replaceComponent(0, "number", 0)
+				context.registry:replaceComponent(0, Component.number, 0)
 			end).to.throw()
 		end)
 
@@ -630,7 +638,11 @@ return function()
 
 		it("should error if the entity does not have the component", function(context)
 			expect(function()
-				context.registry:replaceComponent(context.registry:createEntity(), "number", 0)
+				context.registry:replaceComponent(
+					context.registry:createEntity(),
+					Component.number,
+					0
+				)
 			end).to.throw()
 		end)
 	end)
@@ -641,19 +653,23 @@ return function()
 			local entity = registry:createEntity()
 			local added = 10
 
-			expect(registry:addOrReplaceComponent(entity, "number", added)).to.equal(added)
-			expect(registry._pools.number:get(entity)).to.equal(added)
+			expect(registry:addOrReplaceComponent(entity, Component.number, added)).to.equal(added)
+			expect(registry._pools[Component.number]:get(entity)).to.equal(added)
 		end)
 
 		it("should dispatch the component pool's added signal", function(context)
 			local registry = context.registry
 			local ranAddCallback
 
-			registry._pools.instance.added:connect(function()
+			registry._pools[Component.instance].added:connect(function()
 				ranAddCallback = true
 			end)
 
-			registry:addOrReplaceComponent(registry:createEntity(), "instance", Instance.new("Hole"))
+			registry:addOrReplaceComponent(
+				registry:createEntity(),
+				Component.instance,
+				Instance.new("Hole")
+			)
 			expect(ranAddCallback).to.equal(true)
 		end)
 
@@ -662,8 +678,8 @@ return function()
 			local entity = registry:createEntity()
 			local replaced = 12
 
-			expect(registry:addOrReplaceComponent(entity, "number", replaced)).to.equal(replaced)
-			expect(registry._pools.number:get(entity)).to.equal(replaced)
+			expect(registry:addOrReplaceComponent(entity, Component.number, replaced)).to.equal(replaced)
+			expect(registry._pools[Component.number]:get(entity)).to.equal(replaced)
 		end)
 
 		it("should dispatch the component pool's replaced signal", function(context)
@@ -671,19 +687,19 @@ return function()
 			local entity = registry:createEntity()
 			local ranReplaceCallback = false
 
-			registry._pools.instance.updated:connect(function()
+			registry._pools[Component.instance].updated:connect(function()
 				ranReplaceCallback = true
 			end)
 
-			registry._pools.instance:insert(entity, Instance.new("Hole"))
-			registry:addOrReplaceComponent(entity, "instance", Instance.new("Hole"))
+			registry._pools[Component.instance]:insert(entity, Instance.new("Hole"))
+			registry:addOrReplaceComponent(entity, Component.instance, Instance.new("Hole"))
 
 			expect(ranReplaceCallback).to.equal(true)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:addOrReplaceComponent(0, "number", 0)
+				context.registry:addOrReplaceComponent(0, Component.number, 0)
 			end).to.throw()
 		end)
 
@@ -699,10 +715,10 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry._pools.number:insert(entity, 12)
-			registry:removeComponent(entity, "number")
+			registry._pools[Component.number]:insert(entity, 12)
+			registry:removeComponent(entity, Component.number)
 
-			expect(registry._pools.number:getIndex(entity)).to.equal(nil)
+			expect(registry._pools[Component.number]:getIndex(entity)).to.equal(nil)
 		end)
 
 		it("should dispatch the component pool's removed signal", function(context)
@@ -710,19 +726,19 @@ return function()
 			local entity = registry:createEntity()
 			local ranCallback
 
-			registry._pools.number.removed:connect(function()
+			registry._pools[Component.number].removed:connect(function()
 				ranCallback = true
 			end)
 
-			registry._pools.number:insert(entity, 100)
-			registry:removeComponent(entity, "number")
+			registry._pools[Component.number]:insert(entity, 100)
+			registry:removeComponent(entity, Component.number)
 
 			expect(ranCallback).to.equal(true)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:removeComponent(0, "number", 0)
+				context.registry:removeComponent(0, Component.number, 0)
 			end).to.throw()
 		end)
 
@@ -734,7 +750,7 @@ return function()
 
 		it("should error if the entity does not have the component", function(context)
 			expect(function()
-				context.registry:removeComponent(context.registry:createEntity(), "number")
+				context.registry:removeComponent(context.registry:createEntity(), Component.number)
 			end).to.throw()
 		end)
 	end)
@@ -744,17 +760,17 @@ return function()
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry:tryRemoveComponent(entity, "instance")
+			registry:tryRemoveComponent(entity, Component.instance)
 		end)
 
 		it("should remove a component if it exists on the entity", function(context)
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			registry._pools.number:insert(entity, 10)
-			registry:tryRemoveComponent(entity, "number")
+			registry._pools[Component.number]:insert(entity, 10)
+			registry:tryRemoveComponent(entity, Component.number)
 
-			expect(registry._pools.number:getIndex(entity)).to.equal(nil)
+			expect(registry._pools[Component.number]:getIndex(entity)).to.equal(nil)
 		end)
 
 		it("should dispatch the component pool's removed signal", function(context)
@@ -762,18 +778,18 @@ return function()
 			local entity = registry:createEntity()
 			local ranCallback
 
-			registry._pools.number.removed:connect(function()
+			registry._pools[Component.number].removed:connect(function()
 				ranCallback = true
 			end)
 
-			registry._pools.number:insert(entity, 10)
-			registry:tryRemoveComponent(entity, "number")
+			registry._pools[Component.number]:insert(entity, 10)
+			registry:tryRemoveComponent(entity, Component.number)
 
 			expect(ranCallback).to.equal(true)
 		end)
 
 		it("should do nothing if given an invalid entity", function(context)
-			context.registry:tryRemoveComponent(0, "number")
+			context.registry:tryRemoveComponent(0, Component.number)
 		end)
 
 		it("should error if given an invalid component name", function(context)
@@ -838,10 +854,10 @@ return function()
 	describe("getPools", function()
 		it("should return the pools for the specified component types", function(context)
 			local registry = context.registry
-			local pools = registry:getPools({ "number", "instance" })
+			local pools = registry:getPools({ Component.number, Component.instance })
 
-			expect(pools[1]).to.equal(registry._pools.number)
-			expect(pools[2]).to.equal(registry._pools.instance)
+			expect(pools[1]).to.equal(registry._pools[Component.number])
+			expect(pools[2]).to.equal(registry._pools[Component.instance])
 		end)
 	end)
 end

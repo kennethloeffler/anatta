@@ -4,33 +4,35 @@ return function()
 	local Registry = require(script.Parent.Registry)
 	local T = require(script.Parent.Parent.Core.T)
 
+	local Component = {
+		Test1 = {
+			name = "Test1",
+			type = T.table,
+		},
+		Test2 = {
+			name = "Test2",
+			type = T.table,
+		},
+		Test3 = {
+			name = "Test3",
+			type = T.table,
+		},
+		Test4 = {
+			name = "Test4",
+			type = T.table,
+		},
+		TestTag = {
+			name = "TestTag",
+			type = T.none,
+		},
+	}
+
 	beforeEach(function(context)
 		local registry = Registry.new()
 
-		registry:defineComponent({
-			name = "Test1",
-			type = T.table,
-		})
-
-		registry:defineComponent({
-			name = "Test2",
-			type = T.table,
-		})
-
-		registry:defineComponent({
-			name = "Test3",
-			type = T.table,
-		})
-
-		registry:defineComponent({
-			name = "Test4",
-			type = T.table,
-		})
-
-		registry:defineComponent({
-			name = "TestTag",
-			type = T.none,
-		})
+		for _, definition in pairs(Component) do
+			registry:defineComponent(definition)
+		end
 
 		context.registry = registry
 	end)
@@ -43,20 +45,20 @@ return function()
 			local entity = registry:createEntity()
 
 			if i % 2 == 0 then
-				registry:addComponent(entity, "Test1", {})
-				registry:addComponent(entity, "TestTag")
+				registry:addComponent(entity, Component.Test1, {})
+				registry:addComponent(entity, Component.TestTag)
 			end
 
 			if i % 3 == 0 then
-				registry:addComponent(entity, "Test2", {})
+				registry:addComponent(entity, Component.Test2, {})
 			end
 
 			if i % 4 == 0 then
-				registry:addComponent(entity, "Test3", {})
+				registry:addComponent(entity, Component.Test3, {})
 			end
 
 			if i % 5 == 0 then
-				registry:addComponent(entity, "Test4", {})
+				registry:addComponent(entity, Component.Test4, {})
 			end
 
 			if
@@ -73,8 +75,8 @@ return function()
 	describe("new", function()
 		it("should create a new Mapper when there are  multiple components", function(context)
 			local mapper = Mapper.new(context.registry, {
-				withAll = { "Test1" },
-				without = { "Test2" },
+				withAll = { Component.Test1 },
+				without = { Component.Test2 },
 			})
 
 			expect(getmetatable(mapper)).to.equal(Mapper)
@@ -84,7 +86,7 @@ return function()
 			"should create a new SingleMapper when there is only one required component ",
 			function(context)
 				local mapper = Mapper.new(context.registry, {
-					withAll = { "Test1" },
+					withAll = { Component.Test1 },
 				})
 
 				expect(getmetatable(mapper)).to.equal(SingleMapper)
@@ -99,16 +101,16 @@ return function()
 				function(context)
 					local registry = context.registry
 					local mapper, toIterate = createTestMapper(registry, {
-						withAll = { "Test1", "Test2" },
-						withAny = { "Test3", "Test4" },
+						withAll = { Component.Test1, Component.Test2 },
+						withAny = { Component.Test3, Component.Test4 },
 					})
 
 					mapper:map(function(entity, test1, test2, test3, test4)
 						expect(toIterate[entity]).to.equal(true)
-						expect(test1).to.equal(registry:getComponent(entity, "Test1"))
-						expect(test2).to.equal(registry:getComponent(entity, "Test2"))
-						expect(test3).to.equal(registry:getComponent(entity, "Test3"))
-						expect(test4).to.equal(registry:getComponent(entity, "Test4"))
+						expect(test1).to.equal(registry:getComponent(entity, Component.Test1))
+						expect(test2).to.equal(registry:getComponent(entity, Component.Test2))
+						expect(test3).to.equal(registry:getComponent(entity, Component.Test3))
+						expect(test4).to.equal(registry:getComponent(entity, Component.Test4))
 						toIterate[entity] = nil
 
 						return test1, test2, test3, test4
@@ -123,7 +125,7 @@ return function()
 				function(context)
 					local registry = context.registry
 					local mapper, toIterate = createTestMapper(registry, {
-						withAll = { "Test1", "Test2" },
+						withAll = { Component.Test1, Component.Test2 },
 					})
 
 					mapper:map(function(entity)

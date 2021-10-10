@@ -15,10 +15,10 @@
 --[=[
 	@interface Query
 	@within World
-	.withAll {string}?
-	.withUpdated {string}?
-	.withAny {string}?
-	.without {string}?
+	.withAll {ComponentDefinition}?
+	.withUpdated {ComponentDefinition}?
+	.withAny {ComponentDefinition}?
+	.without {ComponentDefinition}?
 
 	A `Query` represents a set of entities to retrieve from a
 	[`Registry`](/api/Registry). A `Query` can be finalized by passing it to
@@ -68,22 +68,43 @@ local World = {}
 World.__index = World
 
 --[=[
+	@prop components {[string]: ComponentDefinition}
+	@within World
+
+	A dictionary mapping component names to component definitions. Intended to be used for importing
+	component definitions as follows:
+	```lua
+	-- Assuming we've already defined the World elsewhere with a component called "Money"
+	local world = Anatta:getWorld("MyCoolWorld")
+	local registry = world.registry
+
+	local Money = world.components.Money
+
+	registry:addComponent(registry:create(), Money, 5000)
+	```
+]=]
+
+--[=[
 	Creates a new `World` containing an empty [`Registry`](/api/Registry) and calls
 	[`Registry:defineComponent`](/api/Registry#defineComponent) for each
 	[`ComponentDefinition`](/api/Anatta#ComponentDefinition) in the given list.
 
 	@ignore
-	@param componentDefinitions {ComponentDefinition}
+	@param definitions {ComponentDefinition}
 	@return World
 ]=]
-function World.new(componentDefinitions)
+function World.new(definitions)
 	local registry = Registry.new()
 
-	for _, componentDefinition in ipairs(componentDefinitions) do
-		registry:defineComponent(componentDefinition)
+	local components = {}
+
+	for _, definition in ipairs(definitions) do
+		registry:defineComponent(definition)
+		components[definition.name] = definition
 	end
 
 	return setmetatable({
+		components = components,
 		registry = registry,
 		_reactorSystems = {},
 	}, World)
