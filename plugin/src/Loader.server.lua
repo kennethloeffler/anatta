@@ -12,7 +12,7 @@ script.Disabled = true
 local Config = require(script.Parent.Config)
 local useDevSource = Config.useDevSource
 local ServerStorage = game:GetService("ServerStorage")
-local devSource = ServerStorage:FindFirstChild("TagEditor")
+local devSource = ServerStorage:FindFirstChild("AnattaPlugin")
 
 -- The source that's shipped integrated into the plugin.
 local builtinSource = script.Parent.Parent
@@ -115,7 +115,13 @@ function PluginFacade:createMenu(id: string, title: string?, icon: string?)
 	return menu
 end
 
-function PluginFacade:createAction(id: string, text: string, statusTip: string, icon: string?, allowBinding: boolean?)
+function PluginFacade:createAction(
+	id: string,
+	text: string,
+	statusTip: string,
+	icon: string?,
+	allowBinding: boolean?
+)
 	if allowBinding == nil then
 		allowBinding = true
 	end
