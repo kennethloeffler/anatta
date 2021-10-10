@@ -117,20 +117,20 @@ end
 	#### Usage:
 	```lua
 	local entity1 = registry:createEntity()
-	local health1 = registry:addComponent(entity1, "Health", 100)
-	local inventory1 = registry:addComponent(entity1, "Inventory", { "Beans" })
+	local health1 = registry:addComponent(entity1, Health, 100)
+	local inventory1 = registry:addComponent(entity1, Inventory, { "Beans" })
 
 	local entity2 = registry:createEntity()
-	local health2 = registry:addComponent(entity1, "Health", 250)
-	local inventory2 = registry:addComponent(entity2, "Inventory", { "Magic Beans", "Bass Guitar" })
+	local health2 = registry:addComponent(entity1, Health, 250)
+	local inventory2 = registry:addComponent(entity2, Inventory, { "Magic Beans", "Bass Guitar" })
 
 	local copied = Registry.fromRegistry(registry)
 
 	-- we now have an exact copy of the original registry
 	assert(copied:isEntityValid(entity1) and copied:isEntityValid(entity2))
 
-	local copiedHealth1, copiedInventory1 = registry:getComponents(entity1, "Health", "Inventory")
-	local copiedHealth2, copiedInventory2 = registry:getComponents(entity1, "Health", "Inventory")
+	local copiedHealth1, copiedInventory1 = registry:getComponents(entity1, Health, Inventory)
+	local copiedHealth2, copiedInventory2 = registry:getComponents(entity1, Health, Inventory)
 
 	assert(copiedHealth1 == health1 and copiedInventory1 == inventory1)
 	assert(copiedHealth2 == health2 and copiedInventory2 == inventory2)
@@ -283,10 +283,10 @@ end
 
 	-- if entity with the same ID already exists, the existing entity is destroyed first
 	local entity2 = registry:createEntity()
-	registry:addComponent(entity2, "PrettyFly")
+	registry:addComponent(entity2, PrettyFly)
 
 	entity2 = registry:createEntityFrom(entity2)
-	assert(registry:entityHas(entity2, "PrettyFly") == false)
+	assert(registry:entityHas(entity2, PrettyFly) == false)
 	```
 
 	@private
@@ -435,7 +435,7 @@ end
 
 	assert(self:isEntityOrphaned(entity) == true)
 
-	registry:addComponent(entity, "Car", {
+	registry:addComponent(entity, Car, {
 		model = game.ReplicatedStorage.Car:Clone(),
 		color = "Red",
 	})
