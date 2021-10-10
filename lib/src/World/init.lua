@@ -59,6 +59,23 @@ local World = {}
 World.__index = World
 
 --[=[
+	@prop components {[string]: ComponentDefinition}
+	@within World
+
+	A dictionary mapping component names to component definitions. Intended to be used for importing
+	component definitions as follows:
+	```lua
+	-- Assuming we've already defined the World elsewhere with a component called "Money"
+	local world = Anatta:getWorld("MyCoolWorld")
+	local registry = world.registry
+
+	local Money = world.components.Money
+
+	registry:addComponent(registry:create(), Money, 5000)
+	```
+]=]
+
+--[=[
 	Creates a new `World` containing an empty [`Registry`](/api/Registry) and calls
 	[`Registry:defineComponent`](/api/Registry#defineComponent) for each
 	[`ComponentDefinition`](/api/Anatta#ComponentDefinition) in the given list.
@@ -70,15 +87,15 @@ World.__index = World
 function World.new(definitions)
 	local registry = Registry.new()
 
-	local component = {}
+	local components = {}
 
 	for _, definition in ipairs(definitions) do
 		registry:defineComponent(definition)
-		component[definition.name] = definition
+		components[definition.name] = definition
 	end
 
 	return setmetatable({
-		component = component,
+		components = components,
 		registry = registry,
 		_reactorSystems = {},
 	}, World)

@@ -506,7 +506,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
 	@param ... ComponentDefinition
@@ -536,7 +536,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
 	@param ... ComponentDefinition
@@ -565,10 +565,10 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
-	@param definition
+	@param definition ComponentDefinition
 	@return any
 ]=]
 function Registry:getComponent(entity, definition)
@@ -587,11 +587,11 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
 	@param output table
-	@param ...definitions ComponentDefinition
+	@param ... ComponentDefinition
 	@return ...any
 ]=]
 function Registry:getComponents(entity, output, ...)
@@ -610,7 +610,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error "entity %d already has a %s" -- The entity already has that component.
 	@error Failed type check -- The given component has the wrong type.
 
@@ -640,7 +640,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error "entity %d already has a %s" -- The entity already has that component.
 	@error Failed type check -- The given component has the wrong type.
 
@@ -662,7 +662,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
@@ -694,7 +694,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
@@ -727,7 +727,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error Failed type check -- The given component has the wrong type.
 	@error "entity %d does not have a %s" -- The entity is expected to have this component.
 
@@ -759,7 +759,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
@@ -795,7 +795,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error "entity %d does not have a %s" -- The entity is expected to have this component.
 
 	@param entity number
@@ -821,7 +821,7 @@ end
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
 	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
 	@param definition ComponentDefinition
@@ -863,7 +863,7 @@ end
 --[=[
 	Returns the total number of entities with the given component.
 
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param definition ComponentDefinition
 	@return number
@@ -912,7 +912,7 @@ end
 	Returns a list of pools containing the specified components in the same order as
 	the given list of component names.
 
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@private
 	@param definitions {string}
@@ -937,10 +937,10 @@ end
 --[=[
 	Returns the pool containing the specified components.
 
-	@error "invalid component name: %s" -- No component goes by that name.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@private
-	@param definition string
+	@param definition ComponentDefinition
 	@return Pool
 ]=]
 function Registry:getPool(definition)

@@ -34,7 +34,7 @@ local Worlds = {}
 	@function createWorld
 	@within Anatta
 	@param namespace string
-	@param componentDefinitions {[string]: ComponentDefinition} | Instance
+	@param componentDefinitions {ComponentDefinition} | Instance
 	@return World
 ]=]
 local function createWorld(namespace, componentDefinitions)
