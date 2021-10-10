@@ -1,7 +1,7 @@
 local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Actions = require(Modules.Plugin.Actions)
 local Item = require(Modules.Plugin.Components.ListItem)
 
@@ -13,7 +13,7 @@ local function GroupItem(props)
 		LayoutOrder = props.LayoutOrder,
 
 		leftClick = function(_rbx)
-			TagManager.Get():SetGroup(props.Tag, props.Group)
+			ComponentManager.Get():SetGroup(props.Tag, props.Group)
 			props.close()
 		end,
 
@@ -35,7 +35,7 @@ local function mapDispatchToProps(dispatch)
 			dispatch(Actions.ToggleGroupPicker(nil))
 		end,
 		delete = function(name)
-			TagManager.Get():DelGroup(name)
+			ComponentManager.Get():DelGroup(name)
 		end,
 	}
 end

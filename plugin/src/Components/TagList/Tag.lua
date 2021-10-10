@@ -2,7 +2,7 @@ local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
 local Actions = require(Modules.Plugin.Actions)
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Item = require(Modules.Plugin.Components.ListItem)
 local TagSettings = require(Modules.Plugin.Components.TagList.TagSettings)
 local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccessor)
@@ -47,16 +47,16 @@ local function Tag(props)
 			Height = props.isMenuOpen and 171 or 26,
 
 			onSetVisible = function()
-				TagManager.Get():SetVisible(props.Tag, not props.Visible)
+				ComponentManager.Get():SetVisible(props.Tag, not props.Visible)
 			end,
 
 			onCheck = function(_rbx)
-				TagManager.Get():SetTag(props.Tag, not props.HasAll)
+				ComponentManager.Get():SetTag(props.Tag, not props.HasAll)
 			end,
 
 			onSubmit = function(_rbx, newName)
 				props.stopRenaming()
-				TagManager.Get():Rename(props.Tag, newName)
+				ComponentManager.Get():Rename(props.Tag, newName)
 			end,
 
 			onFocusLost = props.stopRenaming,

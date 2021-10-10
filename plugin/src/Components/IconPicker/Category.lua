@@ -1,6 +1,6 @@
 local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Icon = require(Modules.Plugin.Components.Icon)
 local ThemedTextLabel = require(Modules.Plugin.Components.ThemedTextLabel)
 
@@ -35,7 +35,7 @@ function Category:render()
 			Visible = matches,
 			LayoutOrder = i,
 			[Roact.Event.MouseButton1Click] = function(_rbx)
-				TagManager.Get():SetIcon(props.tagName, icon)
+				ComponentManager.Get():SetIcon(props.tagName, icon)
 				props.close()
 			end,
 

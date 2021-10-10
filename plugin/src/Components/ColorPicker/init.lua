@@ -2,7 +2,7 @@ local Modules = script.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
 local Constants = require(Modules.Plugin.Constants)
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Actions = require(Modules.Plugin.Actions)
 
 local Page = require(script.Parent.Page)
@@ -109,7 +109,8 @@ function ColorPicker:render()
 							self.state.wheelMouseDown
 							and input.UserInputType == Enum.UserInputType.MouseMovement
 						then
-							local pos = Vector2.new(input.Position.X, input.Position.Y) - rbx.AbsolutePosition
+							local pos = Vector2.new(input.Position.X, input.Position.Y)
+								- rbx.AbsolutePosition
 							pos = pos / rbx.AbsoluteSize
 
 							self:setState({
@@ -180,7 +181,8 @@ function ColorPicker:render()
 						Label = "RGB",
 
 						Validate = function(text)
-							local r, g, b = text:match("^%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*%s*$")
+							local r, g, b =
+								text:match("^%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*%s*$")
 
 							if r == nil or g == nil or b == nil then
 								return false
@@ -215,7 +217,8 @@ function ColorPicker:render()
 						LayoutOrder = 3,
 
 						Validate = function(text)
-							local h, s, v = text:match("^%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*%s*$")
+							local h, s, v =
+								text:match("^%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*%s*$")
 
 							if h == nil or s == nil or v == nil then
 								return false
@@ -273,7 +276,7 @@ function ColorPicker:render()
 							Text = "Submit",
 							Size = UDim2.new(0.5, 0, 0, 24),
 							leftClick = function()
-								TagManager.Get():SetColor(
+								ComponentManager.Get():SetColor(
 									props.tagName,
 									Color3.fromHSV(self.state.h, self.state.s, self.state.v)
 								)

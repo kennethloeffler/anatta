@@ -2,7 +2,7 @@ local Modules = script.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
 local Actions = require(Modules.Plugin.Actions)
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Util = require(Modules.Plugin.Util)
 
 local Page = require(script.Parent.Page)
@@ -45,7 +45,7 @@ local function GroupPicker(props)
 		IsInput = true,
 
 		onSubmit = function(_rbx, text)
-			TagManager.Get():SetGroup(props.groupPicker, text)
+			ComponentManager.Get():SetGroup(props.groupPicker, text)
 			props.close()
 		end,
 	})

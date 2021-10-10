@@ -1,7 +1,7 @@
 local CoreGui = game:GetService("CoreGui")
 
 local Actions = require(script.Parent.Actions)
-local TagManager = require(script.Parent.TagManager)
+local ComponentManager = require(script.Parent.ComponentManager)
 
 type Exports = {
 	tagMenu: PluginMenu?,
@@ -25,7 +25,7 @@ local exports: Exports = {}
 function exports.promptPickColor(dispatch, tag: string)
 	local module = CoreGui:FindFirstChild("ColorPane")
 	if module and module:IsA("ModuleScript") then
-		local manager = TagManager.Get()
+		local manager = ComponentManager.Get()
 		local ColorPane = require(module)
 
 		ColorPane.PromptForColor({
@@ -62,11 +62,11 @@ function exports.showTagMenu(dispatch, tag: string)
 		elseif action == exports.viewTaggedAction then
 			dispatch(Actions.OpenInstanceView(tag))
 		elseif action == exports.deleteAction then
-			TagManager.Get():DelTag(tag)
+			ComponentManager.Get():DelTag(tag)
 		elseif action == exports.renameAction then
 			dispatch(Actions.SetRenaming(tag, true))
 		elseif visualTypes[action] then
-			TagManager.Get():SetDrawType(tag, visualTypes[action])
+			ComponentManager.Get():SetDrawType(tag, visualTypes[action])
 		elseif action ~= nil and action ~= exports.selectAllAction then
 			print("Missing handler for action " .. action.Title)
 		end

@@ -3,7 +3,7 @@ local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
 local Constants = require(Modules.Plugin.Constants)
 local Actions = require(Modules.Plugin.Actions)
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Util = require(Modules.Plugin.Util)
 
 local Item = require(script.Parent.ListItem)
@@ -104,7 +104,7 @@ function TagList:render()
 				},
 
 				leftClick = function(_rbx)
-					TagManager.Get():AddTag(tag)
+					ComponentManager.Get():AddTag(tag)
 				end,
 			})
 		end)
@@ -137,7 +137,7 @@ function TagList:render()
 			Icon = "tag_blue_add",
 
 			leftClick = function(_rbx)
-				TagManager.Get():AddTag(props.searchTerm)
+				ComponentManager.Get():AddTag(props.searchTerm)
 				props.setSearch("")
 			end,
 		})
@@ -149,7 +149,7 @@ function TagList:render()
 			IsInput = true,
 
 			onSubmit = function(_rbx, text)
-				TagManager.Get():AddTag(text)
+				ComponentManager.Get():AddTag(text)
 			end,
 		})
 	end

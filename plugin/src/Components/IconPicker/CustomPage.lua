@@ -2,7 +2,7 @@ local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local Search = require(Modules.Plugin.Components.Search)
 local Button = require(Modules.Plugin.Components.Button)
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 
 local CustomPage = Roact.PureComponent:extend("CustomPage")
 
@@ -63,7 +63,7 @@ function CustomPage:render()
 			leftClick = function()
 				local url = validate(self.state.text)
 				if url then
-					TagManager.Get():SetIcon(self.props.tagName, url)
+					ComponentManager.Get():SetIcon(self.props.tagName, url)
 					self.props.closeFunc()
 				end
 			end,

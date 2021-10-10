@@ -2,7 +2,7 @@ local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
 local Actions = require(Modules.Plugin.Actions)
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 local PluginGlobals = require(Modules.Plugin.PluginGlobals)
 
 local Button = require(Modules.Plugin.Components.Button)
@@ -63,7 +63,7 @@ local function TagSettings(props)
 				Size = UDim2.new(1, 0, 0, 30),
 				Text = "Delete",
 				leftClick = function()
-					TagManager.Get():DelTag(props.tagMenu)
+					ComponentManager.Get():DelTag(props.tagMenu)
 					props.close()
 				end,
 			}),
@@ -119,7 +119,7 @@ local function TagSettings(props)
 				Size = UDim2.new(1, 0, 0, 30),
 				Position = UDim2.new(0, 0, 0, 40),
 				[Roact.Event.MouseButton1Click] = function()
-					TagManager.Get():SetAlwaysOnTop(props.tagMenu, not props.tagAlwaysOnTop)
+					ComponentManager.Get():SetAlwaysOnTop(props.tagMenu, not props.tagAlwaysOnTop)
 				end,
 			}, {
 				Padding = Roact.createElement("UIPadding", {
@@ -129,7 +129,10 @@ local function TagSettings(props)
 				Check = Roact.createElement(Checkbox, {
 					Checked = props.tagAlwaysOnTop,
 					leftClick = function()
-						TagManager.Get():SetAlwaysOnTop(props.tagMenu, not props.tagAlwaysOnTop)
+						ComponentManager.Get():SetAlwaysOnTop(
+							props.tagMenu,
+							not props.tagAlwaysOnTop
+						)
 					end,
 				}),
 				Label = Roact.createElement(TextLabel, {
@@ -168,7 +171,7 @@ local function TagSettings(props)
 					},
 					CurrentOption = props.tagDrawType,
 					onOptionSelected = function(option)
-						TagManager.Get():SetDrawType(props.tagMenu, option)
+						ComponentManager.Get():SetDrawType(props.tagMenu, option)
 					end,
 				}),
 			}),

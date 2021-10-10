@@ -3,7 +3,7 @@ local Collection = game:GetService("CollectionService")
 local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 
-local TagManager = require(Modules.Plugin.TagManager)
+local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Maid = require(Modules.Plugin.Maid)
 
 local WorldProvider = Roact.PureComponent:extend("WorldProvider")
@@ -35,12 +35,14 @@ function WorldProvider:init()
 			end)
 		end
 	end
-	self.maid.cameraChangedConn = workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(cameraAdded)
+	self.maid.cameraChangedConn = workspace
+		:GetPropertyChangedSignal("CurrentCamera")
+		:Connect(cameraAdded)
 	cameraAdded(workspace.CurrentCamera)
 end
 
 function WorldProvider:didMount()
-	local manager = TagManager.Get()
+	local manager = ComponentManager.Get()
 
 	for _, tag in pairs(manager:GetTags()) do
 		if tag.Visible == false or tag.DrawType == "None" then
@@ -156,7 +158,7 @@ function WorldProvider:updateParts()
 	end
 
 	local tagsMap = {}
-	for _, tag in pairs(TagManager.Get():GetTags()) do
+	for _, tag in pairs(ComponentManager.Get():GetTags()) do
 		tagsMap[tag.Name] = tag
 	end
 
@@ -383,33 +385,37 @@ function WorldProvider:tagAdded(tagName)
 			end
 		end
 	end
-	self.instanceAddedConns[tagName] = Collection:GetInstanceAddedSignal(tagName):Connect(function(obj)
-		if not isTypeAllowed(obj) then
-			return
-		end
-		if obj:IsDescendantOf(workspace) then
-			self:instanceAdded(obj)
+	self.instanceAddedConns[tagName] = Collection
+		:GetInstanceAddedSignal(tagName)
+		:Connect(function(obj)
+			if not isTypeAllowed(obj) then
+				return
+			end
+			if obj:IsDescendantOf(workspace) then
+				self:instanceAdded(obj)
+				self:updateParts()
+			end
+			if not self.instanceAncestryChangedConns[obj] then
+				self.instanceAncestryChangedConns[obj] = obj.AncestryChanged:Connect(function()
+					if not self.trackedParts[obj] and obj:IsDescendantOf(workspace) then
+						self:instanceAdded(obj)
+						self:updateParts()
+					elseif self.trackedParts[obj] and not obj:IsDescendantOf(workspace) then
+						self:removeInstance(obj)
+						self:updateParts()
+					end
+				end)
+			end
+		end)
+	self.instanceRemovedConns[tagName] = Collection
+		:GetInstanceRemovedSignal(tagName)
+		:Connect(function(obj)
+			if not isTypeAllowed(obj) then
+				return
+			end
+			self:instanceRemoved(obj)
 			self:updateParts()
-		end
-		if not self.instanceAncestryChangedConns[obj] then
-			self.instanceAncestryChangedConns[obj] = obj.AncestryChanged:Connect(function()
-				if not self.trackedParts[obj] and obj:IsDescendantOf(workspace) then
-					self:instanceAdded(obj)
-					self:updateParts()
-				elseif self.trackedParts[obj] and not obj:IsDescendantOf(workspace) then
-					self:removeInstance(obj)
-					self:updateParts()
-				end
-			end)
-		end
-	end)
-	self.instanceRemovedConns[tagName] = Collection:GetInstanceRemovedSignal(tagName):Connect(function(obj)
-		if not isTypeAllowed(obj) then
-			return
-		end
-		self:instanceRemoved(obj)
-		self:updateParts()
-	end)
+		end)
 end
 
 function WorldProvider:tagRemoved(tagName)

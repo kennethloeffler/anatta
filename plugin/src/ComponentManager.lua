@@ -9,8 +9,8 @@ local Actions = require(script.Parent.Actions)
 local tagsRoot = game:GetService("ServerStorage")
 local tagsFolderName = "TagList"
 
-local TagManager = {}
-TagManager.__index = TagManager
+local ComponentManager = {}
+ComponentManager.__index = ComponentManager
 
 type Tag = {
 	Name: string,
@@ -30,7 +30,7 @@ local defaultValues = {
 	Group = "",
 }
 
-TagManager._global = nil
+ComponentManager._global = nil
 
 local function lerp(start: number, stop: number, t: number): number
 	return (stop - start) * t + start
@@ -54,7 +54,7 @@ local function genColor(name: string): Color3
 	return Color3.fromHSV(h, s, v)
 end
 
-function TagManager.new(store)
+function ComponentManager.new(store)
 	local self = setmetatable({
 		store = store,
 		selectionChanged = nil,
@@ -66,9 +66,9 @@ function TagManager.new(store)
 		nameChangedSignals = {},
 		tags = {},
 		onUpdate = {},
-	}, TagManager)
+	}, ComponentManager)
 
-	TagManager._global = self
+	ComponentManager._global = self
 
 	-- Migration path to new attribute based format.
 	if self.tagsFolder then
@@ -99,7 +99,10 @@ function TagManager.new(store)
 			end
 		end
 		if migrateCount > 0 then
-			print(string.format("TagEditor: Converted %d tags to attribute-based format.", migrateCount))
+			print(string.format(
+				"TagEditor: Converted %d tags to attribute-based format.",
+				migrateCount
+			))
 		end
 
 		ChangeHistory:SetWaypoint("Migrated tags folder")
@@ -122,7 +125,7 @@ function TagManager.new(store)
 	return self
 end
 
-function TagManager:Destroy()
+function ComponentManager:Destroy()
 	self.selectionChanged:Disconnect()
 	if self.childAddedConn then
 		self.childAddedConn:Disconnect()
@@ -138,15 +141,15 @@ function TagManager:Destroy()
 	end
 end
 
-function TagManager.Get(): TagManager
-	return TagManager._global
+function ComponentManager.Get(): ComponentManager
+	return ComponentManager._global
 end
 
-function TagManager:GetTags(): { Tag }
+function ComponentManager:GetTags(): { Tag }
 	return self.tags
 end
 
-function TagManager:OnTagsUpdated(func)
+function ComponentManager:OnTagsUpdated(func)
 	local connection = {
 		Disconnect = function(id)
 			self.onUpdate[id] = nil
@@ -156,7 +159,7 @@ function TagManager:OnTagsUpdated(func)
 	return connection
 end
 
-function TagManager:_watchFolder()
+function ComponentManager:_watchFolder()
 	for _, child in pairs(self.tagsFolder:GetChildren()) do
 		if child:IsA("Configuration") then
 			self:_watchChild(child)
@@ -184,19 +187,21 @@ function TagManager:_watchFolder()
 	end)
 end
 
-function TagManager:_watchChild(instance: Configuration)
+function ComponentManager:_watchChild(instance: Configuration)
 	self:_updateStore()
 
 	self.attributeChangedSignals[instance] = instance.AttributeChanged:Connect(function(_attribute)
 		self:_updateStore()
 	end)
 
-	self.nameChangedSignals[instance] = instance:GetPropertyChangedSignal("Name"):Connect(function(_attribute)
-		self:_updateStore()
-	end)
+	self.nameChangedSignals[instance] = instance
+		:GetPropertyChangedSignal("Name")
+		:Connect(function(_attribute)
+			self:_updateStore()
+		end)
 end
 
-function TagManager:_getFolder()
+function ComponentManager:_getFolder()
 	if not self.tagsFolder then
 		self.tagsFolder = Instance.new("Folder")
 		self.tagsFolder.Name = tagsFolderName
@@ -206,7 +211,7 @@ function TagManager:_getFolder()
 	return self.tagsFolder
 end
 
-function TagManager:_updateStore()
+function ComponentManager:_updateStore()
 	if not self.updateTriggered then
 		self.updateTriggered = true
 		spawn(function()
@@ -215,7 +220,7 @@ function TagManager:_updateStore()
 	end
 end
 
-function TagManager:_doUpdateStore()
+function ComponentManager:_doUpdateStore()
 	self.updateTriggered = false
 	local tags: { [number]: Tag } = {}
 	local groups: { [string]: boolean } = {}
@@ -283,7 +288,7 @@ function TagManager:_doUpdateStore()
 	end
 end
 
-function TagManager:_updateUnknown()
+function ComponentManager:_updateUnknown()
 	local sel = Selection:Get()
 
 	local knownTags = {}
@@ -310,7 +315,7 @@ function TagManager:_updateUnknown()
 	self.store:dispatch(Actions.SetUnknownTags(unknownTagsList))
 end
 
-function TagManager:_setProp(tagName: string, key: string, value: any)
+function ComponentManager:_setProp(tagName: string, key: string, value: any)
 	local tagsFolder = self:_getFolder()
 	local tag = tagsFolder:FindFirstChild(tagName)
 	if not tag then
@@ -329,7 +334,7 @@ function TagManager:_setProp(tagName: string, key: string, value: any)
 	return true
 end
 
-function TagManager:_getProp(tagName: string, key: string)
+function ComponentManager:_getProp(tagName: string, key: string)
 	if not self.tagsFolder then
 		return nil
 	end
@@ -342,7 +347,7 @@ function TagManager:_getProp(tagName: string, key: string)
 	return instance:GetAttribute(key)
 end
 
-function TagManager:AddTag(name)
+function ComponentManager:AddTag(name)
 	-- Early out if tag already exists.
 	if self.tagsFolder and self.tagsFolder:FindFirstChild(name) then
 		return
@@ -364,7 +369,7 @@ function TagManager:AddTag(name)
 	ChangeHistory:SetWaypoint(string.format("Created tag %q", name))
 end
 
-function TagManager:Rename(oldName, newName)
+function ComponentManager:Rename(oldName, newName)
 	local instance = self.tagsFolder and self.tagsFolder:FindFirstChild(oldName)
 	if not instance then
 		return
@@ -381,59 +386,59 @@ function TagManager:Rename(oldName, newName)
 	ChangeHistory:SetWaypoint(string.format("Renamed tag %q to %q", oldName, newName))
 end
 
-function TagManager:SelectAll(tag: string)
+function ComponentManager:SelectAll(tag: string)
 	Selection:Set(Collection:GetTagged(tag))
 end
 
-function TagManager:GetIcon(name: string): string
+function ComponentManager:GetIcon(name: string): string
 	return self:_getProp(name, "Icon") or defaultValues.Icon
 end
 
-function TagManager:GetVisible(name: string): boolean
+function ComponentManager:GetVisible(name: string): boolean
 	return self:_getProp(name, "Visible") or defaultValues.Visible
 end
 
-function TagManager:GetDrawType(name: string): string
+function ComponentManager:GetDrawType(name: string): string
 	return self:_getProp(name, "DrawType") or defaultValues.DrawType
 end
 
-function TagManager:GetColor(name: string): Color3
+function ComponentManager:GetColor(name: string): Color3
 	return self:_getProp(name, "Color") or defaultValues.Color
 end
 
-function TagManager:GetAlwaysOnTop(name: string): boolean
+function ComponentManager:GetAlwaysOnTop(name: string): boolean
 	return self:_getProp(name, "AlwaysOnTop") or defaultValues.AlwaysOnTop
 end
 
-function TagManager:GetGroup(name: string): string
+function ComponentManager:GetGroup(name: string): string
 	return self:_getProp(name, "Group") or defaultValues.Group
 end
 
-function TagManager:SetIcon(name: string, icon: string?)
+function ComponentManager:SetIcon(name: string, icon: string?)
 	self:_setProp(name, "Icon", icon or "")
 end
 
-function TagManager:SetVisible(name: string, visible: boolean)
+function ComponentManager:SetVisible(name: string, visible: boolean)
 	self:_setProp(name, "Visible", visible)
 end
 
-function TagManager:SetDrawType(name: string, type: string)
+function ComponentManager:SetDrawType(name: string, type: string)
 	self:_setProp(name, "DrawType", type)
 end
 
-function TagManager:SetColor(name: string, color: Color3)
+function ComponentManager:SetColor(name: string, color: Color3)
 	self:_setProp(name, "Color", color)
 end
 
-function TagManager:SetAlwaysOnTop(name: string, value: boolean)
+function ComponentManager:SetAlwaysOnTop(name: string, value: boolean)
 	self:_setProp(name, "AlwaysOnTop", value)
 end
 
-function TagManager:SetGroup(name: string, value: string?)
+function ComponentManager:SetGroup(name: string, value: string?)
 	self:_setProp(name, "Group", value or "")
 end
 
-function TagManager:DelTag(name: string)
+function ComponentManager:DelTag(name: string)
 	local tagsFolder = self.tagsFolder
 	if not tagsFolder then
 		return
@@ -454,7 +459,7 @@ function TagManager:DelTag(name: string)
 	ChangeHistory:SetWaypoint(string.format("Deleted tag %q", name))
 end
 
-function TagManager:SetTag(name: string, value: boolean)
+function ComponentManager:SetTag(name: string, value: boolean)
 	if value then
 		ChangeHistory:SetWaypoint(string.format("Applying tag %q to selection", name))
 	else
@@ -480,6 +485,6 @@ function TagManager:SetTag(name: string, value: boolean)
 	end
 end
 
-type TagManager = typeof(TagManager.new())
+type ComponentManager = typeof(ComponentManager.new())
 
-return TagManager
+return ComponentManager
