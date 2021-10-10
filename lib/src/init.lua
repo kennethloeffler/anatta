@@ -56,7 +56,7 @@ local function createWorld(namespace, componentDefinitions)
 			if descendant:IsA("ModuleScript") and not descendant.Name:find("%.spec$") then
 				local definition = require(descendant)
 
-				if Types.ComponentType(definition) then
+				if Types.ComponentDefinition(definition) then
 					table.insert(definitions, definition)
 				end
 			end
