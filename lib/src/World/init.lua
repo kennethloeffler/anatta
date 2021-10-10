@@ -57,12 +57,12 @@ local Registry = require(script.Registry)
 
 local util = require(script.Parent.util)
 
-local ErrMappersCantHaveUpdated = "mappers cannot track updates to components"
-local ErrMappersNeedComponents = "mappers need at least one required component type"
+local ErrMappersCantHaveUpdated = "mappers cannot track updates; use a reactor instead"
+local ErrMappersNeedComponents = "mappers need at least one component provided in withAll"
 local ErrReactorsNeedComponents =
-	"reactors need at least one required, updated, or optional component type"
+	"reactors need at least one component type provided in withAll, withUpdated, or withAny"
 local ErrTooManyUpdated = "reactors can only track up to 32 updated component types"
-local ErrBadComponentName = "invalid component identifier: %s"
+local ErrInvalidComponentDefinition = 'The component type "%s" is not defined for this world'
 
 local World = {}
 World.__index = World
@@ -80,7 +80,7 @@ World.__index = World
 
 	local Money = world.components.Money
 
-	registry:addComponent(registry:create(), Money, 5000)
+	registry:addComponent(registry:createEntity(), Money, 5000)
 	```
 ]=]
 
@@ -114,8 +114,8 @@ end
 	Creates a new [`Mapper`](/api/Mapper) given a [`Query`](#Query).
 
 	@error "mappers cannot track updates to components; use a Reactor instead" -- Reactors can track updates. Mappers can't.
-	@error "mappers need at least one component type named in withAll" -- There were no components named in withAll.
-	@error "invalid component identifier: %s" -- No component goes by that name.
+	@error "mappers need at least one component type provided in withAll" -- Mappers need components in withAll to query.
+	@error 'the component type "%s" is not defined for this world" -- No component matches that definition.
 
 	@param query Query
 	@return Mapper
@@ -127,11 +127,12 @@ function World:getMapper(query)
 	util.jumpAssert(#withUpdated == 0, ErrMappersCantHaveUpdated)
 	util.jumpAssert(#withAll > 0, ErrMappersNeedComponents)
 
-	for _, componentNames in pairs(query) do
-		for _, componentName in ipairs(componentNames) do
+	for _, components in pairs(query) do
+		for _, definintion in ipairs(components) do
 			util.jumpAssert(
-				self.registry:isComponentDefined(componentName),
-				ErrBadComponentName:format(componentName)
+				self.registry:isComponentDefined(definintion),
+				ErrInvalidComponentDefinition,
+				definintion
 			)
 		end
 	end
@@ -142,9 +143,9 @@ end
 --[=[
 	Creates a new [`Reactor`](/api/Reactor) given a [`Query`](#Query).
 
-	@error "reactors need at least one component type named in withAll, withUpdated, or withAny" -- Reactors need components to query.
-	@error "reactors can only track up to 32 updated component types" -- More than 32 components were named in withUpdated.
-	@error "invalid component identifier: %s" -- No component goes by that name.
+	@error "reactors need at least one component type provided in withAll, withUpdated, or withAny" -- Reactors need components to query.
+	@error "reactors can only track up to 32 updated component types" -- More than 32 components were provided in withUpdated.
+	@error 'the component type "%s" is not defined for this world" -- No component matches that definition.
 
 	@param query Query
 	@return Reactor
@@ -160,11 +161,12 @@ function World:getReactor(query, script)
 		ErrReactorsNeedComponents
 	)
 
-	for _, componentNames in pairs(query) do
-		for _, componentName in ipairs(componentNames) do
+	for _, components in pairs(query) do
+		for _, definition in ipairs(components) do
 			util.jumpAssert(
-				self.registry:isComponentDefined(componentName),
-				ErrBadComponentName:format(componentName)
+				self.registry:isComponentDefined(definition),
+				ErrInvalidComponentDefinition,
+				definition
 			)
 		end
 	end

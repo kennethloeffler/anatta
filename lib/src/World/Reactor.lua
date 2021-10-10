@@ -8,7 +8,7 @@
 	remains present until the entity fails to match the [`Query`](/api/World#Query).
 
 	In contrast to a [`Mapper`](/api/Mapper), a `Reactor` can track updates to components
-	named in [`Query.withUpdated`](/api/World#Query).
+	provided in [`Query.withUpdated`](/api/World#Query).
 
 	You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor).
 ]=]
@@ -132,7 +132,7 @@ end
 	@param callback (number, ...any)
 
 	Iterates over the all the entities present in the `Reactor`. Calls the callback for
-	each entity, passing each entity followed by the components named in the
+	each entity, passing each entity followed by the components provided in the
 	[`Query`](/api/World#Query).
 ]=]
 function Reactor:each(callback)
@@ -153,10 +153,10 @@ end
 
 	Iterates over all the entities present in the `Reactor` and clears each entity's
 	update status. Calls the callback for each entity visited during the iteration,
-	passing the entity followed by the components named in the
+	passing the entity followed by the components provided in the
 	[`Query`](/api/World#Query).
 
-	This function effectively "consumes" all updates made to components named in
+	This function effectively "consumes" all updates made to components provided in
 	[`Query.withUpdated`](/api/World#Query), emptying the `Reactor`. A consumer that wants
 	to selectively consume updates should use [`consume`](#consume) instead.
 ]=]

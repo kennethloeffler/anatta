@@ -28,8 +28,8 @@ local Worlds = {}
 	Creates a new [`World`](World). If the second argument is a list of
 	[`ComponentDefinition`](#ComponentDefinition)s, calls
 	[`Registry:defineComponent`](/api/Registry#defineComponent) on each member of the
-	list. Otherwise, if the second argument is an `Instance`, require all of the
-	`Instance`'s `ModuleScript` descendants and attempt to define each result.
+	list. Otherwise, if the second argument is an `Instance`, calls `require` on all of
+	the `Instance`'s `ModuleScript` descendants and attempts to define each result.
 
 	@function createWorld
 	@within Anatta
