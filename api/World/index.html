@@ -13,8 +13,8 @@ unscoped access to entities and components.
 
 You can get or create a `World` with [`Anatta.getWorld`](/api/Anatta#getWorld) and
 [`Anatta.createWorld`](/api/Anatta#createWorld)."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/World"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/World"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/World" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/World" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.dd1dc258.css">
-<link rel="preload" href="/anatta/assets/js/runtime~main.3cc0410d.js" as="script">
-<link rel="preload" href="/anatta/assets/js/main.289fcfcc.js" as="script">
+<link rel="preload" href="/anatta/assets/js/runtime~main.47443e49.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.5729cd4a.js" as="script">
 </head>
 <body>
 <script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){var t=null;try{t=localStorage.getItem("theme")}catch(t){}return t}();t(null!==e?e:"light")}()</script><div id="__docusaurus">
@@ -77,15 +77,15 @@ You can get or create a `World` with [`Anatta.getWorld`](/api/Anatta#getWorld) a
 
 <span class="token keyword">local</span> Money <span class="token operator">=</span> world<span class="token punctuation">.</span>components<span class="token punctuation">.</span>Money
 
-registry<span class="token punctuation">:</span><span class="token function">addComponent</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> Money<span class="token punctuation">,</span> <span class="token number">5000</span><span class="token punctuation">)</span>
+registry<span class="token punctuation">:</span><span class="token function">addComponent</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">create</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> Money<span class="token punctuation">,</span> <span class="token number">5000</span><span class="token punctuation">)</span>
 </code></pre>
 </div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="registry"></a><code style="text-decoration:none">registry</code><a class="hash-link" href="#registry" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L14"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World.registry: </code> <code class="blue_2Afy">Registry</code></div><div>
 <p>Provides direct, unscoped access to a <code>World</code>'s <a href="/anatta/api/Registry"><code>Registry</code></a>.</p>
 </div><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getMapper"></a><code style="text-decoration:none">getMapper</code><a class="hash-link" href="#getMapper" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L123"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World:</code><code class="green_3LnD">getMapper</code><code>(</code><code>query: </code><code class="blue_2Afy">Query</code><code>) → </code><code class="blue_2Afy">Mapper</code></div><div>
 <p>Creates a new <a href="/anatta/api/Mapper"><code>Mapper</code></a> given a <a href="#Query"><code>Query</code></a>.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;mappers cannot track updates to components; use a Reactor instead&quot;</td><td>Reactors can track updates. Mappers can&#x27;t.</td></tr><tr><td>&quot;mappers need at least one component type provided in withAll&quot;</td><td>Mappers need components in withAll to query.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this world&quot;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getReactor"></a><code style="text-decoration:none">getReactor</code><a class="hash-link" href="#getReactor" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L153"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World:</code><code class="green_3LnD">getReactor</code><code>(</code><code>query: </code><code class="blue_2Afy">Query</code><code>) → </code><code class="blue_2Afy">Reactor</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;mappers cannot track updates to components; use a Reactor instead&quot;</td><td>Reactors can track updates. Mappers can&#x27;t.</td></tr><tr><td>&quot;mappers need at least one component type named in withAll&quot;</td><td>There were no components named in withAll.</td></tr><tr><td>&quot;invalid component identifier: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getReactor"></a><code style="text-decoration:none">getReactor</code><a class="hash-link" href="#getReactor" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L152"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World:</code><code class="green_3LnD">getReactor</code><code>(</code><code>query: </code><code class="blue_2Afy">Query</code><code>) → </code><code class="blue_2Afy">Reactor</code></div><div>
 <p>Creates a new <a href="/anatta/api/Reactor"><code>Reactor</code></a> given a <a href="#Query"><code>Query</code></a>.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;reactors need at least one component type provided in withAll, withUpdated, or withAny&quot;</td><td>Reactors need components to query.</td></tr><tr><td>&quot;reactors can only track up to 32 updated component types&quot;</td><td>More than 32 components were provided in withUpdated.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this world&quot;</td><td>No component matches that definition.</td></tr></tbody></table></div></article></div></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a><ul><li><a href="#Query" class="table-of-contents__link">Query</a></li></ul></li><li><a href="#properties" class="table-of-contents__link">Properties</a><ul><li><a href="#components" class="table-of-contents__link">components</a></li><li><a href="#registry" class="table-of-contents__link">registry</a></li></ul></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#getMapper" class="table-of-contents__link">:getMapper</a></li><li><a href="#getReactor" class="table-of-contents__link">:getReactor</a></li></ul></li></ul></div></div></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;reactors need at least one component type named in withAll, withUpdated, or withAny&quot;</td><td>Reactors need components to query.</td></tr><tr><td>&quot;reactors can only track up to 32 updated component types&quot;</td><td>More than 32 components were named in withUpdated.</td></tr><tr><td>&quot;invalid component identifier: %s&quot;</td><td>No component goes by that name.</td></tr></tbody></table></div></article></div></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a><ul><li><a href="#Query" class="table-of-contents__link">Query</a></li></ul></li><li><a href="#properties" class="table-of-contents__link">Properties</a><ul><li><a href="#components" class="table-of-contents__link">components</a></li><li><a href="#registry" class="table-of-contents__link">registry</a></li></ul></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#getMapper" class="table-of-contents__link">:getMapper</a></li><li><a href="#getReactor" class="table-of-contents__link">:getReactor</a></li></ul></li></ul></div></div></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
         {
             &quot;name&quot;: &quot;new&quot;,
@@ -133,12 +133,12 @@ registry<span class="token punctuation">:</span><span class="token function">add
                     &quot;desc&quot;: &quot;Reactors can track updates. Mappers can&#x27;t.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;mappers need at least one component type provided in withAll\&quot;&quot;,
-                    &quot;desc&quot;: &quot;Mappers need components in withAll to query.&quot;
+                    &quot;lua_type&quot;: &quot;\&quot;mappers need at least one component type named in withAll\&quot;&quot;,
+                    &quot;desc&quot;: &quot;There were no components named in withAll.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this world\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component identifier: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
                 }
             ],
             &quot;source&quot;: {
@@ -165,20 +165,20 @@ registry<span class="token punctuation">:</span><span class="token function">add
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;errors&quot;: [
                 {
-                    &quot;lua_type&quot;: &quot;\&quot;reactors need at least one component type provided in withAll, withUpdated, or withAny\&quot;&quot;,
+                    &quot;lua_type&quot;: &quot;\&quot;reactors need at least one component type named in withAll, withUpdated, or withAny\&quot;&quot;,
                     &quot;desc&quot;: &quot;Reactors need components to query.&quot;
                 },
                 {
                     &quot;lua_type&quot;: &quot;\&quot;reactors can only track up to 32 updated component types\&quot;&quot;,
-                    &quot;desc&quot;: &quot;More than 32 components were provided in withUpdated.&quot;
+                    &quot;desc&quot;: &quot;More than 32 components were named in withUpdated.&quot;
                 },
                 {
-                    &quot;lua_type&quot;: &quot;&#x27;the component type \&quot;%s\&quot; is not defined for this world\&quot;&quot;,
-                    &quot;desc&quot;: &quot;No component matches that definition.&quot;
+                    &quot;lua_type&quot;: &quot;\&quot;invalid component identifier: %s\&quot;&quot;,
+                    &quot;desc&quot;: &quot;No component goes by that name.&quot;
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 153,
+                &quot;line&quot;: 152,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         }
@@ -195,7 +195,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
         },
         {
             &quot;name&quot;: &quot;components&quot;,
-            &quot;desc&quot;: &quot;A dictionary mapping component names to component definitions. Intended to be used for importing\ncomponent definitions as follows:\n```lua\n-- Assuming we&#x27;ve already defined the World elsewhere with a component called \&quot;Money\&quot;\nlocal world = Anatta:getWorld(\&quot;MyCoolWorld\&quot;)\nlocal registry = world.registry\n\nlocal Money = world.components.Money\n\nregistry:addComponent(registry:createEntity(), Money, 5000)\n```&quot;,
+            &quot;desc&quot;: &quot;A dictionary mapping component names to component definitions. Intended to be used for importing\ncomponent definitions as follows:\n```lua\n-- Assuming we&#x27;ve already defined the World elsewhere with a component called \&quot;Money\&quot;\nlocal world = Anatta:getWorld(\&quot;MyCoolWorld\&quot;)\nlocal registry = world.registry\n\nlocal Money = world.components.Money\n\nregistry:addComponent(registry:create(), Money, 5000)\n```&quot;,
             &quot;lua_type&quot;: &quot;{[string]: ComponentDefinition}&quot;,
             &quot;source&quot;: {
                 &quot;line&quot;: 86,
@@ -242,7 +242,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
         &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
     }
 }</pre></details></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2021 . Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/anatta/assets/js/runtime~main.3cc0410d.js"></script>
-<script src="/anatta/assets/js/main.289fcfcc.js"></script>
+<script src="/anatta/assets/js/runtime~main.47443e49.js"></script>
+<script src="/anatta/assets/js/main.5729cd4a.js"></script>
 </body>
 </html>
