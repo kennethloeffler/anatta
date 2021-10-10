@@ -1,6 +1,6 @@
 # ECS basics for Roblox programmers
 
-ECS architectures are uncommon on Roblox, so many Roblox developers may not know much about them or how they can be used. In this section, we'll compare and contrast ECS with another kind of component-based architecture that's more common on Roblox: the "binder" pattern. Then, we'll incrementally alter `CollectionService`'s API, turning it into one that resembles Anatta's API.
+ECS-style architectures are very uncommon on Roblox, so many Roblox developers may not know much about them or understand how they can be used. In this section, we'll compare and contrast ECS with another kind of component-based architecture that is somewhat better known on Roblox: the "binder" pattern. We'll cover the binder pattern in some detail to give a clear picture of how OOP-style composition can work in Roblox. Finally, we'll incrementally alter `CollectionService`'s API, turning it into one that resembles Anatta's API.
 
 First, a quick refresher on the essentials of `CollectionService`:
 ```lua
@@ -42,16 +42,18 @@ end
 
 We can immediately see that this allows us to:
 
-* Listen for addition and removal of tags to know when to alter game state;
-* Make a *query* at any time to discover all the `Instance`s that possess the tag and run the same logic for all of them.
+* Listen for addition and removal of tags to know when to alter the game state;
+* Run a query at any time to discover all the `Instance`s that have the tag and apply the same logic to all of them.
 
-We'll see in the following sections how we can leverage these ideas and improve upon them.
+We'll see in the following sections how we can use these ideas and improve upon them.
 
 ## The binder pattern
 
-Architectures using the "binder" pattern on Roblox have utilized this API with minimal extension to implement OOP-style object composition to some success.
+The binder pattern leverage `CollectionService` to implement OOP-style object composition that provides benefits with respect to Roblox Content Streaming, . It "binds" Lua classes to `CollectionService` tags.
 
 ## Supercharging `CollectionService`
+
+It may be helpful to first think of ECS as being a little bit like an upgraded `CollectionService`. How should we do it?
 
 ### Keeping tags well-defined
 
@@ -70,10 +72,16 @@ CollectionService:DefineTag("OhNo!")
 -- This won't error because we've just defined the tag.
 CollectionService:GetTagged("OhNo!")
 ```
-This helps for debugging simple problems like typos in tag names.
+This helps when debugging simple problems like typos in tag names.
 
 ### Getting the data we want
 
+
+
 ### Making expressive queries
 
-## Replacing `Instance`
+## Now what?
+We have our new and improved `CollectionService` API - now what can we do with it?
+
+### `Instance` and object identity
+There's still one key difference
