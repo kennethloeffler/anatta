@@ -1,0 +1,11 @@
+{
+  "name": "AnattaPluginDevBuild",
+  "tree": {
+    "$className": "DataModel",
+    "ServerStorage": {
+      "AnattaPlugin": {
+        "$path": "../plugin"
+      }
+    }
+  }
+}

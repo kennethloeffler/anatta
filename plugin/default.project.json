@@ -6,7 +6,7 @@
       "$path": "src"
     },
     "Anatta": {
-      "$path": "../"
+      "$path": "../lib"
     },
     "Roact": {
       "$path": "../vendor/roact"
