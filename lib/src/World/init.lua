@@ -55,6 +55,15 @@ local Mapper = require(script.Mapper)
 local Reactor = require(script.Reactor)
 local Registry = require(script.Registry)
 
+local util = require(script.Parent.util)
+
+local ErrMappersCantHaveUpdated = "mappers cannot track updates to components"
+local ErrMappersNeedComponents = "mappers need at least one required component type"
+local ErrReactorsNeedComponents =
+	"reactors need at least one required, updated, or optional component type"
+local ErrTooManyUpdated = "reactors can only track up to 32 updated component types"
+local ErrBadComponentName = "invalid component identifier: %s"
+
 local World = {}
 World.__index = World
 
@@ -83,26 +92,62 @@ end
 --[=[
 	Creates a new [`Mapper`](/api/Mapper) given a [`Query`](#Query).
 
-	@error "Mappers cannot track updates to components"
-	@error "Mappers need at least one component type specified in withAll"
+	@error "mappers cannot track updates to components; use a Reactor instead" -- Reactors can track updates. Mappers can't.
+	@error "mappers need at least one component type named in withAll" -- There were no components named in withAll.
+	@error "invalid component identifier: %s" -- No component goes by that name.
 
 	@param query Query
 	@return Mapper
 ]=]
 function World:getMapper(query)
+	local withAll = query.withAll or {}
+	local withUpdated = query.withUpdated or {}
+
+	util.jumpAssert(#withUpdated == 0, ErrMappersCantHaveUpdated)
+	util.jumpAssert(#withAll > 0, ErrMappersNeedComponents)
+
+	for _, componentNames in pairs(query) do
+		for _, componentName in ipairs(componentNames) do
+			util.jumpAssert(
+				self.registry:isComponentDefined(componentName),
+				ErrBadComponentName:format(componentName)
+			)
+		end
+	end
+
 	return Mapper.new(self.registry, query)
 end
 
 --[=[
 	Creates a new [`Reactor`](/api/Reactor) given a [`Query`](#Query).
 
-	@error "Reactors need at least one component type specified in withAll, withUpdated, or withAny"
-	@error "Reactors can only track up to 32 updated component types"
+	@error "reactors need at least one component type named in withAll, withUpdated, or withAny" -- Reactors need components to query.
+	@error "reactors can only track up to 32 updated component types" -- More than 32 components were named in withUpdated.
+	@error "invalid component identifier: %s" -- No component goes by that name.
 
 	@param query Query
 	@return Reactor
 ]=]
 function World:getReactor(query, script)
+	local withAll = query.withAll or {}
+	local withUpdated = query.withUpdated or {}
+	local withAny = query.withAny or {}
+
+	util.jumpAssert(#withUpdated <= 32, ErrTooManyUpdated)
+	util.jumpAssert(
+		not (#withAll > 0 or #withUpdated > 0 or #withAny > 0),
+		ErrReactorsNeedComponents
+	)
+
+	for _, componentNames in pairs(query) do
+		for _, componentName in ipairs(componentNames) do
+			util.jumpAssert(
+				self.registry:isComponentDefined(componentName),
+				ErrBadComponentName:format(componentName)
+			)
+		end
+	end
+
 	local reactor = Reactor.new(self.registry, query)
 
 	if self._systemReactors[script] then

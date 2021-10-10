@@ -20,9 +20,6 @@ local Types = require(script.Parent.Parent.Types)
 
 local util = require(script.Parent.Parent.util)
 
-local ErrNeedComponents = "Reactors need at least one required, updated, or optional component type"
-local ErrTooManyUpdated = "Reactors can only track up to 32 updated component types"
-
 local Reactor = {}
 Reactor.__index = Reactor
 
@@ -40,9 +37,6 @@ function Reactor.new(registry, query)
 	local withUpdated = query.withUpdated or {}
 	local without = query.without or {}
 	local withAny = query.withAny or {}
-
-	util.jumpAssert(#withUpdated <= 32, ErrTooManyUpdated)
-	util.jumpAssert(#withAll > 0 or #withUpdated > 0 or #withAny > 0, ErrNeedComponents)
 
 	if #withAll == 1 and #withUpdated == 0 and #without == 0 and #withAny == 0 then
 		return SingleReactor.new(registry:getPool(query.withAll[1]))
