@@ -198,16 +198,15 @@ end
 
 	#### Usage:
 	```lua
-	registry:defineComponent({
+	local Health = registry:defineComponent({
 		name = "Health",
 		type = t.number
 	})
 
-	local entity = registry:createEntity()
-
-	registry:addComponent(entity, "Health", 100)
+	registry:addComponent(registry:createEntity(), Health, 100)
 	```
 
+	@private
 	@error "there is already a component type named %s" -- The name is already being used.
 
 	@param definition ComponentDefinition
@@ -228,6 +227,8 @@ function Registry:defineComponent(definition)
 
 	setmetatable(definition, ComponentDefinitionToString)
 	self._pools[definition] = Pool.new(definition)
+
+	return definition
 end
 
 --[=[
