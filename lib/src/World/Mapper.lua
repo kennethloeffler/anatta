@@ -40,7 +40,7 @@ function Mapper.new(registry, query)
 end
 
 --[=[
-	@param callback (number, ...any) -> ...any
+	@param callback (entity: number, ...any) -> ...any
 
 	Maps over entities that satisfy the `Query`. Calls the callback for each entity,
 	passing each entity followed by the components specified by the `Query` and replacing
@@ -59,7 +59,7 @@ function Mapper:map(callback)
 end
 
 --[=[
-	@param callback (number, ...any)
+	@param callback (entity: number, ...any) -> ()
 
 	Iterates over all entities that satisfy the `Query`. Calls the callback for each
 	entity, passing each entity followed by the components specified by the `Query`.
