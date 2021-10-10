@@ -70,44 +70,6 @@ function ComponentManager.new(store)
 
 	ComponentManager._global = self
 
-	-- Migration path to new attribute based format.
-	if self.componentsFolder then
-		ChangeHistory:SetWaypoint("Migrating components folder")
-
-		local migrateCount = 0
-		for _, componentInstance in pairs(self.componentsFolder:GetChildren()) do
-			if componentInstance:IsA("Folder") then
-				local newInstance = Instance.new("Configuration")
-				newInstance.Name = componentInstance.Name
-
-				local inherited = {}
-				for _, valueInst in pairs(componentInstance:GetChildren()) do
-					if valueInst:IsA("ValueBase") then
-						newInstance:SetAttribute(valueInst.Name, valueInst.Value)
-						inherited[valueInst.Name] = true
-					end
-				end
-				for name, value in pairs(defaultValues) do
-					if inherited[name] then
-						continue
-					end
-					newInstance:SetAttribute(name, value)
-				end
-				newInstance.Parent = self.componentsFolder
-				componentInstance.Parent = nil
-				migrateCount += 1
-			end
-		end
-		if migrateCount > 0 then
-			print(string.format(
-				"ComponentEditor: Converted %d components to attribute-based format.",
-				migrateCount
-			))
-		end
-
-		ChangeHistory:SetWaypoint("Migrated components folder")
-	end
-
 	self:_updateStore()
 
 	self.selectionChanged = Selection.SelectionChanged:Connect(function()
