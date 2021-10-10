@@ -27,7 +27,7 @@ return function(plugin, savedState)
 
 	local toggleButton = plugin:button(
 		toolbar,
-		"Component Window",
+		"Component Editor",
 		"Manipulate components",
 		"http://www.roblox.com/asset/?id=1367281857"
 	)
