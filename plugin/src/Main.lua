@@ -99,7 +99,7 @@ return function(plugin, savedState)
 	local viewComponentizedAction = plugin:createAction(
 		prefix .. "ViewComponentized",
 		"View entities",
-		"Show a list of instances that have this component.",
+		"Show a list of entity-instances that have this component.",
 		nil,
 		false
 	)

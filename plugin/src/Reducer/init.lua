@@ -1,3 +1,4 @@
+local AnattaWorld = require(script.AnattaWorld)
 local Search = require(script.Search)
 local IconSearch = require(script.IconSearch)
 local ComponentMenu = require(script.ComponentMenu)
@@ -17,6 +18,7 @@ local RenamingComponent = require(script.RenamingComponent)
 return function(state, action)
 	state = state or {}
 	return {
+		AnattaWorld = AnattaWorld(state.AnattaWorld),
 		IconSearch = IconSearch(state.IconSearch, action),
 		Search = Search(state.Search, action),
 		ComponentMenu = ComponentMenu(state.ComponentMenu, action),

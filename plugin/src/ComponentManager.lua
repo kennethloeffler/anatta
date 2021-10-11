@@ -1,13 +1,17 @@
 --!strict
-
 local Collection = game:GetService("CollectionService")
 local Selection = game:GetService("Selection")
 local ChangeHistory = game:GetService("ChangeHistoryService")
 
+local Anatta = require(script.Parent.Parent.Anatta)
+
 local Actions = require(script.Parent.Actions)
 
-local componentsRoot = game:GetService("ServerStorage")
-local componentsFolderName = "ComponentList"
+local componentConfigRoot = game:GetService("ServerStorage")
+local componentConfigFolder = "ComponentConfigurations"
+
+local componentDefinitionsRoot = game:GetService("ServerStorage")
+local componentDefinitionsFolder = "ComponentDefinitions"
 
 local ComponentManager = {}
 ComponentManager.__index = ComponentManager
@@ -57,14 +61,18 @@ end
 function ComponentManager.new(store)
 	local self = setmetatable({
 		store = store,
+		anattaWorld = store:getState().AnattaWorld,
 		selectionChanged = nil,
 		updateTriggered = false,
-		componentsFolder = componentsRoot:FindFirstChild(componentsFolderName),
-		childAddedConn = nil,
-		childRemovedConn = nil,
+		definitionsFolder = componentDefinitionsRoot:FindFirstChild(componentDefinitionsFolder),
+		definitionAddedConn = nil,
+		definitionRemovedConn = nil,
+		definitionChangedConns = nil,
+		configurationsFolder = componentConfigRoot:FindFirstChild(componentConfigFolder),
 		attributeChangedSignals = {},
-		nameChangedSignals = {},
+		configurationChangedSignals = {},
 		components = {},
+		componentDefinitions = {},
 		onUpdate = {},
 	}, ComponentManager)
 
@@ -80,8 +88,19 @@ function ComponentManager.new(store)
 		self.store:dispatch(Actions.SetSelectionActive(#sel > 0))
 	end)
 
-	if self.componentsFolder then
-		self:_watchFolder()
+	if self.configurationsFolder then
+		self:_watchConfigurations()
+	end
+
+	if not self.definitionsFolder then
+		task.spawn(function()
+			self.definitionsFolder =
+				componentDefinitionsRoot:WaitForChild(componentDefinitionsFolder)
+
+			self:_watchDefinitions()
+		end)
+	else
+		self:_watchDefinitions()
 	end
 
 	return self
@@ -89,17 +108,19 @@ end
 
 function ComponentManager:Destroy()
 	self.selectionChanged:Disconnect()
-	if self.childAddedConn then
-		self.childAddedConn:Disconnect()
+	if self.definitionAddedConn then
+		self.definitionAddedConn:Disconnect()
 	end
-	if self.childRemovedConn then
-		self.childRemovedConn:Disconnect()
+	if self.definitionRemovedConn then
+		self.definitionRemovedConn:Disconnect()
 	end
 	for _, signal in pairs(self.attributeChangedSignals) do
 		signal:Disconnect()
 	end
-	for _, signal in pairs(self.nameChangedSignals) do
-		signal:Disconnect()
+	for _, connections in pairs(self.configurationChangedSignals) do
+		for _, connection in ipairs(connections) do
+			connection:Disconnect()
+		end
 	end
 end
 
@@ -121,56 +142,78 @@ function ComponentManager:OnComponentsUpdated(func)
 	return connection
 end
 
-function ComponentManager:_watchFolder()
-	for _, child in pairs(self.componentsFolder:GetChildren()) do
+function ComponentManager:_watchConfigurations()
+	for _, child in pairs(self.configurationsFolder:GetChildren()) do
 		if child:IsA("Configuration") then
-			self:_watchChild(child)
+			self:_watchConfiguration(child)
 		end
 	end
-	self.childAddedConn = self.componentsFolder.ChildAdded:Connect(function(instance: Instance)
-		if instance:IsA("Configuration") then
-			self:_watchChild(instance)
-		end
-	end)
-	self.childRemovedConn = self.componentsFolder.ChildRemoved:Connect(function(instance)
-		if instance:IsA("Configuration") then
-			self:_updateStore()
-			local nameChangedSignal = self.nameChangedSignals[instance]
-			if nameChangedSignal then
-				nameChangedSignal:Disconnect()
-				self.nameChangedSignals[instance] = nil
-			end
-			local attributeChangedSignal = self.attributeChangedSignals[instance]
-			if attributeChangedSignal then
-				attributeChangedSignal:Disconnect()
-				self.attributeChangedSignals[instance] = nil
-			end
-		end
-	end)
 end
 
-function ComponentManager:_watchChild(instance: Configuration)
+function ComponentManager:_watchDefinitions()
+	local function tryDefineComponent(instance)
+		if instance.ClassName ~= "ModuleScript" then
+			return false
+		end
+
+		local world = self.store:getState().AnattaWorld
+		local registry = world.registry
+		local requireSuccess, requireResult = pcall(require, instance:Clone())
+
+		if not requireSuccess then
+			warn(requireResult)
+			return false
+		end
+
+		local defineSuccess, defineResult = pcall(registry.defineComponent, registry, requireResult)
+
+		if not defineSuccess then
+			warn(defineResult)
+			return false
+		end
+
+		self.componentDefinitions[requireResult.name] = defineResult
+		self:AddComponent(requireResult.name)
+
+		return true
+	end
+
+	for _, instance in ipairs(self.definitionsFolder:GetDescendants()) do
+		tryDefineComponent(instance)
+	end
+
+	self.definitionAddedConn = self.definitionsFolder.DescendantAdded:Connect(tryDefineComponent)
+end
+
+function ComponentManager:_watchConfiguration(instance: Configuration)
+	local originalName = instance.name
+
 	self:_updateStore()
 
 	self.attributeChangedSignals[instance] = instance.AttributeChanged:Connect(function(_attribute)
 		self:_updateStore()
 	end)
 
-	self.nameChangedSignals[instance] = instance
-		:GetPropertyChangedSignal("Name")
-		:Connect(function(_attribute)
-			self:_updateStore()
-		end)
+	self.configurationChangedSignals[instance] = {
+		instance:GetPropertyChangedSignal("Parent"):Connect(function()
+			task.defer(function()
+				instance.Parent = self.configurationsFolder
+			end)
+		end),
+		instance:GetPropertyChangedSignal("Name"):Connect(function()
+			instance.Name = originalName
+		end),
+	}
 end
 
 function ComponentManager:_getFolder()
-	if not self.componentsFolder then
-		self.componentsFolder = Instance.new("Folder")
-		self.componentsFolder.Name = componentsFolderName
-		self.componentsFolder.Parent = componentsRoot
-		self:_watchFolder()
+	if not self.configurationsFolder then
+		self.configurationsFolder = Instance.new("Folder")
+		self.configurationsFolder.Name = componentConfigFolder
+		self.configurationsFolder.Parent = componentConfigRoot
+		self:_watchConfigurations()
 	end
-	return self.componentsFolder
+	return self.configurationsFolder
 end
 
 function ComponentManager:_updateStore()
@@ -188,8 +231,8 @@ function ComponentManager:_doUpdateStore()
 	local groups: { [string]: boolean } = {}
 	local sel = Selection:Get()
 
-	if self.componentsFolder then
-		for _, inst in pairs(self.componentsFolder:GetChildren()) do
+	if self.configurationsFolder then
+		for _, inst in pairs(self.configurationsFolder:GetChildren()) do
 			if not inst:IsA("Configuration") then
 				continue
 			end
@@ -278,8 +321,8 @@ function ComponentManager:_updateUnknown()
 end
 
 function ComponentManager:_setProp(componentName: string, key: string, value: any)
-	local componentsFolder = self:_getFolder()
-	local component = componentsFolder:FindFirstChild(componentName)
+	local configurationsFolder = self:_getFolder()
+	local component = configurationsFolder:FindFirstChild(componentName)
 	if not component then
 		error("Setting property of non-existent component `" .. tostring(componentName) .. "`")
 	end
@@ -301,11 +344,11 @@ function ComponentManager:_setProp(componentName: string, key: string, value: an
 end
 
 function ComponentManager:_getProp(componentName: string, key: string)
-	if not self.componentsFolder then
+	if not self.configurationsFolder then
 		return nil
 	end
 
-	local instance = self.componentsFolder:FindFirstChild(componentName)
+	local instance = self.configurationsFolder:FindFirstChild(componentName)
 	if not instance then
 		return nil
 	end
@@ -315,13 +358,13 @@ end
 
 function ComponentManager:AddComponent(name)
 	-- Early out if component already exists.
-	if self.componentsFolder and self.componentsFolder:FindFirstChild(name) then
+	if self.configurationsFolder and self.configurationsFolder:FindFirstChild(name) then
 		return
 	end
 
 	ChangeHistory:SetWaypoint(string.format("Creating component %q", name))
 
-	local componentsFolder = self:_getFolder()
+	local configurationsFolder = self:_getFolder()
 	local instance = Instance.new("Configuration")
 	instance.Name = name
 	instance:SetAttribute("Icon", defaultValues.Icon)
@@ -330,13 +373,13 @@ function ComponentManager:AddComponent(name)
 	instance:SetAttribute("AlwaysOnTop", defaultValues.AlwaysOnTop)
 	instance:SetAttribute("Group", defaultValues.Group)
 	instance:SetAttribute("Color", genColor(name))
-	instance.Parent = componentsFolder
+	instance.Parent = configurationsFolder
 
 	ChangeHistory:SetWaypoint(string.format("Created component %q", name))
 end
 
 function ComponentManager:Rename(oldName, newName)
-	local instance = self.componentsFolder and self.componentsFolder:FindFirstChild(oldName)
+	local instance = self.configurationsFolder and self.configurationsFolder:FindFirstChild(oldName)
 	if not instance then
 		return
 	end
@@ -405,11 +448,11 @@ function ComponentManager:SetGroup(name: string, value: string?)
 end
 
 function ComponentManager:DelComponent(name: string)
-	local componentsFolder = self.componentsFolder
-	if not componentsFolder then
+	local configurationsFolder = self.configurationsFolder
+	if not configurationsFolder then
 		return
 	end
-	local instance = componentsFolder:FindFirstChild(name)
+	local instance = configurationsFolder:FindFirstChild(name)
 	if not instance then
 		return
 	end

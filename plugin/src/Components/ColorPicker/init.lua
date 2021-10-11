@@ -291,11 +291,11 @@ function ColorPicker:render()
 end
 
 local function mapStateToProps(state)
-	local component = state.ColorPicker
+	local componentName = state.ColorPicker
 	local componentIcon
 	local componentColor
 	for _, entry in pairs(state.ComponentData) do
-		if entry.Name == component then
+		if entry.Name == componentName then
 			componentIcon = entry.Icon
 			componentColor = entry.Color
 			break
@@ -303,7 +303,7 @@ local function mapStateToProps(state)
 	end
 
 	return {
-		componentName = component,
+		componentName = componentName,
 		componentIcon = componentIcon,
 		componentColor = componentColor,
 	}

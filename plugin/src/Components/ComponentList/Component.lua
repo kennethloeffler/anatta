@@ -4,7 +4,7 @@ local RoactRodux = require(Modules.RoactRodux)
 local Actions = require(Modules.Plugin.Actions)
 local ComponentManager = require(Modules.Plugin.ComponentManager)
 local Item = require(Modules.Plugin.Components.ListItem)
-local ComponentSettings = require(Modules.Plugin.Components.ComponentList.ComponentSettings)
+local ComponentValues = require(Modules.Plugin.Components.ComponentList.ComponentValues)
 local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccessor)
 local Util = require(Modules.Plugin.Util)
 local PluginGlobals = require(Modules.Plugin.PluginGlobals)
@@ -65,7 +65,7 @@ local function Component(props)
 				props.showContextMenu(props.Component)
 			end,
 		}, {
-			Settings = props.isMenuOpen and Roact.createElement(ComponentSettings, {}),
+			Settings = props.isMenuOpen and Roact.createElement(ComponentValues, {}),
 		})
 	end)
 end

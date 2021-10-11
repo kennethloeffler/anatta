@@ -9,7 +9,7 @@ local Util = require(Modules.Plugin.Util)
 local Item = require(script.Parent.ListItem)
 local Component = require(script.Component)
 local Group = require(script.Group)
-local ScrollingFrame = require(Modules.Plugin.Components.ScrollingFrame)
+local ScrollFrame = require(Modules.StudioComponents.ScrollFrame)
 local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccessor)
 
 local ComponentList = Roact.PureComponent:extend("ComponentList")
@@ -41,26 +41,6 @@ function ComponentList:render()
 	end)
 
 	local children = {}
-
-	children.UIListLayout = Roact.createElement("UIListLayout", {
-		SortOrder = Enum.SortOrder.LayoutOrder,
-		Padding = UDim.new(0, 1),
-
-		[Roact.Ref] = function(rbx)
-			if not rbx then
-				return
-			end
-			local function update()
-				if not rbx.Parent then
-					return
-				end
-				local cs = rbx.AbsoluteContentSize
-				rbx.Parent.CanvasSize = UDim2.new(0, 0, 0, cs.y)
-			end
-			update()
-			rbx:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(update)
-		end,
-	})
 
 	local lastGroup
 	local itemCount = 1
@@ -146,7 +126,7 @@ function ComponentList:render()
 		})
 	end
 
-	return Roact.createElement(ScrollingFrame, {
+	return Roact.createElement(ScrollFrame, {
 		Size = props.Size or UDim2.new(1, 0, 1, 0),
 	}, children)
 end
