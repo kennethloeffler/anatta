@@ -85,7 +85,6 @@ function ComponentManager.new(store)
 
 	self.selectionChanged = Selection.SelectionChanged:Connect(function()
 		self:_updateStore()
-		self:_updateUnknown()
 
 		local sel = Selection:Get()
 		self.store:dispatch(Actions.SetSelectionActive(#sel > 0))
@@ -313,33 +312,6 @@ function ComponentManager:_doUpdateStore()
 	for _, func in pairs(self.onUpdate) do
 		func(components, oldComponents)
 	end
-end
-
-function ComponentManager:_updateUnknown()
-	local sel = Selection:Get()
-
-	local knownComponents = {}
-	for _, component in pairs(self.components) do
-		knownComponents[component.Name] = true
-	end
-
-	local unknownComponentsMap = {}
-	for _, inst in pairs(sel) do
-		local components = CollectionService:GetTags(inst)
-		for _, name in pairs(components) do
-			-- Ignore unknown components that start with a dot.
-			if not knownComponents[name] and name:sub(1, 1) ~= "." then
-				unknownComponentsMap[name] = true
-			end
-		end
-	end
-	local unknownComponentsList: { string } = {}
-	for component, _ in pairs(unknownComponentsMap) do
-		table.insert(unknownComponentsList, component)
-	end
-	table.sort(unknownComponentsList)
-
-	self.store:dispatch(Actions.SetUnknownComponents(unknownComponentsList))
 end
 
 function ComponentManager:_setProp(componentName: string, key: string, value: any)
