@@ -128,6 +128,11 @@ function ComponentList:render()
 
 	return Roact.createElement(ScrollFrame, {
 		Size = props.Size or UDim2.new(1, 0, 1, 0),
+		Layout = {
+			ClassName = "UIListLayout",
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Padding = UDim.new(0, 1),
+		},
 	}, children)
 end
 
