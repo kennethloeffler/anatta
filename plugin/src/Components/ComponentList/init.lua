@@ -106,26 +106,6 @@ function ComponentList:render()
 		itemCount = itemCount + 1
 	end
 
-	local searchComponentExists = false
-	for i = 1, #components do
-		if components[i] == props.searchTerm then
-			searchComponentExists = true
-			break
-		end
-	end
-	if props.searchTerm and #props.searchTerm > 0 and not searchComponentExists then
-		children.AddNew = Roact.createElement(Item, {
-			LayoutOrder = itemCount,
-			Text = string.format("Add component %q...", props.searchTerm),
-			Icon = "component_blue_add",
-
-			leftClick = function(_rbx)
-				ComponentManager.Get():AddComponent(props.searchTerm)
-				props.setSearch("")
-			end,
-		})
-	end
-
 	return Roact.createElement(ScrollFrame, {
 		Size = props.Size or UDim2.new(1, 0, 1, 0),
 		Layout = {
