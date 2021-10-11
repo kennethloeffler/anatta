@@ -63,7 +63,7 @@ local tryFromTagged = require(script.tryFromTagged)
 	@param instance Instance
 	@param entity number
 	@param componentDefinition ComponentDefinition
-	@return boolean, number, {[string]: any]}
+	@return boolean, {[string]: any]}
 
 	Takes an `Instance`, an entity, a
 	[`ComponentDefinition`](/api/Anatta#ComponentDefinition), and a component and attempts
