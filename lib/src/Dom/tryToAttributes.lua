@@ -71,14 +71,12 @@ function convert(attributeMap, attributeName, concreteType, instance, entity, va
 		return false, (ErrConversionFailed:format(attributeName, concreteType))
 	end
 
-	attributeMap[ENTITY_ATTRIBUTE_NAME] = entity
-
 	return true, attributeMap
 end
 
-return function(instance, entity, component, componentDefinition)
-	local typeDefinition = componentDefinition.type
-	local componentName = componentDefinition.name
+return function(instance, entity, definition, component)
+	local typeDefinition = definition.type
+	local componentName = definition.name
 
 	util.jumpAssert(typeDefinition.check(component))
 
