@@ -1,7 +1,10 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
 local T = require(script.Parent.Parent.Core.T)
 
+local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
+
+local ErrMissingEntityAttribute = "%s is missing an entity attribute"
 
 local TweenInfoType = T.strictInterface({
 	Time = T.number,
@@ -12,7 +15,7 @@ local TweenInfoType = T.strictInterface({
 	DelayTime = T.number,
 })
 
-local function instanceConversion(instance, attributeName, typeDefinition)
+local function instanceConversion(instance, entity, attributeName, typeDefinition)
 	local refFolder = instance:FindFirstChild(INSTANCE_REF_FOLDER)
 
 	if not refFolder or not refFolder:IsA("Folder") then
@@ -36,7 +39,7 @@ local function instanceConversion(instance, attributeName, typeDefinition)
 	local success, result = typeDefinition.check(ref)
 
 	if success then
-		return true, ref
+		return true, entity, ref
 	else
 		return false, result
 	end
@@ -48,7 +51,7 @@ local conversions = {
 	instance = instanceConversion,
 	instanceIsA = instanceConversion,
 
-	enum = function(instance, attributeName, typeDefinition)
+	enum = function(instance, entity, attributeName, typeDefinition)
 		local enum = typeDefinition.typeParams[1]
 		local enums = enum:GetEnumItems()
 		local enumName = instance:GetAttribute(attributeName)
@@ -63,7 +66,7 @@ local conversions = {
 
 		for _, name in ipairs(enums) do
 			if name == enumName then
-				return true, enum[enumName]
+				return true, entity, enum[enumName]
 			end
 		end
 
@@ -73,11 +76,11 @@ local conversions = {
 		)
 	end,
 
-	TweenInfo = function(instance, attributeName)
+	TweenInfo = function(instance, entity, attributeName)
 		local success, result = convert(instance, attributeName, TweenInfoType)
 
 		if success then
-			return true, TweenInfo.new(
+			return true, entity, TweenInfo.new(
 				result.Time,
 				result.EasingStyle,
 				result.EasingDirection,
@@ -98,32 +101,41 @@ function convert(instance, attributeName, typeDefinition)
 		return false, concreteType
 	end
 
+	local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+	if entity == nil or typeof(entity) ~= "number" then
+		return false, ErrMissingEntityAttribute:format(instance:GetFullName())
+	end
+
 	if typeof(concreteType) == "table" then
 		local value = {}
 
 		for field in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 			local fieldTypeDefinition = typeDefinition.typeParams[1][field]
-			local result
-			success, result = convert(instance, fieldAttributeName, fieldTypeDefinition)
+			local convertSuccess, result, componentValue = convert(
+				instance,
+				fieldAttributeName,
+				fieldTypeDefinition
+			)
 
-			if success then
-				value[field] = result
+			if convertSuccess then
+				value[field] = componentValue
 			else
 				return false, result
 			end
 		end
 
-		return true, value
+		return true, entity, value
 	elseif conversions[concreteType] then
-		return conversions[concreteType](instance, attributeName, typeDefinition)
+		return conversions[concreteType](instance, entity, attributeName, typeDefinition)
 	else
 		local value = instance:GetAttribute(attributeName)
 		local err
 		success, err = typeDefinition.check(value)
 
 		if success then
-			return true, value
+			return true, entity, value
 		else
 			return false, err
 		end

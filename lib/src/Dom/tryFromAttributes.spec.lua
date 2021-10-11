@@ -2,6 +2,8 @@ return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
 	local T = require(script.Parent.Parent.Core.T)
 
+	FOCUS()
+	local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 	local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 	local tryFromAttributes = require(script.Parent.tryFromAttributes)
@@ -13,40 +15,57 @@ return function()
 				local instance = Instance.new("Folder")
 
 				instance:SetAttribute("Test", Vector3.new(1, 1, 1))
+				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
 
-				local success, result = tryFromAttributes(
-					instance,
-					{ name = "Test", type = T.Vector3 }
-				)
+				local success, entity, component = tryFromAttributes(instance, {
+					name = "Test",
+					type = T.Vector3,
+				})
 
 				expect(success).to.equal(true)
-				expect(result).to.equal(Vector3.new(1, 1, 1))
+				expect(component).to.equal(Vector3.new(1, 1, 1))
+				expect(entity).to.equal(1)
 			end
 		)
 
-		it("should return false for an unresolvable type", function()
+		it("should fail for an unresolvable type", function()
 			local instance = Instance.new("Folder")
-			local success, result = tryFromAttributes(instance, { name = "Test", type = T.Random })
+
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+
+			local success, result = tryFromAttributes(instance, {
+				name = "Test",
+				type = T.Random,
+			})
 
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
 		end)
 
-		it("should return false when the attribute is not of the correct type", function()
+		it("should fail when the attribute is not of the correct type", function()
 			local instance = Instance.new("Hole")
 
 			instance:SetAttribute("Test", 2.7182818284)
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
 
-			local success, result = tryFromAttributes(instance, { name = "Test", type = T.Vector3 })
+			local success, result = tryFromAttributes(instance, {
+				name = "Test",
+				type = T.Vector3,
+			})
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
 		end)
 
-		it("should return false when the instance does not have the attribute", function()
-			local success, result = tryFromAttributes(Instance.new("Hole"), {
+		it("should fail when the instance does not have the attribute", function()
+			local instance = Instance.new("Hole")
+
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+
+			local success, result = tryFromAttributes(instance, {
 				name = "Test",
 				type = T.Vector3,
 			})
+
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
 		end)
@@ -57,11 +76,13 @@ return function()
 			"should return true and the value when the instance has the correct attributes",
 			function()
 				local instance = Instance.new("Folder")
+
+				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
 				instance:SetAttribute("Test_Field1", UDim2.new(1, 2, 3, 4))
 				instance:SetAttribute("Test_Field2", true)
 				instance:SetAttribute("Test_Field3", -273.15)
 
-				local success, result = tryFromAttributes(instance, {
+				local success, entity, component = tryFromAttributes(instance, {
 					name = "Test",
 					type = T.strictInterface({
 						Field1 = T.UDim2,
@@ -71,10 +92,11 @@ return function()
 				})
 
 				expect(success).to.equal(true)
-				expect(result).to.be.a("table")
-				expect(result.Field1).to.equal(UDim2.new(1, 2, 3, 4))
-				expect(result.Field2).to.equal(true)
-				expect(result.Field3).to.equal(-273.15)
+				expect(entity).to.equal(1)
+				expect(component).to.be.a("table")
+				expect(component.Field1).to.equal(UDim2.new(1, 2, 3, 4))
+				expect(component.Field2).to.equal(true)
+				expect(component.Field3).to.equal(-273.15)
 			end
 		)
 	end)
@@ -83,40 +105,43 @@ return function()
 		it(
 			"should resolve a true boolean attribute to a an Instance reference contained by a correspondingly-named ObjectValue under the ref folder",
 			function()
-				local instanceWithAttribute = Instance.new("FlagStand")
+				local instance = Instance.new("FlagStand")
 				local refFolder = Instance.new("Folder")
 				local objectValue = Instance.new("ObjectValue")
 				local part = Instance.new("Part")
 
 				refFolder.Name = INSTANCE_REF_FOLDER
-				refFolder.Parent = instanceWithAttribute
+				refFolder.Parent = instance
 
 				objectValue.Value = part
 				objectValue.Name = "Test"
 				objectValue.Parent = refFolder
 
-				instanceWithAttribute:SetAttribute("Test", true)
+				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+				instance:SetAttribute("Test", true)
 
-				local success, result = tryFromAttributes(instanceWithAttribute, {
+				local success, entity, component = tryFromAttributes(instance, {
 					name = "Test",
 					type = T.Instance,
 				})
 
 				expect(success).to.equal(true)
-				expect(result).to.equal(part)
+				expect(entity).to.equal(1)
+				expect(component).to.equal(part)
 			end
 		)
 
 		it("should fail when the ObjectValue does not exist", function()
-			local instanceWithAttribute = Instance.new("FlagStand")
+			local instance = Instance.new("FlagStand")
 			local refFolder = Instance.new("Folder")
 
 			refFolder.Name = INSTANCE_REF_FOLDER
-			refFolder.Parent = instanceWithAttribute
+			refFolder.Parent = instance
 
-			instanceWithAttribute:SetAttribute("Test", true)
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+			instance:SetAttribute("Test", true)
 
-			local success, result = tryFromAttributes(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instance, {
 				name = "Test",
 				type = T.Instance,
 			})
@@ -126,11 +151,12 @@ return function()
 		end)
 
 		it("should fail when the ref folder does not exist", function()
-			local instanceWithAttribute = Instance.new("FlagStand")
+			local instance = Instance.new("FlagStand")
 
-			instanceWithAttribute:SetAttribute("Test", true)
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+			instance:SetAttribute("Test", true)
 
-			local success, result = tryFromAttributes(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instance, {
 				name = "Test",
 				type = T.Instance,
 			})
@@ -140,11 +166,12 @@ return function()
 		end)
 
 		it("should fail when the attribute is false", function()
-			local instanceWithAttribute = Instance.new("FlagStand")
+			local instance = Instance.new("FlagStand")
 
-			instanceWithAttribute:SetAttribute("Test", false)
+			instance:SetAttribute("Test", false)
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
 
-			local success, result = tryFromAttributes(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instance, {
 				name = "Test",
 				type = T.Instance,
 			})
@@ -156,21 +183,22 @@ return function()
 
 	describe("instanceOf", function()
 		it("should fail when the referent is not of the correct class", function()
-			local instanceWithAttribute = Instance.new("FlagStand")
+			local instance = Instance.new("FlagStand")
 			local refFolder = Instance.new("Folder")
 			local objectValue = Instance.new("ObjectValue")
 			local hole = Instance.new("Hole")
 
 			refFolder.Name = INSTANCE_REF_FOLDER
-			refFolder.Parent = instanceWithAttribute
+			refFolder.Parent = instance
 
 			objectValue.Value = hole
 			objectValue.Name = "Test"
 			objectValue.Parent = refFolder
 
-			instanceWithAttribute:SetAttribute("Test", true)
+			instance:SetAttribute("Test", true)
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
 
-			local success, result = tryFromAttributes(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instance, {
 				name = "Test",
 				type = T.instanceOf("Part"),
 			})
@@ -182,21 +210,22 @@ return function()
 
 	describe("instanceIsA", function()
 		it("should fail when the referent is not of the correct kind", function()
-			local instanceWithAttribute = Instance.new("FlagStand")
+			local instance = Instance.new("FlagStand")
 			local refFolder = Instance.new("Folder")
 			local objectValue = Instance.new("ObjectValue")
 			local hole = Instance.new("Hole")
 
 			refFolder.Name = INSTANCE_REF_FOLDER
-			refFolder.Parent = instanceWithAttribute
+			refFolder.Parent = instance
 
 			objectValue.Value = hole
 			objectValue.Name = "Test"
 			objectValue.Parent = refFolder
 
-			instanceWithAttribute:SetAttribute("Test", true)
+			instance:SetAttribute("Test", true)
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
 
-			local success, result = tryFromAttributes(instanceWithAttribute, {
+			local success, result = tryFromAttributes(instance, {
 				name = "Test",
 				type = T.instanceIsA("BasePart"),
 			})

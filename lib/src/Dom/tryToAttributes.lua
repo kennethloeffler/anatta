@@ -1,6 +1,7 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
 local util = require(script.Parent.Parent.util)
 
+local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local ErrConversionFailed = "%s (%s) cannot be turned into an attribute"
@@ -48,7 +49,7 @@ local conversions = {
 	end,
 }
 
-function convert(attributeMap, attributeName, concreteType, value, instance)
+function convert(attributeMap, attributeName, concreteType, instance, entity, value)
 	if typeof(concreteType) == "table" then
 		for field, fieldConcreteType in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
@@ -63,10 +64,12 @@ function convert(attributeMap, attributeName, concreteType, value, instance)
 		return false, (ErrConversionFailed:format(attributeName, concreteType))
 	end
 
+	attributeMap[ENTITY_ATTRIBUTE_NAME] = entity
+
 	return true, attributeMap
 end
 
-return function(instance, component, componentDefinition)
+return function(instance, entity, component, componentDefinition)
 	local typeDefinition = componentDefinition.type
 	local componentName = componentDefinition.name
 
@@ -78,5 +81,5 @@ return function(instance, component, componentDefinition)
 		return false, ("Error converting %s: %s"):format(componentName, concreteType)
 	end
 
-	return convert({}, componentName, concreteType, component, instance)
+	return convert({}, componentName, concreteType, instance, entity, component)
 end
