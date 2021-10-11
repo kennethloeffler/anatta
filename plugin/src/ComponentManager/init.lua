@@ -5,8 +5,7 @@ local ChangeHistory = game:GetService("ChangeHistoryService")
 
 local Modules = script.Parent.Parent
 
-local Anatta = require(Modules.Anatta)
-local Constants = require(Modules.Anatta.Library.Core.Constants)
+local Anatta = require(script.Anatta)
 local Types = require(Modules.Anatta.Library.Types)
 
 local Actions = require(script.Parent.Actions)
@@ -16,8 +15,6 @@ local componentConfigFolder = "ComponentConfigurations"
 
 local componentDefinitionsRoot = game:GetService("ServerStorage")
 local componentDefinitionsFolder = "ComponentDefinitions"
-
-local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local ComponentManager = {}
 ComponentManager.__index = ComponentManager
@@ -508,58 +505,18 @@ function ComponentManager:SetComponent(component, value: boolean)
 	local definition = component.Definition
 
 	for _, instance in pairs(selected) do
-		local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
-
-		if
-			entity == nil
-			or typeof(entity) ~= "number"
-			or not world.registry:entityIsValid(entity)
-		then
-			entity = world.registry:createEntity()
-			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
-		end
-
-		local defaultSuccess, defaultValue = definition.type:tryDefault()
-
-		if not defaultSuccess then
-			warn(defaultValue)
-			continue
-		end
-
-		local attributeSuccess, attributeMap = Anatta.Dom.tryToAttributes(
-			instance,
-			entity,
-			definition,
-			defaultValue
-		)
-
-		if not attributeSuccess then
-			warn(attributeMap)
-			continue
-		end
-
 		if value then
-			world.registry:addComponent(entity, definition, defaultValue)
+			local success, err = Anatta.addComponent(world, instance, definition)
 
-			for attributeName, attributeValue in pairs(attributeMap) do
-				instance:SetAttribute(attributeName, attributeValue)
+			if not success then
+				warn(err)
 			end
-
-			CollectionService:AddTag(instance, definition.name)
 		else
-			world.registry:tryRemoveComponent(entity, definition)
+			local success, err = Anatta.removeComponent(world, instance, definition)
 
-			for attributeName in pairs(attributeMap) do
-				if attributeName ~= ENTITY_ATTRIBUTE_NAME then
-					instance:SetAttribute(attributeName, nil)
-				end
+			if not success then
+				warn(err)
 			end
-
-			if world.registry:entityIsOrphaned(entity) then
-				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
-			end
-
-			CollectionService:RemoveTag(instance, definition.name)
 		end
 	end
 
