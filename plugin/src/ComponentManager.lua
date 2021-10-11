@@ -1,9 +1,13 @@
 --!strict
-local Collection = game:GetService("CollectionService")
+local CollectionService = game:GetService("CollectionService")
 local Selection = game:GetService("Selection")
 local ChangeHistory = game:GetService("ChangeHistoryService")
 
-local Anatta = require(script.Parent.Parent.Anatta)
+local Modules = script.Parent.Parent
+
+local Anatta = require(Modules.Anatta)
+local Constants = require(Modules.Anatta.Library.Core.Constants)
+local Types = require(Modules.Anatta.Library.Types)
 
 local Actions = require(script.Parent.Actions)
 
@@ -12,6 +16,8 @@ local componentConfigFolder = "ComponentConfigurations"
 
 local componentDefinitionsRoot = game:GetService("ServerStorage")
 local componentDefinitionsFolder = "ComponentDefinitions"
+
+local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local ComponentManager = {}
 ComponentManager.__index = ComponentManager
@@ -69,7 +75,7 @@ function ComponentManager.new(store)
 		definitionRemovedConn = nil,
 		definitionChangedConns = nil,
 		configurationsFolder = componentConfigRoot:FindFirstChild(componentConfigFolder),
-		attributeChangedSignals = {},
+		configurationChangedConns = {},
 		configurationChangedSignals = {},
 		components = {},
 		componentDefinitions = {},
@@ -114,7 +120,7 @@ function ComponentManager:Destroy()
 	if self.definitionRemovedConn then
 		self.definitionRemovedConn:Disconnect()
 	end
-	for _, signal in pairs(self.attributeChangedSignals) do
+	for _, signal in pairs(self.configurationChangedConns) do
 		signal:Disconnect()
 	end
 	for _, connections in pairs(self.configurationChangedSignals) do
@@ -158,23 +164,32 @@ function ComponentManager:_watchDefinitions()
 
 		local world = self.store:getState().AnattaWorld
 		local registry = world.registry
-		local requireSuccess, requireResult = pcall(require, instance:Clone())
+		local requireSuccess, newDefinition = pcall(require, instance:Clone())
 
 		if not requireSuccess then
-			warn(requireResult)
+			warn(newDefinition)
 			return false
 		end
 
-		local defineSuccess, defineResult = pcall(registry.defineComponent, registry, requireResult)
+		assert(Types.ComponentDefinition(newDefinition))
+
+		local defineSuccess, defineResult = pcall(registry.defineComponent, registry, newDefinition)
 
 		if not defineSuccess then
+			for definition in pairs(registry._pools) do
+				if definition.name == newDefinition.name then
+					self.componentDefinitions[definition.name] = definition
+					self:AddComponent(definition.name)
+					return true
+				end
+			end
+
 			warn(defineResult)
 			return false
 		end
 
-		self.componentDefinitions[requireResult.name] = defineResult
-		self:AddComponent(requireResult.name)
-
+		self.componentDefinitions[newDefinition.name] = newDefinition
+		self:AddComponent(newDefinition.name)
 		return true
 	end
 
@@ -190,9 +205,10 @@ function ComponentManager:_watchConfiguration(instance: Configuration)
 
 	self:_updateStore()
 
-	self.attributeChangedSignals[instance] = instance.AttributeChanged:Connect(function(_attribute)
-		self:_updateStore()
-	end)
+	self.configurationChangedConns[instance] =
+		instance.AttributeChanged:Connect(function(_attribute)
+			self:_updateStore()
+		end)
 
 	self.configurationChangedSignals[instance] = {
 		instance:GetPropertyChangedSignal("Parent"):Connect(function()
@@ -229,43 +245,49 @@ function ComponentManager:_doUpdateStore()
 	self.updateTriggered = false
 	local components: { [number]: Component } = {}
 	local groups: { [string]: boolean } = {}
-	local sel = Selection:Get()
+	local selected = Selection:Get()
 
 	if self.configurationsFolder then
-		for _, inst in pairs(self.configurationsFolder:GetChildren()) do
-			if not inst:IsA("Configuration") then
+		for _, config in pairs(self.configurationsFolder:GetChildren()) do
+			if not config:IsA("Configuration") then
 				continue
 			end
+
 			local hasAny = false
 			local missingAny = false
 			local entry: Component = {
-				Name = inst.Name,
-				Icon = inst:GetAttribute("Icon") or defaultValues.Icon,
-				Visible = inst:GetAttribute("Visible") or false,
-				DrawType = inst:GetAttribute("DrawType") or defaultValues.DrawType,
-				AlwaysOnTop = inst:GetAttribute("AlwaysOnTop") or defaultValues.AlwaysOnTop,
-				Group = inst:GetAttribute("Group") or defaultValues.Group,
-				Color = inst:GetAttribute("Color") or genColor(inst.Name),
+				Name = config.Name,
+				Icon = config:GetAttribute("Icon") or defaultValues.Icon,
+				Visible = config:GetAttribute("Visible") or false,
+				DrawType = config:GetAttribute("DrawType") or defaultValues.DrawType,
+				AlwaysOnTop = config:GetAttribute("AlwaysOnTop") or defaultValues.AlwaysOnTop,
+				Group = config:GetAttribute("Group") or defaultValues.Group,
+				Color = config:GetAttribute("Color") or genColor(config.Name),
+				Definition = self.componentDefinitions[config.Name],
 				HasAll = false,
 				HasSome = false,
 			}
+
 			if entry.Group == "" then
 				entry.Group = nil
 			end
+
 			if entry.Icon == "" then
 				entry.Icon = defaultValues.Icon
 			end
-			for i = 1, #sel do
-				local obj = sel[i]
-				if Collection:HasTag(obj, entry.Name) then
+
+			for _, instance in ipairs(selected) do
+				if CollectionService:HasTag(instance, entry.Name) then
 					hasAny = true
 				else
 					missingAny = true
 				end
 			end
+
 			entry.HasAll = hasAny and not missingAny
 			entry.HasSome = hasAny and missingAny
-			components[#components + 1] = entry
+			table.insert(components, entry)
+
 			if entry.Group then
 				groups[entry.Group] = true
 			end
@@ -277,13 +299,16 @@ function ComponentManager:_doUpdateStore()
 	end)
 
 	local oldComponents = self.components
+
 	self.components = components
 	self.store:dispatch(Actions.SetComponentData(components))
 
 	local groupList = {}
+
 	for name, _true in pairs(groups) do
 		table.insert(groupList, name)
 	end
+
 	table.sort(groupList)
 
 	self.store:dispatch(Actions.SetGroupData(groupList))
@@ -303,7 +328,7 @@ function ComponentManager:_updateUnknown()
 
 	local unknownComponentsMap = {}
 	for _, inst in pairs(sel) do
-		local components = Collection:GetTags(inst)
+		local components = CollectionService:GetTags(inst)
 		for _, name in pairs(components) do
 			-- Ignore unknown components that start with a dot.
 			if not knownComponents[name] and name:sub(1, 1) ~= "." then
@@ -387,16 +412,16 @@ function ComponentManager:Rename(oldName, newName)
 	ChangeHistory:SetWaypoint(string.format("Renaming component %q to %q", oldName, newName))
 
 	instance.Name = newName
-	for _, componentizedInstance in pairs(Collection:GetTagged(oldName)) do
-		Collection:RemoveTag(componentizedInstance, oldName)
-		Collection:AddTag(componentizedInstance, newName)
+	for _, componentizedInstance in pairs(CollectionService:GetTagged(oldName)) do
+		CollectionService:RemoveTag(componentizedInstance, oldName)
+		CollectionService:AddTag(componentizedInstance, newName)
 	end
 
 	ChangeHistory:SetWaypoint(string.format("Renamed component %q to %q", oldName, newName))
 end
 
 function ComponentManager:SelectAll(component: string)
-	Selection:Set(Collection:GetTagged(component))
+	Selection:Set(CollectionService:GetTagged(component))
 end
 
 function ComponentManager:GetIcon(name: string): string
@@ -461,36 +486,94 @@ function ComponentManager:DelComponent(name: string)
 
 	-- Don't use Destroy as it prevents undo.
 	instance.Parent = nil
-	for _, inst in pairs(Collection:GetTagged(name)) do
-		Collection:RemoveTag(inst, name)
+	for _, inst in pairs(CollectionService:GetTagged(name)) do
+		CollectionService:RemoveTag(inst, name)
 	end
 
 	ChangeHistory:SetWaypoint(string.format("Deleted component %q", name))
 end
 
-function ComponentManager:SetComponent(name: string, value: boolean)
+function ComponentManager:SetComponent(component, value: boolean)
 	if value then
-		ChangeHistory:SetWaypoint(string.format("Applying component %q to selection", name))
+		ChangeHistory:SetWaypoint(string.format("Applying component %q to selection", component.Name))
 	else
-		ChangeHistory:SetWaypoint(string.format("Removing component %q from selection", name))
+		ChangeHistory:SetWaypoint(string.format(
+			"Removing component %q from selection",
+			component.Name
+		))
 	end
 
-	local sel = Selection:Get()
-	for _, obj in pairs(sel) do
+	local selected = Selection:Get()
+	local world = self.store:getState().AnattaWorld
+	local definition = component.Definition
+
+	for _, instance in pairs(selected) do
+		local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+		if
+			entity == nil
+			or typeof(entity) ~= "number"
+			or not world.registry:entityIsValid(entity)
+		then
+			entity = world.registry:createEntity()
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
+		end
+
+		local defaultSuccess, defaultValue = definition.type:tryDefault()
+
+		if not defaultSuccess then
+			warn(defaultValue)
+			continue
+		end
+
+		local attributeSuccess, attributeMap = Anatta.Dom.tryToAttributes(
+			instance,
+			entity,
+			definition,
+			defaultValue
+		)
+
+		if not attributeSuccess then
+			warn(attributeMap)
+			continue
+		end
+
 		if value then
-			Collection:AddTag(obj, name)
+			world.registry:addComponent(entity, definition, defaultValue)
+
+			for attributeName, attributeValue in pairs(attributeMap) do
+				instance:SetAttribute(attributeName, attributeValue)
+			end
+
+			CollectionService:AddTag(instance, definition.name)
 		else
-			Collection:RemoveTag(obj, name)
+			world.registry:tryRemoveComponent(entity, definition)
+
+			for attributeName in pairs(attributeMap) do
+				if attributeName ~= ENTITY_ATTRIBUTE_NAME then
+					instance:SetAttribute(attributeName, nil)
+				end
+			end
+
+			if world.registry:entityIsOrphaned(entity) then
+				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+			end
+
+			CollectionService:RemoveTag(instance, definition.name)
 		end
 	end
+
 	-- No changed events are bound on selected objects, so the store needs
 	-- to be manually marked for update.
 	self:_updateStore()
 
 	if value then
-		ChangeHistory:SetWaypoint(string.format("Applied component %q to selection", name))
+		ChangeHistory:SetWaypoint(string.format("Applied component %q to selection", component.Name))
 	else
-		ChangeHistory:SetWaypoint(string.format("Removed component %q from selection", name))
+		ChangeHistory:SetWaypoint(string.format(
+			"Removed component %q from selection",
+			component.Name
+		))
 	end
 end
 

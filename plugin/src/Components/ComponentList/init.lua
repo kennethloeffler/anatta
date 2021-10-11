@@ -61,7 +61,7 @@ function ComponentList:render()
 			Util.merge(components[i], {
 				Hidden = self.state["Hide" .. groupName],
 				Disabled = not props.selectionActive,
-				Component = components[i].Name,
+				Component = components[i],
 				LayoutOrder = itemCount,
 			})
 		)
@@ -124,7 +124,7 @@ local function mapStateToProps(state)
 		local passSearch = not state.Search
 			or component.Name:lower():find(state.Search:lower(), 1, true)
 		if passSearch then
-			components[#components + 1] = component
+			table.insert(components, component)
 		end
 	end
 

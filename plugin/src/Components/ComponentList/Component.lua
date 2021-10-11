@@ -31,7 +31,7 @@ local function Component(props)
 
 	return StudioThemeAccessor.withTheme(function(theme)
 		return Roact.createElement(Item, {
-			Text = Util.escapeComponentName(props.Component, theme),
+			Text = Util.escapeComponentName(props.Component.Name, theme),
 			RichText = true,
 			Icon = props.Icon,
 			IsInput = props.isBeingRenamed,
