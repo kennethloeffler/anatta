@@ -50,12 +50,7 @@ function App:render()
 				end,
 			}),
 
-			UIPadding = Roact.createElement("UIPadding", {
-				PaddingLeft = UDim.new(0, 4),
-				PaddingRight = UDim.new(0, 4),
-				PaddingTop = UDim.new(0, 4),
-				PaddingBottom = UDim.new(0, 4),
-			}),
+			UIPadding = Roact.createElement("UIPadding"),
 
 			ComponentList = Roact.createElement(ComponentList, {
 				Size = UDim2.new(1, 0, 1, -40),
