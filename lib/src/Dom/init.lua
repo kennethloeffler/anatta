@@ -63,7 +63,7 @@ local tryFromTagged = require(script.tryFromTagged)
 	@param instance Instance
 	@param component any
 	@param componentDefinition ComponentDefinition
-	@return boolean, number, {[string]: any]}
+	@return boolean, {[string]: any]}
 
 	Takes an entity, a component on the entity, and the component's
 	[`ComponentDefinition`](/api/Anatta#ComponentDefinition) and attempts to convert the
