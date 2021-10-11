@@ -31,11 +31,14 @@ local tryFromDom = require(script.tryFromDom)
 	@within Dom
 	@param instance Instance
 	@param componentDefinition ComponentDefinition
-	@return boolean, any
+	@return boolean, number, any
 
-	Attempts to convert the attributes of a given `Instance` into a component of the given
-	[`ComponentDefinition`](/api/Anatta#ComponentDefinition). Returns a success value followed
-	by the converted component (if successful) or an error message (if unsuccessful).
+	Attempts to convert the attributes of a given `Instance` into an entity and a
+	component of the given
+	[`ComponentDefinition`](/api/Anatta#ComponentDefinition). Returns a success value
+	followed by the entity and the converted component (if successful) or an error message
+	(if unsuccessful).
+
 ]=]
 local tryFromAttributes = require(script.tryFromAttributes)
 
@@ -60,13 +63,13 @@ local tryFromTagged = require(script.tryFromTagged)
 	@param instance Instance
 	@param component any
 	@param componentDefinition ComponentDefinition
-	@return boolean, {[string]: any]}
+	@return boolean, number, {[string]: any]}
 
-	Takes a component and the component's
+	Takes an entity, a component on the entity, and the component's
 	[`ComponentDefinition`](/api/Anatta#ComponentDefinition) and attempts to convert the
 	component into a dictionary that can be used to set attributes on an `Instance`. The
 	keys of the returned dictionary are the names of the requested attributes, while the
-	values correspond to the value of the component.
+	values correspond to the entity and the value(s) of the component.
 
 	Returns a success value followed by the attribute dictionary (if successful) or an
 	error message (if unsuccessful).
@@ -81,6 +84,7 @@ local tryToAttributes = require(script.tryToAttributes)
 --[=[
 	@function waitForRefs
 	@within Dom
+	@private
 	@yields
 ]=]
 local waitForRefs = require(script.waitForRefs)
