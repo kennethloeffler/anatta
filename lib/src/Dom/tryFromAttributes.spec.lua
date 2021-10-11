@@ -2,7 +2,6 @@ return function()
 	local Constants = require(script.Parent.Parent.Core.Constants)
 	local T = require(script.Parent.Parent.Core.T)
 
-	FOCUS()
 	local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 	local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
