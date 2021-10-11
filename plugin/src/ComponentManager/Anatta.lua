@@ -9,7 +9,7 @@ local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local Anatta = {}
 
-local definitions = {}
+local definitions = setmetatable({}, { __mode = "k" })
 
 local function getValidEntity(world, instance)
 	local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
@@ -20,6 +20,7 @@ local function getValidEntity(world, instance)
 		or not world.registry:entityIsValid(entity)
 	then
 		entity = world.registry:createEntity()
+		CollectionService:AddTag(instance, ".anattaInstance")
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 	end
 
@@ -85,6 +86,7 @@ function Anatta.removeComponent(world, instance, definition)
 	end
 
 	if world.registry:entityIsOrphaned(entity) then
+		CollectionService:RemoveTag(instance, ".anattaInstance")
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 	end
 
