@@ -104,7 +104,15 @@ function World.new(definitions)
 	end
 
 	return setmetatable({
-		components = components,
+		components = setmetatable(components, {
+			__index = function(self, componentName)
+				util.jumpAssert(
+					rawget(self, componentName) ~= nil,
+					ErrInvalidComponentDefinition,
+					componentName
+				)
+			end,
+		}),
 		registry = registry,
 		_reactorSystems = {},
 	}, World)
@@ -156,10 +164,7 @@ function World:getReactor(query, script)
 	local withAny = query.withAny or {}
 
 	util.jumpAssert(#withUpdated <= 32, ErrTooManyUpdated)
-	util.jumpAssert(
-		not (#withAll > 0 or #withUpdated > 0 or #withAny > 0),
-		ErrReactorsNeedComponents
-	)
+	util.jumpAssert(#withAll > 0 or #withUpdated > 0 or #withAny > 0, ErrReactorsNeedComponents)
 
 	for _, components in pairs(query) do
 		for _, definition in ipairs(components) do
@@ -173,8 +178,8 @@ function World:getReactor(query, script)
 
 	local reactor = Reactor.new(self.registry, query)
 
-	if self._systemReactors[script] then
-		table.insert(self._systemReactors[script], reactor)
+	if self._reactorSystems[script] then
+		table.insert(self._reactorSystems[script], reactor)
 	end
 
 	return reactor
