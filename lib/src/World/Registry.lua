@@ -882,7 +882,7 @@ end
 --[=[
 	Passes each entity currently in use by the registry to the given callback.
 
-	@param callback (entity: number)
+	@param callback (entity: number) -> ()
 ]=]
 function Registry:each(callback)
 	if self._nextRecyclableEntityId == NULL_ENTITYID then

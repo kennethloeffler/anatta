@@ -87,7 +87,7 @@ function Reactor.new(registry, query)
 end
 
 --[=[
-	@param callback (number, ...any) -> {RBXScriptConnection | Instance}
+	@param callback (entity: number, ...any) -> {RBXScriptConnection | Instance}
 
 	Calls the callback every time an entity enters the `Reactor`, passing each entity and
 	its components and attaching the return value to each entity.  The callback should
@@ -129,7 +129,7 @@ function Reactor:detach()
 end
 
 --[=[
-	@param callback (number, ...any)
+	@param callback (entity: number, ...any) -> ()
 
 	Iterates over the all the entities present in the `Reactor`. Calls the callback for
 	each entity, passing each entity followed by the components provided in the
@@ -149,7 +149,7 @@ function Reactor:each(callback)
 end
 
 --[=[
-	@param callback (number, ...any)
+	@param callback (entity: number, ...any) -> ()
 
 	Iterates over all the entities present in the `Reactor` and clears each entity's
 	update status. Calls the callback for each entity visited during the iteration,

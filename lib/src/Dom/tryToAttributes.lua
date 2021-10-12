@@ -1,6 +1,7 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
 local util = require(script.Parent.Parent.util)
 
+local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local ErrConversionFailed = "%s (%s) cannot be turned into an attribute"
@@ -48,12 +49,19 @@ local conversions = {
 	end,
 }
 
-function convert(attributeMap, attributeName, concreteType, value, instance)
+function convert(attributeMap, attributeName, concreteType, instance, entity, value)
 	if typeof(concreteType) == "table" then
 		for field, fieldConcreteType in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 
-			convert(attributeMap, fieldAttributeName, fieldConcreteType, value[field], instance)
+			convert(
+				attributeMap,
+				fieldAttributeName,
+				fieldConcreteType,
+				instance,
+				entity,
+				value[field]
+			)
 		end
 	elseif conversions[concreteType] then
 		conversions[concreteType](attributeMap, attributeName, value, instance)
@@ -66,17 +74,28 @@ function convert(attributeMap, attributeName, concreteType, value, instance)
 	return true, attributeMap
 end
 
-return function(instance, component, componentDefinition)
-	local typeDefinition = componentDefinition.type
-	local componentName = componentDefinition.name
+return function(instance, entity, definition, component)
+	local typeDefinition = definition.type
+	local componentName = definition.name
 
 	util.jumpAssert(typeDefinition.check(component))
 
-	local success, concreteType = typeDefinition:tryGetConcreteType()
+	local conversionSuccess, concreteType = typeDefinition:tryGetConcreteType()
 
-	if not success then
+	if not conversionSuccess then
 		return false, ("Error converting %s: %s"):format(componentName, concreteType)
 	end
 
-	return convert({}, componentName, concreteType, component, instance)
+	local success, attributeMap = convert(
+		{},
+		componentName,
+		concreteType,
+		instance,
+		entity,
+		component
+	)
+
+	attributeMap[ENTITY_ATTRIBUTE_NAME] = entity
+
+	return success, attributeMap
 end
