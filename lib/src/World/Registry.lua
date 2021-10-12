@@ -127,7 +127,7 @@ end
 	local copied = Registry.fromRegistry(registry)
 
 	-- we now have an exact copy of the original registry
-	assert(copied:isEntityValid(entity1) and copied:isEntityValid(entity2))
+	assert(copied:entityIsValid(entity1) and copied:entityIsValid(entity2))
 
 	local copiedHealth1, copiedInventory1 = registry:getComponents(entity1, Health, Inventory)
 	local copiedHealth2, copiedInventory2 = registry:getComponents(entity1, Health, Inventory)
@@ -364,7 +364,7 @@ end
 	registry:destroyEntity(entity)
 
 	-- the entity is no longer valid and functions like getComponent or addComponent will throw
-	assert(registry:isEntityValid(entity) == false)
+	assert(registry:entityIsValid(entity) == false)
 	```
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
@@ -374,7 +374,7 @@ end
 ]=]
 function Registry:destroyEntity(entity)
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 	end
 
 	local entityId = bit32.band(entity, ENTITYID_MASK)
@@ -401,15 +401,15 @@ end
 
 	#### Usage:
 	```lua
-	assert(registry:isEntityValid(0) == false)
+	assert(registry:entityIsValid(0) == false)
 
 	local entity = registry:createEntity()
 
-	assert(registry:isEntityValid(entity) == true)
+	assert(registry:entityIsValid(entity) == true)
 
 	registry:destroyEntity(entity)
 
-	assert(registry:isEntityValid(entity) == false)
+	assert(registry:entityIsValid(entity) == false)
 	```
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
@@ -417,7 +417,7 @@ end
 	@param entity number
 	@return boolean
 ]=]
-function Registry:isEntityValid(entity)
+function Registry:entityIsValid(entity)
 	if DEBUG then
 		local ty = type(entity)
 		jumpAssert(ty == "number", ErrBadEntityType, ty)
@@ -433,14 +433,14 @@ end
 	```lua
 	local entity = registry:createEntity()
 
-	assert(self:isEntityOrphaned(entity) == true)
+	assert(self:entityIsOrphaned(entity) == true)
 
 	registry:addComponent(entity, Car, {
 		model = game.ReplicatedStorage.Car:Clone(),
 		color = "Red",
 	})
 
-	assert(registry:isEntityOrphaned(entity) == false)
+	assert(registry:entityIsOrphaned(entity) == false)
 	```
 
 	@error "entity must be a number (got %s)" -- The entity is not a number.
@@ -449,9 +449,9 @@ end
 	@param entity number
 	@return boolean
 ]=]
-function Registry:isEntityOrphaned(entity)
+function Registry:entityIsOrphaned(entity)
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 	end
 
 	for _, pool in pairs(self._pools) do
@@ -479,7 +479,7 @@ end
 function Registry:visitComponents(callback, entity)
 	if entity ~= nil then
 		if DEBUG then
-			jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+			jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 		end
 
 		for definition, pool in pairs(self._pools) do
@@ -515,7 +515,7 @@ end
 ]=]
 function Registry:entityHas(entity, ...)
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 
 		for i = 1, select("#", ...) do
 			jumpAssert(self._pools[select(i, ...)], ErrBadComponentDefinition, select(i, ...))
@@ -545,7 +545,7 @@ end
 ]=]
 function Registry:entityHasAny(entity, ...)
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 
 		for i = 1, select("#", ...) do
 			jumpAssert(self._pools[select(i, ...)], ErrBadComponentDefinition, select(i, ...))
@@ -576,7 +576,7 @@ function Registry:getComponent(entity, definition)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 	end
 
@@ -624,7 +624,7 @@ function Registry:addComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent, entity, definition)
 		jumpAssert(pool.typeCheck(component))
@@ -679,7 +679,7 @@ function Registry:tryAddComponent(entity, definition, component)
 		jumpAssert(pool.typeCheck(component))
 	end
 
-	if not self:isEntityValid(entity) or pool:getIndex(entity) then
+	if not self:entityIsValid(entity) or pool:getIndex(entity) then
 		return nil
 	end
 
@@ -706,7 +706,7 @@ function Registry:getOrAddComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 	end
@@ -741,7 +741,7 @@ function Registry:replaceComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent, entity, definition)
@@ -772,7 +772,7 @@ function Registry:addOrReplaceComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 	end
@@ -806,7 +806,7 @@ function Registry:removeComponent(entity, definition)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:isEntityValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent, entity, definition)
 	end
@@ -835,7 +835,7 @@ function Registry:tryRemoveComponent(entity, definition)
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 	end
 
-	if self:isEntityValid(entity) and pool:getIndex(entity) then
+	if self:entityIsValid(entity) and pool:getIndex(entity) then
 		pool.removed:dispatch(entity, pool:get(entity))
 		pool:delete(entity)
 		return true

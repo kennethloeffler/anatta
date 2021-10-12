@@ -62,7 +62,7 @@ return function()
 	describe("createEntity", function()
 		it("should return a valid entity identifier", function(context)
 			for _, entity in ipairs(makeEntities(context.registry, 100)) do
-				expect(context.registry:isEntityValid(entity)).to.equal(true)
+				expect(context.registry:entityIsValid(entity)).to.equal(true)
 			end
 		end)
 
@@ -242,12 +242,12 @@ return function()
 		end)
 	end)
 
-	describe("isEntityValid", function()
+	describe("entityIsValid", function()
 		it("should return true if the entity identifier is valid", function(context)
 			local registry = context.registry
 			local entity = registry:createEntity()
 
-			expect(registry:isEntityValid(entity)).to.equal(true)
+			expect(registry:entityIsValid(entity)).to.equal(true)
 		end)
 
 		it("should return false if the entity identifier is not valid", function(context)
@@ -256,20 +256,20 @@ return function()
 
 			registry:destroyEntity(entity)
 
-			expect(registry:isEntityValid(entity)).to.equal(false)
-			expect(registry:isEntityValid(NULL_ENTITYID)).to.equal(false)
+			expect(registry:entityIsValid(entity)).to.equal(false)
+			expect(registry:entityIsValid(NULL_ENTITYID)).to.equal(false)
 		end)
 
 		it("should error if entity is not a number", function(context)
 			expect(function()
-				context.registry:isEntityValid("entity")
+				context.registry:entityIsValid("entity")
 			end).to.throw()
 		end)
 	end)
 
-	describe("isEntityOrphaned", function()
+	describe("entityIsOrphaned", function()
 		it("should return true if the entity has no components", function(context)
-			expect(context.registry:isEntityOrphaned(context.registry:createEntity())).to.equal(true)
+			expect(context.registry:entityIsOrphaned(context.registry:createEntity())).to.equal(true)
 		end)
 
 		it("should return false if the entity has any components", function(context)
@@ -278,12 +278,12 @@ return function()
 
 			registry:addComponent(entity, Component.number, 10)
 
-			expect(context.registry:isEntityOrphaned(entity)).to.equal(false)
+			expect(context.registry:entityIsOrphaned(entity)).to.equal(false)
 		end)
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:isEntityOrphaned(0)
+				context.registry:entityIsOrphaned(0)
 			end).to.throw()
 		end)
 	end)
