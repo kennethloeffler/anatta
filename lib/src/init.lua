@@ -45,7 +45,11 @@ local function createWorld(namespace, componentDefinitions)
 	local definitions = {}
 
 	util.jumpAssert(not Worlds[namespace], ErrWorldAlreadyExists, namespace)
-	util.jumpAssert(t.table(componentDefinitions) or t.instance(componentDefinitions))
+	util.jumpAssert(
+		t.none(componentDefinitions)
+			or t.table(componentDefinitions)
+			or t.instance(componentDefinitions)
+	)
 
 	if typeof(componentDefinitions) == "table" then
 		for _, definition in pairs(componentDefinitions) do
