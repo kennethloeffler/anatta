@@ -7,8 +7,16 @@
 	an entity matches the [`Query`](/api/World#Query), the entity enters the `Reactor` and
 	remains present until the entity fails to match the [`Query`](/api/World#Query).
 
-	In contrast to a [`Mapper`](/api/Mapper), a `Reactor` can track updates to components
-	provided in [`Query.withUpdated`](/api/World#Query).
+	Unlike a [`Mapper`](/api/Mapper), a `Reactor` has the ability to track updates to
+	components. When a component in [`Query.withUpdated`](/api/World#Query) is replaced
+	using [`Registry:replaceComponent`](/api/Registry#replaceComponent) or
+	[`Mapper:map`](/api/Mapper#map), the `Reactor` "sees" the replacement and considers
+	the component updated. Updated components can then be "consumed" using
+	[`Reactor:consumeEach`](#consumeEach) or [`Reactor:consume`](#consume).
+
+	Also unlike a [`Mapper`](/api/Mapper), a `Reactor` has the ability to "attach"
+	`RBXScriptConnection`s and `Instance`s to entities present in the `Reactor` using
+	[`Reactor:withAttachments`](#withAttachments).
 
 	You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor).
 ]=]
@@ -19,6 +27,8 @@ local SingleReactor = require(script.Parent.SingleReactor)
 local Types = require(script.Parent.Parent.Types)
 
 local util = require(script.Parent.Parent.util)
+
+local ErrEntityMissing = "entity %d is not present in this reactor"
 
 local Reactor = {}
 Reactor.__index = Reactor
@@ -94,6 +104,11 @@ end
 	return a list of connections and/or `Instance`s. When the entity later leaves the
 	`Reactor`, attached `Instance`s are destroyed and attached connections are
 	disconnected.
+
+	:::warning
+	Yielding inside of the callback is forbidden. There are currently no protections
+	against this, so be careful!
+	:::
 ]=]
 function Reactor:withAttachments(callback)
 	local attachmentsAdded = self.added:connect(function(entity, ...)
@@ -132,8 +147,11 @@ end
 	@param callback (entity: number, ...any) -> ()
 
 	Iterates over the all the entities present in the `Reactor`. Calls the callback for
-	each entity, passing each entity followed by the components provided in the
+	each entity, passing each entity followed by the components named in the
 	[`Query`](/api/World#Query).
+
+	:::info
+	It's safe to add or remove components inside of the callback.
 ]=]
 function Reactor:each(callback)
 	local dense = self._pool.dense
@@ -153,12 +171,15 @@ end
 
 	Iterates over all the entities present in the `Reactor` and clears each entity's
 	update status. Calls the callback for each entity visited during the iteration,
-	passing the entity followed by the components provided in the
+	passing the entity followed by the components named in the
 	[`Query`](/api/World#Query).
 
-	This function effectively "consumes" all updates made to components provided in
+	This function effectively "consumes" all updates made to components named in
 	[`Query.withUpdated`](/api/World#Query), emptying the `Reactor`. A consumer that wants
 	to selectively consume updates should use [`consume`](#consume) instead.
+
+	:::info
+	It's safe to add or remove components inside of the callback.
 ]=]
 function Reactor:consumeEach(callback)
 	local dense = self._pool.dense
@@ -179,11 +200,15 @@ function Reactor:consumeEach(callback)
 end
 
 --[=[
-	@param entity number
+	Consumes updates made to components named in `Query.withUpdated`.
 
-	Clears a given entity's updated status.
+	@error "entity %d is not present in this reactor" -- The reactor doesn't contain that entity.
+
+	@param entity number
 ]=]
 function Reactor:consume(entity)
+	util.jumpAssert(self._pool:getIndex(entity) ~= nil, ErrEntityMissing, entity)
+
 	self._pool:delete(entity)
 	self._updates[entity] = nil
 end

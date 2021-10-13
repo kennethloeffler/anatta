@@ -5,7 +5,7 @@
 	[`Query`](/api/World#Query).
 
 	A `Mapper` is stateless. In contrast to a [`Reactor`](/api/Reactor), a `Mapper` cannot
-	track components with [`Query.withUpdated`](/api/World#Query).
+	track updates to components with [`Query.withUpdated`](/api/World#Query).
 
 	You can create a `Mapper` using [`World:getMapper`](/api/World#getMapper).
 ]=]
@@ -42,9 +42,16 @@ end
 --[=[
 	@param callback (entity: number, ...any) -> ...any
 
-	Maps over entities that satisfy the `Query`. Calls the callback for each entity,
-	passing each entity followed by the components specified by the `Query` and replacing
-	the components in `Query.withAll` with the callback's return value.
+	Maps over entities that satisfy the [`Query`](/api/World#Query). Calls the callback
+	for each entity, passing each entity followed by the components named in the
+	[`Query`](/api/World#Query), and replaces the components in
+	[`Query.withAll`](/api/World#Query) with the callback's return value. The replacement
+	is equivalent a [`Registry:replaceComponent`](/api/Registry#replaceComponent) call.
+
+	:::warning
+	Adding or removing any of the components named in [`Query.withAll`](/api/World#Query)
+	is forbidden inside of the callback. There are currently no protections against this,
+	so be careful!
 ]=]
 function Mapper:map(callback)
 	local packed = self._packed
@@ -62,7 +69,12 @@ end
 	@param callback (entity: number, ...any) -> ()
 
 	Iterates over all entities that satisfy the `Query`. Calls the callback for each
-	entity, passing each entity followed by the components specified by the `Query`.
+	entity, passing each entity followed by the components named in the `Query`.
+
+	:::warning
+	Adding or removing any of the components named in [`Query.withAll`](/api/World#Query)
+	is forbidden inside of the callback. There are currently no protections against this,
+	so be careful!
 ]=]
 function Mapper:each(callback)
 	local packed = self._packed
