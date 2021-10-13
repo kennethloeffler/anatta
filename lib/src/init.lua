@@ -2,7 +2,10 @@
 	@class Anatta
 
 	`Anatta` is the main entry point to the library and is used to manage
-	[`World`](/api/World)s.
+	[`World`](/api/World)s with [`getWorld`](#getWorld) and
+	[`createWorld`](#createWorld). The intent of this API is to provide a global point of
+	access to a `World` with a particular *namespace*. A namespace is the set of
+	`ComponentDefinition`s defined for a [`World`'s registry](/api/World#registry).
 ]=]
 
 local Dom = require(script.Dom)
@@ -10,6 +13,7 @@ local T = require(script.Core.T)
 local Types = require(script.Types)
 local World = require(script.World)
 local util = require(script.util)
+local t = require(script.Parent.t)
 
 local ErrWorldAlreadyExists = 'A world named "%s" already exists'
 local ErrWorldDoesntExist = 'No world named "%s" exists'
@@ -41,6 +45,7 @@ local function createWorld(namespace, componentDefinitions)
 	local definitions = {}
 
 	util.jumpAssert(not Worlds[namespace], ErrWorldAlreadyExists, namespace)
+	util.jumpAssert(t.table(componentDefinitions) or t.instance(componentDefinitions))
 
 	if typeof(componentDefinitions) == "table" then
 		for _, definition in pairs(componentDefinitions) do
