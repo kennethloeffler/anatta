@@ -7,8 +7,16 @@
 	an entity matches the [`Query`](/api/World#Query), the entity enters the `Reactor` and
 	remains present until the entity fails to match the [`Query`](/api/World#Query).
 
-	In contrast to a [`Mapper`](/api/Mapper), a `Reactor` can track updates to components
-	provided in [`Query.withUpdated`](/api/World#Query).
+	Unlike a [`Mapper`](/api/Mapper), a `Reactor` has the ability to track updates to
+	components. When a component in [`Query.withUpdated`](/api/World#Query) is replaced
+	using [`Registry:replaceComponent`](/api/Registry#replaceComponent) or
+	[`Mapper:map`](/api/Mapper#map), the `Reactor` "sees" the replacement and considers
+	the component updated. Updated components can then be "consumed" using
+	[`Reactor:consumeEach`](#consumeEach) or [`Reactor:consume`](#consume).
+
+	Also unlike a [`Mapper`](/api/Mapper), a `Reactor` has the ability to "attach"
+	`RBXScriptConnection`s and `Instance`s to entities present in the `Reactor` using
+	[`Reactor:withAttachments`](#withAttachments).
 
 	You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor).
 ]=]
@@ -132,7 +140,7 @@ end
 	@param callback (entity: number, ...any) -> ()
 
 	Iterates over the all the entities present in the `Reactor`. Calls the callback for
-	each entity, passing each entity followed by the components provided in the
+	each entity, passing each entity followed by the components named in the
 	[`Query`](/api/World#Query).
 ]=]
 function Reactor:each(callback)
@@ -153,10 +161,10 @@ end
 
 	Iterates over all the entities present in the `Reactor` and clears each entity's
 	update status. Calls the callback for each entity visited during the iteration,
-	passing the entity followed by the components provided in the
+	passing the entity followed by the components named in the
 	[`Query`](/api/World#Query).
 
-	This function effectively "consumes" all updates made to components provided in
+	This function effectively "consumes" all updates made to components named in
 	[`Query.withUpdated`](/api/World#Query), emptying the `Reactor`. A consumer that wants
 	to selectively consume updates should use [`consume`](#consume) instead.
 ]=]
