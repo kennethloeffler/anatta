@@ -6,6 +6,7 @@ local Dom = require(Modules.Anatta.Library.Dom)
 local Constants = require(Modules.Anatta.Library.Core.Constants)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
+local SHARED_INSTANCE_TAG_NAME = Constants.SharedInstanceTagName
 
 local Anatta = {}
 
@@ -18,7 +19,7 @@ local function getValidEntity(world, instance)
 		or not world.registry:entityIsValid(entity)
 	then
 		entity = world.registry:createEntity()
-		CollectionService:AddTag(instance, ".anattaInstance")
+		CollectionService:AddTag(instance, SHARED_INSTANCE_TAG_NAME)
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 	end
 
@@ -95,7 +96,7 @@ function Anatta.removeComponent(world, instance, definition)
 	end
 
 	if world.registry:entityIsOrphaned(entity) then
-		CollectionService:RemoveTag(instance, ".anattaInstance")
+		CollectionService:RemoveTag(instance, SHARED_INSTANCE_TAG_NAME)
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
 	end
 
