@@ -260,10 +260,8 @@ return function()
 			expect(registry:entityIsValid(NULL_ENTITYID)).to.equal(false)
 		end)
 
-		it("should error if entity is not a number", function(context)
-			expect(function()
-				context.registry:entityIsValid("entity")
-			end).to.throw()
+		it("should return false if the entity is not a number", function(context)
+			expect(context.registry:entityIsValid("entity")).to.equal(false)
 		end)
 	end)
 
