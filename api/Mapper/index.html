@@ -8,17 +8,17 @@
 [`Query`](/api/World#Query).
 
 A `Mapper` is stateless. In contrast to a [`Reactor`](/api/Reactor), a `Mapper` cannot
-track components with [`Query.withUpdated`](/api/World#Query).
+track updates to components with [`Query.withUpdated`](/api/World#Query).
 
 You can create a `Mapper` using [`World:getMapper`](/api/World#getMapper)."><meta data-react-helmet="true" property="og:description" content="Provides scoped access to a [`Registry`](/api/Registry) according to a
 [`Query`](/api/World#Query).
 
 A `Mapper` is stateless. In contrast to a [`Reactor`](/api/Reactor), a `Mapper` cannot
-track components with [`Query.withUpdated`](/api/World#Query).
+track updates to components with [`Query.withUpdated`](/api/World#Query).
 
 You can create a `Mapper` using [`World:getMapper`](/api/World#getMapper)."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/Mapper"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/Mapper"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Mapper" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Mapper" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.3c0ff9e9.css">
-<link rel="preload" href="/anatta/assets/js/runtime~main.924336b8.js" as="script">
-<link rel="preload" href="/anatta/assets/js/main.e09c76fd.js" as="script">
+<link rel="preload" href="/anatta/assets/js/runtime~main.ffbc6c2b.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.b90025fc.js" as="script">
 </head>
 <body>
 <script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){var t=null;try{t=localStorage.getItem("theme")}catch(t){}return t}();t(null!==e?e:"light")}()</script><div id="__docusaurus">
@@ -29,25 +29,55 @@ You can create a `Mapper` using [`World:getMapper`](/api/World#getMapper)."><met
 </p>
 <p>
   A <code>Mapper</code> is stateless. In contrast to a <a href="/anatta/api/Reactor"><code>Reactor</code></a>, a <code>Mapper</code> cannot
-  track components with <a href="/anatta/api/World#Query"><code>Query.withUpdated</code></a>.
+  track updates to components with <a href="/anatta/api/World#Query"><code>Query.withUpdated</code></a>.
 </p>
 <p>You can create a <code>Mapper</code> using <a href="/anatta/api/World#getMapper"><code>World:getMapper</code></a>.</p>
-</div></header><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="each"></a><code style="text-decoration:none">each</code><a class="hash-link" href="#each" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Mapper.lua#L67"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Mapper:</code><code class="green_3LnD">each</code><code>(</code><code>callback: </code><code class="green_3LnD">(</code><div class="inset_2cJr"><code>entity: </code><code class="blue_2Afy">number</code><code class="green_3LnD">,</code></div><div class="inset_2cJr"><code class="blue_2Afy">...any</code></div><code class="green_3LnD">)</code><code class="green_3LnD"> → </code><code class="green_3LnD">(</code><code class="green_3LnD">)</code><code>) → </code><code>(</code><code>)</code></div><div>
+</div></header><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="each"></a><code style="text-decoration:none">each</code><a class="hash-link" href="#each" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Mapper.lua#L79"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Mapper:</code><code class="green_3LnD">each</code><code>(</code><code>callback: </code><code class="green_3LnD">(</code><div class="inset_2cJr"><code>entity: </code><code class="blue_2Afy">number</code><code class="green_3LnD">,</code></div><div class="inset_2cJr"><code class="blue_2Afy">...any</code></div><code class="green_3LnD">)</code><code class="green_3LnD"> → </code><code class="green_3LnD">(</code><code class="green_3LnD">)</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>
   Iterates over all entities that satisfy the <code>Query</code>. Calls the callback for each
-  entity, passing each entity followed by the components specified by the <code>Query</code>.
+  entity, passing each entity followed by the components named in the <code>Query</code>.
 </p>
-</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="map"></a><code style="text-decoration:none">map</code><a class="hash-link" href="#map" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Mapper.lua#L49"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Mapper:</code><code class="green_3LnD">map</code><code>(</code><code>callback: </code><code class="green_3LnD">(</code><div class="inset_2cJr"><code>entity: </code><code class="blue_2Afy">number</code><code class="green_3LnD">,</code></div><div class="inset_2cJr"><code class="blue_2Afy">...any</code></div><code class="green_3LnD">)</code><code class="green_3LnD"> → </code><code class="blue_2Afy">...any</code><code>) → </code><code>(</code><code>)</code></div><div>
+<div class="admonition admonition-warning alert alert--danger">
+  <div class="admonition-heading">
+    <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
+          <path d="M5.05.31c.81 2.17.41 3.38-.52 4.31C3.55 5.67 1.98 6.45.9 7.98c-1.45 2.05-1.7 6.53 3.53 7.7-2.2-1.16-2.67-4.52-.3-6.61-.61 2.03.53 3.33 1.94 2.86 1.39-.47 2.3.53 2.27 1.67-.02.78-.31 1.44-1.13 1.81 3.42-.59 4.78-3.42 4.78-5.56 0-2.84-2.53-3.22-1.25-5.61-1.52.13-2.03 1.13-1.89 2.75.09 1.08-1.02 1.8-1.86 1.33-.67-.41-.66-1.19-.06-1.78C8.18 5.31 8.68 2.45 5.05.32L5.03.3l.02.01z"></path>
+        </svg></span>warning</h5>
+  </div>
+  <div class="admonition-content">
+    <p>
+      Adding or removing any of the components named in <a href="/anatta/api/World#Query"><code>Query.withAll</code></a>
+      is forbidden inside of the callback. There are currently no protections against this,
+      so be careful!
+    </p>
+  </div>
+</div>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="map"></a><code style="text-decoration:none">map</code><a class="hash-link" href="#map" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Mapper.lua#L56"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Mapper:</code><code class="green_3LnD">map</code><code>(</code><code>callback: </code><code class="green_3LnD">(</code><div class="inset_2cJr"><code>entity: </code><code class="blue_2Afy">number</code><code class="green_3LnD">,</code></div><div class="inset_2cJr"><code class="blue_2Afy">...any</code></div><code class="green_3LnD">)</code><code class="green_3LnD"> → </code><code class="blue_2Afy">...any</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>
-  Maps over entities that satisfy the <code>Query</code>. Calls the callback for each entity,
-  passing each entity followed by the components specified by the <code>Query</code> and replacing
-  the components in <code>Query.withAll</code> with the callback's return value.
+  Maps over entities that satisfy the <a href="/anatta/api/World#Query"><code>Query</code></a>. Calls the callback
+  for each entity, passing each entity followed by the components named in the
+  <a href="/anatta/api/World#Query"><code>Query</code></a>, and replaces the components in
+  <a href="/anatta/api/World#Query"><code>Query.withAll</code></a> with the callback's return value. The replacement
+  is equivalent a <a href="/anatta/api/Registry#replaceComponent"><code>Registry:replaceComponent</code></a> call.
 </p>
+<div class="admonition admonition-warning alert alert--danger">
+  <div class="admonition-heading">
+    <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
+          <path d="M5.05.31c.81 2.17.41 3.38-.52 4.31C3.55 5.67 1.98 6.45.9 7.98c-1.45 2.05-1.7 6.53 3.53 7.7-2.2-1.16-2.67-4.52-.3-6.61-.61 2.03.53 3.33 1.94 2.86 1.39-.47 2.3.53 2.27 1.67-.02.78-.31 1.44-1.13 1.81 3.42-.59 4.78-3.42 4.78-5.56 0-2.84-2.53-3.22-1.25-5.61-1.52.13-2.03 1.13-1.89 2.75.09 1.08-1.02 1.8-1.86 1.33-.67-.41-.66-1.19-.06-1.78C8.18 5.31 8.68 2.45 5.05.32L5.03.3l.02.01z"></path>
+        </svg></span>warning</h5>
+  </div>
+  <div class="admonition-content">
+    <p>
+      Adding or removing any of the components named in <a href="/anatta/api/World#Query"><code>Query.withAll</code></a>
+      is forbidden inside of the callback. There are currently no protections against this,
+      so be careful!
+    </p>
+  </div>
+</div>
 </div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
         {
             &quot;name&quot;: &quot;map&quot;,
-            &quot;desc&quot;: &quot;Maps over entities that satisfy the `Query`. Calls the callback for each entity,\npassing each entity followed by the components specified by the `Query` and replacing\nthe components in `Query.withAll` with the callback&#x27;s return value.&quot;,
+            &quot;desc&quot;: &quot;Maps over entities that satisfy the [`Query`](/api/World#Query). Calls the callback\nfor each entity, passing each entity followed by the components named in the\n[`Query`](/api/World#Query), and replaces the components in\n[`Query.withAll`](/api/World#Query) with the callback&#x27;s return value. The replacement\nis equivalent a [`Registry:replaceComponent`](/api/Registry#replaceComponent) call.\n\n:::warning\nAdding or removing any of the components named in [`Query.withAll`](/api/World#Query)\nis forbidden inside of the callback. There are currently no protections against this,\nso be careful!&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;callback&quot;,
@@ -58,13 +88,13 @@ You can create a `Mapper` using [`World:getMapper`](/api/World#getMapper)."><met
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 49,
+                &quot;line&quot;: 56,
                 &quot;path&quot;: &quot;lib/src/World/Mapper.lua&quot;
             }
         },
         {
             &quot;name&quot;: &quot;each&quot;,
-            &quot;desc&quot;: &quot;Iterates over all entities that satisfy the `Query`. Calls the callback for each\nentity, passing each entity followed by the components specified by the `Query`.&quot;,
+            &quot;desc&quot;: &quot;Iterates over all entities that satisfy the `Query`. Calls the callback for each\nentity, passing each entity followed by the components named in the `Query`.\n\n:::warning\nAdding or removing any of the components named in [`Query.withAll`](/api/World#Query)\nis forbidden inside of the callback. There are currently no protections against this,\nso be careful!&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;callback&quot;,
@@ -75,7 +105,7 @@ You can create a `Mapper` using [`World:getMapper`](/api/World#getMapper)."><met
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 67,
+                &quot;line&quot;: 79,
                 &quot;path&quot;: &quot;lib/src/World/Mapper.lua&quot;
             }
         }
@@ -83,13 +113,13 @@ You can create a `Mapper` using [`World:getMapper`](/api/World#getMapper)."><met
     &quot;properties&quot;: [],
     &quot;types&quot;: [],
     &quot;name&quot;: &quot;Mapper&quot;,
-    &quot;desc&quot;: &quot;Provides scoped access to a [`Registry`](/api/Registry) according to a\n[`Query`](/api/World#Query).\n\nA `Mapper` is stateless. In contrast to a [`Reactor`](/api/Reactor), a `Mapper` cannot\ntrack components with [`Query.withUpdated`](/api/World#Query).\n\nYou can create a `Mapper` using [`World:getMapper`](/api/World#getMapper).&quot;,
+    &quot;desc&quot;: &quot;Provides scoped access to a [`Registry`](/api/Registry) according to a\n[`Query`](/api/World#Query).\n\nA `Mapper` is stateless. In contrast to a [`Reactor`](/api/Reactor), a `Mapper` cannot\ntrack updates to components with [`Query.withUpdated`](/api/World#Query).\n\nYou can create a `Mapper` using [`World:getMapper`](/api/World#getMapper).&quot;,
     &quot;source&quot;: {
         &quot;line&quot;: 12,
         &quot;path&quot;: &quot;lib/src/World/Mapper.lua&quot;
     }
 }</pre></details></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a></li><li><a href="#properties" class="table-of-contents__link">Properties</a></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#each" class="table-of-contents__link">:each</a></li><li><a href="#map" class="table-of-contents__link">:map</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2021 kennethloeffler. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/anatta/assets/js/runtime~main.924336b8.js"></script>
-<script src="/anatta/assets/js/main.e09c76fd.js"></script>
+<script src="/anatta/assets/js/runtime~main.ffbc6c2b.js"></script>
+<script src="/anatta/assets/js/main.b90025fc.js"></script>
 </body>
 </html>

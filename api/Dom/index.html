@@ -7,8 +7,8 @@
 <title data-react-helmet="true">Dom | Anatta</title><meta data-react-helmet="true" property="og:title" content="Dom | Anatta"><meta data-react-helmet="true" name="twitter:card" content="summary_large_image"><meta data-react-helmet="true" name="description" content="`Dom` is a utility module used to convert components to and from attributes and
 `CollectionService` tags on `Instance`s."><meta data-react-helmet="true" property="og:description" content="`Dom` is a utility module used to convert components to and from attributes and
 `CollectionService` tags on `Instance`s."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/Dom"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/Dom"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Dom" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Dom" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.3c0ff9e9.css">
-<link rel="preload" href="/anatta/assets/js/runtime~main.924336b8.js" as="script">
-<link rel="preload" href="/anatta/assets/js/main.e09c76fd.js" as="script">
+<link rel="preload" href="/anatta/assets/js/runtime~main.ffbc6c2b.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.b90025fc.js" as="script">
 </head>
 <body>
 <script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){var t=null;try{t=localStorage.getItem("theme")}catch(t){}return t}();t(null!==e?e:"light")}()</script><div id="__docusaurus">
@@ -67,13 +67,14 @@
     </p>
   </div>
 </div>
-</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="tryToAttributes"></a><code style="text-decoration:none">tryToAttributes</code><a class="hash-link" href="#tryToAttributes" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/Dom/init.lua#L82"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Dom.</code><code class="green_3LnD">tryToAttributes</code><code>(</code><div class="inset_2cJr"><div><code>instance: </code><code class="blue_2Afy">Instance</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code><code>,</code></div><div><code>componentDefinition: </code><code class="blue_2Afy">ComponentDefinition</code></div></div><code>) → </code><code class="blue_2Afy">boolean,</code><code class="op_1JtD">{</code><code>[string]: </code><code class="blue_2Afy">any]</code><code class="op_1JtD">}</code></div><div>
+</div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="tryToAttributes"></a><code style="text-decoration:none">tryToAttributes</code><a class="hash-link" href="#tryToAttributes" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/Dom/init.lua#L84"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Dom.</code><code class="green_3LnD">tryToAttributes</code><code>(</code><div class="inset_2cJr"><div><code>instance: </code><code class="blue_2Afy">Instance</code><code>,</code></div><div><code>entity: </code><code class="blue_2Afy">number</code><code>,</code></div><div><code>componentDefinition: </code><code class="blue_2Afy">ComponentDefinition</code><code>,</code></div><div><code>component: </code><code class="blue_2Afy">any</code></div></div><code>) → </code><code class="blue_2Afy">boolean,</code><code class="op_1JtD">{</code><code>[string]: </code><code class="blue_2Afy">any]</code><code class="op_1JtD">}</code></div><div>
 <p>
-  Takes an entity, a component on the entity, and the component's
-  <a href="/anatta/api/Anatta#ComponentDefinition"><code>ComponentDefinition</code></a> and attempts to convert the
-  component into a dictionary that can be used to set attributes on an <code>Instance</code>. The
-  keys of the returned dictionary are the names of the requested attributes, while the
-  values correspond to the entity and the value(s) of the component.
+  Takes an <code>Instance</code>, an entity, a
+  <a href="/anatta/api/Anatta#ComponentDefinition"><code>ComponentDefinition</code></a>, and a component and attempts
+  to convert the component into a dictionary that can be used to set attributes on the
+  <code>Instance</code>. The keys of the returned dictionary are the names of the requested
+  attributes, while the values correspond to the entity and the value(s) of the
+  component.
 </p>
 <p>
   Returns a success value followed by the attribute dictionary (if successful) or an
@@ -164,7 +165,7 @@
         },
         {
             &quot;name&quot;: &quot;tryToAttributes&quot;,
-            &quot;desc&quot;: &quot;Takes an entity, a component on the entity, and the component&#x27;s\n[`ComponentDefinition`](/api/Anatta#ComponentDefinition) and attempts to convert the\ncomponent into a dictionary that can be used to set attributes on an `Instance`. The\nkeys of the returned dictionary are the names of the requested attributes, while the\nvalues correspond to the entity and the value(s) of the component.\n\nReturns a success value followed by the attribute dictionary (if successful) or an\nerror message (if unsuccessful).\n\n:::info\nThis function has side effects when components contain `Instance` references. When\nthis is the case, a `Folder` is created under the given `Instance` and an\n`ObjectValue` under that `Folder` for each `Instance` reference.&quot;,
+            &quot;desc&quot;: &quot;Takes an `Instance`, an entity, a\n[`ComponentDefinition`](/api/Anatta#ComponentDefinition), and a component and attempts\nto convert the component into a dictionary that can be used to set attributes on the\n`Instance`. The keys of the returned dictionary are the names of the requested\nattributes, while the values correspond to the entity and the value(s) of the\ncomponent.\n\nReturns a success value followed by the attribute dictionary (if successful) or an\nerror message (if unsuccessful).\n\n:::info\nThis function has side effects when components contain `Instance` references. When\nthis is the case, a `Folder` is created under the given `Instance` and an\n`ObjectValue` under that `Folder` for each `Instance` reference.&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;instance&quot;,
@@ -172,14 +173,19 @@
                     &quot;lua_type&quot;: &quot;Instance&quot;
                 },
                 {
-                    &quot;name&quot;: &quot;component&quot;,
+                    &quot;name&quot;: &quot;entity&quot;,
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;any&quot;
+                    &quot;lua_type&quot;: &quot;number&quot;
                 },
                 {
                     &quot;name&quot;: &quot;componentDefinition&quot;,
                     &quot;desc&quot;: &quot;&quot;,
                     &quot;lua_type&quot;: &quot;ComponentDefinition&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;component&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;any&quot;
                 }
             ],
             &quot;returns&quot;: [
@@ -190,7 +196,7 @@
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 82,
+                &quot;line&quot;: 84,
                 &quot;path&quot;: &quot;lib/src/Dom/init.lua&quot;
             }
         },
@@ -203,7 +209,7 @@
             &quot;private&quot;: true,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 90,
+                &quot;line&quot;: 92,
                 &quot;path&quot;: &quot;lib/src/Dom/init.lua&quot;
             }
         }
@@ -217,7 +223,7 @@
         &quot;path&quot;: &quot;lib/src/Dom/init.lua&quot;
     }
 }</pre></details></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a></li><li><a href="#properties" class="table-of-contents__link">Properties</a></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#tryFromAttributes" class="table-of-contents__link">.tryFromAttributes</a></li><li><a href="#tryFromDom" class="table-of-contents__link">.tryFromDom</a></li><li><a href="#tryFromTagged" class="table-of-contents__link">.tryFromTagged</a></li><li><a href="#tryToAttributes" class="table-of-contents__link">.tryToAttributes</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2021 kennethloeffler. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/anatta/assets/js/runtime~main.924336b8.js"></script>
-<script src="/anatta/assets/js/main.e09c76fd.js"></script>
+<script src="/anatta/assets/js/runtime~main.ffbc6c2b.js"></script>
+<script src="/anatta/assets/js/main.b90025fc.js"></script>
 </body>
 </html>

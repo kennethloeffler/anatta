@@ -13,8 +13,8 @@ unscoped access to entities and components.
 
 You can get or create a `World` with [`Anatta.getWorld`](/api/Anatta#getWorld) and
 [`Anatta.createWorld`](/api/Anatta#createWorld)."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/World"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/World"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/World" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/World" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.3c0ff9e9.css">
-<link rel="preload" href="/anatta/assets/js/runtime~main.924336b8.js" as="script">
-<link rel="preload" href="/anatta/assets/js/main.e09c76fd.js" as="script">
+<link rel="preload" href="/anatta/assets/js/runtime~main.ffbc6c2b.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.b90025fc.js" as="script">
 </head>
 <body>
 <script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){var t=null;try{t=localStorage.getItem("theme")}catch(t){}return t}();t(null!==e?e:"light")}()</script><div id="__docusaurus">
@@ -27,7 +27,7 @@ You can get or create a `World` with [`Anatta.getWorld`](/api/Anatta#getWorld) a
   You can get or create a <code>World</code> with <a href="/anatta/api/Anatta#getWorld"><code>Anatta.getWorld</code></a> and
   <a href="/anatta/api/Anatta#createWorld"><code>Anatta.createWorld</code></a>.
 </p>
-</div></header><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="types"></a>Types<a class="hash-link" href="#types" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="Query"></a><code style="text-decoration:none">Query</code><a class="hash-link" href="#Query" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L54"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code class="purple__nFc">interface</code> <code>Query {</code><div class="inset_2cJr"><div><code>withAll: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code><code class="blue_2Afy">?</code></div><div><code>withUpdated: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code><code class="blue_2Afy">?</code></div><div><code>withAny: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code><code class="blue_2Afy">?</code></div><div><code>without: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code><code class="blue_2Afy">?</code></div></div><code>}</code></div><div>
+</div></header><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="types"></a>Types<a class="hash-link" href="#types" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="Query"></a><code style="text-decoration:none">Query</code><a class="hash-link" href="#Query" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L123"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code class="purple__nFc">interface</code> <code>Query {</code><div class="inset_2cJr"><div><code>withAll: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code><code class="blue_2Afy">?</code></div><div><code>withUpdated: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code><code class="blue_2Afy">?</code></div><div><code>withAny: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code><code class="blue_2Afy">?</code></div><div><code>without: </code><code class="op_1JtD">{</code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code><code class="blue_2Afy">?</code></div></div><code>}</code></div><div>
 <p>
   A <code>Query</code> represents a set of entities to retrieve from a
   <a href="/anatta/api/Registry"><code>Registry</code></a>. A <code>Query</code> can be finalized by passing it to
@@ -35,12 +35,94 @@ You can get or create a `World` with [`Anatta.getWorld`](/api/Anatta#getWorld) a
 </p>
 <p>
   The fields of a <code>Query</code> determine which entities are yielded. Each field is an
-  optional list of component names that corresponds to one of the following rules:
+  optional list of <code>ComponentsDefinition</code>s that corresponds to a rule:
 </p>
-<h3><code>Query.withAll</code></h3>
-<p>An entity must have all of these components.</p>
-<h3><code>Query.withUpdated</code></h3>
-<p>An entity must have an updated copy of all of these components.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Rule</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>withAll</td>
+      <td>An entity must have all of these components.</td>
+    </tr>
+    <tr>
+      <td>withUpdated</td>
+      <td>An entity must have an updated copy of all of these components.</td>
+    </tr>
+    <tr>
+      <td>withAny</td>
+      <td>An entity may have any or none of these components.</td>
+    </tr>
+    <tr>
+      <td>without</td>
+      <td>An entity must not have any of these components.</td>
+    </tr>
+  </tbody>
+</table>
+<div class="admonition admonition-note alert alert--secondary">
+  <div class="admonition-heading">
+    <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16">
+          <path d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path>
+        </svg></span>note</h5>
+  </div>
+  <div class="admonition-content">
+    <p>
+      A <a href="/anatta/api/Mapper"><code>Mapper</code></a> cannot track updates to
+      components. <a href="#getMapper"><code>World:getMapper</code></a> throws an error when passed a <code>Query</code>
+      containing a <code>withUpdated</code> field.
+    </p>
+  </div>
+</div>
+<h3>Using queries</h3>
+<p>
+  Methods like <a href="/anatta/api/Reactor#each"><code>Reactor:each</code></a> and <a href="/anatta/api/Mapper#map"><code>Mapper:map</code></a>
+  take callbacks that are passed an entity and its components. The components go in a
+  specific order: first the components from <code>withAll</code>, then the components from
+  <code>withUpdated</code>, and finally the components from <code>withAny</code>. The order of the fields
+  in <code>Query</code> has no effect on this - dictionaries don't have a defined order in Lua!
+  Here are some example signatures using made-up components:
+</p>
+<pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> world <span class="token operator">=</span> Anatta<span class="token punctuation">.</span><span class="token function">getWorld</span><span class="token punctuation">(</span><span class="token string">"TheOverworld"</span><span class="token punctuation">)</span>
+<span class="token keyword">local</span> components <span class="token operator">=</span> world<span class="token punctuation">.</span>components
+<span class="token keyword">local</span> registry <span class="token operator">=</span> world<span class="token punctuation">.</span>registry
+
+<span class="token keyword">local</span> Ascendant <span class="token operator">=</span> components<span class="token punctuation">.</span>Ascendant
+<span class="token keyword">local</span> Blessed <span class="token operator">=</span> components<span class="token punctuation">.</span>Blessed
+<span class="token keyword">local</span> Human <span class="token operator">=</span> components<span class="token punctuation">.</span>Human
+<span class="token keyword">local</span> Immortal <span class="token operator">=</span> components<span class="token punctuation">.</span>Immortal
+<span class="token keyword">local</span> Magicka <span class="token operator">=</span> components<span class="token punctuation">.</span>Magicka
+
+<span class="token keyword">local</span> thePowerful <span class="token operator">=</span> world<span class="token punctuation">:</span><span class="token function">getMapper</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+	withAll <span class="token operator">=</span> <span class="token punctuation">{</span> Human<span class="token punctuation">,</span> Blessed <span class="token punctuation">}</span><span class="token punctuation">,</span>
+	withAny <span class="token operator">=</span> <span class="token punctuation">{</span> Magicka <span class="token punctuation">}</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+thePowerful<span class="token punctuation">:</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> human<span class="token punctuation">,</span> blessed<span class="token punctuation">,</span> magicka<span class="token punctuation">)</span>
+	<span class="token keyword">return</span> human<span class="token punctuation">,</span> blessed
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+
+<span class="token keyword">local</span> demigods <span class="token operator">=</span> world<span class="token punctuation">:</span><span class="token function">getReactor</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+	withUpdated <span class="token operator">=</span> <span class="token punctuation">{</span> Blessed <span class="token punctuation">}</span><span class="token punctuation">,</span>
+	withAll <span class="token operator">=</span> <span class="token punctuation">{</span> Human<span class="token punctuation">,</span> Immortal <span class="token punctuation">}</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+demigods<span class="token punctuation">:</span><span class="token function">each</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> human<span class="token punctuation">,</span> immortal<span class="token punctuation">,</span> blessed<span class="token punctuation">)</span>
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+
+<span class="token keyword">local</span> ascendantDivineBeings <span class="token operator">=</span> world<span class="token punctuation">:</span><span class="token function">getReactor</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+	without <span class="token operator">=</span> <span class="token punctuation">{</span> Human <span class="token punctuation">}</span><span class="token punctuation">,</span>
+	withAny <span class="token operator">=</span> <span class="token punctuation">{</span> Magicka <span class="token punctuation">}</span><span class="token punctuation">,</span>
+	withAll <span class="token operator">=</span> <span class="token punctuation">{</span> Blessed<span class="token punctuation">,</span> Immortal <span class="token punctuation">}</span><span class="token punctuation">,</span>
+	withUpdated <span class="token operator">=</span> <span class="token punctuation">{</span> Ascendant <span class="token punctuation">}</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+
+ascendantDivineBeings<span class="token punctuation">:</span><span class="token function">each</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> blessed<span class="token punctuation">,</span> immortal<span class="token punctuation">,</span> ascendant<span class="token punctuation">,</span> magicka<span class="token punctuation">)</span>
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+</code></pre>
 <div class="admonition admonition-warning alert alert--danger">
   <div class="admonition-heading">
     <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
@@ -48,25 +130,36 @@ You can get or create a `World` with [`Anatta.getWorld`](/api/Anatta#getWorld) a
         </svg></span>warning</h5>
   </div>
   <div class="admonition-content">
+    <p>Sometimes we define "tag" components that look like this:</p>
+    <pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> T <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span>Packages<span class="token punctuation">.</span>Anatta<span class="token punctuation">)</span><span class="token punctuation">.</span>T
+
+<span class="token keyword">return</span> <span class="token punctuation">{</span>
+	name <span class="token operator">=</span> <span class="token string">"Blessed"</span><span class="token punctuation">,</span>
+	type <span class="token operator">=</span> T<span class="token punctuation">.</span>none<span class="token punctuation">,</span>
+<span class="token punctuation">}</span>
+</code></pre>
+    <p>Tag components always have a value of <code>nil</code>. That means:</p>
+    <pre class="language-lua"><code class="language-lua"><span class="token keyword">local</span> entity <span class="token operator">=</span> registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+registry<span class="token punctuation">:</span><span class="token function">addComponent</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> Blessed<span class="token punctuation">)</span>
+
+<span class="token function">assert</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">getComponent</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> Blessed<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token keyword">nil</span><span class="token punctuation">,</span> <span class="token string">"Tag components are equal to nil!"</span><span class="token punctuation">)</span>
+</code></pre>
+    <p>And also:</p>
+    <pre class="language-lua"><code class="language-lua">world<span class="token punctuation">:</span><span class="token function">getMapper</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+	withAll <span class="token operator">=</span> <span class="token punctuation">{</span> Blessed <span class="token punctuation">}</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">:</span><span class="token function">map</span><span class="token punctuation">(</span><span class="token keyword">function</span><span class="token punctuation">(</span>entity<span class="token punctuation">,</span> blessed<span class="token punctuation">)</span>
+	<span class="token function">assert</span><span class="token punctuation">(</span>blessed <span class="token operator">==</span> <span class="token keyword">nil</span><span class="token punctuation">,</span> <span class="token string">"Tag components are equal to nil!"</span><span class="token punctuation">)</span>
+<span class="token keyword">end</span><span class="token punctuation">)</span>
+</code></pre>
     <p>
-      A <a href="/anatta/api/Mapper"><code>Mapper</code></a> cannot track updates to
-      components. <a href="#getMapper"><code>World:getMapper</code></a> throws an error when this field is
-      included.
+      The correct way to check for the existence of tag components (and in general) is with
+      <a href="/anatta/api/Registry#entityHas"><code>Registry:entityHas</code></a> or
+      <a href="/anatta/api/Registry#entityHasAny"><code>Registry:entityHasAny</code></a>.
     </p>
   </div>
 </div>
-<h3><code>Query.withAny</code></h3>
-<p>An entity may have any or none of these components.</p>
-<h3><code>Query.without</code></h3>
-<p>An entity must not have any of these components.</p>
-<p>
-  Methods like <a href="/anatta/api/Reactor#withAttachments"><code>Reactor:withAttachments</code></a> and
-  <a href="/anatta/api/Mapper#each"><code>Mapper:each</code></a> take callbacks that are passed an entity and its
-  components. Such callbacks receive an entity as their first argument, followed in
-  order by the entity's components from <code>withAll</code>, then the components from
-  <code>withUpdated</code>, and finally the components from <code>withAny</code>.
-</p>
-</div><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="properties"></a>Properties<a class="hash-link" href="#properties" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="components"></a><code style="text-decoration:none">components</code><a class="hash-link" href="#components" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L86"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World.components: </code> <code class="op_1JtD">{</code><code>[string]: </code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code></div><div>
+</div><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="properties"></a>Properties<a class="hash-link" href="#properties" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="components"></a><code style="text-decoration:none">components</code><a class="hash-link" href="#components" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L155"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World.components: </code> <code class="op_1JtD">{</code><code>[string]: </code><code class="blue_2Afy">ComponentDefinition</code><code class="op_1JtD">}</code></div><div>
 <p>
   A dictionary mapping component names to component definitions. Intended to be used for importing
   component definitions as follows:
@@ -81,9 +174,9 @@ registry<span class="token punctuation">:</span><span class="token function">add
 </code></pre>
 </div><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="registry"></a><code style="text-decoration:none">registry</code><a class="hash-link" href="#registry" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L14"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World.registry: </code> <code class="blue_2Afy">Registry</code></div><div>
 <p>Provides direct, unscoped access to a <code>World</code>'s <a href="/anatta/api/Registry"><code>Registry</code></a>.</p>
-</div><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getMapper"></a><code style="text-decoration:none">getMapper</code><a class="hash-link" href="#getMapper" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L131"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World:</code><code class="green_3LnD">getMapper</code><code>(</code><code>query: </code><code class="blue_2Afy">Query</code><code>) → </code><code class="blue_2Afy">Mapper</code></div><div>
+</div><h2><a aria-hidden="true" tabindex="-1" class="anchor anchor__h2 anchorWithStickyNavbar_31ik" id="functions"></a>Functions<a class="hash-link" href="#functions" title="Direct link to heading">#</a></h2><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getMapper"></a><code style="text-decoration:none">getMapper</code><a class="hash-link" href="#getMapper" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L200"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World:</code><code class="green_3LnD">getMapper</code><code>(</code><code>query: </code><code class="blue_2Afy">Query</code><code>) → </code><code class="blue_2Afy">Mapper</code></div><div>
 <p>Creates a new <a href="/anatta/api/Mapper"><code>Mapper</code></a> given a <a href="#Query"><code>Query</code></a>.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;mappers cannot track updates to components; use a Reactor instead&quot;</td><td>Reactors can track updates. Mappers can&#x27;t.</td></tr><tr><td>&quot;mappers need at least one component type provided in withAll&quot;</td><td>Mappers need components in withAll to query.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this world&quot;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getReactor"></a><code style="text-decoration:none">getReactor</code><a class="hash-link" href="#getReactor" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L161"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World:</code><code class="green_3LnD">getReactor</code><code>(</code><code>query: </code><code class="blue_2Afy">Query</code><code>) → </code><code class="blue_2Afy">Reactor</code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;mappers cannot track updates to components; use a Reactor instead&quot;</td><td>Reactors can track updates. Mappers can&#x27;t.</td></tr><tr><td>&quot;mappers need at least one component type provided in withAll&quot;</td><td>Mappers need components in withAll to query.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this world&quot;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3><a aria-hidden="true" tabindex="-1" class="anchor anchor__h3 anchorWithStickyNavbar_31ik" id="getReactor"></a><code style="text-decoration:none">getReactor</code><a class="hash-link" href="#getReactor" title="Direct link to heading">#</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L230"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World:</code><code class="green_3LnD">getReactor</code><code>(</code><code>query: </code><code class="blue_2Afy">Query</code><code>) → </code><code class="blue_2Afy">Reactor</code></div><div>
 <p>Creates a new <a href="/anatta/api/Reactor"><code>Reactor</code></a> given a <a href="#Query"><code>Query</code></a>.</p>
 </div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;reactors need at least one component type provided in withAll, withUpdated, or withAny&quot;</td><td>Reactors need components to query.</td></tr><tr><td>&quot;reactors can only track up to 32 updated component types&quot;</td><td>More than 32 components were provided in withUpdated.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this world&quot;</td><td>No component matches that definition.</td></tr></tbody></table></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
@@ -106,7 +199,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;ignore&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 96,
+                &quot;line&quot;: 165,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         },
@@ -142,7 +235,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 131,
+                &quot;line&quot;: 200,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         },
@@ -178,7 +271,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 161,
+                &quot;line&quot;: 230,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         }
@@ -198,7 +291,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
             &quot;desc&quot;: &quot;A dictionary mapping component names to component definitions. Intended to be used for importing\ncomponent definitions as follows:\n```lua\n-- Assuming we&#x27;ve already defined the World elsewhere with a component called \&quot;Money\&quot;\nlocal world = Anatta:getWorld(\&quot;MyCoolWorld\&quot;)\nlocal registry = world.registry\n\nlocal Money = world.components.Money\n\nregistry:addComponent(registry:createEntity(), Money, 5000)\n```&quot;,
             &quot;lua_type&quot;: &quot;{[string]: ComponentDefinition}&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 86,
+                &quot;line&quot;: 155,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         }
@@ -206,7 +299,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
     &quot;types&quot;: [
         {
             &quot;name&quot;: &quot;Query&quot;,
-            &quot;desc&quot;: &quot;A `Query` represents a set of entities to retrieve from a\n[`Registry`](/api/Registry). A `Query` can be finalized by passing it to\n[`World:getReactor`](#getReactor) or [`World:getMapper`](#getMapper).\n\nThe fields of a `Query` determine which entities are yielded. Each field is an\noptional list of component names that corresponds to one of the following rules:\n\n### `Query.withAll`\nAn entity must have all of these components.\n\n### `Query.withUpdated`\nAn entity must have an updated copy of all of these components.\n\n:::warning\nA [`Mapper`](/api/Mapper) cannot track updates to\ncomponents. [`World:getMapper`](#getMapper) throws an error when this field is\nincluded.\n:::\n\n### `Query.withAny`\nAn entity may have any or none of these components.\n\n### `Query.without`\nAn entity must not have any of these components.\n\nMethods like [`Reactor:withAttachments`](/api/Reactor#withAttachments) and\n[`Mapper:each`](/api/Mapper#each) take callbacks that are passed an entity and its\ncomponents. Such callbacks receive an entity as their first argument, followed in\norder by the entity&#x27;s components from `withAll`, then the components from\n`withUpdated`, and finally the components from `withAny`.&quot;,
+            &quot;desc&quot;: &quot;A `Query` represents a set of entities to retrieve from a\n[`Registry`](/api/Registry). A `Query` can be finalized by passing it to\n[`World:getReactor`](#getReactor) or [`World:getMapper`](#getMapper).\n\nThe fields of a `Query` determine which entities are yielded. Each field is an\noptional list of `ComponentsDefinition`s that corresponds to a rule:\n\n| Field       | Rule                                                            |\n|-------------|-----------------------------------------------------------------|\n| withAll     | An entity must have all of these components.                    |\n| withUpdated | An entity must have an updated copy of all of these components. |\n| withAny     | An entity may have any or none of these components.             |\n| without     | An entity must not have any of these components.                |\n\n:::note\nA [`Mapper`](/api/Mapper) cannot track updates to\ncomponents. [`World:getMapper`](#getMapper) throws an error when passed a `Query`\ncontaining a `withUpdated` field.\n:::\n\n### Using queries\n\nMethods like [`Reactor:each`](/api/Reactor#each) and [`Mapper:map`](/api/Mapper#map)\ntake callbacks that are passed an entity and its components. The components go in a\nspecific order: first the components from `withAll`, then the components from\n`withUpdated`, and finally the components from `withAny`. The order of the fields\nin `Query` has no effect on this - dictionaries don&#x27;t have a defined order in Lua!\nHere are some example signatures using made-up components:\n\n```lua\nlocal world = Anatta.getWorld(\&quot;TheOverworld\&quot;)\nlocal components = world.components\nlocal registry = world.registry\n\nlocal Ascendant = components.Ascendant\nlocal Blessed = components.Blessed\nlocal Human = components.Human\nlocal Immortal = components.Immortal\nlocal Magicka = components.Magicka\n\nlocal thePowerful = world:getMapper({\n\twithAll = { Human, Blessed },\n\twithAny = { Magicka },\n})\n\nthePowerful:map(function(entity, human, blessed, magicka)\n\treturn human, blessed\nend)\n\nlocal demigods = world:getReactor({\n\twithUpdated = { Blessed },\n\twithAll = { Human, Immortal },\n})\n\ndemigods:each(function(entity, human, immortal, blessed)\nend)\n\nlocal ascendantDivineBeings = world:getReactor({\n\twithout = { Human },\n\twithAny = { Magicka },\n\twithAll = { Blessed, Immortal },\n\twithUpdated = { Ascendant },\n})\n\nascendantDivineBeings:each(function(entity, blessed, immortal, ascendant, magicka)\nend)\n```\n\n:::warning\nSometimes we define \&quot;tag\&quot; components that look like this:\n```lua\nlocal T = require(Packages.Anatta).T\n\nreturn {\n\tname = \&quot;Blessed\&quot;,\n\ttype = T.none,\n}\n```\nTag components always have a value of `nil`. That means:\n```lua\nlocal entity = registry:createEntity()\n\nregistry:addComponent(entity, Blessed)\n\nassert(registry:getComponent(entity, Blessed) == nil, \&quot;Tag components are equal to nil!\&quot;)\n```\nAnd also:\n```lua\nworld:getMapper({\n\twithAll = { Blessed },\n}):map(function(entity, blessed)\n\tassert(blessed == nil, \&quot;Tag components are equal to nil!\&quot;)\nend)\n```\n\nThe correct way to check for the existence of tag components (and in general) is with\n[`Registry:entityHas`](/api/Registry#entityHas) or\n[`Registry:entityHasAny`](/api/Registry#entityHasAny).\n:::&quot;,
             &quot;fields&quot;: [
                 {
                     &quot;name&quot;: &quot;withAll&quot;,
@@ -230,7 +323,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 54,
+                &quot;line&quot;: 123,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         }
@@ -242,7 +335,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
         &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
     }
 }</pre></details></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link">Types</a><ul><li><a href="#Query" class="table-of-contents__link">Query</a></li></ul></li><li><a href="#properties" class="table-of-contents__link">Properties</a><ul><li><a href="#components" class="table-of-contents__link">components</a></li><li><a href="#registry" class="table-of-contents__link">registry</a></li></ul></li><li><a href="#functions" class="table-of-contents__link">Functions</a><ul><li><a href="#getMapper" class="table-of-contents__link">:getMapper</a></li><li><a href="#getReactor" class="table-of-contents__link">:getReactor</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2021 kennethloeffler. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/anatta/assets/js/runtime~main.924336b8.js"></script>
-<script src="/anatta/assets/js/main.e09c76fd.js"></script>
+<script src="/anatta/assets/js/runtime~main.ffbc6c2b.js"></script>
+<script src="/anatta/assets/js/main.b90025fc.js"></script>
 </body>
 </html>
