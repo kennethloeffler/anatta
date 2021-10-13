@@ -61,15 +61,17 @@ local tryFromTagged = require(script.tryFromTagged)
 	@function tryToAttributes
 	@within Dom
 	@param instance Instance
-	@param component any
+	@param entity number
 	@param componentDefinition ComponentDefinition
+	@param component any
 	@return boolean, {[string]: any]}
 
-	Takes an entity, a component on the entity, and the component's
-	[`ComponentDefinition`](/api/Anatta#ComponentDefinition) and attempts to convert the
-	component into a dictionary that can be used to set attributes on an `Instance`. The
-	keys of the returned dictionary are the names of the requested attributes, while the
-	values correspond to the entity and the value(s) of the component.
+	Takes an `Instance`, an entity, a
+	[`ComponentDefinition`](/api/Anatta#ComponentDefinition), and a component and attempts
+	to convert the component into a dictionary that can be used to set attributes on the
+	`Instance`. The keys of the returned dictionary are the names of the requested
+	attributes, while the values correspond to the entity and the value(s) of the
+	component.
 
 	Returns a success value followed by the attribute dictionary (if successful) or an
 	error message (if unsuccessful).
