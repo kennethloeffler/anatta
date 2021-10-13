@@ -910,8 +910,7 @@ function Registry:isComponentDefined(definition)
 end
 
 --[=[
-	Returns a list of pools containing the specified components in the same order as
-	the given list of component names.
+	Returns a list of the `Pool`s used to manage the given components.
 
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
@@ -936,7 +935,7 @@ function Registry:getPools(definitions)
 end
 
 --[=[
-	Returns the pool containing the specified components.
+	Returns the `Pool` containing the given components.
 
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
