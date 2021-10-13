@@ -102,6 +102,11 @@ end
 	return a list of connections and/or `Instance`s. When the entity later leaves the
 	`Reactor`, attached `Instance`s are destroyed and attached connections are
 	disconnected.
+
+	:::warning
+	Yielding inside of the callback is forbidden. There are currently no protections
+	against this, so be careful!
+	:::
 ]=]
 function Reactor:withAttachments(callback)
 	local attachmentsAdded = self.added:connect(function(entity, ...)
@@ -142,6 +147,9 @@ end
 	Iterates over the all the entities present in the `Reactor`. Calls the callback for
 	each entity, passing each entity followed by the components named in the
 	[`Query`](/api/World#Query).
+
+	:::info
+	It's safe to add or remove components inside of the callback.
 ]=]
 function Reactor:each(callback)
 	local dense = self._pool.dense
@@ -167,6 +175,9 @@ end
 	This function effectively "consumes" all updates made to components named in
 	[`Query.withUpdated`](/api/World#Query), emptying the `Reactor`. A consumer that wants
 	to selectively consume updates should use [`consume`](#consume) instead.
+
+	:::info
+	It's safe to add or remove components inside of the callback.
 ]=]
 function Reactor:consumeEach(callback)
 	local dense = self._pool.dense
