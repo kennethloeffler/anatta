@@ -9,8 +9,6 @@ local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local Anatta = {}
 
-local definitions = setmetatable({}, { __mode = "k" })
-
 local function getValidEntity(world, instance)
 	local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
@@ -28,10 +26,6 @@ local function getValidEntity(world, instance)
 end
 
 local function getAttributeMap(instance, definition)
-	if definitions[definition] then
-		return true, next(definitions[definition])
-	end
-
 	local defaultSuccess, default = definition.type:tryDefault()
 
 	if not defaultSuccess then
@@ -40,13 +34,7 @@ local function getAttributeMap(instance, definition)
 
 	local attributeSuccess, attributeMap = Dom.tryToAttributes(instance, 0, definition, default)
 
-	if not attributeSuccess then
-		return false, attributeMap
-	end
-
-	definitions[definition] = { [attributeMap] = default }
-
-	return true, attributeMap, default
+	return attributeSuccess, attributeMap, default
 end
 
 function Anatta.addComponent(world, instance, definition)
@@ -58,13 +46,18 @@ function Anatta.addComponent(world, instance, definition)
 	end
 
 	attributeMap[ENTITY_ATTRIBUTE_NAME] = entity
-	world.registry:addComponent(entity, definition, defaultValue)
 
 	for attributeName, attributeValue in pairs(attributeMap) do
-		instance:SetAttribute(attributeName, attributeValue)
+		if typeof(attributeValue) == "Instance" then
+			instance.__anattaRefs[attributeName].Value = attributeValue
+			instance:SetAttribute(attributeName, attributeValue.Name)
+		else
+			instance:SetAttribute(attributeName, attributeValue)
+		end
 	end
 
 	CollectionService:AddTag(instance, definition.name)
+	world.registry:addComponent(entity, definition, defaultValue)
 
 	return true
 end
@@ -79,7 +72,23 @@ function Anatta.removeComponent(world, instance, definition)
 
 	world.registry:tryRemoveComponent(entity, definition)
 
-	for attributeName in pairs(attributeMap) do
+	for attributeName, attributeValue in pairs(attributeMap) do
+		if typeof(attributeValue) == "Instance" then
+			local anattaRefs = instance:FindFirstChild("__anattaRefs")
+
+			if anattaRefs then
+				local objectValue = anattaRefs:FindFirstChild(attributeName)
+
+				if objectValue then
+					objectValue:Destroy()
+				end
+
+				if not next(anattaRefs:GetChildren()) then
+					anattaRefs:Destroy()
+				end
+			end
+		end
+
 		if attributeName ~= ENTITY_ATTRIBUTE_NAME then
 			instance:SetAttribute(attributeName, nil)
 		end
