@@ -45,11 +45,6 @@ local function createWorld(namespace, componentDefinitions)
 	local definitions = {}
 
 	util.jumpAssert(not Worlds[namespace], ErrWorldAlreadyExists, namespace)
-	util.jumpAssert(
-		t.none(componentDefinitions)
-			or t.table(componentDefinitions)
-			or t.instance(componentDefinitions)
-	)
 
 	if typeof(componentDefinitions) == "table" then
 		for _, definition in pairs(componentDefinitions) do
@@ -70,6 +65,8 @@ local function createWorld(namespace, componentDefinitions)
 				end
 			end
 		end
+	else
+		error(("Expected table or Instance, got %s"):format(tostring(componentDefinitions)), 2)
 	end
 
 	local world = World.new(definitions)
