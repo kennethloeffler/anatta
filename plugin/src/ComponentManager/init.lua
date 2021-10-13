@@ -13,7 +13,7 @@ local Actions = require(script.Parent.Actions)
 local componentConfigRoot = game:GetService("ServerStorage")
 local componentConfigFolder = "ComponentConfigurations"
 
-local componentDefinitionsRoot = game:GetService("ServerStorage")
+local componentDefinitionsRoot = game:GetService("ReplicatedStorage")
 local componentDefinitionsFolder = "ComponentDefinitions"
 
 local ComponentManager = {}
