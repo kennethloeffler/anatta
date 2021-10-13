@@ -28,6 +28,8 @@ local Types = require(script.Parent.Parent.Types)
 
 local util = require(script.Parent.Parent.util)
 
+local ErrEntityMissing = "entity %d is not present in this reactor"
+
 local Reactor = {}
 Reactor.__index = Reactor
 
@@ -198,11 +200,15 @@ function Reactor:consumeEach(callback)
 end
 
 --[=[
-	@param entity number
+	Consumes updates made to components named in `Query.withUpdated`.
 
-	Clears a given entity's updated status.
+	@error "entity %d is not present in this reactor" -- The reactor doesn't contain that entity.
+
+	@param entity number
 ]=]
 function Reactor:consume(entity)
+	util.jumpAssert(self._pool:getIndex(entity) ~= nil, ErrEntityMissing, entity)
+
 	self._pool:delete(entity)
 	self._updates[entity] = nil
 end
