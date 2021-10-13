@@ -25,31 +25,100 @@
 	[`World:getReactor`](#getReactor) or [`World:getMapper`](#getMapper).
 
 	The fields of a `Query` determine which entities are yielded. Each field is an
-	optional list of component names that corresponds to one of the following rules:
+	optional list of `ComponentsDefinition`s that corresponds to a rule:
 
-	### `Query.withAll`
-	An entity must have all of these components.
+	| Field       | Rule                                                            |
+	|-------------|-----------------------------------------------------------------|
+	| withAll     | An entity must have all of these components.                    |
+	| withUpdated | An entity must have an updated copy of all of these components. |
+	| withAny     | An entity may have any or none of these components.             |
+	| without     | An entity must not have any of these components.                |
 
-	### `Query.withUpdated`
-	An entity must have an updated copy of all of these components.
-
-	:::warning
+	:::note
 	A [`Mapper`](/api/Mapper) cannot track updates to
-	components. [`World:getMapper`](#getMapper) throws an error when this field is
-	included.
+	components. [`World:getMapper`](#getMapper) throws an error when passed a `Query`
+	containing a `withUpdated` field.
 	:::
 
-	### `Query.withAny`
-	An entity may have any or none of these components.
+	### Using queries
 
-	### `Query.without`
-	An entity must not have any of these components.
+	Methods like [`Reactor:each`](/api/Reactor#each) and [`Mapper:map`](/api/Mapper#map)
+	take callbacks that are passed an entity and its components. The components go in a
+	specific order: first the components from `withAll`, then the components from
+	`withUpdated`, and finally the components from `withAny`. The order of the fields
+	in `Query` has no effect on this - dictionaries don't have a defined order in Lua!
+	Here are some example signatures using made-up components:
 
-	Methods like [`Reactor:withAttachments`](/api/Reactor#withAttachments) and
-	[`Mapper:each`](/api/Mapper#each) take callbacks that are passed an entity and its
-	components. Such callbacks receive an entity as their first argument, followed in
-	order by the entity's components from `withAll`, then the components from
-	`withUpdated`, and finally the components from `withAny`.
+	```lua
+	local world = Anatta.getWorld("TheOverworld")
+	local components = world.components
+	local registry = world.registry
+
+	local Ascendant = components.Ascendant
+	local Blessed = components.Blessed
+	local Human = components.Human
+	local Immortal = components.Immortal
+	local Magicka = components.Magicka
+
+	local thePowerful = world:getMapper({
+		withAll = { Human, Blessed },
+		withAny = { Magicka },
+	})
+
+	thePowerful:map(function(entity, human, blessed, magicka)
+		return human, blessed
+	end)
+
+	local demigods = world:getReactor({
+		withUpdated = { Blessed },
+		withAll = { Human, Immortal },
+	})
+
+	demigods:each(function(entity, human, immortal, blessed)
+	end)
+
+	local ascendantDivineBeings = world:getReactor({
+		without = { Human },
+		withAny = { Magicka },
+		withAll = { Blessed, Immortal },
+		withUpdated = { Ascendant },
+	})
+
+	ascendantDivineBeings:each(function(entity, blessed, immortal, ascendant, magicka)
+	end)
+	```
+
+	:::warning
+	Sometimes we define "tag" components that look like this:
+	```lua
+	local T = require(Packages.Anatta).T
+
+	return {
+		name = "Blessed",
+		type = T.none,
+	}
+	```
+	Tag components always have a value of `nil`. That means:
+	```lua
+	local entity = registry:createEntity()
+
+	registry:addComponent(entity, Blessed)
+
+	assert(registry:getComponent(entity, Blessed) == nil, "Tag components are equal to nil!")
+	```
+	And also:
+	```lua
+	world:getMapper({
+		withAll = { Blessed },
+	}):map(function(entity, blessed)
+		assert(blessed == nil, "Tag components are equal to nil!")
+	end)
+	```
+
+	The correct way to check for the existence of tag components (and in general) is with
+	[`Registry:entityHas`](/api/Registry#entityHas) or
+	[`Registry:entityHasAny`](/api/Registry#entityHasAny).
+	:::
 ]=]
 local Mapper = require(script.Mapper)
 local Reactor = require(script.Reactor)
