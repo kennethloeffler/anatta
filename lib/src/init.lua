@@ -66,7 +66,7 @@ local function createWorld(namespace, componentDefinitions)
 			end
 		end
 	else
-		error(("Expected table or Instance, got %s"):format(tostring(componentDefinitions)), 2)
+		error(("expected table or Instance, got %s"):format(tostring(componentDefinitions)), 2)
 	end
 
 	local world = World.new(definitions)
