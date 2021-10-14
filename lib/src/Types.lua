@@ -6,7 +6,7 @@ local TypeDefinition = t.strictInterface({
 	typeName = t.string,
 })
 
-local ComponentDefinition = t.strictInterface({
+local ComponentDefinition = t.interface({
 	description = t.optional(t.string),
 	name = t.string,
 	type = TypeDefinition,
