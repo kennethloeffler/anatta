@@ -24,14 +24,14 @@ return function()
 
 	describe("getWorld", function()
 		it("should return a world with the given namespace", function()
-			local world = Anatta.createWorld("TestWorld2")
+			local world = Anatta.createWorld("TestWorld2", {})
 
 			expect(Anatta.getWorld("TestWorld2")).to.equal(world)
 		end)
 
 		it("should error if there is no world under that namespace", function()
 			expect(function()
-				Anatta.getWorld("ZOned")
+				Anatta.getWorld("ZOned", {})
 			end).to.throw()
 		end)
 	end)
