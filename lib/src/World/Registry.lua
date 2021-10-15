@@ -790,6 +790,38 @@ function Registry:addOrReplaceComponent(entity, definition, component)
 end
 
 --[=[
+	Adds the component to the entity, immediately replacing the component with itself, and
+	returns the component.
+
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
+	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
+	@error "entity %d already has a %s" -- The entity already has that component.
+	@error Failed type check -- The given component has the wrong type.
+
+	@param entity number
+	@param definition ComponentDefinition
+	@param component any
+	@return any
+]=]
+function Registry:addAndReplaceComponent(entity, definition, component)
+	local pool = self._pools[definition]
+
+	if DEBUG then
+		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(pool, ErrBadComponentDefinition, definition)
+		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent, entity, definition)
+		jumpAssert(pool.typeCheck(component))
+	end
+
+	pool:insert(entity, component)
+	pool.added:dispatch(entity, component)
+	pool.updated:dispatch(entity, component)
+
+	return component
+end
+
+--[=[
 	Removes the component from the entity.
 
 	@error "expected entity to be a number, got %s" -- The entity is not a number.
