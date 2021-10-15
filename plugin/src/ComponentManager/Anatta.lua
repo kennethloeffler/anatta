@@ -58,7 +58,7 @@ function Anatta.addComponent(world, instance, definition)
 	end
 
 	CollectionService:AddTag(instance, definition.name)
-	world.registry:addComponent(entity, definition, defaultValue)
+	world.registry:tryAddComponent(entity, definition, defaultValue)
 
 	return true
 end
