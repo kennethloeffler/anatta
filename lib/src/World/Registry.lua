@@ -20,10 +20,11 @@ local ENTITYID_MASK = Constants.EntityIdMask
 local ENTITYID_WIDTH = Constants.EntityIdWidth
 local NULL_ENTITYID = Constants.NullEntityId
 
-local ErrAlreadyHasComponent = "entity %s already has a %s"
+local ErrAlreadyHasComponent = "entity %d already has a %s"
 local ErrBadComponentDefinition = 'the component type "%s" is not defined for this registry'
-local ErrInvalidEntity = 'the entity "%s" does not exist or has been destroyed'
-local ErrMissingComponent = "entity %s does not have a %s"
+local ErrEntityNotANumber = "expected entity to be a number, got %s"
+local ErrInvalidEntity = "entity %d does not exist or has been destroyed"
+local ErrMissingComponent = "entity %d does not have a %s"
 local ErrComponentNameTaken = "there is already a component type named %s"
 
 local ComponentDefinitionToString = {
@@ -369,7 +370,8 @@ end
 	assert(registry:entityIsValid(entity) == false)
 	```
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 
 	@param entity number
 ]=]
@@ -417,9 +419,7 @@ end
 	@return boolean
 ]=]
 function Registry:entityIsValid(entity)
-	if typeof(entity) ~= "number" then
-		return false
-	end
+	jumpAssert(typeof(entity) == "number", ErrEntityNotANumber, entity)
 
 	return self._entities[bit32.band(entity, ENTITYID_MASK)] == entity
 end
@@ -441,7 +441,8 @@ end
 	assert(registry:entityIsOrphaned(entity) == false)
 	```
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 
 	@param entity number
 	@return boolean
@@ -466,7 +467,8 @@ end
 
 	If an entity is given, passes only the components that the entity has.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 
 	@param callback (definition: ComponentDefinition) -> boolean
 	@param entity number?
@@ -501,7 +503,8 @@ end
 --[=[
 	Returns `true` if the entity all of the given components. Otherwise, returns `false`.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
@@ -530,7 +533,8 @@ end
 	Returns `true` if the entity has any of the given components. Otherwise, returns
 	`false`.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
@@ -558,7 +562,8 @@ end
 --[=[
 	Returns the component of the given type on the entity.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
@@ -579,7 +584,8 @@ end
 --[=[
 	Returns all of the given components on the entity.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
@@ -601,9 +607,10 @@ end
 	:::info
 	An entity can only have one component of each type at a time.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
-	@error "entity %s already has a %s" -- The entity already has that component.
+	@error "entity %d already has a %s" -- The entity already has that component.
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
@@ -630,9 +637,10 @@ end
 --[=[
 	Adds the given components to the entity and returns the entity.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
-	@error "entity %s already has a %s" -- The entity already has that component.
+	@error "entity %d already has a %s" -- The entity already has that component.
 	@error Failed type check -- The given component has the wrong type.
 
 	@param entity number
@@ -651,7 +659,8 @@ end
 	If the entity does not have the component, adds and returns the component. Otherwise,
 	returns `nil`.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error Failed type check -- The given component has the wrong type.
 
@@ -682,7 +691,8 @@ end
 	If the entity has the component, returns the component. Otherwise adds the component
 	to the entity and returns the component.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error Failed type check -- The given component has the wrong type.
 
@@ -714,10 +724,11 @@ end
 --[=[
 	Replaces the given component on the entity and returns the new component.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error Failed type check -- The given component has the wrong type.
-	@error "entity %s does not have a %s" -- The entity is expected to have this component.
+	@error "entity %d does not have a %s" -- The entity is expected to have this component.
 
 	@param entity number
 	@param definition ComponentDefinition
@@ -745,7 +756,8 @@ end
 	new component. Otherwise, adds the component to the entity and returns the new
 	component.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 	@error Failed type check -- The given component has the wrong type.
 
@@ -780,9 +792,10 @@ end
 --[=[
 	Removes the component from the entity.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
-	@error "entity %s does not have a %s" -- The entity is expected to have this component.
+	@error "entity %d does not have a %s" -- The entity is expected to have this component.
 
 	@param entity number
 	@param definition ComponentDefinition
@@ -805,7 +818,8 @@ end
 	If the entity has the component, removes it and returns `true`. Otherwise, returns
 	`false`.
 
-	@error 'the entity "%s" does not exist or has been destroyed' -- The entity is invalid.
+	@error "expected entity to be a number, got %s" -- The entity is not a number.
+	@error "entity %d does not exist or has been destroyed" -- The entity is invalid.
 	@error 'the component type "%s" is not defined for this registry' -- No component matches that definition.
 
 	@param entity number
