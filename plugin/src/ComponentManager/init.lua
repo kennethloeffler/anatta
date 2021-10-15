@@ -86,8 +86,8 @@ function ComponentManager.new(store)
 	self.selectionChanged = Selection.SelectionChanged:Connect(function()
 		self:_updateStore()
 
-		local sel = Selection:Get()
-		self.store:dispatch(Actions.SetSelectionActive(#sel > 0))
+		local selected = Selection:Get()
+		self.store:dispatch(Actions.SetSelectionActive(#selected > 0))
 	end)
 
 	if self.configurationsFolder then
