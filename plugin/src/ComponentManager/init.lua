@@ -6,6 +6,7 @@ local ChangeHistory = game:GetService("ChangeHistoryService")
 local Modules = script.Parent.Parent
 
 local Anatta = require(script.Anatta)
+local Constants = require(Modules.Anatta.Library.Core.Constants)
 local Types = require(Modules.Anatta.Library.Types)
 
 local Actions = require(script.Parent.Actions)
@@ -15,6 +16,8 @@ local componentConfigFolder = "ComponentConfigurations"
 
 local componentDefinitionsRoot = game:GetService("ReplicatedStorage")
 local componentDefinitionsFolder = "ComponentDefinitions"
+
+local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local ComponentManager = {}
 ComponentManager.__index = ComponentManager
@@ -242,6 +245,7 @@ function ComponentManager:_doUpdateStore()
 	local components: { [number]: Component } = {}
 	local groups: { [string]: boolean } = {}
 	local selected = Selection:Get()
+	local world = self.store:getState().AnattaWorld
 
 	if self.configurationsFolder then
 		for _, config in pairs(self.configurationsFolder:GetChildren()) do
@@ -249,6 +253,8 @@ function ComponentManager:_doUpdateStore()
 				continue
 			end
 
+			local definition = self.componentDefinitions[config.Name]
+			local values = {}
 			local hasAny = false
 			local missingAny = false
 			local entry: Component = {
@@ -259,9 +265,10 @@ function ComponentManager:_doUpdateStore()
 				AlwaysOnTop = config:GetAttribute("AlwaysOnTop") or defaultValues.AlwaysOnTop,
 				Group = config:GetAttribute("Group") or defaultValues.Group,
 				Color = config:GetAttribute("Color") or genColor(config.Name),
-				Definition = self.componentDefinitions[config.Name],
+				Definition = definition,
 				HasAll = false,
 				HasSome = false,
+				Values = values,
 			}
 
 			if entry.Group == "" then
@@ -274,6 +281,10 @@ function ComponentManager:_doUpdateStore()
 
 			for _, instance in ipairs(selected) do
 				if CollectionService:HasTag(instance, entry.Name) then
+					local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+					local componentValue = world.registry:getComponent(entity, definition)
+
+					table.insert(values, componentValue)
 					hasAny = true
 				else
 					missingAny = true

@@ -4,12 +4,7 @@ local T = Anatta.T
 
 return function(state)
 	if state == nil then
-		return Anatta:createWorld("AnattaPlugin", {
-			{
-				name = "AnattaInstance",
-				type = T.instance,
-			},
-		})
+		return Anatta.createWorld("AnattaPlugin", {})
 	end
 
 	return state
