@@ -54,14 +54,17 @@ function Pool:delete(entity)
 	local entityId = bit32.band(entity, ENTITYID_MASK)
 	local denseIdx = self.sparse[entityId]
 
+	self.sparse[entityId] = nil
+
 	if denseIdx < prevSize then
 		local swapped = self.dense[prevSize]
 
 		self.sparse[bit32.band(swapped, ENTITYID_MASK)] = denseIdx
 		self.dense[denseIdx] = swapped
 		self.components[denseIdx] = self.components[prevSize]
+		self.dense[prevSize] = nil
+		self.components[prevSize] = nil
 	else
-		self.sparse[entityId] = nil
 		table.remove(self.dense, prevSize)
 		table.remove(self.components, prevSize)
 	end
