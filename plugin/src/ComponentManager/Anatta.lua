@@ -19,8 +19,8 @@ local function getValidEntity(world, instance)
 		or not world.registry:entityIsValid(entity)
 	then
 		entity = world.registry:createEntity()
-		CollectionService:AddTag(instance, SHARED_INSTANCE_TAG_NAME)
 		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
+		CollectionService:AddTag(instance, SHARED_INSTANCE_TAG_NAME)
 	end
 
 	return entity
