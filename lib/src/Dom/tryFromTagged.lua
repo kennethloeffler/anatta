@@ -24,6 +24,7 @@ return function(pool)
 				instance:GetFullName(),
 				componentName
 			))
+			continue
 		end
 
 		pool:insert(entity, component)
