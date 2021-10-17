@@ -211,6 +211,8 @@ function Reactor:consume(entity)
 
 	self._pool:delete(entity)
 	self._updates[entity] = nil
+	self:_pack(entity)
+	self.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 end
 
 --[[
