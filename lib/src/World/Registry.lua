@@ -745,8 +745,8 @@ function Registry:replaceComponent(entity, definition, component)
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent, entity, definition)
 	end
 
-	pool.updated:dispatch(entity, component)
 	pool:replace(entity, component)
+	pool.updated:dispatch(entity, component)
 
 	return component
 end
