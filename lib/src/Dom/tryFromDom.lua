@@ -10,8 +10,8 @@ return function(registry)
 
 	local entitySet = {}
 
-	for componentName, pool in pairs(registry._pools) do
-		if componentName:sub(1, 1) == "." then
+	for definition, pool in pairs(registry._pools) do
+		if definition.name:sub(1, 1) == "." then
 			continue
 		end
 
