@@ -8,7 +8,7 @@ return function(pool)
 	util.jumpAssert(pool.size == 0, "Pool must be empty")
 
 	local definition = pool.componentDefinition
-	local tagged = CollectionService:GetTagged(componentName)
+	local tagged = CollectionService:GetTagged(definition.name)
 	local taggedCount = #tagged
 
 	pool.dense = table.create(taggedCount)
@@ -20,7 +20,7 @@ return function(pool)
 		if not success then
 			warn(("%s failed attribute validation for %s"):format(
 				instance:GetFullName(),
-				componentName
+				definition.name
 			))
 			continue
 		end
