@@ -13,14 +13,7 @@ local function waitForRefs(instance, attributeName, typeDefinition, objectValues
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 			local fieldTypeDefinition = typeDefinition.typeParams[1][field]
 
-			task.defer(
-				waitForRefs,
-				instance,
-				fieldAttributeName,
-				fieldTypeDefinition,
-				objectValues,
-				refFolder
-			)
+			waitForRefs(instance, fieldAttributeName, fieldTypeDefinition, objectValues, refFolder)
 		end
 	elseif concreteType == "instanceOf" or concreteType == "instanceIsA" then
 		local objectValue = refFolder:WaitForChild(attributeName)
