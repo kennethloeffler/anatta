@@ -209,10 +209,10 @@ end
 function Reactor:consume(entity)
 	util.jumpAssert(self._pool:getIndex(entity) ~= nil, ErrEntityMissing, entity)
 
-	self._pool:delete(entity)
 	self._updates[entity] = nil
 	self:_pack(entity)
 	self.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
+	self._pool:delete(entity)
 end
 
 --[[
