@@ -9,7 +9,7 @@
 
 --- @interface TypeDefinition
 --- @within T
---- .check (...)
+--- .check (...) -> boolean
 --- .typeParams { TypeDefinition }
 --- .typeName string
 --- A wrapped `t` check returned by each member function.
