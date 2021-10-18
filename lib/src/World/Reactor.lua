@@ -102,8 +102,8 @@ end
 	Calls the callback every time an entity enters the `Reactor`, passing each entity and
 	its components and attaching the return value to each entity.  The callback should
 	return a list of connections, `Instance`s, and/or functions. When the entity later
-	leaves the `Reactor`, and attached connections are disconnected, attached `Instance`s
-	are destroyed, and attached functions are called.
+	leaves the `Reactor`, attached connections are disconnected, attached `Instance`s are
+	destroyed, and attached functions are called.
 
 	:::warning
 	Yielding inside of the callback is forbidden. There are currently no protections
