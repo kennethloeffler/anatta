@@ -165,7 +165,7 @@ function WorldProvider:updateParts()
 
 	local adornMap = {}
 	for i = 1, #newList do
-		local components = Collection:GetComponents(newList[i].Instance)
+		local components = Collection:GetTags(newList[i].Instance)
 		local outlines = {}
 		local boxes = {}
 		local icons = {}
