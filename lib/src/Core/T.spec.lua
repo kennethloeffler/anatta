@@ -48,6 +48,12 @@ return function()
 	end)
 
 	describe("getConcreteType", function()
+		it("should fail for table", function()
+			local success, msg = T.table:tryGetConcreteType()
+
+			expect(success).to.equal(false)
+		end)
+
 		it("should resolve a primitive", function()
 			local _, concreteType = T.string:tryGetConcreteType()
 			expect(concreteType).to.equal("string")
