@@ -8,6 +8,7 @@ local Modules = script.Parent.Parent
 local Anatta = require(script.Anatta)
 local Constants = require(Modules.Anatta.Library.Core.Constants)
 local Types = require(Modules.Anatta.Library.Types)
+local Dom = require(Modules.Anatta.Library.Dom)
 
 local Actions = require(script.Parent.Actions)
 
@@ -164,6 +165,10 @@ function ComponentManager:_watchDefinitions()
 		local world = self.store:getState().AnattaWorld
 		local registry = world.registry
 		local requireSuccess, newDefinition = pcall(require, instance:Clone())
+
+		if not newDefinition.type:tryDefault() then
+			return false
+		end
 
 		if not requireSuccess then
 			warn(newDefinition)
