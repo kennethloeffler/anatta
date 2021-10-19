@@ -9,7 +9,7 @@
 
 --- @interface TypeDefinition
 --- @within T
---- .check (...)
+--- .check (...) -> boolean
 --- .typeParams { TypeDefinition }
 --- .typeName string
 --- A wrapped `t` check returned by each member function.
@@ -102,6 +102,10 @@ local concrete = {
 	numberConstrainedExclusive = "number",
 	numberPositive = "number",
 	numberNegative = "number",
+}
+
+local unserializable = {
+	table = true,
 }
 
 local concreters = {
@@ -292,6 +296,10 @@ end
 
 function TypeDefinition:tryGetConcreteType()
 	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
+
+	if unserializable[self.typeName] then
+		return false, ("%s has no concrete type"):format(self.typeName)
+	end
 
 	if concreteType then
 		return true, concreteType

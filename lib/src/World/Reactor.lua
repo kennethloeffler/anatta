@@ -97,13 +97,13 @@ function Reactor.new(registry, query)
 end
 
 --[=[
-	@param callback (entity: number, ...any) -> {RBXScriptConnection | Instance}
+	@param callback (entity: number, ...any) -> {RBXScriptConnection | Instance | (...) -> ()}
 
 	Calls the callback every time an entity enters the `Reactor`, passing each entity and
 	its components and attaching the return value to each entity.  The callback should
-	return a list of connections and/or `Instance`s. When the entity later leaves the
-	`Reactor`, attached `Instance`s are destroyed and attached connections are
-	disconnected.
+	return a list of connections, `Instance`s, and/or functions. When the entity later
+	leaves the `Reactor`, attached connections are disconnected, attached `Instance`s are
+	destroyed, and attached functions are called.
 
 	:::warning
 	Yielding inside of the callback is forbidden. There are currently no protections
@@ -209,10 +209,10 @@ end
 function Reactor:consume(entity)
 	util.jumpAssert(self._pool:getIndex(entity) ~= nil, ErrEntityMissing, entity)
 
-	self._pool:delete(entity)
 	self._updates[entity] = nil
 	self:_pack(entity)
 	self.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
+	self._pool:delete(entity)
 end
 
 --[[

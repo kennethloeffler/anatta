@@ -8,6 +8,7 @@ local Modules = script.Parent.Parent
 local Anatta = require(script.Anatta)
 local Constants = require(Modules.Anatta.Library.Core.Constants)
 local Types = require(Modules.Anatta.Library.Types)
+local Dom = require(Modules.Anatta.Library.Dom)
 
 local Actions = require(script.Parent.Actions)
 
@@ -164,6 +165,10 @@ function ComponentManager:_watchDefinitions()
 		local world = self.store:getState().AnattaWorld
 		local registry = world.registry
 		local requireSuccess, newDefinition = pcall(require, instance:Clone())
+
+		if not newDefinition.type:tryDefault() then
+			return false
+		end
 
 		if not requireSuccess then
 			warn(newDefinition)
@@ -325,11 +330,11 @@ function ComponentManager:_doUpdateStore()
 	end
 end
 
-function ComponentManager:_setProp(componentName: string, key: string, value: any)
+function ComponentManager:_setProp(componentDefinition, key: string, value: any)
 	local configurationsFolder = self:_getFolder()
-	local component = configurationsFolder:FindFirstChild(componentName)
+	local component = configurationsFolder:FindFirstChild(componentDefinition.name)
 	if not component then
-		error("Setting property of non-existent component `" .. tostring(componentName) .. "`")
+		error("Setting property of non-existent component `" .. tostring(componentDefinition.name) .. "`")
 	end
 
 	-- don't do unnecessary updates
@@ -340,10 +345,10 @@ function ComponentManager:_setProp(componentName: string, key: string, value: an
 	ChangeHistory:SetWaypoint(string.format(
 		"Setting property %q of component %q",
 		key,
-		componentName
+		componentDefinition.name
 	))
 	component:SetAttribute(key, value)
-	ChangeHistory:SetWaypoint(string.format("Set property %q of component %q", key, componentName))
+	ChangeHistory:SetWaypoint(string.format("Set property %q of component %q", key, componentDefinition.name))
 
 	return true
 end
