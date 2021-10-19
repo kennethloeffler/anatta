@@ -104,6 +104,10 @@ local concrete = {
 	numberNegative = "number",
 }
 
+local unserializable = {
+	table = true,
+}
+
 local concreters = {
 	union = function(typeDefinition)
 		local success, previousConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
@@ -292,6 +296,10 @@ end
 
 function TypeDefinition:tryGetConcreteType()
 	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
+
+	if unserializable[self.typeName] then
+		return false, ("%s has no concrete type"):format(self.typeName)
+	end
 
 	if concreteType then
 		return true, concreteType
