@@ -19,6 +19,12 @@ local function createVector3FromString(str)
 	)
 end
 
+local function createShortStringFromVector3(vec3)
+	return string.format("%.3f, %.3f, %.3f", vec3.X, vec3.Y, vec3.Z)
+		:gsub("%.?0+$", "")
+		:gsub("%.?0+,", ",")
+end
+
 local function Vector3Input(props)
 	return Roact.createElement(ComplexStringInput, {
 		Key = props.Key,
@@ -30,7 +36,7 @@ local function Vector3Input(props)
 			if not vec3 then
 				return false
 			else
-				return true, tostring(vec3)
+				return true, createShortStringFromVector3(vec3)
 			end
 		end,
 

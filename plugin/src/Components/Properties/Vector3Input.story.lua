@@ -7,7 +7,7 @@ return function(target)
 	local element = Roact.createFragment({
 		Layout = Roact.createElement("UIListLayout", {
 			Padding = UDim.new(0, 5),
-			SortOrder = Enum.SortOrder.LayoutOrder,
+			SortOrder = Enum.SortOrder.Name,
 			FillDirection = Enum.FillDirection.Vertical,
 			HorizontalAlignment = Enum.HorizontalAlignment.Center,
 			VerticalAlignment = Enum.VerticalAlignment.Center,
