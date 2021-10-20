@@ -3,7 +3,7 @@ local Roact = require(Modules.Roact)
 
 local ComplexStringInput = require(script.Parent.ComplexStringInput)
 
-local vector3Pattern = "^(%-?%d+),(%-?%d+),(%-?%d+)$"
+local vector3Pattern = "^([%-%d%.]+),([%-%d%.]+),([%-%d%.]+)$"
 
 local function createVector3FromString(str)
 	local x, y, z = str:match(vector3Pattern)

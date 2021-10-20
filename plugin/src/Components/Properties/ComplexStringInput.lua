@@ -1,10 +1,7 @@
 local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
-local StudioComponents = require(Modules.StudioComponents)
 
 local StringInput = require(script.Parent.StringInput)
-
-local function noop() end
 
 local ComplexStringInput = Roact.Component:extend("ComplexStringInput")
 
