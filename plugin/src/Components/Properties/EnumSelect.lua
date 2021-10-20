@@ -4,7 +4,7 @@ local StudioComponents = require(Modules.StudioComponents)
 
 local BaseProperty = require(script.Parent.BaseProperty)
 
-local function EnumItem(props)
+local function EnumSelect(props)
 	local items = {}
 
 	for _, enum in ipairs(Enum:GetEnums()) do
@@ -31,4 +31,4 @@ local function EnumItem(props)
 	})
 end
 
-return EnumItem
+return EnumSelect
