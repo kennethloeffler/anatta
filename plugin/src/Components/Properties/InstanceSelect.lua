@@ -47,10 +47,21 @@ function InstanceSelect:render()
 				local newSelected = Selection:Get()[1]
 
 				if newSelected then
-					self:setState({
-						Instance = newSelected
-					})
-					self.props.OnChanged(newSelected)
+					local valid = true
+					if self.props.IsA then
+						valid = newSelected:IsA(self.props.IsA)
+					end
+
+					if self.props.ClassName then
+						valid = newSelected.ClassName == self.props.ClassName
+					end
+
+					if valid then
+						self:setState({
+							Instance = newSelected
+						})
+						self.props.OnChanged(newSelected)
+					end
 				end
 
 				RunService.Heartbeat:Wait()
