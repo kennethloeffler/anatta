@@ -1,7 +1,7 @@
 local Vendor = script.Parent.Parent.Parent.Parent
 local Roact = require(Vendor.Roact)
 
-local Vector2Input = require(script.Parent.Vector2Input)
+local UDimInput = require(script.Parent.UDimInput)
 
 return function(target)
 	local element = Roact.createFragment({
@@ -17,11 +17,11 @@ return function(target)
 			Size = UDim2.fromOffset(300, 25),
 			BackgroundTransparency = 1,
 		}, {
-			Vector2Input = Roact.createElement(Vector2Input, {
-				Key = "Whoa, I'm in 2D",
-				Value = Vector2.new(-1, 55),
-				OnChanged = function(vec2)
-					print(vec2)
+			UDimInput = Roact.createElement(UDimInput, {
+				Key = "What is a UDim?",
+				Value = UDim.new(0.4, 25),
+				OnChanged = function(udim)
+					print(udim)
 				end
 			})
 		}),
