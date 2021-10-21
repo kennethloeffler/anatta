@@ -60,7 +60,9 @@ function ComplexStringInput:render()
 			if self.props.Filter then
 				self:filterField()
 				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
-			else
+			end
+
+			if self.props.Validate then
 				self:validateField()
 				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
 			end

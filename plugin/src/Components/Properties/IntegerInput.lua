@@ -3,13 +3,13 @@ local Roact = require(Modules.Roact)
 
 local ComplexStringInput = require(script.Parent.ComplexStringInput)
 
-local function NumberInput(props)
+local function IntegerInput(props)
 	return Roact.createElement(ComplexStringInput, {
 		Key = props.Key,
 		Value = props.Value,
 
 		Filter = function(raw)
-			return raw:match("%-?%d*%.?%d*")
+			return raw:match("%d*%.?%d*")
 		end,
 
 		Validate = function(raw)
@@ -17,17 +17,7 @@ local function NumberInput(props)
 				raw = 0
 			end
 
-			raw = tonumber(raw)
-
-			if props.Max then
-				raw = math.min(raw, props.Max)
-			end
-
-			if props.Min then
-				raw = math.max(raw, props.Min)
-			end
-
-			return true, raw
+			return true, math.floor(tonumber(raw) + 0.5)
 		end,
 
 		Parse = function(raw)
@@ -38,4 +28,4 @@ local function NumberInput(props)
 	})
 end
 
-return NumberInput
+return IntegerInput
