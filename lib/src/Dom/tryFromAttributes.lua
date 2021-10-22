@@ -109,10 +109,17 @@ function convert(instance, attributeName, typeDefinition)
 
 	if typeof(concreteType) == "table" then
 		local value = {}
+		local typeParams
+
+		if typeDefinition.typeName == "strictArray" then
+			typeParams = typeDefinition.typeParams
+		else
+			typeParams = typeDefinition.typeParams[1]
+		end
 
 		for field in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
-			local fieldTypeDefinition = typeDefinition.typeParams[1][field]
+			local fieldTypeDefinition = typeParams[field]
 			local convertSuccess, result, componentValue = convert(
 				instance,
 				fieldAttributeName,
