@@ -78,6 +78,17 @@ return function()
 			expect(concreteInterface.simulacrum.name).to.equal("string")
 		end)
 
+		it("should resolve a strict array into an array of concrete types", function()
+			local interface = T.strictArray(T.Enum, T.strictInterface({
+				name = T.string,
+			}))
+			local _, concreteInterface = interface:tryGetConcreteType()
+
+			expect(concreteInterface[1]).to.equal("Enum")
+			expect(concreteInterface[2]).to.be.a("table")
+			expect(concreteInterface[2].name).to.equal("string")
+		end)
+
 		it("should resolve a union when it contains uniform types", function()
 			local stringUnion = T.union(
 				T.literal("Oh"),
