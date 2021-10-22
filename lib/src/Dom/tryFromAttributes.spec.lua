@@ -100,6 +100,32 @@ return function()
 		)
 	end)
 
+	describe("strictArray", function()
+		it(
+			"should return true and the value when the instance has the correct attributes",
+			function()
+				local instance = Instance.new("Folder")
+
+				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+				instance:SetAttribute("Test_1", UDim2.new(1, 2, 3, 4))
+				instance:SetAttribute("Test_2", true)
+				instance:SetAttribute("Test_3", -273.15)
+
+				local success, entity, component = tryFromAttributes(instance, {
+					name = "Test",
+					type = T.strictArray(T.UDim2, T.boolean, T.number),
+				})
+
+				expect(success).to.equal(true)
+				expect(entity).to.equal(1)
+				expect(component).to.be.a("table")
+				expect(component[1]).to.equal(UDim2.new(1, 2, 3, 4))
+				expect(component[2]).to.equal(true)
+				expect(component[3]).to.equal(-273.15)
+			end
+		)
+	end)
+
 	describe("Instance", function()
 		it(
 			"should resolve a true boolean attribute to a an Instance reference contained by a correspondingly-named ObjectValue under the ref folder",

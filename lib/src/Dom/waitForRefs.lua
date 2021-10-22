@@ -8,10 +8,18 @@ local function waitForRefs(instance, attributeName, typeDefinition, objectValues
 
 	objectValues = objectValues or {}
 
+	local typeParams
+
+	if typeDefinition.typeName == "strictArray" then
+		typeParams = typeDefinition.typeParams
+	else
+		typeParams = typeDefinition.typeParams[1]
+	end
+
 	if typeof(concreteType) == "table" then
 		for field in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
-			local fieldTypeDefinition = typeDefinition.typeParams[1][field]
+			local fieldTypeDefinition = typeParams[field]
 
 			waitForRefs(instance, fieldAttributeName, fieldTypeDefinition, objectValues, refFolder)
 		end
