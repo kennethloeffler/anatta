@@ -102,4 +102,12 @@ return function()
 			expect(concreteType).to.equal("string")
 		end)
 	end)
+
+	describe("API", function()
+		it("should throw when indexed with an invalid type name", function()
+			expect(function()
+				T.instanceof("Part")
+			end).to.throw()
+		end)
+	end)
 end

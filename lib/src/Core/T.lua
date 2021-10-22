@@ -310,14 +310,22 @@ function TypeDefinition:tryGetConcreteType()
 	end
 end
 
+local T = setmetatable({}, {
+	__index = function(self, typeName)
+		if rawget(self, typeName) == nil then
+			error(("%s is not a valid type name"):format(typeName), 3)
+		end
+	end,
+})
+
 for typeName in pairs(t) do
 	if firstOrder[typeName] ~= nil then
-		TypeDefinition[typeName] = TypeDefinition._new(typeName, t[typeName])
+		T[typeName] = TypeDefinition._new(typeName, t[typeName])
 	elseif secondOrder[typeName] ~= nil then
-		TypeDefinition[typeName] = function(...)
+		T[typeName] = function(...)
 			return TypeDefinition._new(typeName, t[typeName](unwrap(...)), ...)
 		end
 	end
 end
 
-return TypeDefinition
+return T
