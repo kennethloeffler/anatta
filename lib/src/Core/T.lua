@@ -204,17 +204,34 @@ local defaults = {
 	end,
 
 	instanceOf = function(typeDefinition)
-		return true, Instance.new(typeDefinition.typeParams[1])
+		local canCreate, instance = pcall(Instance.new, typeDefinition.typeParams[1])
+
+		if not canCreate then
+			return false, instance
+		end
+
+		return true, instance
 	end,
 
 	instance = function(typeDefinition)
-		return true, Instance.new(typeDefinition.typeParams[1])
+		local canCreate, instance = pcall(Instance.new, typeDefinition.typeParams[1])
+
+		if not canCreate then
+			return false, instance
+		end
+
+		return true, instance
 	end,
 
 	instanceIsA = function(typeDefinition)
 		local class = typeDefinition.typeParams[1]
+		local canCreate, instance = pcall(Instance.new, concreteFromAbstract[class] or class)
 
-		return true, Instance.new(concreteFromAbstract[class] or class)
+		if not canCreate then
+			return false, instance
+		end
+
+		return true, instance
 	end,
 
 	number = 0,
