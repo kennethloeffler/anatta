@@ -185,9 +185,16 @@ local defaults = {
 
 	table = function(typeDefinition, concreteType)
 		local default = {}
+		local typeParams
+
+		if typeDefinition.typeName == "strictArray" then
+			typeParams = typeDefinition.typeParams
+		else
+			typeParams = typeDefinition.typeParams[1]
+		end
 
 		for field in pairs(concreteType) do
-			local success, fieldDefault = typeDefinition.typeParams[1][field]:tryDefault()
+			local success, fieldDefault = typeParams[field]:tryDefault()
 
 			if not success then
 				return false, fieldDefault
