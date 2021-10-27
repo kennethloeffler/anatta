@@ -200,24 +200,19 @@ local defaults = {
 	end,
 
 	Instance = function(typeDefinition)
-		typeDefinition._containsRefs = true
 		return true, Instance.new("Hole")
 	end,
 
 	instanceOf = function(typeDefinition)
-		typeDefinition._containsRefs = true
 		return true, Instance.new(typeDefinition.typeParams[1])
 	end,
 
 	instance = function(typeDefinition)
-		typeDefinition._containsRefs = true
 		return true, Instance.new(typeDefinition.typeParams[1])
 	end,
 
 	instanceIsA = function(typeDefinition)
 		local class = typeDefinition.typeParams[1]
-
-		typeDefinition._containsRefs = true
 
 		return true, Instance.new(concreteFromAbstract[class] or class)
 	end,
@@ -277,7 +272,6 @@ function TypeDefinition._new(typeName, check, ...)
 		typeParams = { ... },
 		check = check,
 		typeName = typeName,
-		_containsRefs = false,
 	}, TypeDefinition)
 end
 
