@@ -4,7 +4,6 @@ local TypeDefinition = t.strictInterface({
 	typeParams = t.table,
 	check = t.callback,
 	typeName = t.string,
-	_containsRefs = t.boolean,
 })
 
 local ComponentDefinition = t.interface({
