@@ -215,11 +215,6 @@ function ComponentManager:_watchConfiguration(instance: Configuration)
 		end)
 
 	self.configurationChangedSignals[instance] = {
-		instance:GetPropertyChangedSignal("Parent"):Connect(function()
-			task.defer(function()
-				instance.Parent = self.configurationsFolder
-			end)
-		end),
 		instance:GetPropertyChangedSignal("Name"):Connect(function()
 			instance.Name = originalName
 		end),
