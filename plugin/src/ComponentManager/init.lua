@@ -201,6 +201,8 @@ function ComponentManager:_watchDefinitions()
 		tryDefineComponent(instance)
 	end
 
+	Dom.tryFromDom(self.store:getState().AnattaWorld.registry)
+
 	self.definitionAddedConn = self.definitionsFolder.DescendantAdded:Connect(tryDefineComponent)
 end
 
