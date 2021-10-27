@@ -185,9 +185,16 @@ local defaults = {
 
 	table = function(typeDefinition, concreteType)
 		local default = {}
+		local typeParams
+
+		if typeDefinition.typeName == "strictArray" then
+			typeParams = typeDefinition.typeParams
+		else
+			typeParams = typeDefinition.typeParams[1]
+		end
 
 		for field in pairs(concreteType) do
-			local success, fieldDefault = typeDefinition.typeParams[1][field]:tryDefault()
+			local success, fieldDefault = typeParams[field]:tryDefault()
 
 			if not success then
 				return false, fieldDefault
@@ -204,17 +211,34 @@ local defaults = {
 	end,
 
 	instanceOf = function(typeDefinition)
-		return true, Instance.new(typeDefinition.typeParams[1])
+		local canCreate, instance = pcall(Instance.new, typeDefinition.typeParams[1])
+
+		if not canCreate then
+			return false, instance
+		end
+
+		return true, instance
 	end,
 
 	instance = function(typeDefinition)
-		return true, Instance.new(typeDefinition.typeParams[1])
+		local canCreate, instance = pcall(Instance.new, typeDefinition.typeParams[1])
+
+		if not canCreate then
+			return false, instance
+		end
+
+		return true, instance
 	end,
 
 	instanceIsA = function(typeDefinition)
 		local class = typeDefinition.typeParams[1]
+		local canCreate, instance = pcall(Instance.new, concreteFromAbstract[class] or class)
 
-		return true, Instance.new(concreteFromAbstract[class] or class)
+		if not canCreate then
+			return false, instance
+		end
+
+		return true, instance
 	end,
 
 	number = 0,
