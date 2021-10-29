@@ -88,6 +88,36 @@ function Mapper:each(callback)
 	end
 end
 
+function Mapper:find(callback)
+	local packed = self._packed
+	local numPacked = self._numPacked
+	local shortest = self:_getShortestPool(self._required)
+
+	for _, entity in ipairs(shortest.dense) do
+		if self:_tryPack(entity) then
+			local result = callback(entity, unpack(packed, 1, numPacked))
+			if result ~= nil then
+				return result
+			end
+		end
+	end
+end
+
+function Mapper:filter(callback)
+	local results = {}
+	local packed = self._packed
+	local numPacked = self._numPacked
+	local shortest = self:_getShortestPool(self._required)
+
+	for _, entity in ipairs(shortest.dense) do
+		if self:_tryPack(entity) then
+			table.insert(results, callback(entity, unpack(packed, 1, numPacked)))
+		end
+	end
+
+	return results
+end
+
 function Mapper:_replace(entity, ...)
 	for i, pool in ipairs(self._required) do
 		local newComponent = select(i, ...)

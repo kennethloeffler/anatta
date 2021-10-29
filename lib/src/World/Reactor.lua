@@ -131,24 +131,6 @@ function Reactor:getAttachment(entity)
 end
 
 --[=[
-	@private
-
-	Detaches all the attachments made to this `Reactor`, destroying all attached
-	`Instance`s and disconnecting all attached connections.
-]=]
-function Reactor:detach()
-	for _, attached in ipairs(self._pool.components) do
-		for _, item in ipairs(attached) do
-			Finalizers[typeof(item)](item)
-		end
-	end
-
-	for _, connection in ipairs(self._connections) do
-		connection:disconnect()
-	end
-end
-
---[=[
 	@param callback (entity: number, ...any) -> ()
 
 	Iterates over the all the entities present in the `Reactor`. Calls the callback for
@@ -168,6 +150,38 @@ function Reactor:each(callback)
 
 		self:_pack(entity)
 		callback(entity, unpack(packed, 1, numPacked))
+	end
+end
+
+function Reactor:find(callback)
+	local dense = self._pool.dense
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
+
+		self:_pack(entity)
+
+		local result = callback(entity, unpack(packed, 1, numPacked))
+
+		if result ~= nil then
+			return result
+		end
+	end
+end
+
+function Reactor:filter(callback)
+	local results = {}
+	local dense = self._pool.dense
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
+
+		self:_pack(entity)
+		table.insert(results, callback(entity, unpack(packed, 1, numPacked)))
 	end
 end
 
@@ -218,6 +232,24 @@ function Reactor:consume(entity)
 	self:_pack(entity)
 	self.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 	self._pool:delete(entity)
+end
+
+--[=[
+	@private
+
+	Detaches all the attachments made to this `Reactor`, destroying all attached
+	`Instance`s and disconnecting all attached connections.
+]=]
+function Reactor:detach()
+	for _, attached in ipairs(self._pool.components) do
+		for _, item in ipairs(attached) do
+			Finalizers[typeof(item)](item)
+		end
+	end
+
+	for _, connection in ipairs(self._connections) do
+		connection:disconnect()
+	end
 end
 
 --[[
