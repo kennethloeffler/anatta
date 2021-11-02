@@ -112,7 +112,8 @@ end
 ]=]
 function Reactor:withAttachments(callback)
 	local attachmentsAdded = self.added:connect(function(entity, ...)
-		self._pool:replace(entity, callback(entity, ...))
+		local result = callback(entity, ...)
+		self._pool:replace(entity, typeof(result) == "table" and result or {})
 	end)
 
 	local attachmentsRemoved = self.removed:connect(function(entity)
