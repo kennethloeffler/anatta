@@ -112,17 +112,23 @@ end
 ]=]
 function Reactor:withAttachments(callback)
 	local attachmentsAdded = self.added:connect(function(entity, ...)
-		self._pool:replace(entity, callback(entity, ...))
+		local result = callback(entity, ...)
+		self._pool:replace(entity, typeof(result) == "table" and result or {})
 	end)
 
 	local attachmentsRemoved = self.removed:connect(function(entity)
-		for _, item in ipairs(self._pool:get(entity)) do
+		for _, item in pairs(self._pool:get(entity)) do
 			Finalizers[typeof(item)](item)
 		end
 	end)
 
 	table.insert(self._connections, attachmentsAdded)
 	table.insert(self._connections, attachmentsRemoved)
+end
+
+function Reactor:getAttachment(entity)
+	util.jumpAssert(self._pool:getIndex(entity) ~= nil, ErrEntityMissing, entity)
+	return self._pool:get(entity)
 end
 
 --[=[
