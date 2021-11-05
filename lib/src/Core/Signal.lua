@@ -51,7 +51,7 @@ function Signal:dispatch(...)
 
 	for _, callback in ipairs(self._callbacks) do
 		if not disconnected[callback] then
-			callback(...)
+			task.spawn(callback, ...)
 		else
 			disconnected[callback] = nil
 		end
