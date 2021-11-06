@@ -201,8 +201,6 @@ function ComponentManager:_watchDefinitions()
 		tryDefineComponent(instance)
 	end
 
-	Dom.tryFromDom(self.store:getState().AnattaWorld.registry)
-
 	self.definitionAddedConn = self.definitionsFolder.DescendantAdded:Connect(tryDefineComponent)
 end
 
@@ -331,7 +329,11 @@ function ComponentManager:_setProp(componentDefinition, key: string, value: any)
 	local configurationsFolder = self:_getFolder()
 	local component = configurationsFolder:FindFirstChild(componentDefinition.name)
 	if not component then
-		error("Setting property of non-existent component `" .. tostring(componentDefinition.name) .. "`")
+		error(
+			"Setting property of non-existent component `"
+				.. tostring(componentDefinition.name)
+				.. "`"
+		)
 	end
 
 	-- don't do unnecessary updates
@@ -345,7 +347,11 @@ function ComponentManager:_setProp(componentDefinition, key: string, value: any)
 		componentDefinition.name
 	))
 	component:SetAttribute(key, value)
-	ChangeHistory:SetWaypoint(string.format("Set property %q of component %q", key, componentDefinition.name))
+	ChangeHistory:SetWaypoint(string.format(
+		"Set property %q of component %q",
+		key,
+		componentDefinition.name
+	))
 
 	return true
 end
