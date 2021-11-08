@@ -321,7 +321,7 @@ function Registry:createEntityFrom(entity)
 		return entity
 	end
 
-	if existingEntityId == entityId then
+	if existingEntityId == entityId and self:entityIsValid(entity) then
 		-- The id is currently in use. We should destroy the existing entity before continuing.
 		self:destroyEntity(entity)
 	end

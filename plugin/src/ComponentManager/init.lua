@@ -4,21 +4,17 @@ local Selection = game:GetService("Selection")
 local ChangeHistory = game:GetService("ChangeHistoryService")
 
 local Modules = script.Parent.Parent
-
-local Anatta = require(script.Anatta)
-local Constants = require(Modules.Anatta.Library.Core.Constants)
 local Types = require(Modules.Anatta.Library.Types)
-local Dom = require(Modules.Anatta.Library.Dom)
 
 local Actions = require(script.Parent.Actions)
+local ComponentAnnotation = require(script.ComponentAnnotation)
+local EntityGenerator = require(script.EntityGenerator)
 
 local componentConfigRoot = game:GetService("ServerStorage")
 local componentConfigFolder = "ComponentConfigurations"
 
 local componentDefinitionsRoot = game:GetService("ReplicatedStorage")
 local componentDefinitionsFolder = "ComponentDefinitions"
-
-local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local ComponentManager = {}
 ComponentManager.__index = ComponentManager
@@ -68,7 +64,7 @@ end
 function ComponentManager.new(store)
 	local self = setmetatable({
 		store = store,
-		anattaWorld = store:getState().AnattaWorld,
+		entityGenerator = EntityGenerator.new(),
 		selectionChanged = nil,
 		updateTriggered = false,
 		definitionsFolder = componentDefinitionsRoot:FindFirstChild(componentDefinitionsFolder),
@@ -113,16 +109,21 @@ function ComponentManager.new(store)
 end
 
 function ComponentManager:Destroy()
+	self.entityGenerator:destroy()
 	self.selectionChanged:Disconnect()
+
 	if self.definitionAddedConn then
 		self.definitionAddedConn:Disconnect()
 	end
+
 	if self.definitionRemovedConn then
 		self.definitionRemovedConn:Disconnect()
 	end
+
 	for _, signal in pairs(self.configurationChangedConns) do
 		signal:Disconnect()
 	end
+
 	for _, connections in pairs(self.configurationChangedSignals) do
 		for _, connection in ipairs(connections) do
 			connection:Disconnect()
@@ -162,8 +163,6 @@ function ComponentManager:_watchDefinitions()
 			return false
 		end
 
-		local world = self.store:getState().AnattaWorld
-		local registry = world.registry
 		local requireSuccess, newDefinition = pcall(require, instance:Clone())
 
 		if not newDefinition.type:tryDefault() then
@@ -177,23 +176,9 @@ function ComponentManager:_watchDefinitions()
 
 		assert(Types.ComponentDefinition(newDefinition))
 
-		local defineSuccess, defineResult = pcall(registry.defineComponent, registry, newDefinition)
-
-		if not defineSuccess then
-			for definition in pairs(registry._pools) do
-				if definition.name == newDefinition.name then
-					self.componentDefinitions[definition.name] = definition
-					self:AddComponent(definition.name)
-					return true
-				end
-			end
-
-			warn(defineResult)
-			return false
-		end
-
 		self.componentDefinitions[newDefinition.name] = newDefinition
 		self:AddComponent(newDefinition.name)
+
 		return true
 	end
 
@@ -245,7 +230,6 @@ function ComponentManager:_doUpdateStore()
 	local components: { [number]: Component } = {}
 	local groups: { [string]: boolean } = {}
 	local selected = Selection:Get()
-	local world = self.store:getState().AnattaWorld
 
 	if self.configurationsFolder then
 		for _, config in pairs(self.configurationsFolder:GetChildren()) do
@@ -281,10 +265,6 @@ function ComponentManager:_doUpdateStore()
 
 			for _, instance in ipairs(selected) do
 				if CollectionService:HasTag(instance, entry.Name) then
-					local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
-					local componentValue = world.registry:getComponent(entity, definition)
-
-					table.insert(values, componentValue)
 					hasAny = true
 				else
 					missingAny = true
@@ -492,21 +472,37 @@ function ComponentManager:SetComponent(component, value: boolean)
 	end
 
 	local selected = Selection:Get()
-	local world = self.store:getState().AnattaWorld
 	local definition = component.Definition
 
 	for _, instance in pairs(selected) do
 		if value then
-			local success, err = Anatta.addComponent(world, instance, definition)
+			local success, err = ComponentAnnotation.add(instance, definition)
 
 			if not success then
 				warn(err)
+				continue
 			end
+
+			self.entityGenerator:requestCreation(instance)
 		else
-			local success, err = Anatta.removeComponent(world, instance, definition)
+			local success, err = ComponentAnnotation.remove(instance, definition)
 
 			if not success then
 				warn(err)
+				continue
+			end
+
+			local hasNoComponents = true
+
+			for componentName in pairs(self.componentDefinitions) do
+				if CollectionService:HasTag(instance, componentName) then
+					hasNoComponents = false
+					break
+				end
+			end
+
+			if hasNoComponents then
+				self.entityGenerator:requestDestruction(instance)
 			end
 		end
 	end

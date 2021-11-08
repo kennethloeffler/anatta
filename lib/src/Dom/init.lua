@@ -90,10 +90,13 @@ local tryToAttributes = require(script.tryToAttributes)
 ]=]
 local waitForRefs = require(script.waitForRefs)
 
+local getEntitiesFromDom = require(script.getEntitiesFromDom)
+
 return {
 	tryFromAttributes = tryFromAttributes,
 	tryFromDom = tryFromDom,
 	tryFromTagged = tryFromTagged,
 	tryToAttributes = tryToAttributes,
 	waitForRefs = waitForRefs,
+	getEntitiesFromDom = getEntitiesFromDom,
 }
