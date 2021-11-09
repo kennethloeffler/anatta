@@ -169,6 +169,8 @@ function Reactor:find(callback)
 			return result
 		end
 	end
+
+	return nil
 end
 
 function Reactor:filter(callback)
@@ -183,6 +185,8 @@ function Reactor:filter(callback)
 		self:_pack(entity)
 		table.insert(results, callback(entity, unpack(packed, 1, numPacked)))
 	end
+
+	return results
 end
 
 --[=[

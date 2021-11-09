@@ -96,11 +96,14 @@ function Mapper:find(callback)
 	for _, entity in ipairs(shortest.dense) do
 		if self:_tryPack(entity) then
 			local result = callback(entity, unpack(packed, 1, numPacked))
+
 			if result ~= nil then
 				return result
 			end
 		end
 	end
+
+	return nil
 end
 
 function Mapper:filter(callback)
