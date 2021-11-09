@@ -114,7 +114,11 @@ function Mapper:filter(callback)
 
 	for _, entity in ipairs(shortest.dense) do
 		if self:_tryPack(entity) then
-			table.insert(results, callback(entity, unpack(packed, 1, numPacked)))
+			local result = callback(entity, unpack(packed, 1, numPacked))
+
+			if result ~= nil then
+				table.insert(results, result)
+			end
 		end
 	end
 

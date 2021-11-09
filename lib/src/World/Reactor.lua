@@ -183,7 +183,11 @@ function Reactor:filter(callback)
 		local entity = dense[i]
 
 		self:_pack(entity)
-		table.insert(results, callback(entity, unpack(packed, 1, numPacked)))
+		local result = callback(entity, unpack(packed, 1, numPacked))
+
+		if result ~= nil then
+			table.insert(results, result)
+		end
 	end
 
 	return results

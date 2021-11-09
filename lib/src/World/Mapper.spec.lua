@@ -114,32 +114,35 @@ return function()
 		end)
 	end)
 
-	describe("filter", function(context)
-		it("should fill and return a table with whatever is returned from the callback", function()
-			local registry = context.registry
-			local mapper = createTestMapper(registry, {
-				withAll = { Component.Test1 },
-				without = { Component.Test2 },
-			})
+	describe("filter", function()
+		it(
+			"should fill and return a table with whatever is returned from the callback",
+			function(context)
+				local registry = context.registry
+				local mapper = createTestMapper(registry, {
+					withAll = { Component.Test1 },
+					without = { Component.Test2 },
+				})
 
-			local expected = {}
-			for _ = 1, 10 do
-				table.insert(
-					expected,
-					registry:addComponent(registry:createEntity(), Component.Test1, {})
-				)
-			end
-
-			local results = mapper:filter(function(_, component)
-				if table.find(expected, component) ~= nil then
-					return component
+				local expected = {}
+				for _ = 1, 10 do
+					table.insert(
+						expected,
+						registry:addComponent(registry:createEntity(), Component.Test1, {})
+					)
 				end
-			end)
 
-			for i, v in ipairs(results) do
-				expect(v).to.equal(expected[i])
+				local results = mapper:filter(function(_, component)
+					if table.find(expected, component) ~= nil then
+						return component
+					end
+				end)
+
+				for i, v in ipairs(results) do
+					expect(v).to.equal(expected[i])
+				end
 			end
-		end)
+		)
 	end)
 
 	describe("map", function()
