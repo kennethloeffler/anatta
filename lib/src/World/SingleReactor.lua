@@ -24,6 +24,37 @@ function SingleReactor:each(callback)
 	end
 end
 
+function SingleReactor:find(callback)
+	local dense = self._componentPool.dense
+	local components = self._componentPool.components
+
+	for i = self._componentPool.size, 1, -1 do
+		local result = callback(dense[i], components[i])
+
+		if result ~= nil then
+			return result
+		end
+	end
+
+	return nil
+end
+
+function SingleReactor:filter(callback)
+	local results = {}
+	local dense = self._componentPool.dense
+	local components = self._componentPool.components
+
+	for i = self._componentPool.size, 1, -1 do
+		local result = callback(dense[i], components[i])
+
+		if result ~= nil then
+			table.insert(results, result)
+		end
+	end
+
+	return results
+end
+
 function SingleReactor:withAttachments(callback)
 	if not self._pool then
 		self._pool = Pool.new({ name = "reactorContents", type = {} })
