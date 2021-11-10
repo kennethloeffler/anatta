@@ -3,14 +3,60 @@ return function()
 	local SingleReactor = require(script.Parent.SingleReactor)
 
 	describe("new", function()
-		it("should create a new SingleCollection from a pool", function()
+		it("should create a new SingleReactor from a pool", function()
 			local pool = Pool.new({ name = "test", type = {} })
-			local collection = SingleReactor.new(pool)
+			local reactor = SingleReactor.new(pool)
 
-			expect(getmetatable(collection)).to.equal(SingleReactor)
-			expect(collection.added).to.equal(pool.added)
-			expect(collection.removed).to.equal(pool.removed)
-			expect(collection._componentPool).to.equal(pool)
+			expect(getmetatable(reactor)).to.equal(SingleReactor)
+			expect(reactor.added).to.equal(pool.added)
+			expect(reactor.removed).to.equal(pool.removed)
+			expect(reactor._componentPool).to.equal(pool)
+		end)
+	end)
+
+	describe("find", function()
+		it("should return whatever is returned from the callback", function()
+			local pool = Pool.new({ name = "test", type = {} })
+			local reactor = SingleReactor.new(pool)
+
+			local expected = {}
+
+			pool:insert(1, expected)
+
+			local found = reactor:find(function(_, component)
+				if expected == component then
+					return component
+				end
+			end)
+
+			expect(found).to.equal(expected)
+		end)
+	end)
+	describe("filter", function()
+		it("should fill and return a table with whatever is returned from the callback", function()
+			local pool = Pool.new({ name = "test", type = {} })
+			local reactor = SingleReactor.new(pool)
+
+			local expected = {}
+
+			for i = 1, 10 do
+				local value = {}
+
+				pool:insert(i, value)
+				table.insert(expected, value)
+			end
+
+			local results = reactor:filter(function(_, component)
+				if table.find(expected, component) ~= nil then
+					return component
+				end
+			end)
+
+			expect(#results).to.equal(#expected)
+
+			for _, v in ipairs(results) do
+				expect(table.find(expected, v)).to.be.ok()
+			end
 		end)
 	end)
 
@@ -18,14 +64,14 @@ return function()
 		it("should iterate the entire pool and pass each element's data", function()
 			local pool = Pool.new({ name = "test", type = {} })
 			local toIterate = {}
-			local collection = SingleReactor.new(pool)
+			local reactor = SingleReactor.new(pool)
 
 			for i = 1, 100 do
 				toIterate[i] = true
 				pool:insert(i, i)
 			end
 
-			collection:each(function(entity, val)
+			reactor:each(function(entity, val)
 				toIterate[entity] = nil
 				expect(entity).to.equal(val)
 			end)
@@ -35,14 +81,14 @@ return function()
 	end)
 
 	describe("withAttachments", function()
-		it("should attach attachments when an entity enters the collection", function()
+		it("should attach attachments when an entity enters the reactor", function()
 			local pool = Pool.new({ name = "test", type = {} })
-			local collection = SingleReactor.new(pool)
+			local reactor = SingleReactor.new(pool)
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
 			local holes = {}
 
-			collection:withAttachments(function()
+			reactor:withAttachments(function()
 				local hole = Instance.new("Hole")
 
 				hole.Parent = workspace
@@ -65,7 +111,7 @@ return function()
 			expect(numCalled).to.equal(50)
 			numCalled = 0
 
-			collection:each(function(entity)
+			reactor:each(function(entity)
 				pool:delete(entity)
 				pool.removed:dispatch(entity)
 			end)
@@ -82,13 +128,13 @@ return function()
 	end)
 
 	describe("detach", function()
-		it("should detach every item from every entity in the collection", function()
+		it("should detach every item from every entity in the reactor", function()
 			local pool = Pool.new({ name = "test", type = {} })
-			local collection = SingleReactor.new(pool)
+			local reactor = SingleReactor.new(pool)
 			local event = Instance.new("BindableEvent")
 			local numCalled = 0
 
-			collection:withAttachments(function()
+			reactor:withAttachments(function()
 				return {
 					event.Event:Connect(function()
 						numCalled += 1
@@ -101,7 +147,7 @@ return function()
 				pool.added:dispatch(i)
 			end
 
-			collection:detach(collection)
+			reactor:detach()
 
 			event:Fire()
 			expect(numCalled).to.equal(0)
