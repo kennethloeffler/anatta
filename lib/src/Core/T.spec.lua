@@ -109,5 +109,15 @@ return function()
 				T.instanceof("Part")
 			end).to.throw()
 		end)
+
+		it("should return a callable type check", function()
+			local exampleInterface = T.strictInterface({
+				cool = T.number,
+			})
+
+			expect(exampleInterface({
+				cool = 55
+			})).to.equal(true)
+		end)
 	end)
 end
