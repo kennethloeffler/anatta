@@ -291,6 +291,10 @@ end
 local TypeDefinition = {}
 TypeDefinition.__index = TypeDefinition
 
+TypeDefinition.__call = function(self, ...)
+	return self.check(...)
+end
+
 function TypeDefinition._new(typeName, check, ...)
 	return setmetatable({
 		typeParams = { ... },
