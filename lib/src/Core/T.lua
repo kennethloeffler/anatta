@@ -88,9 +88,6 @@ local secondOrder = {
 }
 
 local concrete = {
-	instance = "instanceOf",
-	instanceOf = "instanceOf",
-	instanceIsA = "instanceIsA",
 	enum = "enum",
 	integer = "number",
 	match = "string",
@@ -114,6 +111,10 @@ local function makeConcreteInstance(typeDefinition)
 end
 
 local concreters = {
+	Instance = makeConcreteInstance,
+	instance = makeConcreteInstance,
+	instanceOf = makeConcreteInstance,
+	instanceIsA = makeConcreteInstance,
 
 	literal = function(typeDefinition)
 		return true, typeof(typeDefinition.typeParams[1])
@@ -308,6 +309,7 @@ function TypeDefinition._new(typeName, check, ...)
 		typeParams = { ... },
 		check = check,
 		typeName = typeName,
+		_containsRefs = false,
 	}, TypeDefinition)
 end
 
@@ -331,19 +333,23 @@ function TypeDefinition:tryDefault()
 end
 
 function TypeDefinition:tryGetConcreteType()
-	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
-
 	if unserializable[self.typeName] then
 		return false, ("%s has no concrete type"):format(self.typeName)
 	end
 
+	local concreter = concreters[self.typeName]
+
+	if concreter then
+		return concreter(self)
+	end
+
+	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
+
 	if concreteType then
 		return true, concreteType
-	elseif concreters[self.typeName] then
-		return concreters[self.typeName](self)
-	else
-		return false, ("%s has no concrete type"):format(self.typeName)
 	end
+
+	return false, ("%s has no concrete type"):format(self.typeName)
 end
 
 local T = setmetatable({}, {
