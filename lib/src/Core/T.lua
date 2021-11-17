@@ -212,8 +212,8 @@ local defaults = {
 		return true, default
 	end,
 
-	Instance = function(typeDefinition)
-		return true, Instance.new("Hole")
+	Instance = function()
+		return true, Instance.new("Folder")
 	end,
 
 	instanceOf = function(typeDefinition)
