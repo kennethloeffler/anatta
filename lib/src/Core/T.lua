@@ -108,31 +108,12 @@ local unserializable = {
 	table = true,
 }
 
+local function makeConcreteInstance(typeDefinition)
+	typeDefinition._containsRefs = true
+	return true, "Instance"
+end
+
 local concreters = {
-	union = function(typeDefinition)
-		local success, previousConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
-
-		if not success then
-			return false, previousConcreteType
-		end
-
-		for _, typeParam in ipairs(typeDefinition.typeParams) do
-			local currentConcreteType
-			success, currentConcreteType = typeParam:tryGetConcreteType()
-
-			if not success then
-				return false, currentConcreteType
-			end
-
-			if (currentConcreteType == nil) or (currentConcreteType ~= previousConcreteType) then
-				return false, nil
-			else
-				previousConcreteType = currentConcreteType
-			end
-		end
-
-		return true, previousConcreteType
-	end,
 
 	literal = function(typeDefinition)
 		return true, typeof(typeDefinition.typeParams[1])
@@ -168,6 +149,31 @@ local concreters = {
 		end
 
 		return true, result
+	end,
+
+	union = function(typeDefinition)
+		local success, previousConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
+
+		if not success then
+			return false, previousConcreteType
+		end
+
+		for _, typeParam in ipairs(typeDefinition.typeParams) do
+			local currentConcreteType
+			success, currentConcreteType = typeParam:tryGetConcreteType()
+
+			if not success then
+				return false, currentConcreteType
+			end
+
+			if (currentConcreteType == nil) or (currentConcreteType ~= previousConcreteType) then
+				return false, nil
+			else
+				previousConcreteType = currentConcreteType
+			end
+		end
+
+		return true, previousConcreteType
 	end,
 }
 
@@ -251,11 +257,13 @@ local defaults = {
 		ColorSequenceKeypoint.new(0, Color3.new()),
 		ColorSequenceKeypoint.new(1, Color3.new()),
 	}),
+
 	NumberRange = NumberRange.new(0, 0),
 	NumberSequence = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0),
 		NumberSequenceKeypoint.new(1, 0),
 	}),
+
 	Rect = Rect.new(Vector2.new(), Vector2.new()),
 	TweenInfo = TweenInfo.new(),
 	UDim = UDim.new(0, 0),
