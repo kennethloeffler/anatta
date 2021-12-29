@@ -183,11 +183,13 @@ function Registry.fromRegistry(original)
 				copy.added:dispatch(entity, copy:get(entity))
 			end
 		else
-			warn(("Type check for entity %s's %s failed: %s;\n\nSkipping component pool..."):format(
-				failedEntity,
-				definition,
-				checkErr
-			))
+			warn(
+				("Type check for entity %s's %s failed: %s;\n\nSkipping component pool..."):format(
+					failedEntity,
+					definition,
+					checkErr
+				)
+			)
 			continue
 		end
 	end
@@ -384,8 +386,10 @@ function Registry:destroyEntity(entity)
 
 	for _, pool in pairs(self._pools) do
 		if pool:getIndex(entity) then
-			pool.removed:dispatch(entity, pool:get(entity))
+			local component = pool:get(entity)
+
 			pool:delete(entity)
+			pool.removed:dispatch(entity, component)
 		end
 	end
 
@@ -866,8 +870,11 @@ function Registry:tryRemoveComponent(entity, definition)
 	end
 
 	if self:entityIsValid(entity) and pool:getIndex(entity) then
-		pool.removed:dispatch(entity, pool:get(entity))
+		local component = pool:get(entity)
+
 		pool:delete(entity)
+		pool.removed:dispatch(entity, component)
+
 		return true
 	end
 
