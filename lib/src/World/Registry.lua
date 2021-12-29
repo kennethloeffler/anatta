@@ -384,8 +384,10 @@ function Registry:destroyEntity(entity)
 
 	for _, pool in pairs(self._pools) do
 		if pool:getIndex(entity) then
-			pool.removed:dispatch(entity, pool:get(entity))
+			local component = pool:get(entity)
+
 			pool:delete(entity)
+			pool.removed:dispatch(entity, component)
 		end
 	end
 
@@ -866,8 +868,11 @@ function Registry:tryRemoveComponent(entity, definition)
 	end
 
 	if self:entityIsValid(entity) and pool:getIndex(entity) then
-		pool.removed:dispatch(entity, pool:get(entity))
+		local component = pool:get(entity)
+
 		pool:delete(entity)
+		pool.removed:dispatch(entity, component)
+
 		return true
 	end
 
