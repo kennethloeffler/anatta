@@ -227,7 +227,7 @@ end
 	@param query Query
 	@return Reactor
 ]=]
-function World:getReactor(query, script)
+function World:getReactor(query)
 	local withAll = query.withAll or {}
 	local withUpdated = query.withUpdated or {}
 	local withAny = query.withAny or {}
