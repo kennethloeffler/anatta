@@ -183,13 +183,11 @@ function Registry.fromRegistry(original)
 				copy.added:dispatch(entity, copy:get(entity))
 			end
 		else
-			warn(
-				("Type check for entity %s's %s failed: %s;\n\nSkipping component pool..."):format(
-					failedEntity,
-					definition,
-					checkErr
-				)
-			)
+			warn(("Type check for entity %s's %s failed: %s;\n\nSkipping component pool..."):format(
+				failedEntity,
+				definition,
+				checkErr
+			))
 			continue
 		end
 	end
