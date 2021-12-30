@@ -28,7 +28,7 @@ local function waitForRefs(instance, attributeName, typeDefinition, objectValues
 
 			waitForRefs(instance, fieldAttributeName, fieldTypeDefinition, objectValues, refFolder)
 		end
-	elseif concreteType == "instanceOf" or concreteType == "instanceIsA" then
+	elseif concreteType == "Instance" then
 		local objectValue = refFolder:WaitForChild(attributeName)
 
 		if objectValue.Value == nil then

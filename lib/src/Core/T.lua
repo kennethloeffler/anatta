@@ -130,6 +130,10 @@ local concreters = {
 				return false, concreteType
 			end
 
+			if typeParam._containsRefs then
+				typeDefinition._containsRefs = true
+			end
+
 			result[i] = concreteType
 		end
 
@@ -139,11 +143,15 @@ local concreters = {
 	strictInterface = function(typeDefinition)
 		local result = {}
 
-		for key, def in pairs(typeDefinition.typeParams[1]) do
-			local success, concreteType = def:tryGetConcreteType()
+		for key, typeParam in pairs(typeDefinition.typeParams[1]) do
+			local success, concreteType = typeParam:tryGetConcreteType()
 
 			if not success then
 				return false, concreteType
+			end
+
+			if typeParam._containsRefs then
+				typeDefinition._containsRefs = true
 			end
 
 			result[key] = concreteType
