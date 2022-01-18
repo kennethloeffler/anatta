@@ -19,15 +19,13 @@ function Signal.new()
 end
 
 function Signal:connect(callback)
-	local callbacks = self._callbacks
-
 	self._callbacks = append(self._callbacks, callback)
 
 	local function disconnect()
 		local newList = {}
 		local i = 0
 
-		for _, oldCallback in ipairs(callbacks) do
+		for _, oldCallback in ipairs(self._callbacks) do
 			if oldCallback ~= callback then
 				i += 1
 				newList[i] = oldCallback
