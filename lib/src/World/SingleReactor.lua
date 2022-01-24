@@ -1,6 +1,9 @@
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 local Pool = require(script.Parent.Parent.Core.Pool)
 
+local WarnNoAttachmentsTable =
+	"withAttachments callback defined in %s at line %s did not return a table"
+
 local SingleReactor = {}
 SingleReactor.__index = SingleReactor
 
@@ -63,14 +66,33 @@ function SingleReactor:withAttachments(callback)
 	table.insert(
 		self._connections,
 		self.added:connect(function(entity, component)
-			self._pool:insert(entity, callback(entity, component))
+			local attachments = callback(entity, component)
+
+			if typeof(attachments) ~= "table" then
+				warn(WarnNoAttachmentsTable:format(
+					debug.info(callback, "s"),
+					debug.info(callback, "l")
+				))
+
+				self._pool:insert(entity, {})
+				return
+			end
+
+			self._pool:insert(entity, attachments)
 		end)
 	)
 
 	table.insert(
 		self._connections,
 		self.removed:connect(function(entity)
-			for _, item in ipairs(self._pool:get(entity)) do
+			local attachments = self._pool:get(entity)
+
+			if attachments == nil then
+				-- Tried to double remove (removeComponent inside the callback)? We don't really care...
+				return
+			end
+
+			for _, item in ipairs(attachments) do
 				Finalizers[typeof(item)](item)
 			end
 		end)

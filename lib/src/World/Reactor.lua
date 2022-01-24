@@ -30,6 +30,9 @@ local util = require(script.Parent.Parent.util)
 
 local ErrEntityMissing = "entity %d is not present in this reactor"
 
+local WarnNoAttachmentsTable =
+	"withAttachments callback defined in %s at line %s did not return a table"
+
 local Reactor = {}
 Reactor.__index = Reactor
 
@@ -112,12 +115,27 @@ end
 ]=]
 function Reactor:withAttachments(callback)
 	local attachmentsAdded = self.added:connect(function(entity, ...)
-		local result = callback(entity, ...)
-		self._pool:replace(entity, typeof(result) == "table" and result or {})
+		local attachments = callback(entity, ...)
+
+		if typeof(attachments) ~= "table" then
+			warn(WarnNoAttachmentsTable:format(debug.info(callback, "s"), debug.info(callback, "l")))
+
+			self._pool:replace(entity, {})
+			return
+		end
+
+		self._pool:replace(entity, attachments)
 	end)
 
 	local attachmentsRemoved = self.removed:connect(function(entity)
-		for _, item in pairs(self._pool:get(entity)) do
+		local attachments = self._pool:get(entity)
+
+		if attachments == nil then
+			-- Tried to double remove (removeComponent on a withAll component inside the callback)? Don't really care...
+			return
+		end
+
+		for _, item in pairs(attachments) do
 			Finalizers[typeof(item)](item)
 		end
 	end)
