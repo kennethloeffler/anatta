@@ -1,7 +1,8 @@
 local Constants = require(script.Parent.Constants)
 local Signal = require(script.Parent.Signal)
 
-local ENTITYID_MASK = Constants.EntityIdMask
+local ENTITYID_OFFSET = Constants.EntityIdOffset
+local ENTITYID_WIDTH = Constants.EntityIdWidth
 
 local Pool = {}
 Pool.__index = Pool
@@ -23,22 +24,22 @@ function Pool.new(componentDefinition)
 end
 
 function Pool:getIndex(entity)
-	return self.sparse[bit32.band(entity, ENTITYID_MASK)]
+	return self.sparse[bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)]
 end
 
 function Pool:get(entity)
-	return self.components[self.sparse[bit32.band(entity, ENTITYID_MASK)]]
+	return self.components[self.sparse[bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)]]
 end
 
 function Pool:replace(entity, component)
-	self.components[self.sparse[bit32.band(entity, ENTITYID_MASK)]] = component
+	self.components[self.sparse[bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)]] = component
 end
 
 function Pool:insert(entity, component)
 	self.size += 1
 
 	local size = self.size
-	local entityId = bit32.band(entity, ENTITYID_MASK)
+	local entityId = bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)
 
 	table.insert(self.dense, entity)
 	table.insert(self.components, component)
@@ -51,7 +52,7 @@ function Pool:delete(entity)
 	self.size -= 1
 
 	local prevSize = self.size + 1
-	local entityId = bit32.band(entity, ENTITYID_MASK)
+	local entityId = bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)
 	local denseIdx = self.sparse[entityId]
 
 	self.sparse[entityId] = nil
@@ -59,7 +60,7 @@ function Pool:delete(entity)
 	if denseIdx < prevSize then
 		local swapped = self.dense[prevSize]
 
-		self.sparse[bit32.band(swapped, ENTITYID_MASK)] = denseIdx
+		self.sparse[bit32.extract(swapped, ENTITYID_OFFSET, ENTITYID_WIDTH)] = denseIdx
 		self.dense[denseIdx] = swapped
 		self.components[denseIdx] = self.components[prevSize]
 		self.dense[prevSize] = nil
