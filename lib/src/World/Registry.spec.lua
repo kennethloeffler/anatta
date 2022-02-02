@@ -110,7 +110,7 @@ return function()
 		it(
 			"should return an entity identifier equal to hint when hint's entity id is not in use",
 			function(context)
-				expect(context.registry:createEntityFrom(0xDEADBEEF)).to.equal(0xDEADBEEF)
+				expect(context.registry:createEntityFrom(0x0EADBEEF)).to.equal(0x0EADBEEF)
 			end
 		)
 
