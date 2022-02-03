@@ -421,9 +421,13 @@ end
 	@return boolean
 ]=]
 function Registry:entityIsValid(entity)
-	jumpAssert(typeof(entity) == "number", ErrEntityNotANumber, entity)
+	if typeof(entity) ~= "number" then
+		return false, ErrEntityNotANumber, entity
+	elseif self._entities[bit32.band(entity, ENTITYID_MASK)] ~= entity then
+		return false, ErrInvalidEntity, entity
+	end
 
-	return self._entities[bit32.band(entity, ENTITYID_MASK)] == entity
+	return true
 end
 
 --[=[
