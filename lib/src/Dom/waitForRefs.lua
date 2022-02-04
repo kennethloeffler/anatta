@@ -5,6 +5,10 @@ local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 local function waitForRefs(instance, attributeName, typeDefinition, objectValues, refFolder)
 	local _, concreteType = typeDefinition:tryGetConcreteType()
 
+	if not typeDefinition._containsRefs then
+		return {}
+	end
+
 	refFolder = refFolder or instance:WaitForChild(INSTANCE_REF_FOLDER)
 
 	objectValues = objectValues or {}
@@ -24,7 +28,7 @@ local function waitForRefs(instance, attributeName, typeDefinition, objectValues
 
 			waitForRefs(instance, fieldAttributeName, fieldTypeDefinition, objectValues, refFolder)
 		end
-	elseif concreteType == "instanceOf" or concreteType == "instanceIsA" then
+	elseif concreteType == "Instance" then
 		local objectValue = refFolder:WaitForChild(attributeName)
 
 		if objectValue.Value == nil then

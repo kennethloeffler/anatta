@@ -88,9 +88,6 @@ local secondOrder = {
 }
 
 local concrete = {
-	instance = "instanceOf",
-	instanceOf = "instanceOf",
-	instanceIsA = "instanceIsA",
 	enum = "enum",
 	integer = "number",
 	match = "string",
@@ -108,7 +105,61 @@ local unserializable = {
 	table = true,
 }
 
+local function makeConcreteInstance(typeDefinition)
+	typeDefinition._containsRefs = true
+	return true, "Instance"
+end
+
 local concreters = {
+	Instance = makeConcreteInstance,
+	instance = makeConcreteInstance,
+	instanceOf = makeConcreteInstance,
+	instanceIsA = makeConcreteInstance,
+
+	literal = function(typeDefinition)
+		return true, typeof(typeDefinition.typeParams[1])
+	end,
+
+	strictArray = function(typeDefinition)
+		local result = table.create(#typeDefinition.typeParams)
+
+		for i, typeParam in ipairs(typeDefinition.typeParams) do
+			local success, concreteType = typeParam:tryGetConcreteType()
+
+			if not success then
+				return false, concreteType
+			end
+
+			if typeParam._containsRefs then
+				typeDefinition._containsRefs = true
+			end
+
+			result[i] = concreteType
+		end
+
+		return true, result
+	end,
+
+	strictInterface = function(typeDefinition)
+		local result = {}
+
+		for key, typeParam in pairs(typeDefinition.typeParams[1]) do
+			local success, concreteType = typeParam:tryGetConcreteType()
+
+			if not success then
+				return false, concreteType
+			end
+
+			if typeParam._containsRefs then
+				typeDefinition._containsRefs = true
+			end
+
+			result[key] = concreteType
+		end
+
+		return true, result
+	end,
+
 	union = function(typeDefinition)
 		local success, previousConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
 
@@ -132,42 +183,6 @@ local concreters = {
 		end
 
 		return true, previousConcreteType
-	end,
-
-	literal = function(typeDefinition)
-		return true, typeof(typeDefinition.typeParams[1])
-	end,
-
-	strictArray = function(typeDefinition)
-		local result = table.create(#typeDefinition.typeParams)
-
-		for i, typeParam in ipairs(typeDefinition.typeParams) do
-			local success, concreteType = typeParam:tryGetConcreteType()
-
-			if not success then
-				return false, concreteType
-			end
-
-			result[i] = concreteType
-		end
-
-		return true, result
-	end,
-
-	strictInterface = function(typeDefinition)
-		local result = {}
-
-		for key, def in pairs(typeDefinition.typeParams[1]) do
-			local success, concreteType = def:tryGetConcreteType()
-
-			if not success then
-				return false, concreteType
-			end
-
-			result[key] = concreteType
-		end
-
-		return true, result
 	end,
 }
 
@@ -206,8 +221,8 @@ local defaults = {
 		return true, default
 	end,
 
-	Instance = function(typeDefinition)
-		return true, Instance.new("Hole")
+	Instance = function()
+		return true, Instance.new("Folder")
 	end,
 
 	instanceOf = function(typeDefinition)
@@ -251,11 +266,13 @@ local defaults = {
 		ColorSequenceKeypoint.new(0, Color3.new()),
 		ColorSequenceKeypoint.new(1, Color3.new()),
 	}),
+
 	NumberRange = NumberRange.new(0, 0),
 	NumberSequence = NumberSequence.new({
 		NumberSequenceKeypoint.new(0, 0),
 		NumberSequenceKeypoint.new(1, 0),
 	}),
+
 	Rect = Rect.new(Vector2.new(), Vector2.new()),
 	TweenInfo = TweenInfo.new(),
 	UDim = UDim.new(0, 0),
@@ -291,11 +308,16 @@ end
 local TypeDefinition = {}
 TypeDefinition.__index = TypeDefinition
 
+TypeDefinition.__call = function(self, ...)
+	return self.check(...)
+end
+
 function TypeDefinition._new(typeName, check, ...)
 	return setmetatable({
 		typeParams = { ... },
 		check = check,
 		typeName = typeName,
+		_containsRefs = false,
 	}, TypeDefinition)
 end
 
@@ -319,19 +341,23 @@ function TypeDefinition:tryDefault()
 end
 
 function TypeDefinition:tryGetConcreteType()
-	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
-
 	if unserializable[self.typeName] then
 		return false, ("%s has no concrete type"):format(self.typeName)
 	end
 
+	local concreter = concreters[self.typeName]
+
+	if concreter then
+		return concreter(self)
+	end
+
+	local concreteType = concrete[self.typeName] or (firstOrder[self.typeName] and self.typeName)
+
 	if concreteType then
 		return true, concreteType
-	elseif concreters[self.typeName] then
-		return concreters[self.typeName](self)
-	else
-		return false, ("%s has no concrete type"):format(self.typeName)
 	end
+
+	return false, ("%s has no concrete type"):format(self.typeName)
 end
 
 local T = setmetatable({}, {

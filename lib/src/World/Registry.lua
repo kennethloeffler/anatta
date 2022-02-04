@@ -384,8 +384,10 @@ function Registry:destroyEntity(entity)
 
 	for _, pool in pairs(self._pools) do
 		if pool:getIndex(entity) then
-			pool.removed:dispatch(entity, pool:get(entity))
+			local component = pool:get(entity)
+
 			pool:delete(entity)
+			pool.removed:dispatch(entity, component)
 		end
 	end
 
@@ -419,9 +421,13 @@ end
 	@return boolean
 ]=]
 function Registry:entityIsValid(entity)
-	jumpAssert(typeof(entity) == "number", ErrEntityNotANumber, entity)
+	if typeof(entity) ~= "number" then
+		return false, ErrEntityNotANumber, entity
+	elseif self._entities[bit32.band(entity, ENTITYID_MASK)] ~= entity then
+		return false, ErrInvalidEntity, entity
+	end
 
-	return self._entities[bit32.band(entity, ENTITYID_MASK)] == entity
+	return true
 end
 
 --[=[
@@ -866,8 +872,11 @@ function Registry:tryRemoveComponent(entity, definition)
 	end
 
 	if self:entityIsValid(entity) and pool:getIndex(entity) then
-		pool.removed:dispatch(entity, pool:get(entity))
+		local component = pool:get(entity)
+
 		pool:delete(entity)
+		pool.removed:dispatch(entity, component)
+
 		return true
 	end
 

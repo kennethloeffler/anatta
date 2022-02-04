@@ -146,6 +146,63 @@ return function()
 		end)
 	end)
 
+	describe("find", function()
+		it("should return whatever is returned from the callback", function(context)
+			local registry = context.registry
+			local reactor = createTestReactor(registry, {
+				withAll = { Component.Test1 },
+				without = { Component.Test2 },
+			})
+
+			local expected = registry:addComponent(registry:createEntity(), Component.Test1, {})
+
+			local found = reactor:find(function(_, component)
+				if expected == component then
+					return component
+				end
+			end)
+
+			expect(found).to.equal(expected)
+		end)
+	end)
+
+	describe("filter", function()
+		it(
+			"should fill and return a table with whatever is returned from the callback",
+			function(context)
+				local registry = context.registry
+				local reactor = createTestReactor(registry, {
+					withAll = { Component.Test1 },
+					without = { Component.Test2 },
+				})
+
+				local expected = {}
+
+				for _ = 1, 10 do
+					local component = registry:addComponent(
+						registry:createEntity(),
+						Component.Test1,
+						{}
+					)
+
+					table.insert(expected, component)
+				end
+
+				local results = reactor:filter(function(_, component)
+					if table.find(expected, component) ~= nil then
+						return component
+					end
+				end)
+
+				expect(#results).to.equal(#expected)
+
+				for _, v in ipairs(results) do
+					expect(table.find(expected, v)).to.be.ok()
+				end
+			end
+		)
+	end)
+
 	describe("each", function()
 		describe("required", function()
 			it(

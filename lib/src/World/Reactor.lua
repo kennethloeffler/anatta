@@ -30,6 +30,9 @@ local util = require(script.Parent.Parent.util)
 
 local ErrEntityMissing = "entity %d is not present in this reactor"
 
+local WarnNoAttachmentsTable =
+	"withAttachments callback defined in %s at line %s did not return a table"
+
 local Reactor = {}
 Reactor.__index = Reactor
 
@@ -112,12 +115,27 @@ end
 ]=]
 function Reactor:withAttachments(callback)
 	local attachmentsAdded = self.added:connect(function(entity, ...)
-		local result = callback(entity, ...)
-		self._pool:replace(entity, typeof(result) == "table" and result or {})
+		local attachments = callback(entity, ...)
+
+		if typeof(attachments) ~= "table" then
+			warn(WarnNoAttachmentsTable:format(debug.info(callback, "s"), debug.info(callback, "l")))
+
+			self._pool:replace(entity, {})
+			return
+		end
+
+		self._pool:replace(entity, attachments)
 	end)
 
 	local attachmentsRemoved = self.removed:connect(function(entity)
-		for _, item in pairs(self._pool:get(entity)) do
+		local attachments = self._pool:get(entity)
+
+		if attachments == nil then
+			-- Tried to double remove (removeComponent on a withAll component inside the callback)? Don't really care...
+			return
+		end
+
+		for _, item in pairs(attachments) do
 			Finalizers[typeof(item)](item)
 		end
 	end)
@@ -129,24 +147,6 @@ end
 function Reactor:getAttachment(entity)
 	util.jumpAssert(self._pool:getIndex(entity) ~= nil, ErrEntityMissing, entity)
 	return self._pool:get(entity)
-end
-
---[=[
-	@private
-
-	Detaches all the attachments made to this `Reactor`, destroying all attached
-	`Instance`s and disconnecting all attached connections.
-]=]
-function Reactor:detach()
-	for _, attached in ipairs(self._pool.components) do
-		for _, item in ipairs(attached) do
-			Finalizers[typeof(item)](item)
-		end
-	end
-
-	for _, connection in ipairs(self._connections) do
-		connection:disconnect()
-	end
 end
 
 --[=[
@@ -170,6 +170,46 @@ function Reactor:each(callback)
 		self:_pack(entity)
 		callback(entity, unpack(packed, 1, numPacked))
 	end
+end
+
+function Reactor:find(callback)
+	local dense = self._pool.dense
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
+
+		self:_pack(entity)
+
+		local result = callback(entity, unpack(packed, 1, numPacked))
+
+		if result ~= nil then
+			return result
+		end
+	end
+
+	return nil
+end
+
+function Reactor:filter(callback)
+	local results = {}
+	local dense = self._pool.dense
+	local packed = self._packed
+	local numPacked = self._numPacked
+
+	for i = self._pool.size, 1, -1 do
+		local entity = dense[i]
+
+		self:_pack(entity)
+		local result = callback(entity, unpack(packed, 1, numPacked))
+
+		if result ~= nil then
+			table.insert(results, result)
+		end
+	end
+
+	return results
 end
 
 --[=[
@@ -219,6 +259,24 @@ function Reactor:consume(entity)
 	self:_pack(entity)
 	self.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
 	self._pool:delete(entity)
+end
+
+--[=[
+	@private
+
+	Detaches all the attachments made to this `Reactor`, destroying all attached
+	`Instance`s and disconnecting all attached connections.
+]=]
+function Reactor:detach()
+	for _, attached in ipairs(self._pool.components) do
+		for _, item in ipairs(attached) do
+			Finalizers[typeof(item)](item)
+		end
+	end
+
+	for _, connection in ipairs(self._connections) do
+		connection:disconnect()
+	end
 end
 
 --[[
