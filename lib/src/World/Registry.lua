@@ -402,7 +402,7 @@ function Registry:destroyEntity(entity)
 end
 
 --[=[
-	Returns `true` if the entity exists. Otherwise, returns `false`.
+	Returns `true` if the entity exists. Otherwise, returns `false` and an error message.
 
 	#### Usage:
 	```lua
@@ -418,13 +418,13 @@ end
 	```
 
 	@param entity number
-	@return boolean
+	@return boolean, string
 ]=]
 function Registry:entityIsValid(entity)
 	if typeof(entity) ~= "number" then
-		return false, ErrEntityNotANumber:format(entity)
+		return false, ErrEntityNotANumber:format(tostring(entity))
 	elseif self._entities[bit32.band(entity, ENTITYID_MASK)] ~= entity then
-		return false, ErrInvalidEntity:format(entity)
+		return false, ErrInvalidEntity:format(tostring(entity))
 	end
 
 	return true, ""
