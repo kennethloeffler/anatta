@@ -6,6 +6,6 @@ return {
 	EntityIdWidth = EntityIdWidth,
 	EntityAttributeName = "__entity",
 	InstanceRefFolder = "__anattaRefs",
-	SharedInstanceTagName = ".anattaSharedInstance",
+	EntityTagName = ".anattaSharedInstance",
 	NullEntityId = 0,
 }

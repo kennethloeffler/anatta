@@ -1,4 +1,5 @@
 local CollectionService = game:GetService("CollectionService")
+local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -11,7 +12,7 @@ local PENDING_ENTITY_CREATION = ".__pendingEntityCreation"
 local PENDING_ENTITY_DESTRUCTION = ".__pendingEntityDestruction"
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local ENTITY_AUTHORITY = ".__entityAuthority"
-local SHARED_INSTANCE_TAG_NAME = Constants.SharedInstanceTagName
+local ENTITY_TAG_NAME = Constants.EntityTagName
 local NEGOTIATION_ACK = ".__authorityNegotiation"
 local TOKEN_ATTRIBUTE = "__authorityToken"
 local PING_ATTRIBUTE = "__ping"
@@ -32,6 +33,7 @@ function EntityGenerator.new()
 
 	self = setmetatable({
 		heartbeatConnection = false,
+		entityRemovedConnection = false,
 		entityAddedConnection = false,
 		pendingRemovals = {},
 		pendingAdditions = {},
@@ -108,82 +110,93 @@ function EntityGenerator:becomeAuthority()
 	Dom.getEntitiesFromDom(registry)
 
 	self.heartbeatConnection = RunService.Heartbeat:Connect(function()
-		for instance in pairs(self.pendingAdditions) do
-			local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+		local pendingAdditions = CollectionService:GetTagged(PENDING_ENTITY_CREATION)
+		local pendingDestructions = CollectionService:GetTagged(PENDING_ENTITY_DESTRUCTION)
 
-			if
-				typeof(entity) == "number"
-				and not CollectionService:HasTag(instance, PENDING_ENTITY_CREATION)
-			then
-				if not registry:entityIsValid(entity) then
-					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, registry:createEntityFrom(entity))
-				else
-					instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, registry:createEntity())
-				end
-			end
-
-			self.pendingRemovals[instance] = nil
-			CollectionService:RemoveTag(instance, PENDING_ENTITY_CREATION)
-			CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
+		if
+			next(pendingAdditions) == nil
+			and next(pendingDestructions) == nil
+			and next(self.pendingRemovals) == nil
+			and next(self.pendingAdditions) == nil
+		then
+			return
 		end
 
-		table.clear(self.pendingAdditions)
-
-		for _, instance in ipairs(CollectionService:GetTagged(PENDING_ENTITY_CREATION)) do
-			self.pendingRemovals[instance] = nil
-
-			CollectionService:AddTag(instance, SHARED_INSTANCE_TAG_NAME)
+		local function add(instance)
+			CollectionService:AddTag(instance, ENTITY_TAG_NAME)
 			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, registry:createEntity())
-
 			CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
+			CollectionService:RemoveTag(instance, PENDING_ENTITY_CREATION)
+
+			ChangeHistoryService:ResetWaypoints()
 		end
 
-		for _, instance in ipairs(CollectionService:GetTagged(PENDING_ENTITY_DESTRUCTION)) do
+		local function remove(instance)
 			local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
-			if typeof(entity) == "number" and registry:entityIsValid(entity) then
+			if registry:entityIsValid(entity) then
 				registry:destroyEntity(instance:GetAttribute(ENTITY_ATTRIBUTE_NAME))
 			end
 
 			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
-			CollectionService:RemoveTag(instance, SHARED_INSTANCE_TAG_NAME)
+			CollectionService:RemoveTag(instance, ENTITY_TAG_NAME)
+			CollectionService:RemoveTag(instance, PENDING_ENTITY_CREATION)
 			CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
 		end
 
-		for instance in pairs(self.pendingRemovals) do
-			local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+		for _, instance in ipairs(pendingAdditions) do
+			add(instance)
+		end
 
-			if typeof(entity) == "number" and registry:entityIsValid(entity) then
-				registry:destroyEntity(instance:GetAttribute(ENTITY_ATTRIBUTE_NAME))
-			end
+		for instance in pairs(self.pendingAdditions) do
+			add(instance)
+		end
+
+		for _, instance in ipairs(pendingDestructions) do
+			remove(instance)
+		end
+
+		for instance in pairs(self.pendingRemovals) do
+			remove(instance)
 		end
 
 		table.clear(self.pendingRemovals)
+		table.clear(self.pendingAdditions)
 	end)
 
 	self.entityRemovedConnection = CollectionService
-		:GetInstanceRemovedSignal(SHARED_INSTANCE_TAG_NAME)
+		:GetInstanceAddedSignal(ENTITY_TAG_NAME)
 		:Connect(function(instance)
-			self.pendingRemovals[instance] = true
+			self.pendingAdditions[instance] = true
 		end)
 
 	self.entityAddedConnection = CollectionService
-		:GetInstanceAddedSignal(SHARED_INSTANCE_TAG_NAME)
+		:GetInstanceRemovedSignal(ENTITY_TAG_NAME)
 		:Connect(function(instance)
-			self.pendingAdditions[instance] = true
+			self.pendingRemovals[instance] = true
 		end)
 end
 
 function EntityGenerator:requestCreation(instance)
+	if CollectionService:HasTag(instance, ENTITY_TAG_NAME) then
+		return
+	end
+
 	CollectionService:AddTag(instance, PENDING_ENTITY_CREATION)
 end
 
 function EntityGenerator:requestDestruction(instance)
+	if not CollectionService:HasTag(instance, ENTITY_TAG_NAME) then
+		return
+	end
+
 	CollectionService:AddTag(instance, PENDING_ENTITY_DESTRUCTION)
 end
 
 function EntityGenerator:destroy()
 	self.authorityRemovedConnection:Disconnect()
+	self.entityRemovedConnection:Disconnect()
+	self.entityAddedConnection:Disconnect()
 
 	if self.heartbeatConnection then
 		self.heartbeatConnection:Disconnect()

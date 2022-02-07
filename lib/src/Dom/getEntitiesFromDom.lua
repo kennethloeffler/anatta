@@ -3,12 +3,12 @@ local CollectionService = game:GetService("CollectionService")
 local Constants = require(script.Parent.Parent.Core.Constants)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
-local SHARED_INSTANCE_TAG_NAME = Constants.SharedInstanceTagName
+local ENTITY_TAG_NAME = Constants.EntityTagName
 
 return function(registry)
 	local entities = {}
 
-	for _, instance in ipairs(CollectionService:GetTagged(SHARED_INSTANCE_TAG_NAME)) do
+	for _, instance in ipairs(CollectionService:GetTagged(ENTITY_TAG_NAME)) do
 		local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
 		if typeof(entity) ~= "number" then

@@ -5,6 +5,7 @@ local ChangeHistory = game:GetService("ChangeHistoryService")
 
 local Modules = script.Parent.Parent
 local Types = require(Modules.Anatta.Library.Types)
+local Dom = require(Modules.Anatta.Library.Dom)
 
 local Actions = require(script.Parent.Actions)
 local ComponentAnnotation = require(script.ComponentAnnotation)
@@ -165,16 +166,22 @@ function ComponentManager:_watchDefinitions()
 
 		local requireSuccess, newDefinition = pcall(require, instance:Clone())
 
-		if not newDefinition.type:tryDefault() then
-			return false
-		end
-
 		if not requireSuccess then
 			warn(newDefinition)
 			return false
 		end
 
+		newDefinition.name = newDefinition.name or instance.Name
+
+		if not newDefinition.canPluginUse then
+			return false
+		end
+
 		assert(Types.ComponentDefinition(newDefinition))
+
+		if not newDefinition.type:tryDefault() and not newDefinition.type.typeName == "none" then
+			return false
+		end
 
 		self.componentDefinitions[newDefinition.name] = newDefinition
 		self:AddComponent(newDefinition.name)
@@ -265,6 +272,12 @@ function ComponentManager:_doUpdateStore()
 
 			for _, instance in ipairs(selected) do
 				if CollectionService:HasTag(instance, entry.Name) then
+					local success, _, value = Dom.tryFromAttributes(instance, definition)
+
+					if success then
+						table.insert(values, value)
+					end
+
 					hasAny = true
 				else
 					missingAny = true
@@ -475,6 +488,18 @@ function ComponentManager:SetComponent(component, value: boolean)
 	local definition = component.Definition
 
 	for _, instance in pairs(selected) do
+		local isModelWithPrimaryPart = instance:IsA("Model") and instance.PrimaryPart
+
+		if
+			not (instance:IsA("BasePart") or instance:IsA("Attachment") or isModelWithPrimaryPart)
+		then
+			continue
+		end
+
+		if isModelWithPrimaryPart then
+			instance = instance.PrimaryPart
+		end
+
 		if value then
 			local success, err = ComponentAnnotation.add(instance, definition)
 

@@ -1,6 +1,14 @@
+local ServerStorage = game:GetService("ServerStorage")
+local RunService = game:GetService("RunService")
+
 -- Sanity check.
 if not plugin then
 	error("Hot reloader must be executed as a plugin!")
+end
+
+if RunService:IsRunMode() or RunService:IsRunning() then
+	warn("Not running Anatta plugin in run mode")
+	return
 end
 
 -- Prevent clones of the script from running.
@@ -11,7 +19,6 @@ script.Disabled = true
 -- reloaded in edit mode. (No need for play solo or the hotswap plugin.)
 local Config = require(script.Parent.Config)
 local useDevSource = Config.useDevSource
-local ServerStorage = game:GetService("ServerStorage")
 local devSource = ServerStorage:FindFirstChild("AnattaPlugin")
 
 -- The source that's shipped integrated into the plugin.

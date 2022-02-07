@@ -12,7 +12,7 @@ local ComponentAnnotation = {}
 local function getAttributeMap(instance, definition)
 	local defaultSuccess, default = definition.type:tryDefault()
 
-	if not defaultSuccess then
+	if not defaultSuccess and not definition.type.typeName == "none" then
 		return false, default
 	end
 
@@ -56,11 +56,11 @@ function ComponentAnnotation.remove(instance, definition)
 				local objectValue = anattaRefs:FindFirstChild(attributeName)
 
 				if objectValue then
-					objectValue:Destroy()
+					objectValue.Parent = nil
 				end
 
 				if not next(anattaRefs:GetChildren()) then
-					anattaRefs:Destroy()
+					anattaRefs.Parent = nil
 				end
 			end
 		elseif attributeName ~= ENTITY_ATTRIBUTE_NAME then

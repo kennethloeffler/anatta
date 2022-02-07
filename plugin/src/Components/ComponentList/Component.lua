@@ -47,7 +47,7 @@ local function Component(props)
 			Height = props.isMenuOpen and 171 or 26,
 
 			onSetVisible = function()
-				ComponentManager.Get():SetVisible(props.Component, not props.Visible)
+				ComponentManager.Get():SetVisible(props.Definition, not props.Visible)
 			end,
 
 			onCheck = function(_rbx)

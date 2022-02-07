@@ -116,7 +116,7 @@ return function()
 			})
 
 			expect(exampleInterface({
-				cool = 55
+				cool = 55,
 			})).to.equal(true)
 		end)
 	end)
