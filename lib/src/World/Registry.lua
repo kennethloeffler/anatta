@@ -497,7 +497,7 @@ function Registry:destroyEntity(entity)
 	-- |-------| |---------------------------|
 	-- VVVV VVVV PPPP PPPP PPPP PPPP PPPP PPPP
 	self._entities[entityId] = bit32.replace(
-		self._nextRecyclableEntityId, -- 24 bits
+		self._nextRecyclableEntityId, -- entity ID width
 		bit32.extract(entity, VERSION_OFFSET, VERSION_WIDTH) + 1,
 		VERSION_OFFSET,
 		VERSION_WIDTH
