@@ -16,13 +16,15 @@ local t = require(script.Parent.Parent.Parent.t)
 local jumpAssert = util.jumpAssert
 
 local DEBUG = Constants.Debug
-local DOMAIN = Constants.Domain
 local DOMAIN_OFFSET = Constants.DomainOffset
+local DOMAIN_WIDTH = Constants.DomainWidth
+local DOMAIN = Constants.Domain
+local PARTIALID_WIDTH = Constants.PartialIdWidth
 local ENTITYID_OFFSET = Constants.EntityIdOffset
 local ENTITYID_WIDTH = Constants.EntityIdWidth
-local NULL_ENTITYID = Constants.NullEntityId
 local VERSION_OFFSET = Constants.VersionOffset
 local VERSION_WIDTH = Constants.VersionWidth
+local NULL_ENTITYID = Constants.NullEntityId
 
 local DomainNames = {
 	"server",
@@ -38,8 +40,7 @@ local ErrComponentNameTaken = "there is already a component type named %s"
 local ErrEntityNotANumber = "expected entity to be a number, got %s"
 local ErrInvalidEntity = "entity %d does not exist or has been destroyed"
 local ErrMissingComponent = "entity %d does not have a %s"
-local ErrWrongDomain =
-	"entity %d comes from the wrong domain; came from a %s, but this registry is a %s"
+local ErrWrongDomain = "entity %d comes from the wrong domain; came from a %s, but this registry is a %s"
 
 local ComponentDefinitionToString = {
 	__tostring = function(definition)
@@ -89,6 +90,7 @@ function Registry.new()
 		_pools = {},
 		_nextRecyclableEntityId = NULL_ENTITYID,
 		_size = 0,
+		_foreignCount = 0,
 	}, Registry)
 end
 
@@ -122,8 +124,15 @@ function Registry.getVersion(entity)
 	return bit32.extract(entity, VERSION_OFFSET, VERSION_WIDTH)
 end
 
+--[=[
+	Returns the domain of an entity. 0 = client; 1 = server
+
+	@private
+	@param entity number
+	@return number
+]=]
 function Registry.getDomain(entity)
-	return Constants[bit32.extract(entity, DOMAIN_OFFSET)]
+	return Constants[bit32.extract(entity, DOMAIN_OFFSET, DOMAIN_WIDTH)]
 end
 
 --[=[
@@ -213,11 +222,6 @@ function Registry.fromRegistry(original)
 	end
 end
 
-local function collectEntityRefs(type)
-	if type == T.Entity then
-	end
-end
-
 --[=[
 	Defines a new component type for the registry using the given
 	[`ComponentDefinition`](/api/Anatta#ComponentDefinition).
@@ -277,17 +281,25 @@ end
 function Registry:createEntity()
 	if self._nextRecyclableEntityId == NULL_ENTITYID then
 		-- no entityIds to recycle
-		local newEntityId = self._size + 1
-		self._size = newEntityId
+		local newPartialId = self._size + 1
+		self._size = newPartialId
 
-		local newEntity = bit32.replace(newEntityId, DOMAIN, DOMAIN_OFFSET)
-		self._entities[newEntityId] = newEntity
+		-- quit out if the partial ID goes above the maximum allocated space in
+		-- partial ID
+		jumpAssert(newPartialId < 2 ^ PARTIALID_WIDTH - 1, "exceeded entity partial id maximum")
 
-		return newEntity
+		-- append the domain to the right side of the partial ID to form
+		-- the complete entity ID
+		local newEntityId = bit32.replace(bit32.lshift(newPartialId, DOMAIN_WIDTH), DOMAIN, DOMAIN_OFFSET, DOMAIN_WIDTH)
+
+		self._entities[newEntityId] = newEntityId
+
+		return newEntityId
 	else
 		local entities = self._entities
 		local recyclableEntityId = self._nextRecyclableEntityId
 		local nextElement = entities[recyclableEntityId]
+
 		local recycledEntity = bit32.replace(
 			recyclableEntityId,
 			bit32.extract(nextElement, ENTITYID_WIDTH, 32 - ENTITYID_WIDTH),
@@ -300,6 +312,35 @@ function Registry:createEntity()
 
 		return recycledEntity
 	end
+end
+
+--[=[
+	Imports an entity from a different domain. These are not recycled.
+
+	@private
+	@param entity number
+	@return number
+]=]
+function Registry:importEntity(entity)
+	jumpAssert(t.number(entity))
+	jumpAssert(
+		bit32.extract(entity, DOMAIN_OFFSET, DOMAIN_WIDTH) ~= DOMAIN,
+		ErrWrongDomain,
+		entity,
+		WrongDomainName,
+		ExpectedDomainName
+	)
+
+	local entityId = bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)
+	local entities = self._entities
+
+	jumpAssert(entities[entityId] == nil, "attempt to import an existing entity: %d", entity)
+
+	entities[entityId] = entity
+
+	self._foreignCount += 1
+
+	return entity
 end
 
 --[=[
@@ -326,7 +367,7 @@ end
 function Registry:createEntityFrom(entity)
 	jumpAssert(t.number(entity))
 	jumpAssert(
-		bit32.extract(entity, DOMAIN_OFFSET) == DOMAIN,
+		bit32.extract(entity, DOMAIN_OFFSET, DOMAIN_WIDTH) == DOMAIN,
 		ErrWrongDomain,
 		entity,
 		WrongDomainName,
@@ -335,11 +376,7 @@ function Registry:createEntityFrom(entity)
 
 	local entityId = bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)
 	local entities = self._entities
-	local existingEntityId = bit32.extract(
-		entities[entityId] or NULL_ENTITYID,
-		ENTITYID_OFFSET,
-		ENTITYID_WIDTH
-	)
+	local existingEntityId = bit32.extract(entities[entityId] or NULL_ENTITYID, ENTITYID_OFFSET, ENTITYID_WIDTH)
 
 	if existingEntityId == NULL_ENTITYID then
 		-- The given id is out of range, so we'll have to backfill.
@@ -347,15 +384,18 @@ function Registry:createEntityFrom(entity)
 
 		-- _entities mustn't contain any gaps. If necessary, create the entities on the
 		-- interval (size, entityId) and push them onto the recyclable list.
-		for id = self._size + 1, entityId - 1 do
-			entities[id] = bit32.replace(id, DOMAIN, DOMAIN_OFFSET)
-			nextRecyclableEntityId = id
+		for newPartialId = self._size + 1, bit32.rshift(entityId, DOMAIN_WIDTH) - 1 do
+			local newId = bit32.replace(bit32.lshift(newPartialId, DOMAIN_WIDTH), DOMAIN, DOMAIN_OFFSET, DOMAIN_WIDTH)
+
+			entities[newId] = nextRecyclableEntityId
+			nextRecyclableEntityId = newId
 		end
 
 		-- Now all we have to do is set the head of the recyclable list and append to
 		-- _entities.
 		self._nextRecyclableEntityId = nextRecyclableEntityId
-		self._size = entityId
+		self._size = bit32.rshift(entityId, DOMAIN_WIDTH)
+
 		entities[entityId] = entity
 
 		return entity
@@ -371,11 +411,7 @@ function Registry:createEntityFrom(entity)
 
 	if nextRecyclableEntityId == entityId then
 		-- Pop the recyclable list. Done.
-		self._nextRecyclableEntityId = bit32.extract(
-			entities[entityId],
-			ENTITYID_OFFSET,
-			ENTITYID_WIDTH
-		)
+		self._nextRecyclableEntityId = bit32.extract(entities[entityId], ENTITYID_OFFSET, ENTITYID_WIDTH)
 
 		entities[entityId] = entity
 
@@ -388,11 +424,7 @@ function Registry:createEntityFrom(entity)
 
 	while nextRecyclableEntityId ~= entityId do
 		prevRecyclableEntityId = nextRecyclableEntityId
-		nextRecyclableEntityId = bit32.extract(
-			self._entities[nextRecyclableEntityId],
-			ENTITYID_OFFSET,
-			ENTITYID_WIDTH
-		)
+		nextRecyclableEntityId = bit32.extract(self._entities[nextRecyclableEntityId], ENTITYID_OFFSET, ENTITYID_WIDTH)
 	end
 
 	-- Make the previous element point to the next element, effectively removing
@@ -432,8 +464,9 @@ function Registry:destroyEntity(entity)
 		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
 	end
 
-	local entityId = bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)
+	local entityId = Registry.getId(entity)
 
+	-- remove from all pools
 	for _, pool in pairs(self._pools) do
 		if pool:getIndex(entity) then
 			local component = pool:get(entity)
@@ -443,10 +476,28 @@ function Registry:destroyEntity(entity)
 		end
 	end
 
-	-- push this entityId onto the free list so that it can be recycled, and increment the
+	-- Replicated entities should not be recycled.
+	-- We can safely throw them out since they are not part of the
+	-- recycling stack.
+	if Registry.getDomain(entity) ~= DOMAIN then
+		self._entities[entityId] = nil
+
+		self._foreignCount -= 1
+
+		return
+	end
+
+	-- push this entityId onto the recycling stack so that it can be recycled, and increment the
 	-- identifier's version to avoid possible collision
+	--
+	-- self._entities[entityId] points to the previous next recyclableEntityId
+	-- switches to format:
+	--
+	-- VERSION   POINTER
+	-- |-------| |---------------------------|
+	-- VVVV VVVV PPPP PPPP PPPP PPPP PPPP PPPP
 	self._entities[entityId] = bit32.replace(
-		self._nextRecyclableEntityId,
+		self._nextRecyclableEntityId, -- entity ID width
 		bit32.extract(entity, VERSION_OFFSET, VERSION_WIDTH) + 1,
 		VERSION_OFFSET,
 		VERSION_WIDTH
@@ -479,13 +530,9 @@ function Registry:entityIsValid(entity)
 		return false, ErrEntityNotANumber, entity
 	end
 
-	local domain = bit32.extract(entity, DOMAIN_OFFSET)
+	local entityId = Registry.getId(entity)
 
-	if domain ~= DOMAIN then
-		return false, ErrWrongDomain, entity, WrongDomainName, ExpectedDomainName
-	end
-
-	if self._entities[bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)] ~= entity then
+	if self._entities[entityId] ~= entity then
 		return false, ErrInvalidEntity, entity
 	end
 
@@ -952,7 +999,7 @@ end
 ]=]
 function Registry:countEntities()
 	local entityId = self._nextRecyclableEntityId
-	local count = self._size
+	local count = self._size + self._foreignCount
 
 	while entityId ~= NULL_ENTITYID do
 		entityId = bit32.extract(self._entities[entityId], ENTITYID_OFFSET, ENTITYID_WIDTH)
@@ -987,11 +1034,11 @@ end
 ]=]
 function Registry:each(callback)
 	if self._nextRecyclableEntityId == NULL_ENTITYID then
-		for _, entity in ipairs(self._entities) do
+		for _, entity in pairs(self._entities) do
 			callback(entity)
 		end
 	else
-		for id, entity in ipairs(self._entities) do
+		for id, entity in pairs(self._entities) do
 			if bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH) == id then
 				callback(entity)
 			end

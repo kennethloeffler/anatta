@@ -28,11 +28,11 @@ function Pool:getIndex(entity)
 end
 
 function Pool:get(entity)
-	return self.components[self.sparse[bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)]]
+	return self.components[self:getIndex(entity)]
 end
 
 function Pool:replace(entity, component)
-	self.components[self.sparse[bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)]] = component
+	self.components[self:getIndex(entity)] = component
 end
 
 function Pool:insert(entity, component)

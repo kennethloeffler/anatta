@@ -1,17 +1,49 @@
-local EntityIdWidth = 20
+local PartialIdWidth = 23
 
 local RunService = game:GetService("RunService")
 
-return {
+--[[
+	Entity Masking:
+	D = Domain
+	V = Version
+	I = Partial ID
+	P = Pointer
+
+	I+D = Entity ID
+
+	 VERSION   ENTITY ID
+	|-------| |---------------------------|
+	VVVV VVVV IIII IIII IIII IIII IIII IIID
+]]
+
+local Constants = {
 	Debug = true,
-	DomainOffset = 31,
-	EntityIdWidth = EntityIdWidth,
+
+	-- Domain: server = even; client = odd
+	DomainOffset = 0,
+	DomainWidth = 1,
+	Domain = if RunService:IsServer() then 0 else 1,
+
+	-- Partial entity IDs exclude domain
+	PartialIdOffset = 1,
+	PartialIdWidth = PartialIdWidth, -- 23
+
+	-- Entity ID = Partial ID + Domain
 	EntityIdOffset = 0,
+	EntityIdWidth = PartialIdWidth + 1,
+	EntityIdMask = 0x00FFFFFF,
+
+	-- Version increments per entity cycle
+	VersionOffset = PartialIdWidth + 1,
+	VersionWidth = 32 - (PartialIdWidth + 1),
+
+	-- Bookkeeping
+	NullEntityId = 0,
+
+	-- DOM
+	SharedInstanceTagName = ".anattaSharedInstance",
 	EntityAttributeName = "__entity",
 	InstanceRefFolder = "__anattaRefs",
-	Domain = (RunService:IsServer() or RunService:IsEdit()) and 0 or 1,
-	NullEntityId = 0,
-	SharedInstanceTagName = ".anattaSharedInstance",
-	VersionOffset = EntityIdWidth,
-	VersionWidth = 31 - EntityIdWidth,
 }
+
+return Constants
