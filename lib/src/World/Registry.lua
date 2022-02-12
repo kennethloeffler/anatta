@@ -300,7 +300,6 @@ function Registry:createEntity()
 		local recyclableEntityId = self._nextRecyclableEntityId
 		local nextElement = entities[recyclableEntityId]
 
-		-- Increment the generation of the entity ID
 		local recycledEntity = bit32.replace(
 			recyclableEntityId,
 			bit32.extract(nextElement, ENTITYID_WIDTH, 32 - ENTITYID_WIDTH),
