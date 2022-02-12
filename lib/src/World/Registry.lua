@@ -470,7 +470,7 @@ end
 	```
 
 	@param entity number
-	@return boolean
+	@return boolean, string, number, string?, string?
 ]=]
 function Registry:entityIsValid(entity)
 	if typeof(entity) ~= "number" then
@@ -480,7 +480,7 @@ function Registry:entityIsValid(entity)
 	local domain = bit32.extract(entity, DOMAIN_OFFSET)
 
 	if domain ~= DOMAIN then
-		return false, ErrWrongDomain:format(WrongDomainName, ExpectedDomainName)
+		return false, ErrWrongDomain, entity, WrongDomainName, ExpectedDomainName
 	end
 
 	if self._entities[bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)] ~= entity then
@@ -515,7 +515,7 @@ end
 ]=]
 function Registry:entityIsOrphaned(entity)
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 	end
 
 	for _, pool in pairs(self._pools) do
@@ -543,7 +543,7 @@ end
 function Registry:visitComponents(callback, entity)
 	if entity ~= nil then
 		if DEBUG then
-			jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+			jumpAssert(self:entityIsValid(entity))
 		end
 
 		for definition, pool in pairs(self._pools) do
@@ -579,7 +579,7 @@ end
 ]=]
 function Registry:entityHas(entity, ...)
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 
 		for i = 1, select("#", ...) do
 			jumpAssert(self._pools[select(i, ...)], ErrBadComponentDefinition, select(i, ...))
@@ -609,7 +609,7 @@ end
 ]=]
 function Registry:entityHasAny(entity, ...)
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 
 		for i = 1, select("#", ...) do
 			jumpAssert(self._pools[select(i, ...)], ErrBadComponentDefinition, select(i, ...))
@@ -640,7 +640,7 @@ function Registry:getComponent(entity, definition)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 	end
 
@@ -688,7 +688,7 @@ function Registry:addComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent, entity, definition)
 		jumpAssert(pool.typeCheck(component))
@@ -770,7 +770,7 @@ function Registry:getOrAddComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 	end
@@ -805,7 +805,7 @@ function Registry:replaceComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent, entity, definition)
@@ -836,7 +836,7 @@ function Registry:addOrReplaceComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool.typeCheck(component))
 	end
@@ -874,7 +874,7 @@ function Registry:addAndReplaceComponent(entity, definition, component)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(not pool:getIndex(entity), ErrAlreadyHasComponent, entity, definition)
 		jumpAssert(pool.typeCheck(component))
@@ -902,7 +902,7 @@ function Registry:removeComponent(entity, definition)
 	local pool = self._pools[definition]
 
 	if DEBUG then
-		jumpAssert(self:entityIsValid(entity), ErrInvalidEntity, entity)
+		jumpAssert(self:entityIsValid(entity))
 		jumpAssert(pool, ErrBadComponentDefinition, definition)
 		jumpAssert(pool:getIndex(entity), ErrMissingComponent, entity, definition)
 	end
