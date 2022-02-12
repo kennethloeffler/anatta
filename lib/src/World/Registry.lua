@@ -478,7 +478,7 @@ function Registry:destroyEntity(entity)
 
 	-- Replicated entities should not be recycled.
 	-- We can safely throw them out since they are not part of the
-	-- recyclcing stack.
+	-- recycling stack.
 	if Registry.getDomain(entity) ~= DOMAIN then
 		self._entities[entityId] = nil
 
