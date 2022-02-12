@@ -90,6 +90,7 @@ function Registry.new()
 		_pools = {},
 		_nextRecyclableEntityId = NULL_ENTITYID,
 		_size = 0,
+		_foreignCount = 0,
 	}, Registry)
 end
 
@@ -334,9 +335,11 @@ function Registry:importEntity(entity)
 	local entityId = bit32.extract(entity, ENTITYID_OFFSET, ENTITYID_WIDTH)
 	local entities = self._entities
 
-	jumpAssert(entities[entityId] ~= nil, "attempt to import an existing entity: %d", entity)
+	jumpAssert(entities[entityId] == nil, "attempt to import an existing entity: %d", entity)
 
 	entities[entityId] = entity
+
+	self._foreignCount += 1
 
 	return entity
 end
@@ -479,6 +482,8 @@ function Registry:destroyEntity(entity)
 	-- recyclcing stack.
 	if Registry.getDomain(entity) ~= DOMAIN then
 		self._entities[entityId] = nil
+
+		self._foreignCount -= 1
 
 		return
 	end
@@ -995,7 +1000,7 @@ end
 ]=]
 function Registry:countEntities()
 	local entityId = self._nextRecyclableEntityId
-	local count = self._size
+	local count = self._size + self._foreignCount
 
 	while entityId ~= NULL_ENTITYID do
 		entityId = bit32.extract(self._entities[entityId], ENTITYID_OFFSET, ENTITYID_WIDTH)
