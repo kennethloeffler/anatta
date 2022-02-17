@@ -132,7 +132,7 @@ end
 	@return number
 ]=]
 function Registry.getDomain(entity)
-	return Constants[bit32.extract(entity, DOMAIN_OFFSET, DOMAIN_WIDTH)]
+	return bit32.extract(entity, DOMAIN_OFFSET, DOMAIN_WIDTH)
 end
 
 --[=[
