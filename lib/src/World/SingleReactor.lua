@@ -1,8 +1,7 @@
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 local Pool = require(script.Parent.Parent.Core.Pool)
 
-local WarnNoAttachmentsTable =
-	"withAttachments callback defined in %s at line %s did not return a table"
+local WarnNoAttachmentsTable = "withAttachments callback defined in %s at line %s did not return a table"
 
 local SingleReactor = {}
 SingleReactor.__index = SingleReactor
@@ -69,10 +68,7 @@ function SingleReactor:withAttachments(callback)
 			local attachments = callback(entity, component)
 
 			if typeof(attachments) ~= "table" then
-				warn(WarnNoAttachmentsTable:format(
-					debug.info(callback, "s"),
-					debug.info(callback, "l")
-				))
+				warn(WarnNoAttachmentsTable:format(debug.info(callback, "s"), debug.info(callback, "l")))
 
 				self._pool:insert(entity, {})
 				return

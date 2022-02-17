@@ -54,14 +54,7 @@ function convert(attributeMap, attributeName, concreteType, instance, entity, va
 		for field, fieldConcreteType in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 
-			convert(
-				attributeMap,
-				fieldAttributeName,
-				fieldConcreteType,
-				instance,
-				entity,
-				value[field]
-			)
+			convert(attributeMap, fieldAttributeName, fieldConcreteType, instance, entity, value[field])
 		end
 	elseif conversions[concreteType] then
 		conversions[concreteType](attributeMap, attributeName, value, instance)
@@ -86,14 +79,7 @@ return function(instance, entity, definition, component)
 		return false, ("Error converting %s: %s"):format(componentName, concreteType)
 	end
 
-	local success, attributeMap = convert(
-		{},
-		componentName,
-		concreteType,
-		instance,
-		entity,
-		component
-	)
+	local success, attributeMap = convert({}, componentName, concreteType, instance, entity, component)
 
 	attributeMap[ENTITY_ATTRIBUTE_NAME] = entity
 

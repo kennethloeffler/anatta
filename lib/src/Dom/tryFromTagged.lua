@@ -18,10 +18,7 @@ return function(pool)
 		local success, entity, component = tryFromAttributes(instance, definition)
 
 		if not success then
-			warn(("%s failed attribute validation for %s"):format(
-				instance:GetFullName(),
-				definition.name
-			))
+			warn(("%s failed attribute validation for %s"):format(instance:GetFullName(), definition.name))
 			continue
 		end
 

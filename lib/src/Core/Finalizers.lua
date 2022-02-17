@@ -6,8 +6,7 @@ local function disconnectOrDestroy(arg)
 	end
 end
 
-local dummyConnection = game.Changed:Connect(function()
-end)
+local dummyConnection = game.Changed:Connect(function() end)
 
 dummyConnection:Disconnect()
 
