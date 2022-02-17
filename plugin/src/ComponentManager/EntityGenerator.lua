@@ -8,6 +8,7 @@ local Constants = require(Modules.Anatta.Library.Core.Constants)
 local Registry = require(Modules.Anatta.Library.World.Registry)
 local Dom = require(Modules.Anatta.Library.Dom)
 
+local CANDIDATE = ".__pendingAuthorityCandidate"
 local PENDING_ENTITY_CREATION = ".__pendingEntityCreation"
 local PENDING_ENTITY_DESTRUCTION = ".__pendingEntityDestruction"
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
@@ -55,11 +56,13 @@ function EntityGenerator:negotiateAuthority()
 
 	LocalPlayer:SetAttribute(PING_ATTRIBUTE, LocalPlayer:GetNetworkPing())
 	LocalPlayer:SetAttribute(TOKEN_ATTRIBUTE, Random.new():NextNumber())
+
 	CollectionService:AddTag(LocalPlayer, NEGOTIATION_ACK)
+	CollectionService:AddTag(LocalPlayer, CANDIDATE)
 
 	repeat
 		RunService.Heartbeat:Wait()
-	until #CollectionService:GetTagged(NEGOTIATION_ACK) == #Players:GetPlayers()
+	until #CollectionService:GetTagged(NEGOTIATION_ACK) == #CollectionService:GetTagged(CANDIDATE)
 		or #CollectionService:GetTagged(ENTITY_AUTHORITY) > 0
 
 	if #CollectionService:GetTagged(ENTITY_AUTHORITY) > 0 then
@@ -68,7 +71,7 @@ function EntityGenerator:negotiateAuthority()
 
 	local candidates = {}
 
-	for _, player in ipairs(Players:GetPlayers()) do
+	for _, player in ipairs(CollectionService:GetTagged(CANDIDATE)) do
 		table.insert(candidates, {
 			player = player,
 			ping = player:GetAttribute(PING_ATTRIBUTE),
@@ -165,15 +168,17 @@ function EntityGenerator:becomeAuthority()
 	end)
 
 	self.entityRemovedConnection = CollectionService
-		:GetInstanceAddedSignal(ENTITY_TAG_NAME)
+		:GetInstanceRemovedSignal(ENTITY_TAG_NAME)
 		:Connect(function(instance)
-			self.pendingAdditions[instance] = true
+			if instance:GetAttribute(ENTITY_ATTRIBUTE_NAME) ~= nil then
+				self.pendingRemovals[instance] = true
+			end
 		end)
 
 	self.entityAddedConnection = CollectionService
-		:GetInstanceRemovedSignal(ENTITY_TAG_NAME)
+		:GetInstanceAddedSignal(ENTITY_TAG_NAME)
 		:Connect(function(instance)
-			self.pendingRemovals[instance] = true
+			self.pendingAdditions[instance] = true
 		end)
 end
 
