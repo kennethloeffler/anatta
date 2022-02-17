@@ -107,7 +107,7 @@ return function()
 
 	describe("createEntityFrom", function()
 		it("should return an entity identifier equal to hint when hint's entity id is not in use", function(context)
-			expect(context.registry:createEntityFrom(0x0EADBEEF)).to.equal(0x0EADBEEF)
+			expect(context.registry:createEntityFrom(0xDEADBEEE)).to.equal(0xDEADBEEE)
 		end)
 
 		it("should return an entity identifier equal to hint when hint's entity id has been recycled", function(context)
