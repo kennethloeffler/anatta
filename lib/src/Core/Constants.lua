@@ -2,6 +2,9 @@ local PartialIdWidth = 23
 
 local RunService = game:GetService("RunService")
 
+local IsRunning = RunService:IsRunning()
+local IsServer = RunService:IsServer()
+
 --[[
 	Entity Masking:
 	D = Domain
@@ -22,7 +25,8 @@ local Constants = {
 	-- Domain: server = even; client = odd
 	DomainOffset = 0,
 	DomainWidth = 1,
-	Domain = if RunService:IsServer() then 0 else 1,
+
+	Domain = if not IsRunning then 0 elseif IsServer then 0 else 1,
 
 	-- Partial entity IDs exclude domain
 	PartialIdOffset = 1,
