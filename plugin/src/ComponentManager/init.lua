@@ -488,18 +488,6 @@ function ComponentManager:SetComponent(component, value: boolean)
 	local definition = component.Definition
 
 	for _, instance in pairs(selected) do
-		local isModelWithPrimaryPart = instance:IsA("Model") and instance.PrimaryPart
-
-		if
-			not (instance:IsA("BasePart") or instance:IsA("Attachment") or isModelWithPrimaryPart)
-		then
-			continue
-		end
-
-		if isModelWithPrimaryPart then
-			instance = instance.PrimaryPart
-		end
-
 		if value then
 			local success, err = ComponentAnnotation.add(instance, definition)
 
