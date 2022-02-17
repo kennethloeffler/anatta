@@ -16,8 +16,7 @@ return function()
 		it("should insert a callback into .callbacks", function()
 			local sig = Signal.new()
 
-			local callback = function()
-			end
+			local callback = function() end
 
 			sig:connect(callback)
 
@@ -65,8 +64,7 @@ return function()
 	describe("Disconnect", function()
 		it("should remove a callback from .callbacks", function()
 			local sig = Signal.new()
-			local callback = function()
-			end
+			local callback = function() end
 			local connection = sig:connect(callback)
 
 			connection:disconnect()

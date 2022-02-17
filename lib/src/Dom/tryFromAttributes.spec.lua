@@ -8,24 +8,21 @@ return function()
 	local tryFromAttributes = require(script.Parent.tryFromAttributes)
 
 	describe("basic types", function()
-		it(
-			"should return true and the value when the instance has the correct attribute",
-			function()
-				local instance = Instance.new("Folder")
+		it("should return true and the value when the instance has the correct attribute", function()
+			local instance = Instance.new("Folder")
 
-				instance:SetAttribute("Test", Vector3.new(1, 1, 1))
-				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+			instance:SetAttribute("Test", Vector3.new(1, 1, 1))
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
 
-				local success, entity, component = tryFromAttributes(instance, {
-					name = "Test",
-					type = T.Vector3,
-				})
+			local success, entity, component = tryFromAttributes(instance, {
+				name = "Test",
+				type = T.Vector3,
+			})
 
-				expect(success).to.equal(true)
-				expect(component).to.equal(Vector3.new(1, 1, 1))
-				expect(entity).to.equal(1)
-			end
-		)
+			expect(success).to.equal(true)
+			expect(component).to.equal(Vector3.new(1, 1, 1))
+			expect(entity).to.equal(1)
+		end)
 
 		it("should fail for an unresolvable type", function()
 			local instance = Instance.new("Folder")
@@ -71,59 +68,53 @@ return function()
 	end)
 
 	describe("strictInterface", function()
-		it(
-			"should return true and the value when the instance has the correct attributes",
-			function()
-				local instance = Instance.new("Folder")
+		it("should return true and the value when the instance has the correct attributes", function()
+			local instance = Instance.new("Folder")
 
-				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
-				instance:SetAttribute("Test_Field1", UDim2.new(1, 2, 3, 4))
-				instance:SetAttribute("Test_Field2", true)
-				instance:SetAttribute("Test_Field3", -273.15)
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+			instance:SetAttribute("Test_Field1", UDim2.new(1, 2, 3, 4))
+			instance:SetAttribute("Test_Field2", true)
+			instance:SetAttribute("Test_Field3", -273.15)
 
-				local success, entity, component = tryFromAttributes(instance, {
-					name = "Test",
-					type = T.strictInterface({
-						Field1 = T.UDim2,
-						Field2 = T.boolean,
-						Field3 = T.number,
-					}),
-				})
+			local success, entity, component = tryFromAttributes(instance, {
+				name = "Test",
+				type = T.strictInterface({
+					Field1 = T.UDim2,
+					Field2 = T.boolean,
+					Field3 = T.number,
+				}),
+			})
 
-				expect(success).to.equal(true)
-				expect(entity).to.equal(1)
-				expect(component).to.be.a("table")
-				expect(component.Field1).to.equal(UDim2.new(1, 2, 3, 4))
-				expect(component.Field2).to.equal(true)
-				expect(component.Field3).to.equal(-273.15)
-			end
-		)
+			expect(success).to.equal(true)
+			expect(entity).to.equal(1)
+			expect(component).to.be.a("table")
+			expect(component.Field1).to.equal(UDim2.new(1, 2, 3, 4))
+			expect(component.Field2).to.equal(true)
+			expect(component.Field3).to.equal(-273.15)
+		end)
 	end)
 
 	describe("strictArray", function()
-		it(
-			"should return true and the value when the instance has the correct attributes",
-			function()
-				local instance = Instance.new("Folder")
+		it("should return true and the value when the instance has the correct attributes", function()
+			local instance = Instance.new("Folder")
 
-				instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
-				instance:SetAttribute("Test_1", UDim2.new(1, 2, 3, 4))
-				instance:SetAttribute("Test_2", true)
-				instance:SetAttribute("Test_3", -273.15)
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+			instance:SetAttribute("Test_1", UDim2.new(1, 2, 3, 4))
+			instance:SetAttribute("Test_2", true)
+			instance:SetAttribute("Test_3", -273.15)
 
-				local success, entity, component = tryFromAttributes(instance, {
-					name = "Test",
-					type = T.strictArray(T.UDim2, T.boolean, T.number),
-				})
+			local success, entity, component = tryFromAttributes(instance, {
+				name = "Test",
+				type = T.strictArray(T.UDim2, T.boolean, T.number),
+			})
 
-				expect(success).to.equal(true)
-				expect(entity).to.equal(1)
-				expect(component).to.be.a("table")
-				expect(component[1]).to.equal(UDim2.new(1, 2, 3, 4))
-				expect(component[2]).to.equal(true)
-				expect(component[3]).to.equal(-273.15)
-			end
-		)
+			expect(success).to.equal(true)
+			expect(entity).to.equal(1)
+			expect(component).to.be.a("table")
+			expect(component[1]).to.equal(UDim2.new(1, 2, 3, 4))
+			expect(component[2]).to.equal(true)
+			expect(component[3]).to.equal(-273.15)
+		end)
 	end)
 
 	describe("Instance", function()

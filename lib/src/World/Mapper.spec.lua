@@ -82,16 +82,13 @@ return function()
 			expect(getmetatable(mapper)).to.equal(Mapper)
 		end)
 
-		it(
-			"should create a new SingleMapper when there is only one required component ",
-			function(context)
-				local mapper = Mapper.new(context.registry, {
-					withAll = { Component.Test1 },
-				})
+		it("should create a new SingleMapper when there is only one required component ", function(context)
+			local mapper = Mapper.new(context.registry, {
+				withAll = { Component.Test1 },
+			})
 
-				expect(getmetatable(mapper)).to.equal(SingleMapper)
-			end
-		)
+			expect(getmetatable(mapper)).to.equal(SingleMapper)
+		end)
 	end)
 
 	describe("find", function()
@@ -115,34 +112,28 @@ return function()
 	end)
 
 	describe("filter", function()
-		it(
-			"should fill and return a table with whatever is returned from the callback",
-			function(context)
-				local registry = context.registry
-				local mapper = createTestMapper(registry, {
-					withAll = { Component.Test1 },
-					without = { Component.Test2 },
-				})
+		it("should fill and return a table with whatever is returned from the callback", function(context)
+			local registry = context.registry
+			local mapper = createTestMapper(registry, {
+				withAll = { Component.Test1 },
+				without = { Component.Test2 },
+			})
 
-				local expected = {}
-				for _ = 1, 10 do
-					table.insert(
-						expected,
-						registry:addComponent(registry:createEntity(), Component.Test1, {})
-					)
-				end
-
-				local results = mapper:filter(function(_, component)
-					if table.find(expected, component) ~= nil then
-						return component
-					end
-				end)
-
-				for i, v in ipairs(results) do
-					expect(v).to.equal(expected[i])
-				end
+			local expected = {}
+			for _ = 1, 10 do
+				table.insert(expected, registry:addComponent(registry:createEntity(), Component.Test1, {}))
 			end
-		)
+
+			local results = mapper:filter(function(_, component)
+				if table.find(expected, component) ~= nil then
+					return component
+				end
+			end)
+
+			for i, v in ipairs(results) do
+				expect(v).to.equal(expected[i])
+			end
+		end)
 	end)
 
 	describe("map", function()
@@ -171,31 +162,28 @@ return function()
 				end
 			)
 
-			it(
-				"should replace required components with ones returned by the callback",
-				function(context)
-					local registry = context.registry
-					local mapper, toIterate = createTestMapper(registry, {
-						withAll = { Component.Test1, Component.Test2 },
-					})
+			it("should replace required components with ones returned by the callback", function(context)
+				local registry = context.registry
+				local mapper, toIterate = createTestMapper(registry, {
+					withAll = { Component.Test1, Component.Test2 },
+				})
 
-					mapper:map(function(entity)
-						local newTest1 = {}
-						local newTest2 = {}
+				mapper:map(function(entity)
+					local newTest1 = {}
+					local newTest2 = {}
 
-						toIterate[entity] = { newTest1, newTest2 }
+					toIterate[entity] = { newTest1, newTest2 }
 
-						return newTest1, newTest2
-					end)
+					return newTest1, newTest2
+				end)
 
-					mapper:map(function(entity, test1, test2)
-						expect(test1).to.equal(toIterate[entity][1])
-						expect(test2).to.equal(toIterate[entity][2])
+				mapper:map(function(entity, test1, test2)
+					expect(test1).to.equal(toIterate[entity][1])
+					expect(test2).to.equal(toIterate[entity][2])
 
-						return test1, test2
-					end)
-				end
-			)
+					return test1, test2
+				end)
+			end)
 		end)
 	end)
 end
