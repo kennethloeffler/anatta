@@ -107,7 +107,7 @@ return function()
 
 	describe("createEntityFrom", function()
 		it("should return an entity identifier equal to hint when hint's entity id is not in use", function(context)
-			expect(context.registry:createEntityFrom(0xDEADBEEF)).to.equal(0xDEADBEEF)
+			expect(context.registry:createEntityFrom(0xDEADBEEE)).to.equal(0xDEADBEEE)
 		end)
 
 		it("should return an entity identifier equal to hint when hint's entity id has been recycled", function(context)
@@ -250,10 +250,8 @@ return function()
 			expect(registry:entityIsValid(NULL_ENTITYID)).to.equal(false)
 		end)
 
-		it("should error if the entity is not a number", function(context)
-			expect(function()
-				context.registry:entityIsValid("entity")
-			end).to.throw()
+		it("should return false if the entity is not a number", function(context)
+			expect(context.registry:entityIsValid("entity")).to.equal(false)
 		end)
 	end)
 
