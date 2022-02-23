@@ -62,6 +62,20 @@ local function genColor(name: string): Color3
 	return Color3.fromHSV(h, s, v)
 end
 
+local function getLinkedInstance(instance)
+	local isModelWithPrimaryPart = instance:IsA("Model") and instance.PrimaryPart
+
+	if not (instance:IsA("BasePart") or instance:IsA("Attachment") or isModelWithPrimaryPart) then
+		return nil
+	end
+
+	if isModelWithPrimaryPart then
+		return instance.PrimaryPart
+	end
+
+	return instance
+end
+
 function ComponentManager.new(store)
 	local self = setmetatable({
 		store = store,
@@ -275,8 +289,14 @@ function ComponentManager:_doUpdateStore()
 			end
 
 			for _, instance in ipairs(selected) do
-				if CollectionService:HasTag(instance, entry.Name) then
-					local success, _, value = Dom.tryFromAttributes(instance, definition)
+				local linkedInstance = getLinkedInstance(instance)
+
+				if not linkedInstance then
+					continue
+				end
+
+				if CollectionService:HasTag(linkedInstance, entry.Name) then
+					local success, _, value = Dom.tryFromAttributes(linkedInstance, definition)
 
 					if success then
 						table.insert(values, value)
@@ -477,29 +497,23 @@ function ComponentManager:SetComponent(component, value: boolean)
 	local definition = component.Definition
 
 	for _, instance in pairs(selected) do
-		local isModelWithPrimaryPart = instance:IsA("Model") and instance.PrimaryPart
+		local linkedInstance = getLinkedInstance(instance)
 
-		if
-			not (instance:IsA("BasePart") or instance:IsA("Attachment") or isModelWithPrimaryPart)
-		then
+		if not linkedInstance then
 			continue
 		end
 
-		if isModelWithPrimaryPart then
-			instance = instance.PrimaryPart
-		end
-
 		if value then
-			local success, err = ComponentAnnotation.add(instance, definition)
+			local success, err = ComponentAnnotation.add(linkedInstance, definition)
 
 			if not success then
 				warn(err)
 				continue
 			end
 
-			self.entityGenerator:requestCreation(instance)
+			self.entityGenerator:requestCreation(linkedInstance)
 		else
-			local success, err = ComponentAnnotation.remove(instance, definition)
+			local success, err = ComponentAnnotation.remove(linkedInstance, definition)
 
 			if not success then
 				warn(err)
@@ -509,14 +523,14 @@ function ComponentManager:SetComponent(component, value: boolean)
 			local hasNoComponents = true
 
 			for componentName in pairs(self.componentDefinitions) do
-				if CollectionService:HasTag(instance, componentName) then
+				if CollectionService:HasTag(linkedInstance, componentName) then
 					hasNoComponents = false
 					break
 				end
 			end
 
 			if hasNoComponents then
-				self.entityGenerator:requestDestruction(instance)
+				self.entityGenerator:requestDestruction(linkedInstance)
 			end
 		end
 	end
