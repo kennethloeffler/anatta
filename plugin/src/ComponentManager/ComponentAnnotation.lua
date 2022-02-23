@@ -10,6 +10,10 @@ local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local ComponentAnnotation = {}
 
 local function getAttributeMap(instance, definition)
+	if definition.pluginType then
+		definition = { name = definition.name, type = definition.pluginType }
+	end
+
 	local defaultSuccess, default = definition.type:tryDefault()
 
 	if not defaultSuccess and not definition.type.typeName == "none" then
