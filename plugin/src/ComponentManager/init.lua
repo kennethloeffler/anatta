@@ -97,8 +97,7 @@ function ComponentManager.new(store)
 
 	if not self.definitionsFolder then
 		task.spawn(function()
-			self.definitionsFolder =
-				componentDefinitionsRoot:WaitForChild(componentDefinitionsFolder)
+			self.definitionsFolder = componentDefinitionsRoot:WaitForChild(componentDefinitionsFolder)
 
 			self:_watchDefinitions()
 		end)
@@ -201,10 +200,9 @@ function ComponentManager:_watchConfiguration(instance: Configuration)
 
 	self:_updateStore()
 
-	self.configurationChangedConns[instance] =
-		instance.AttributeChanged:Connect(function(_attribute)
-			self:_updateStore()
-		end)
+	self.configurationChangedConns[instance] = instance.AttributeChanged:Connect(function(_attribute)
+		self:_updateStore()
+	end)
 
 	self.configurationChangedSignals[instance] = {
 		instance:GetPropertyChangedSignal("Name"):Connect(function()
@@ -245,6 +243,12 @@ function ComponentManager:_doUpdateStore()
 			end
 
 			local definition = self.componentDefinitions[config.Name]
+
+			if not definition then
+				config:Destroy()
+				continue
+			end
+
 			local values = {}
 			local hasAny = false
 			local missingAny = false
@@ -322,11 +326,7 @@ function ComponentManager:_setProp(componentDefinition, key: string, value: any)
 	local configurationsFolder = self:_getFolder()
 	local component = configurationsFolder:FindFirstChild(componentDefinition.name)
 	if not component then
-		error(
-			"Setting property of non-existent component `"
-				.. tostring(componentDefinition.name)
-				.. "`"
-		)
+		error("Setting property of non-existent component `" .. tostring(componentDefinition.name) .. "`")
 	end
 
 	-- don't do unnecessary updates
@@ -334,17 +334,9 @@ function ComponentManager:_setProp(componentDefinition, key: string, value: any)
 		return false
 	end
 
-	ChangeHistory:SetWaypoint(string.format(
-		"Setting property %q of component %q",
-		key,
-		componentDefinition.name
-	))
+	ChangeHistory:SetWaypoint(string.format("Setting property %q of component %q", key, componentDefinition.name))
 	component:SetAttribute(key, value)
-	ChangeHistory:SetWaypoint(string.format(
-		"Set property %q of component %q",
-		key,
-		componentDefinition.name
-	))
+	ChangeHistory:SetWaypoint(string.format("Set property %q of component %q", key, componentDefinition.name))
 
 	return true
 end
@@ -478,10 +470,7 @@ function ComponentManager:SetComponent(component, value: boolean)
 	if value then
 		ChangeHistory:SetWaypoint(string.format("Applying component %q to selection", component.Name))
 	else
-		ChangeHistory:SetWaypoint(string.format(
-			"Removing component %q from selection",
-			component.Name
-		))
+		ChangeHistory:SetWaypoint(string.format("Removing component %q from selection", component.Name))
 	end
 
 	local selected = Selection:Get()
@@ -527,10 +516,7 @@ function ComponentManager:SetComponent(component, value: boolean)
 	if value then
 		ChangeHistory:SetWaypoint(string.format("Applied component %q to selection", component.Name))
 	else
-		ChangeHistory:SetWaypoint(string.format(
-			"Removed component %q from selection",
-			component.Name
-		))
+		ChangeHistory:SetWaypoint(string.format("Removed component %q from selection", component.Name))
 	end
 end
 
