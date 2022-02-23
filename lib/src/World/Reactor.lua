@@ -30,8 +30,7 @@ local util = require(script.Parent.Parent.util)
 
 local ErrEntityMissing = "entity %d is not present in this reactor"
 
-local WarnNoAttachmentsTable =
-	"withAttachments callback defined in %s at line %s did not return a table"
+local WarnNoAttachmentsTable = "withAttachments callback defined in %s at line %s did not return a table"
 
 local Reactor = {}
 Reactor.__index = Reactor

@@ -19,20 +19,19 @@ local function instanceConversion(instance, entity, attributeName, typeDefinitio
 	local refFolder = instance:FindFirstChild(INSTANCE_REF_FOLDER)
 
 	if not refFolder or not refFolder:IsA("Folder") then
-		return false, ("Expected ref folder as a child of %s, got %s"):format(
-			instance:GetFullName(),
-			tostring(refFolder)
-		)
+		return false,
+			("Expected ref folder as a child of %s, got %s"):format(instance:GetFullName(), tostring(refFolder))
 	end
 
 	local objectValue = refFolder:FindFirstChild(attributeName)
 
 	if not objectValue or not objectValue:IsA("ObjectValue") then
-		return false, ("Expected ObjectValue %s under %s, got %s"):format(
-			attributeName,
-			instance:GetFullName(),
-			tostring(objectValue)
-		)
+		return false,
+			("Expected ObjectValue %s under %s, got %s"):format(
+				attributeName,
+				instance:GetFullName(),
+				tostring(objectValue)
+			)
 	end
 
 	local ref = objectValue.Value
@@ -70,24 +69,23 @@ local conversions = {
 			end
 		end
 
-		return false, ('Expected one of:\n\n\t\t%s;\n\n\tgot "%s"'):format(
-			table.concat(enums, "\n\t\t"),
-			enumName
-		)
+		return false, ('Expected one of:\n\n\t\t%s;\n\n\tgot "%s"'):format(table.concat(enums, "\n\t\t"), enumName)
 	end,
 
 	TweenInfo = function(instance, entity, attributeName)
 		local success, result = convert(instance, attributeName, TweenInfoType)
 
 		if success then
-			return true, entity, TweenInfo.new(
-				result.Time,
-				result.EasingStyle,
-				result.EasingDirection,
-				result.RepeatCount,
-				result.Reverses,
-				result.DelayTime
-			)
+			return true,
+				entity,
+				TweenInfo.new(
+					result.Time,
+					result.EasingStyle,
+					result.EasingDirection,
+					result.RepeatCount,
+					result.Reverses,
+					result.DelayTime
+				)
 		else
 			return false, result
 		end
@@ -120,11 +118,7 @@ function convert(instance, attributeName, typeDefinition)
 		for field in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 			local fieldTypeDefinition = typeParams[field]
-			local convertSuccess, result, componentValue = convert(
-				instance,
-				fieldAttributeName,
-				fieldTypeDefinition
-			)
+			local convertSuccess, result, componentValue = convert(instance, fieldAttributeName, fieldTypeDefinition)
 
 			if convertSuccess then
 				value[field] = componentValue

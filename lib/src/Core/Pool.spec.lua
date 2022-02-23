@@ -2,16 +2,17 @@ return function()
 	local Constants = require(script.Parent.Constants)
 	local Pool = require(script.Parent.Pool)
 
-	local ENTITYID_MASK = Constants.EntityIdMask
+	local ENTITYID_OFFSET = Constants.EntityIdOffset
 	local ENTITYID_WIDTH = Constants.EntityIdWidth
+	local VERSION_WIDTH = Constants.VersionWidth
 
 	local function generate(pool)
 		local rand = Random.new()
 		local size = 0
 
 		for _ = 1, 200 do
-			local id = rand:NextInteger(1, 2 ^ 16 - 1)
-			local version = bit32.lshift(rand:NextInteger(1, 2 ^ 16 - 1), ENTITYID_WIDTH)
+			local id = rand:NextInteger(1, 2 ^ ENTITYID_WIDTH - 1)
+			local version = bit32.lshift(rand:NextInteger(1, 2 ^ VERSION_WIDTH - 1), ENTITYID_WIDTH)
 
 			if not pool.sparse[id] then
 				size += 1
@@ -40,14 +41,11 @@ return function()
 		end)
 	end)
 
-	describe("getIndex", function()
-	end)
+	describe("getIndex", function() end)
 
-	describe("get", function()
-	end)
+	describe("get", function() end)
 
-	describe("replace", function()
-	end)
+	describe("replace", function() end)
 
 	describe("insert", function()
 		it("should add an element and return the passed component object", function()
@@ -67,7 +65,7 @@ return function()
 			expect(pool.size).to.equal(size)
 
 			for i, v in ipairs(pool.dense) do
-				expect(pool.sparse[bit32.band(v, ENTITYID_MASK)]).to.equal(i)
+				expect(pool.sparse[bit32.extract(v, ENTITYID_OFFSET, ENTITYID_WIDTH)]).to.equal(i)
 			end
 		end)
 	end)

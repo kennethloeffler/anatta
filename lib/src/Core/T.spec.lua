@@ -21,30 +21,27 @@ return function()
 			expect(ty.typeName).to.equal("instanceIsA")
 		end)
 
-		it(
-			"should return a compound definition for second-order functions that take functions as arguments",
-			function()
-				local ty = T.union(T.literal("string1"), T.literal("string2"))
+		it("should return a compound definition for second-order functions that take functions as arguments", function()
+			local ty = T.union(T.literal("string1"), T.literal("string2"))
 
-				expect(ty).to.be.a("table")
-				expect(ty.typeParams).to.be.a("table")
-				expect(ty.check).to.be.a("function")
-				expect(ty.typeName).to.equal("union")
+			expect(ty).to.be.a("table")
+			expect(ty.typeParams).to.be.a("table")
+			expect(ty.check).to.be.a("function")
+			expect(ty.typeName).to.equal("union")
 
-				local typeParams = ty.typeParams
-				local string1 = typeParams[1]
-				local string2 = typeParams[2]
+			local typeParams = ty.typeParams
+			local string1 = typeParams[1]
+			local string2 = typeParams[2]
 
-				expect(string1).to.be.a("table")
-				expect(string2).to.be.a("table")
-				expect(string1.check).to.be.a("function")
-				expect(string2.check).to.be.a("function")
-				expect(string1.typeParams[1]).to.equal("string1")
-				expect(string2.typeParams[1]).to.equal("string2")
-				expect(string1.typeName).to.equal("literal")
-				expect(string2.typeName).to.equal("literal")
-			end
-		)
+			expect(string1).to.be.a("table")
+			expect(string2).to.be.a("table")
+			expect(string1.check).to.be.a("function")
+			expect(string2.check).to.be.a("function")
+			expect(string1.typeParams[1]).to.equal("string1")
+			expect(string2.typeParams[1]).to.equal("string2")
+			expect(string1.typeName).to.equal("literal")
+			expect(string2.typeName).to.equal("literal")
+		end)
 	end)
 
 	describe("getConcreteType", function()
@@ -79,9 +76,12 @@ return function()
 		end)
 
 		it("should resolve a strict array into an array of concrete types", function()
-			local interface = T.strictArray(T.Enum, T.strictInterface({
-				name = T.string,
-			}))
+			local interface = T.strictArray(
+				T.Enum,
+				T.strictInterface({
+					name = T.string,
+				})
+			)
 			local _, concreteInterface = interface:tryGetConcreteType()
 
 			expect(concreteInterface[1]).to.equal("Enum")

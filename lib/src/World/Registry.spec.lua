@@ -88,8 +88,7 @@ return function()
 			end
 
 			for i, destroyedEntity in ipairs(destroyed) do
-				local nextRecyclableEntityId = destroyed[i + 1] and destroyed[i + 1]
-					or NULL_ENTITYID
+				local nextRecyclableEntityId = destroyed[i + 1] and destroyed[i + 1] or NULL_ENTITYID
 
 				expect(Registry.getId(registry:createEntity())).to.equal(destroyedEntity)
 				expect(registry._nextRecyclableEntityId).to.equal(nextRecyclableEntityId)
@@ -107,28 +106,22 @@ return function()
 	end)
 
 	describe("createEntityFrom", function()
-		it(
-			"should return an entity identifier equal to hint when hint's entity id is not in use",
-			function(context)
-				expect(context.registry:createEntityFrom(0xDEADBEEF)).to.equal(0xDEADBEEF)
+		it("should return an entity identifier equal to hint when hint's entity id is not in use", function(context)
+			expect(context.registry:createEntityFrom(0xDEADBEEE)).to.equal(0xDEADBEEE)
+		end)
+
+		it("should return an entity identifier equal to hint when hint's entity id has been recycled", function(context)
+			local registry = context.registry
+			local entity = makeEntities(registry, 100)[50]
+
+			registry:destroyEntity(entity)
+
+			for _ = 1, 100 do
+				registry:destroyEntity(registry:createEntity())
 			end
-		)
 
-		it(
-			"should return an entity identifier equal to hint when hint's entity id has been recycled",
-			function(context)
-				local registry = context.registry
-				local entity = makeEntities(registry, 100)[50]
-
-				registry:destroyEntity(entity)
-
-				for _ = 1, 100 do
-					registry:destroyEntity(registry:createEntity())
-				end
-
-				expect(registry:createEntityFrom(entity)).to.equal(entity)
-			end
-		)
+			expect(registry:createEntityFrom(entity)).to.equal(entity)
+		end)
 
 		it("should remove entities from the stack of recyclable entities", function(context)
 			local registry = context.registry
@@ -155,10 +148,7 @@ return function()
 			-- now look like this:
 			-- 32, 4, 2
 			local version = 16
-			local entity = registry:createEntityFrom(bit32.bor(
-				64,
-				bit32.lshift(version, ENTITYID_WIDTH)
-			))
+			local entity = registry:createEntityFrom(bit32.bor(64, bit32.lshift(version, ENTITYID_WIDTH)))
 			expect(Registry.getId(entity)).to.equal(64)
 			expect(Registry.getVersion(entity)).to.equal(16)
 
@@ -260,10 +250,8 @@ return function()
 			expect(registry:entityIsValid(NULL_ENTITYID)).to.equal(false)
 		end)
 
-		it("should error if the entity is not a number", function(context)
-			expect(function()
-				context.registry:entityIsValid("entity")
-			end).to.throw()
+		it("should return false if the entity is not a number", function(context)
+			expect(context.registry:entityIsValid("entity")).to.equal(false)
 		end)
 	end)
 
@@ -326,8 +314,7 @@ return function()
 
 		it("should error if given an invalid entity", function(context)
 			expect(function()
-				context.registry:visitComponents(function()
-				end, 0)
+				context.registry:visitComponents(function() end, 0)
 			end).to.throw()
 		end)
 	end)
@@ -363,18 +350,11 @@ return function()
 	end)
 
 	describe("entityHasAny", function()
-		it(
-			"should return false if the entity does not have any of the components",
-			function(context)
-				local registry = context.registry
+		it("should return false if the entity does not have any of the components", function(context)
+			local registry = context.registry
 
-				expect(registry:entityHasAny(
-					registry:createEntity(),
-					Component.instance,
-					Component.number
-				)).to.equal(false)
-			end
-		)
+			expect(registry:entityHasAny(registry:createEntity(), Component.instance, Component.number)).to.equal(false)
+		end)
 
 		it("should return true if the entity has any of the components", function(context)
 			local registry = context.registry
@@ -450,18 +430,17 @@ return function()
 			expect(ranCallback).to.equal(true)
 		end)
 
-		it(
-			"should return the correct component instance when a recycled entity is used",
-			function(context)
-				local registry = context.registry
-				local entity = registry:createEntity()
+		it("should return the correct component instance when a recycled entity is used", function(context)
+			local registry = context.registry
+			local entity = registry:createEntity()
 
-				registry:destroyEntity(entity)
-				entity = registry:createEntity()
+			registry:destroyEntity(entity)
+			entity = registry:createEntity()
 
-				expect(registry:addComponent(entity, Component.instance, Instance.new("Part"))).to.equal(registry._pools[Component.instance]:get(entity))
-			end
-		)
+			expect(registry:addComponent(entity, Component.instance, Instance.new("Part"))).to.equal(
+				registry._pools[Component.instance]:get(entity)
+			)
+		end)
 
 		it("should correctly handle tag components", function(context)
 			local registry = context.registry
@@ -521,18 +500,17 @@ return function()
 			expect(ranCallback).to.equal(true)
 		end)
 
-		it(
-			"should return the correct component instance when a recycled entity is used",
-			function(context)
-				local registry = context.registry
-				local entity = registry:createEntity()
+		it("should return the correct component instance when a recycled entity is used", function(context)
+			local registry = context.registry
+			local entity = registry:createEntity()
 
-				registry:destroyEntity(entity)
-				entity = registry:createEntity()
+			registry:destroyEntity(entity)
+			entity = registry:createEntity()
 
-				expect(registry:tryAddComponent(entity, Component.instance, Instance.new("Hole"))).to.equal(registry._pools[Component.instance]:get(entity))
-			end
-		)
+			expect(registry:tryAddComponent(entity, Component.instance, Instance.new("Hole"))).to.equal(
+				registry._pools[Component.instance]:get(entity)
+			)
+		end)
 
 		it("should correctly handle tag components", function(context)
 			local registry = context.registry
@@ -638,11 +616,7 @@ return function()
 
 		it("should error if the entity does not have the component", function(context)
 			expect(function()
-				context.registry:replaceComponent(
-					context.registry:createEntity(),
-					Component.number,
-					0
-				)
+				context.registry:replaceComponent(context.registry:createEntity(), Component.number, 0)
 			end).to.throw()
 		end)
 	end)
@@ -665,11 +639,7 @@ return function()
 				ranAddCallback = true
 			end)
 
-			registry:addOrReplaceComponent(
-				registry:createEntity(),
-				Component.instance,
-				Instance.new("Hole")
-			)
+			registry:addOrReplaceComponent(registry:createEntity(), Component.instance, Instance.new("Hole"))
 			expect(ranAddCallback).to.equal(true)
 		end)
 
@@ -828,27 +798,24 @@ return function()
 	end)
 
 	describe("countEntities", function()
-		it(
-			"should return the number of non-destroyed entities currently in the registry",
-			function(context)
-				local registry = context.registry
-				local count = 128
-				local entities = table.create(count)
+		it("should return the number of non-destroyed entities currently in the registry", function(context)
+			local registry = context.registry
+			local count = 128
+			local entities = table.create(count)
 
-				for i = 1, count do
-					entities[i] = registry:createEntity()
-				end
-
-				for i, entity in ipairs(entities) do
-					if i % 16 == 0 then
-						count = count - 1
-						registry:destroyEntity(entity)
-					end
-				end
-
-				expect(registry:countEntities()).to.equal(count)
+			for i = 1, count do
+				entities[i] = registry:createEntity()
 			end
-		)
+
+			for i, entity in ipairs(entities) do
+				if i % 16 == 0 then
+					count = count - 1
+					registry:destroyEntity(entity)
+				end
+			end
+
+			expect(registry:countEntities()).to.equal(count)
+		end)
 	end)
 
 	describe("getPools", function()

@@ -175,11 +175,7 @@ function World.new(definitions)
 	return setmetatable({
 		components = setmetatable(components, {
 			__index = function(self, componentName)
-				util.jumpAssert(
-					rawget(self, componentName) ~= nil,
-					ErrInvalidComponentDefinition,
-					componentName
-				)
+				util.jumpAssert(rawget(self, componentName) ~= nil, ErrInvalidComponentDefinition, componentName)
 			end,
 		}),
 		registry = registry,
@@ -206,11 +202,7 @@ function World:getMapper(query)
 
 	for _, components in pairs(query) do
 		for _, definintion in ipairs(components) do
-			util.jumpAssert(
-				self.registry:isComponentDefined(definintion),
-				ErrInvalidComponentDefinition,
-				definintion
-			)
+			util.jumpAssert(self.registry:isComponentDefined(definintion), ErrInvalidComponentDefinition, definintion)
 		end
 	end
 
@@ -237,11 +229,7 @@ function World:getReactor(query)
 
 	for _, components in pairs(query) do
 		for _, definition in ipairs(components) do
-			util.jumpAssert(
-				self.registry:isComponentDefined(definition),
-				ErrInvalidComponentDefinition,
-				definition
-			)
+			util.jumpAssert(self.registry:isComponentDefined(definition), ErrInvalidComponentDefinition, definition)
 		end
 	end
 

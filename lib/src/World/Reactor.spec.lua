@@ -79,11 +79,7 @@ return function()
 						registry:replaceComponent(entity, component, {})
 					end
 
-					toIterate[entity] = registry:getComponents(
-						entity,
-						{},
-						unpack(query.withUpdated or {})
-					)
+					toIterate[entity] = registry:getComponents(entity, {}, unpack(query.withUpdated or {}))
 				else
 					toIterate[entity] = true
 				end
@@ -94,22 +90,19 @@ return function()
 	end
 
 	describe("new", function()
-		it(
-			"should create a new Reactor when there is anything more than one required component",
-			function(context)
-				local reactor = Reactor.new(context.registry, {
-					withAll = { Component.Test1, Component.Test2 },
-				})
+		it("should create a new Reactor when there is anything more than one required component", function(context)
+			local reactor = Reactor.new(context.registry, {
+				withAll = { Component.Test1, Component.Test2 },
+			})
 
-				expect(getmetatable(reactor)).to.equal(Reactor)
+			expect(getmetatable(reactor)).to.equal(Reactor)
 
-				expect(reactor._pool).to.be.ok()
-				expect(getmetatable(reactor._pool)).to.equal(Pool)
+			expect(reactor._pool).to.be.ok()
+			expect(getmetatable(reactor._pool)).to.equal(Pool)
 
-				expect(reactor._updates).to.be.a("table")
-				expect(next(reactor._updates)).to.equal(nil)
-			end
-		)
+			expect(reactor._updates).to.be.a("table")
+			expect(next(reactor._updates)).to.equal(nil)
+		end)
 
 		it(
 			"should create a new SingleReactor when there is exactly one required component and nothing else",
@@ -167,40 +160,33 @@ return function()
 	end)
 
 	describe("filter", function()
-		it(
-			"should fill and return a table with whatever is returned from the callback",
-			function(context)
-				local registry = context.registry
-				local reactor = createTestReactor(registry, {
-					withAll = { Component.Test1 },
-					without = { Component.Test2 },
-				})
+		it("should fill and return a table with whatever is returned from the callback", function(context)
+			local registry = context.registry
+			local reactor = createTestReactor(registry, {
+				withAll = { Component.Test1 },
+				without = { Component.Test2 },
+			})
 
-				local expected = {}
+			local expected = {}
 
-				for _ = 1, 10 do
-					local component = registry:addComponent(
-						registry:createEntity(),
-						Component.Test1,
-						{}
-					)
+			for _ = 1, 10 do
+				local component = registry:addComponent(registry:createEntity(), Component.Test1, {})
 
-					table.insert(expected, component)
-				end
-
-				local results = reactor:filter(function(_, component)
-					if table.find(expected, component) ~= nil then
-						return component
-					end
-				end)
-
-				expect(#results).to.equal(#expected)
-
-				for _, v in ipairs(results) do
-					expect(table.find(expected, v)).to.be.ok()
-				end
+				table.insert(expected, component)
 			end
-		)
+
+			local results = reactor:filter(function(_, component)
+				if table.find(expected, component) ~= nil then
+					return component
+				end
+			end)
+
+			expect(#results).to.equal(#expected)
+
+			for _, v in ipairs(results) do
+				expect(table.find(expected, v)).to.be.ok()
+			end
+		end)
 	end)
 
 	describe("each", function()
@@ -591,29 +577,26 @@ return function()
 			)
 		end)
 
-		it(
-			"should stop tracking updates on an entity after all updated components have been removed",
-			function(context)
-				local registry = context.registry
-				local testEntity = registry:createEntity()
-				local reactor = createTestReactor(registry, {
-					withAll = { Component.Test1, Component.Test2 },
-					withUpdated = { Component.Test4 },
-					without = { Component.Test3 },
-				})
+		it("should stop tracking updates on an entity after all updated components have been removed", function(context)
+			local registry = context.registry
+			local testEntity = registry:createEntity()
+			local reactor = createTestReactor(registry, {
+				withAll = { Component.Test1, Component.Test2 },
+				withUpdated = { Component.Test4 },
+				without = { Component.Test3 },
+			})
 
-				registry:withComponents(testEntity, {
-					[Component.Test1] = {},
-					[Component.Test2] = {},
-					[Component.Test4] = {},
-				})
+			registry:withComponents(testEntity, {
+				[Component.Test1] = {},
+				[Component.Test2] = {},
+				[Component.Test4] = {},
+			})
 
-				registry:replaceComponent(testEntity, Component.Test4, {})
-				registry:removeComponent(testEntity, Component.Test4)
-				expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
-				expect(reactor._updates[testEntity]).to.equal(nil)
-			end
-		)
+			registry:replaceComponent(testEntity, Component.Test4, {})
+			registry:removeComponent(testEntity, Component.Test4)
+			expect(reactor._pool:getIndex(testEntity)).to.never.be.ok()
+			expect(reactor._updates[testEntity]).to.equal(nil)
+		end)
 	end)
 
 	describe("withAttachments", function()
@@ -680,23 +663,20 @@ return function()
 	end)
 
 	describe("consumeEach", function()
-		it(
-			"should remove each entity from the pool and clear their update states",
-			function(context)
-				local reactor, toIterate = createTestReactor(context.registry, {
-					withUpdated = { Component.Test1 },
-				})
+		it("should remove each entity from the pool and clear their update states", function(context)
+			local reactor, toIterate = createTestReactor(context.registry, {
+				withUpdated = { Component.Test1 },
+			})
 
-				reactor:consumeEach(function(entity)
-					expect(toIterate[entity]).to.be.ok()
-					toIterate[entity] = nil
-				end)
+			reactor:consumeEach(function(entity)
+				expect(toIterate[entity]).to.be.ok()
+				toIterate[entity] = nil
+			end)
 
-				expect(next(toIterate)).to.equal(nil)
-				expect(next(reactor._pool.dense)).to.equal(nil)
-				expect(next(reactor._updates)).to.equal(nil)
-			end
-		)
+			expect(next(toIterate)).to.equal(nil)
+			expect(next(reactor._pool.dense)).to.equal(nil)
+			expect(next(reactor._updates)).to.equal(nil)
+		end)
 	end)
 
 	describe("consume", function()
@@ -721,42 +701,27 @@ return function()
 	end)
 
 	describe("_pack", function()
-		it(
-			"should pack the required and updated components of the entity into _packed",
-			function(context)
-				local registry = context.registry
-				local reactor = createTestReactor(registry, {
-					withAll = { Component.Test2, Component.Test3 },
-					withUpdated = { Component.Test3, Component.Test4 },
-				})
+		it("should pack the required and updated components of the entity into _packed", function(context)
+			local registry = context.registry
+			local reactor = createTestReactor(registry, {
+				withAll = { Component.Test2, Component.Test3 },
+				withUpdated = { Component.Test3, Component.Test4 },
+			})
 
-				local entity = context.registry:withComponents(context.registry:createEntity(), {
-					[Component.Test1] = {},
-					[Component.Test2] = {},
-					[Component.Test3] = {},
-					[Component.Test4] = {},
-				})
+			local entity = context.registry:withComponents(context.registry:createEntity(), {
+				[Component.Test1] = {},
+				[Component.Test2] = {},
+				[Component.Test3] = {},
+				[Component.Test4] = {},
+			})
 
-				reactor:_pack(entity)
+			reactor:_pack(entity)
 
-				expect(reactor._packed[1]).to.equal(context.registry:getComponent(
-					entity,
-					Component.Test2
-				))
-				expect(reactor._packed[2]).to.equal(context.registry:getComponent(
-					entity,
-					Component.Test3
-				))
-				expect(reactor._packed[3]).to.equal(context.registry:getComponent(
-					entity,
-					Component.Test3
-				))
-				expect(reactor._packed[4]).to.equal(context.registry:getComponent(
-					entity,
-					Component.Test4
-				))
-			end
-		)
+			expect(reactor._packed[1]).to.equal(context.registry:getComponent(entity, Component.Test2))
+			expect(reactor._packed[2]).to.equal(context.registry:getComponent(entity, Component.Test3))
+			expect(reactor._packed[3]).to.equal(context.registry:getComponent(entity, Component.Test3))
+			expect(reactor._packed[4]).to.equal(context.registry:getComponent(entity, Component.Test4))
+		end)
 	end)
 
 	describe("_tryPack", function()
