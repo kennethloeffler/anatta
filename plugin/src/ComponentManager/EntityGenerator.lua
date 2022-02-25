@@ -26,11 +26,9 @@ local LocalPlayer = Players.LocalPlayer
 function EntityGenerator.new()
 	local self
 
-	local authorityRemovedConnection = CollectionService
-		:GetInstanceRemovedSignal(ENTITY_AUTHORITY)
-		:Connect(function()
-			self:negotiateAuthority()
-		end)
+	local authorityRemovedConnection = CollectionService:GetInstanceRemovedSignal(ENTITY_AUTHORITY):Connect(function()
+		self:negotiateAuthority()
+	end)
 
 	self = setmetatable({
 		heartbeatConnection = false,
@@ -110,6 +108,28 @@ end
 function EntityGenerator:becomeAuthority()
 	local registry = Registry.new()
 
+	local function add(instance)
+		CollectionService:AddTag(instance, ENTITY_TAG_NAME)
+		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, registry:createEntity())
+		CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
+		CollectionService:RemoveTag(instance, PENDING_ENTITY_CREATION)
+
+		ChangeHistoryService:ResetWaypoints()
+	end
+
+	local function remove(instance)
+		local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+		if registry:entityIsValid(entity) then
+			registry:destroyEntity(instance:GetAttribute(ENTITY_ATTRIBUTE_NAME))
+		end
+
+		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
+		CollectionService:RemoveTag(instance, ENTITY_TAG_NAME)
+		CollectionService:RemoveTag(instance, PENDING_ENTITY_CREATION)
+		CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
+	end
+
 	Dom.getEntitiesFromDom(registry)
 
 	self.heartbeatConnection = RunService.Heartbeat:Connect(function()
@@ -123,28 +143,6 @@ function EntityGenerator:becomeAuthority()
 			and next(self.pendingAdditions) == nil
 		then
 			return
-		end
-
-		local function add(instance)
-			CollectionService:AddTag(instance, ENTITY_TAG_NAME)
-			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, registry:createEntity())
-			CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
-			CollectionService:RemoveTag(instance, PENDING_ENTITY_CREATION)
-
-			ChangeHistoryService:ResetWaypoints()
-		end
-
-		local function remove(instance)
-			local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
-
-			if registry:entityIsValid(entity) then
-				registry:destroyEntity(instance:GetAttribute(ENTITY_ATTRIBUTE_NAME))
-			end
-
-			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, nil)
-			CollectionService:RemoveTag(instance, ENTITY_TAG_NAME)
-			CollectionService:RemoveTag(instance, PENDING_ENTITY_CREATION)
-			CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
 		end
 
 		for _, instance in ipairs(pendingAdditions) do
@@ -175,11 +173,9 @@ function EntityGenerator:becomeAuthority()
 			end
 		end)
 
-	self.entityAddedConnection = CollectionService
-		:GetInstanceAddedSignal(ENTITY_TAG_NAME)
-		:Connect(function(instance)
-			self.pendingAdditions[instance] = true
-		end)
+	self.entityAddedConnection = CollectionService:GetInstanceAddedSignal(ENTITY_TAG_NAME):Connect(function(instance)
+		self.pendingAdditions[instance] = true
+	end)
 end
 
 function EntityGenerator:requestCreation(instance)
