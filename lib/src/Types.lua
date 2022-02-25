@@ -11,6 +11,9 @@ local ComponentDefinition = t.interface({
 	description = t.optional(t.string),
 	name = t.string,
 	type = TypeDefinition,
+	pluginType = t.optional(TypeDefinition),
+	fromPluginType = t.optional(t.callback),
+	canPluginUse = t.optional(t.boolean),
 })
 
 local Query = t.strictInterface({

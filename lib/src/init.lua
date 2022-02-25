@@ -23,6 +23,9 @@ local ErrWorldDoesntExist = 'No world named "%s" exists'
 --- .name string
 --- .type TypeDefinition
 --- .description string?
+--- .canPluginUse boolean?
+--- .pluginType TypeDefinition?
+--- .fromPluginType (BasePart | Attachment | Model, any)?
 --- A named [`TypeDefinition`](/api/T#TypeDefinition) with an optional description.
 
 local Worlds = {}
