@@ -63,7 +63,6 @@ local tryFromTagged = require(script.tryFromTagged)
 	@param instance Instance
 	@param entity number
 	@param componentDefinition ComponentDefinition
-	@param component any
 	@return boolean, {[string]: any]}
 
 	Takes an `Instance`, an entity, a
