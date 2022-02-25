@@ -58,5 +58,5 @@ return function(registry)
 		end
 	end
 
-	return true
+	return
 end
