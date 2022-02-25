@@ -6,7 +6,6 @@ local RunService = game:GetService("RunService")
 local Modules = script.Parent.Parent.Parent
 local Constants = require(Modules.Anatta.Library.Core.Constants)
 local Registry = require(Modules.Anatta.Library.World.Registry)
-local Dom = require(Modules.Anatta.Library.Dom)
 
 local CANDIDATE = ".__pendingAuthorityCandidate"
 local PENDING_ENTITY_CREATION = ".__pendingEntityCreation"
@@ -130,7 +129,25 @@ function EntityGenerator:becomeAuthority()
 		CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
 	end
 
-	Dom.getEntitiesFromDom(registry)
+	local entities = {}
+
+	for _, instance in ipairs(CollectionService:GetTagged(ENTITY_TAG_NAME)) do
+		local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+		if typeof(entity) ~= "number" then
+			warn(
+				("bad entity attribute for %s: number expected, got %s"):format(instance:GetFullName(), typeof(entity))
+			)
+		end
+
+		table.insert(entities, entity)
+	end
+
+	table.sort(entities)
+
+	for _, entity in ipairs(entities) do
+		registry:createEntityFrom(entity)
+	end
 
 	self.heartbeatConnection = RunService.Heartbeat:Connect(function()
 		local pendingAdditions = CollectionService:GetTagged(PENDING_ENTITY_CREATION)
