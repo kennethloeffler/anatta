@@ -45,7 +45,7 @@ local Constants = {
 	NullEntityId = 0,
 
 	-- DOM
-	LinkedInstanceTagName = ".anattaLinkedInstance",
+	SharedInstanceTagName = ".anattaSharedInstance",
 	EntityAttributeName = "__entity",
 	InstanceRefFolder = "__anattaRefs",
 }

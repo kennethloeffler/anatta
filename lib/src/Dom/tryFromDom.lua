@@ -57,4 +57,6 @@ return function(registry)
 			pool.added:dispatch(entity, pool:get(entity))
 		end
 	end
+
+	return
 end

@@ -107,7 +107,7 @@ local unserializable = {
 
 local function makeConcreteInstance(typeDefinition)
 	typeDefinition._containsRefs = true
-	return true, typeDefinition.typeName
+	return true, "Instance"
 end
 
 local concreters = {
