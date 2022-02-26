@@ -122,13 +122,7 @@ function PluginFacade:createMenu(id: string, title: string?, icon: string?)
 	return menu
 end
 
-function PluginFacade:createAction(
-	id: string,
-	text: string,
-	statusTip: string,
-	icon: string?,
-	allowBinding: boolean?
-)
+function PluginFacade:createAction(id: string, text: string, statusTip: string, icon: string?, allowBinding: boolean?)
 	if allowBinding == nil then
 		allowBinding = true
 	end
@@ -183,7 +177,11 @@ function PluginFacade:_watch(instance)
 		return
 	end
 
-	local connection1 = instance.Changed:Connect(function(_prop)
+	local connection1 = instance.Changed:Connect(function(prop)
+		if not (prop == "Source" or prop == "Name") then
+			return
+		end
+
 		print("Reloading due to", instance:GetFullName())
 
 		self:_reload()

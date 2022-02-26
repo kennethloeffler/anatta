@@ -26,6 +26,10 @@ function EntityGenerator.new()
 	local self
 
 	local authorityRemovedConnection = CollectionService:GetInstanceRemovedSignal(ENTITY_AUTHORITY):Connect(function()
+		RunService.Heartbeat:Wait()
+		RunService.Heartbeat:Wait()
+		RunService.Heartbeat:Wait()
+
 		self:negotiateAuthority()
 	end)
 
@@ -102,14 +106,21 @@ function EntityGenerator:negotiateAuthority()
 	if chosen.player == LocalPlayer then
 		self:becomeAuthority()
 	end
+
+	CollectionService:RemoveTag(LocalPlayer, NEGOTIATION_ACK)
+	CollectionService:RemoveTag(LocalPlayer, CANDIDATE)
 end
 
 function EntityGenerator:becomeAuthority()
 	local registry = Registry.new()
 
+	CollectionService:AddTag(LocalPlayer, ENTITY_AUTHORITY)
+
 	local function add(instance)
+		local entity = registry:createEntity()
+
 		CollectionService:AddTag(instance, ENTITY_TAG_NAME)
-		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, registry:createEntity())
+		instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, entity)
 		CollectionService:RemoveTag(instance, PENDING_ENTITY_DESTRUCTION)
 		CollectionService:RemoveTag(instance, PENDING_ENTITY_CREATION)
 
@@ -162,19 +173,19 @@ function EntityGenerator:becomeAuthority()
 			return
 		end
 
-		for _, instance in ipairs(pendingAdditions) do
-			add(instance)
-		end
-
 		for instance in pairs(self.pendingAdditions) do
 			add(instance)
 		end
 
-		for _, instance in ipairs(pendingDestructions) do
-			remove(instance)
+		for _, instance in ipairs(pendingAdditions) do
+			add(instance)
 		end
 
 		for instance in pairs(self.pendingRemovals) do
+			remove(instance)
+		end
+
+		for _, instance in ipairs(pendingDestructions) do
 			remove(instance)
 		end
 
