@@ -16,3 +16,6 @@
 [submodule "vendor/rodux"]
 	path = vendor/rodux
 	url = https://github.com/roblox/rodux
+[submodule "vendor/llama"]
+	path = vendor/llama
+	url = https://github.com/freddylist/llama
