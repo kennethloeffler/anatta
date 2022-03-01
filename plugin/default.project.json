@@ -8,6 +8,9 @@
     "Anatta": {
       "$path": "../lib"
     },
+    "Llama" : {
+      "$path": "../vendor/llama"
+    },
     "Roact": {
       "$path": "../vendor/roact"
     },
