@@ -112,9 +112,7 @@ return function(plugin, savedState)
 
 	local selectAllConn = selectAllAction.Triggered:Connect(function()
 		local state = store:getState()
-		local component = state.InstanceView
-			or PluginGlobals.currentComponentMenu
-			or state.ComponentMenu
+		local component = state.InstanceView or PluginGlobals.currentComponentMenu or state.ComponentMenu
 		if component then
 			ComponentManager.Get():SelectAll(component)
 		end
@@ -160,10 +158,7 @@ return function(plugin, savedState)
 		false
 	)
 
-	local visualizeMenu: PluginMenu = plugin:createMenu(
-		prefix .. "ComponentMenu_VisualizeAs",
-		"Change draw mode"
-	)
+	local visualizeMenu: PluginMenu = plugin:createMenu(prefix .. "ComponentMenu_VisualizeAs", "Change draw mode")
 	visualizeMenu:AddAction(visualizeBox)
 	visualizeMenu:AddAction(visualizeSphere)
 	visualizeMenu:AddAction(visualizeOutline)
@@ -175,11 +170,9 @@ return function(plugin, savedState)
 	componentMenu:AddAction(selectAllAction)
 	componentMenu:AddMenu(visualizeMenu)
 	componentMenu:AddSeparator()
-	componentMenu:AddAction(renameAction)
 	componentMenu:AddAction(changeIconAction)
 	componentMenu:AddAction(changeColorAction)
 	componentMenu:AddAction(changeGroupAction)
-	componentMenu:AddAction(deleteAction)
 
 	PluginGlobals.ComponentMenu = componentMenu
 	PluginGlobals.changeIconAction = changeIconAction
