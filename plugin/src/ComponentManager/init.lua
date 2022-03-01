@@ -256,9 +256,9 @@ function ComponentManager:_doUpdateStore()
 				continue
 			end
 
-			local definition = self.componentDefinitions[config.Name]
+			local rawDefinition = self.componentDefinitions[config.Name]
 
-			if not definition then
+			if not rawDefinition then
 				config:Destroy()
 				continue
 			end
@@ -274,7 +274,7 @@ function ComponentManager:_doUpdateStore()
 				AlwaysOnTop = config:GetAttribute("AlwaysOnTop") or defaultValues.AlwaysOnTop,
 				Group = config:GetAttribute("Group") or defaultValues.Group,
 				Color = config:GetAttribute("Color") or genColor(config.Name),
-				Definition = definition,
+				Definition = rawDefinition,
 				HasAll = false,
 				HasSome = false,
 				Values = values,
@@ -287,6 +287,11 @@ function ComponentManager:_doUpdateStore()
 			if entry.Icon == "" then
 				entry.Icon = defaultValues.Icon
 			end
+
+			local definition = {
+				name = rawDefinition.name,
+				type = rawDefinition.pluginType or rawDefinition.type,
+			}
 
 			for _, instance in ipairs(selected) do
 				local linkedInstance = getLinkedInstance(instance)
