@@ -50,23 +50,26 @@ function exports.showComponentMenu(dispatch, component: string)
 			[exports.visualizeIcon] = "Icon",
 		}
 
-		exports.currentComponentMenu = component
 		local action = exports.ComponentMenu:ShowAsync()
+		local definition = component.Definition
+
+		exports.currentComponentMenu = component
 		exports.currentComponentMenu = nil
+
 		if action == exports.changeIconAction then
-			dispatch(Actions.ToggleIconPicker(component))
+			dispatch(Actions.ToggleIconPicker(definition))
 		elseif action == exports.changeGroupAction then
-			dispatch(Actions.ToggleGroupPicker(component))
+			dispatch(Actions.ToggleGroupPicker(definition))
 		elseif action == exports.changeColorAction then
-			exports.promptPickColor(dispatch, component)
+			exports.promptPickColor(dispatch, definition)
 		elseif action == exports.viewComponentizedAction then
-			dispatch(Actions.OpenInstanceView(component))
+			dispatch(Actions.OpenInstanceView(definition))
 		elseif action == exports.deleteAction then
-			ComponentManager.Get():DelComponent(component)
+			ComponentManager.Get():DelComponent(definition)
 		elseif action == exports.renameAction then
-			dispatch(Actions.SetRenaming(component, true))
+			dispatch(Actions.SetRenaming(definition, true))
 		elseif visualTypes[action] then
-			ComponentManager.Get():SetDrawType(component, visualTypes[action])
+			ComponentManager.Get():SetDrawType(definition, visualTypes[action])
 		elseif action ~= nil and action ~= exports.selectAllAction then
 			print("Missing handler for action " .. action.Title)
 		end
