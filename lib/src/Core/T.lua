@@ -99,6 +99,7 @@ local concrete = {
 	numberConstrainedExclusive = "number",
 	numberPositive = "number",
 	numberNegative = "number",
+	entity = "number",
 }
 
 local unserializable = {
@@ -393,20 +394,14 @@ for typeName in pairs(t) do
 	end
 end
 
-function T.initEntity(worlds)
-	T._worlds = worlds
-end
+T.entity = TypeDefinition._new("entity", function(entity)
+	local type = typeof(entity)
 
-function T.entity(worldName)
-	return TypeDefinition._new("entity", function(entity)
-		local world = T._worlds[worldName]
-
-		if not world then
-			return false, 'The world "%s" does not exist', worldName
-		end
-
-		return world.registry:entityIsValid(entity)
-	end)
-end
+	if type == "number" then
+		return true
+	else
+		return false, ("Expected number, got %s"):format(type)
+	end
+end)
 
 return T
