@@ -75,6 +75,8 @@ local function createWorld(namespace, componentDefinitions)
 	local world = World.new(definitions)
 	Worlds[namespace] = world
 
+	T.initEntity(Worlds)
+
 	return world
 end
 

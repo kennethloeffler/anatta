@@ -106,7 +106,6 @@ local unserializable = {
 }
 
 local function makeConcreteInstance(typeDefinition)
-	typeDefinition._containsRefs = true
 	return true, typeDefinition.typeName
 end
 
@@ -130,10 +129,6 @@ local concreters = {
 				return false, concreteType
 			end
 
-			if typeParam._containsRefs then
-				typeDefinition._containsRefs = true
-			end
-
 			result[i] = concreteType
 		end
 
@@ -148,10 +143,6 @@ local concreters = {
 
 			if not success then
 				return false, concreteType
-			end
-
-			if typeParam._containsRefs then
-				typeDefinition._containsRefs = true
 			end
 
 			result[key] = concreteType
@@ -313,12 +304,36 @@ TypeDefinition.__call = function(self, ...)
 end
 
 function TypeDefinition._new(typeName, check, ...)
-	return setmetatable({
-		typeParams = { ... },
+	local typeParams = { ... }
+	local containsRefs = typeName == "Instance"
+		or typeName == "instance"
+		or typeName == "instanceOf"
+		or typeName == "instanceIsA"
+	local containsEntities = typeName == "entity"
+
+	for _, typeParam in pairs(typeName == "strictInterface" and typeParams[1] or typeParams) do
+		if not Types.TypeDefinition(typeParam) then
+			continue
+		end
+
+		if typeParam._containsRefs then
+			containsRefs = true
+		end
+
+		if typeParam._containsEntities then
+			containsEntities = true
+		end
+	end
+
+	local typeDefinition = setmetatable({
+		typeParams = typeParams,
 		check = check,
 		typeName = typeName,
-		_containsRefs = false,
+		_containsRefs = containsRefs,
+		_containsEntities = containsEntities,
 	}, TypeDefinition)
+
+	return typeDefinition
 end
 
 function TypeDefinition:tryDefault()
@@ -376,6 +391,22 @@ for typeName in pairs(t) do
 			return TypeDefinition._new(typeName, t[typeName](unwrap(...)), ...)
 		end
 	end
+end
+
+function T.initEntity(worlds)
+	T._worlds = worlds
+end
+
+function T.entity(worldName)
+	return TypeDefinition._new("entity", function(entity)
+		local world = T._worlds[worldName]
+
+		if not world then
+			return false, 'The world "%s" does not exist', worldName
+		end
+
+		return world.registry:entityIsValid(entity)
+	end)
 end
 
 return T

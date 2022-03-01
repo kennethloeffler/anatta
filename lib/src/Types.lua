@@ -5,6 +5,7 @@ local TypeDefinition = t.strictInterface({
 	check = t.callback,
 	typeName = t.string,
 	_containsRefs = t.boolean,
+	_containsEntities = t.boolean,
 })
 
 local ComponentDefinition = t.interface({

@@ -3,11 +3,11 @@ local Constants = require(script.Parent.Parent.Core.Constants)
 local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local function waitForRefs(instance, attributeName, typeDefinition, objectValues, refFolder)
-	local _, concreteType = typeDefinition:tryGetConcreteType()
-
 	if not typeDefinition._containsRefs then
 		return {}
 	end
+
+	local _, concreteType = typeDefinition:tryGetConcreteType()
 
 	refFolder = refFolder or instance:WaitForChild(INSTANCE_REF_FOLDER)
 
