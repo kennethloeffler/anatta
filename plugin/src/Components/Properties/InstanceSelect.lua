@@ -24,11 +24,13 @@ end
 
 function InstanceSelect:render()
 	return Roact.createElement(BaseProperty, {
-		Text = self.props.Key
+		Text = self.props.Key,
 	}, {
 		InstanceSelector = Roact.createElement(StudioComponents.Button, {
 			Size = UDim2.new(1, 0, 1, 0),
-			Text = self.state.Instance.Name,
+			Text = self.state.Instance and self.state.Instance.Name or "",
+			TextXAlignment = Enum.TextXAlignment.Left,
+			BorderSizePixel = 0,
 			OnActivated = function()
 				if self.state.Selecting then
 					return
@@ -58,7 +60,7 @@ function InstanceSelect:render()
 
 					if valid then
 						self:setState({
-							Instance = newSelected
+							Instance = newSelected,
 						})
 						self.props.OnChanged(newSelected)
 					end
@@ -74,7 +76,7 @@ function InstanceSelect:render()
 			end,
 			LayoutOrder = 0,
 			Selected = self.state.Selecting,
-		})
+		}),
 	})
 end
 
