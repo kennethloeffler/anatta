@@ -6,6 +6,7 @@ local Util = require(Modules.Plugin.Util)
 local Icon = require(script.Parent.Icon)
 local Checkbox = require(script.Parent.Checkbox)
 local StudioThemeAccessor = require(script.Parent.StudioThemeAccessor)
+local VerticalExpandingList = require(Modules.StudioComponents.VerticalExpandingList)
 local ListItemChrome = require(script.Parent.ListItemChrome)
 
 local Item = Roact.PureComponent:extend("Item")
@@ -51,7 +52,7 @@ function Item:render()
 		rightClick = props.rightClick,
 	}, {
 		StudioThemeAccessor.withTheme(function(theme)
-			return Roact.createElement("Frame", {
+			return Roact.createElement(VerticalExpandingList, {
 				Size = UDim2.new(1, 0, 1, 0),
 				BackgroundTransparency = 1.0,
 				Position = UDim2.new(0, 0, 0, 0),
@@ -78,12 +79,7 @@ function Item:render()
 						Util.merge({
 							BackgroundTransparency = 1.0,
 							TextXAlignment = Enum.TextXAlignment.Left,
-							Position = props.Icon and UDim2.new(0, 48 + 16, 0, 0) or UDim2.new(
-								0,
-								14,
-								0,
-								0
-							),
+							Position = props.Icon and UDim2.new(0, 48 + 16, 0, 0) or UDim2.new(0, 14, 0, 0),
 							Size = UDim2.new(1, -40, 1, 0),
 							Text = props.IsInput and (props.TextBoxText or "") or props.Text,
 							ClearTextOnFocus = (function()
@@ -120,25 +116,10 @@ function Item:render()
 
 						onClick = props.onSetVisible,
 					}),
-					Settings = props.onSettings and Roact.createElement(Icon, {
-						Name = "cog",
-						Position = UDim2.new(1, -24, 0.5, 0),
-						AnchorPoint = Vector2.new(1, 0.5),
-
-						onClick = props.onSettings,
-					}),
-					Delete = props.onDelete and Roact.createElement(Icon, {
-						Name = "cancel",
-						Position = UDim2.new(1, -4, 0.5, 0),
-						AnchorPoint = Vector2.new(1, 0.5),
-
-						onClick = props.onDelete,
-					}),
 				}),
-				Children = Roact.createElement("Frame", {
+				Children = Roact.createElement(VerticalExpandingList, {
 					Size = UDim2.new(1, 0, 1, -26),
 					Position = UDim2.new(0, 0, 0, 26),
-					BackgroundColor3 = theme:GetColor("MainBackground"),
 					BorderSizePixel = 0,
 				}, props[Roact.Children]),
 			})
