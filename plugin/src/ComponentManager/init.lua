@@ -304,7 +304,7 @@ function ComponentManager:_doUpdateStore()
 					local success, _, value = Dom.tryFromAttributes(linkedInstance, definition)
 
 					if success then
-						table.insert(values, value)
+						values[linkedInstance] = value
 					end
 
 					hasAny = true

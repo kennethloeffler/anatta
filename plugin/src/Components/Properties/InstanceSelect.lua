@@ -42,8 +42,6 @@ function InstanceSelect:render()
 
 				local oldSelection = Selection:Get()
 
-				Selection:Set({})
-
 				Selection.SelectionChanged:Wait()
 
 				local newSelected = Selection:Get()[1]
@@ -59,6 +57,7 @@ function InstanceSelect:render()
 					end
 
 					if valid then
+						print("is valid")
 						self:setState({
 							Instance = newSelected,
 						})

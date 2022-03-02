@@ -6,6 +6,7 @@ local Dom = require(Modules.Anatta.Library.Dom)
 local Constants = require(Modules.Anatta.Library.Core.Constants)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
+local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local ComponentAnnotation = {}
 
@@ -34,7 +35,7 @@ function ComponentAnnotation.add(instance, definition)
 
 	for attributeName, attributeValue in pairs(attributeMap) do
 		if typeof(attributeValue) == "Instance" then
-			instance.__anattaRefs[attributeName].Value = attributeValue
+			instance[INSTANCE_REF_FOLDER][attributeName].Value = attributeValue
 		elseif attributeName ~= ENTITY_ATTRIBUTE_NAME then
 			instance:SetAttribute(attributeName, attributeValue)
 		end
@@ -54,7 +55,7 @@ function ComponentAnnotation.remove(instance, definition)
 
 	for attributeName, attributeValue in pairs(attributeMap) do
 		if typeof(attributeValue) == "Instance" then
-			local anattaRefs = instance:FindFirstChild("__anattaRefs")
+			local anattaRefs = instance:FindFirstChild(INSTANCE_REF_FOLDER)
 
 			if anattaRefs then
 				local objectValue = anattaRefs:FindFirstChild(attributeName)
