@@ -23,12 +23,14 @@ function InstanceSelect:init()
 end
 
 function InstanceSelect:render()
+	local requiredKind = self.props.ClassName or self.props.IsA
+
 	return Roact.createElement(BaseProperty, {
-		Text = self.props.Key,
+		Text = ("%s (%s)"):format(self.props.Key, requiredKind or "any"),
 	}, {
 		InstanceSelector = Roact.createElement(StudioComponents.Button, {
 			Size = UDim2.new(1, 0, 1, 0),
-			Text = self.state.Instance and self.state.Instance.Name or "",
+			Text = self.state.Instance and self.state.Instance.Name or "<none>",
 			TextXAlignment = Enum.TextXAlignment.Left,
 			BorderSizePixel = 0,
 			OnActivated = function()
@@ -58,10 +60,10 @@ function InstanceSelect:render()
 					end
 
 					if valid then
-						print("is valid")
 						self:setState({
 							Instance = newSelected,
 						})
+
 						self.props.OnChanged(newSelected)
 					end
 				end
