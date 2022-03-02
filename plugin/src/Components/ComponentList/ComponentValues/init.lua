@@ -2,15 +2,12 @@ local Modules = script.Parent.Parent.Parent.Parent
 local Properties = script.Parent.Parent.Properties
 local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
-local Llama = require(Modules.Llama)
 local Actions = require(Modules.Plugin.Actions)
 local Anatta = require(Modules.Anatta)
 local PluginGlobals = require(Modules.Plugin.PluginGlobals)
 
 local InstanceSelect = require(Properties.InstanceSelect)
 local Boolean = require(Properties.Boolean)
-local NumberInput = require(Properties.NumberInput)
-local IntegerInput = require(Properties.IntegerInput)
 local NumberInput = require(Properties.NumberInput)
 local StringInput = require(Properties.StringInput)
 local UDim2Input = require(Properties.UDim2Input)
@@ -20,22 +17,40 @@ local Vector3Input = require(Properties.Vector3Input)
 
 local VerticalExpandingList = require(Modules.StudioComponents.VerticalExpandingList)
 
+local ENTITY_ATTRIBUTE_NAME = Anatta.Constants.EntityAttributeName
+local INSTANCE_REF_FOLDER = Anatta.Constants.InstanceRefFolder
+
 local ComponentValues = Roact.Component:extend("ComponentValues")
 
-local function createInstanceElement(name, typeDefinition, value, values)
+local function createInstanceElement(name, attributeName, typeDefinition, value, values)
 	local typeParam = typeDefinition.typeParams[1]
 
 	return Roact.createElement(InstanceSelect, {
 		Key = name,
-		Instance = value,
+		Instance = value.Parent and value,
 		IsA = typeDefinition.typeName == "instanceIsA" and typeParam,
 		ClassName = typeDefinition.typeName == "instanceOf" and typeParam,
 
 		OnChanged = function(instance)
 			for linkedInstance in pairs(values) do
+				linkedInstance[INSTANCE_REF_FOLDER][attributeName].Value = instance
 			end
 		end,
 	})
+end
+
+local function makeInputElement(elementKind)
+	return function(name, attributeName, _, value, values)
+		return Roact.createElement(elementKind, {
+			Key = name,
+			Value = value,
+			OnChanged = function(newValue)
+				for linkedInstance in pairs(values) do
+					linkedInstance:SetAttribute(attributeName, newValue)
+				end
+			end,
+		})
+	end
 end
 
 local Types = {
@@ -43,16 +58,35 @@ local Types = {
 	Instance = createInstanceElement,
 	instanceIsA = createInstanceElement,
 	instanceOf = createInstanceElement,
-	number = function(instance, name, _, value, values)
-		return Roact.createElement(NumberInput, { Key = name, Value = value, OnChanged = print })
+	number = makeInputElement(NumberInput),
+	boolean = makeInputElement(Boolean),
+	string = makeInputElement(StringInput),
+	UDim2 = makeInputElement(UDim2Input),
+	UDim = makeInputElement(UDimInput),
+	Vector2 = makeInputElement(Vector2Input),
+	Vector3 = makeInputElement(Vector3Input),
+	entity = function(name, attributeName, _, _, values)
+		return Roact.createElement(InstanceSelect, {
+			Key = name,
+			OnChanged = function(instance)
+				for linkedInstance in pairs(values) do
+					local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+					if entity then
+						linkedInstance:SetAttribute(attributeName, entity)
+					else
+						warn(("%s does not have a linked entity"):format(instance:GetFullName()))
+					end
+				end
+			end,
+		})
 	end,
-	boolean = function(instance, name, _, value, values)
-		return Roact.createElement(Boolean, { Key = name, Value = value, OnChanged = print })
-	end,
-	entity = function(name) end,
 }
 
-local function createComponentMembers(name, typeDefinition, value, values, members)
+local function createComponentMembers(name, attributeName, typeDefinition, value, values, members, attributeMap)
+	members = members or {}
+	attributeMap = attributeMap or {}
+
 	local typeOk, concreteType = typeDefinition:tryGetConcreteType()
 
 	if not typeOk then
@@ -70,10 +104,22 @@ local function createComponentMembers(name, typeDefinition, value, values, membe
 		end
 
 		for fieldName in pairs(concreteType) do
-			createComponentMembers(fieldName, typeParams[fieldName], value[fieldName], values, members)
+			local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
+			local fieldTypeDefinition = typeParams[fieldName]
+			local fieldValue = value[fieldName]
+
+			createComponentMembers(
+				fieldName,
+				fieldAttributeName,
+				fieldTypeDefinition,
+				fieldValue,
+				values,
+				members,
+				attributeMap
+			)
 		end
 	elseif Types[concreteType] ~= nil then
-		local element = Types[concreteType](name, typeDefinition, value, values)
+		local element = Types[concreteType](name, attributeName, typeDefinition, value, values)
 		table.insert(members, element)
 	end
 
@@ -91,7 +137,7 @@ function ComponentValues:render()
 	return Roact.createElement(
 		VerticalExpandingList,
 		{},
-		createComponentMembers(name, typeDefinition, value, props.Values, {})
+		createComponentMembers(name, name, typeDefinition, value, props.Values)
 	)
 end
 
