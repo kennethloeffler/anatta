@@ -22,7 +22,7 @@ local function BaseProperty(props)
 			}),
 			ValueContainer = Roact.createElement("Frame", {
 				BackgroundColor3 = theme:GetColor(Enum.StudioStyleGuideColor.MainBackground),
-				BorderSizePixel = 0,
+				BorderSizePixel = 1,
 				BorderColor3 = theme:GetColor(Enum.StudioStyleGuideColor.Border),
 				Size = UDim2.new(0.5, 0, 1, 0),
 				Position = UDim2.new(0.5, 0, 0, 0),
