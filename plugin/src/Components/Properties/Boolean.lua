@@ -4,9 +4,19 @@ local StudioComponents = require(Modules.StudioComponents)
 
 local BaseProperty = require(script.Parent.BaseProperty)
 
-local function Boolean(props)
+local Boolean = Roact.Component:extend("Boolean")
+
+function Boolean:init()
+	self:setState({
+		Value = not not self.props.Value,
+	})
+end
+
+function Boolean:render()
+	local props = self.props
+
 	return Roact.createElement(BaseProperty, {
-		Text = props.Key
+		Text = props.Key,
 	}, {
 		Centered = Roact.createElement("Frame", {
 			Size = UDim2.new(1, 0, 0, 15),
@@ -15,10 +25,18 @@ local function Boolean(props)
 			Position = UDim2.new(0, 5, 0.5, 0),
 		}, {
 			Checkbox = Roact.createElement(StudioComponents.Checkbox, {
-				Value = props.Value,
-				OnActivated = props.OnActivated
-			})
-		})
+				Value = self.state.Value,
+				OnActivated = function()
+					local newValue = not self.state.Value
+
+					props.OnChanged(newValue)
+
+					self:setState({
+						Value = newValue,
+					})
+				end,
+			}),
+		}),
 	})
 end
 
