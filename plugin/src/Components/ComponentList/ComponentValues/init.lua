@@ -25,9 +25,11 @@ local ComponentValues = Roact.Component:extend("ComponentValues")
 local function createInstanceElement(name, attributeName, typeDefinition, value, values)
 	local typeParam = typeDefinition.typeParams[1]
 
+	local currentInstance = if value and value.Parent then value else nil
+
 	return Roact.createElement(InstanceSelect, {
 		Key = name,
-		Instance = value.Parent and value,
+		Instance = currentInstance,
 		IsA = typeDefinition.typeName == "instanceIsA" and typeParam,
 		ClassName = typeDefinition.typeName == "instanceOf" and typeParam,
 
