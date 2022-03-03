@@ -13,8 +13,8 @@ unscoped access to entities and components.
 
 You can get or create a `World` with [`Anatta.getWorld`](/api/Anatta#getWorld) and
 [`Anatta.createWorld`](/api/Anatta#createWorld)."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/World"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/World"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/World" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/World" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.302001c7.css">
-<link rel="preload" href="/anatta/assets/js/runtime~main.5a38636d.js" as="script">
-<link rel="preload" href="/anatta/assets/js/main.040c92bb.js" as="script">
+<link rel="preload" href="/anatta/assets/js/runtime~main.239af95c.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.66baba6c.js" as="script">
 </head>
 <body>
 <script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
@@ -161,7 +161,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
 </div>
 </div><h2 class="anchor anchorWithStickyNavbar_31ik" id="properties">Properties<a aria-hidden="true" class="hash-link" href="#properties" title="Direct link to heading">​</a></h2><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="registry"><code style="text-decoration:none">registry</code><a aria-hidden="true" class="hash-link" href="#registry" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L14"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World<!-- -->.<!-- -->registry<!-- -->:<!-- --> </code> <code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/Registry">Registry</a></code></div><div>
 <p>Provides direct, unscoped access to a <code>World</code>'s <a href="/anatta/api/Registry"><code>Registry</code></a>.</p>
-</div><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="components"><code style="text-decoration:none">components</code><a aria-hidden="true" class="hash-link" href="#components" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L155"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World<!-- -->.<!-- -->components<!-- -->:<!-- --> </code> <code class="purple__nFc">{</code><span><code>[</code><code class="blue_2Afy">string</code><code>]</code></span><code>: </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/Anatta#ComponentDefinition">ComponentDefinition</a></code><code class="purple__nFc">}</code></div><div>
+</div><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="components"><code style="text-decoration:none">components</code><a aria-hidden="true" class="hash-link" href="#components" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L162"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World<!-- -->.<!-- -->components<!-- -->:<!-- --> </code> <code class="purple__nFc">{</code><span><code>[</code><code class="blue_2Afy">string</code><code>]</code></span><code>: </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/Anatta#ComponentDefinition">ComponentDefinition</a></code><code class="purple__nFc">}</code></div><div>
 <p>
   A dictionary mapping component names to component definitions. Intended to be used for importing
   component definitions as follows:
@@ -174,9 +174,9 @@ registry<span class="token punctuation">:</span><span class="token function">add
 
 registry<span class="token punctuation">:</span><span class="token function">addComponent</span><span class="token punctuation">(</span>registry<span class="token punctuation">:</span><span class="token function">createEntity</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> Money<span class="token punctuation">,</span> <span class="token number">5000</span><span class="token punctuation">)</span>
 </code></pre>
-</div><h2 class="anchor anchorWithStickyNavbar_31ik" id="functions">Functions<a aria-hidden="true" class="hash-link" href="#functions" title="Direct link to heading">​</a></h2><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="getMapper"><code style="text-decoration:none">getMapper</code><a aria-hidden="true" class="hash-link" href="#getMapper" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L196"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World<!-- -->:</code><code class="green_3LnD">getMapper</code><code>(</code><code>query<!-- -->: </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/World#Query">Query</a></code><code>) → </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/Mapper">Mapper</a></code></div><div>
+</div><h2 class="anchor anchorWithStickyNavbar_31ik" id="functions">Functions<a aria-hidden="true" class="hash-link" href="#functions" title="Direct link to heading">​</a></h2><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="getMapper"><code style="text-decoration:none">getMapper</code><a aria-hidden="true" class="hash-link" href="#getMapper" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L267"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World<!-- -->:</code><code class="green_3LnD">getMapper</code><code>(</code><code>query<!-- -->: </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/World#Query">Query</a></code><code>) → </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/Mapper">Mapper</a></code></div><div>
 <p>Creates a new <a href="/anatta/api/Mapper"><code>Mapper</code></a> given a <a href="#Query"><code>Query</code></a>.</p>
-</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;mappers cannot track updates to components; use a Reactor instead&quot;</td><td>Reactors can track updates. Mappers can&#x27;t.</td></tr><tr><td>&quot;mappers need at least one component type provided in withAll&quot;</td><td>Mappers need components in withAll to query.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this world&quot;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="getReactor"><code style="text-decoration:none">getReactor</code><a aria-hidden="true" class="hash-link" href="#getReactor" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L222"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World<!-- -->:</code><code class="green_3LnD">getReactor</code><code>(</code><code>query<!-- -->: </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/World#Query">Query</a></code><code>) → </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/Reactor">Reactor</a></code></div><div>
+</div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;mappers cannot track updates to components; use a Reactor instead&quot;</td><td>Reactors can track updates. Mappers can&#x27;t.</td></tr><tr><td>&quot;mappers need at least one component type provided in withAll&quot;</td><td>Mappers need components in withAll to query.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this world&quot;</td><td>No component matches that definition.</td></tr></tbody></table><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="getReactor"><code style="text-decoration:none">getReactor</code><a aria-hidden="true" class="hash-link" href="#getReactor" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/init.lua#L293"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>World<!-- -->:</code><code class="green_3LnD">getReactor</code><code>(</code><code>query<!-- -->: </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/World#Query">Query</a></code><code>) → </code><code class="blue_2Afy"><a style="text-decoration:underline;color:inherit" href="/anatta/api/Reactor">Reactor</a></code></div><div>
 <p>Creates a new <a href="/anatta/api/Reactor"><code>Reactor</code></a> given a <a href="#Query"><code>Query</code></a>.</p>
 </div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;reactors need at least one component type provided in withAll, withUpdated, or withAny&quot;</td><td>Reactors need components to query.</td></tr><tr><td>&quot;reactors can only track up to 32 updated component types&quot;</td><td>More than 32 components were provided in withUpdated.</td></tr><tr><td>&#x27;the component type &quot;%s&quot; is not defined for this world&quot;</td><td>No component matches that definition.</td></tr></tbody></table></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
@@ -199,7 +199,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;ignore&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 165,
+                &quot;line&quot;: 172,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         },
@@ -235,7 +235,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 196,
+                &quot;line&quot;: 267,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         },
@@ -271,7 +271,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 222,
+                &quot;line&quot;: 293,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         }
@@ -291,7 +291,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
             &quot;desc&quot;: &quot;A dictionary mapping component names to component definitions. Intended to be used for importing\ncomponent definitions as follows:\n```lua\n-- Assuming we&#x27;ve already defined the World elsewhere with a component called \&quot;Money\&quot;\nlocal world = Anatta:getWorld(\&quot;MyCoolWorld\&quot;)\nlocal registry = world.registry\n\nlocal Money = world.components.Money\n\nregistry:addComponent(registry:createEntity(), Money, 5000)\n```&quot;,
             &quot;lua_type&quot;: &quot;{[string]: ComponentDefinition}&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 155,
+                &quot;line&quot;: 162,
                 &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
             }
         }
@@ -335,7 +335,7 @@ registry<span class="token punctuation">:</span><span class="token function">add
         &quot;path&quot;: &quot;lib/src/World/init.lua&quot;
     }
 }</pre></details></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#Query" class="table-of-contents__link toc-highlight">Query</a></li></ul></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a><ul><li><a href="#components" class="table-of-contents__link toc-highlight">components</a></li><li><a href="#registry" class="table-of-contents__link toc-highlight">registry</a></li></ul></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#getMapper" class="table-of-contents__link toc-highlight">:getMapper</a></li><li><a href="#getReactor" class="table-of-contents__link toc-highlight">:getReactor</a></li><li><a href="#new" class="table-of-contents__link toc-highlight">.new</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2022 kennethloeffler. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/anatta/assets/js/runtime~main.5a38636d.js"></script>
-<script src="/anatta/assets/js/main.040c92bb.js"></script>
+<script src="/anatta/assets/js/runtime~main.239af95c.js"></script>
+<script src="/anatta/assets/js/main.66baba6c.js"></script>
 </body>
 </html>
