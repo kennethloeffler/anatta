@@ -81,6 +81,7 @@ function ComponentManager.new(store)
 		store = store,
 		entityGenerator = EntityGenerator.new(),
 		selectionChanged = nil,
+		selectionPaused = false,
 		updateTriggered = false,
 		definitionsFolder = componentDefinitionsRoot:FindFirstChild(componentDefinitionsFolder),
 		definitionAddedConn = nil,
@@ -99,6 +100,10 @@ function ComponentManager.new(store)
 	self:_updateStore()
 
 	self.selectionChanged = Selection.SelectionChanged:Connect(function()
+		if self.selectionPaused then
+			return
+		end
+
 		self:_updateStore()
 
 		local selected = Selection:Get()
@@ -120,6 +125,14 @@ function ComponentManager.new(store)
 	end
 
 	return self
+end
+
+function ComponentManager:pauseSelection()
+	self.selectionPaused = true
+end
+
+function ComponentManager:unpauseSelection()
+	self.selectionPaused = false
 end
 
 function ComponentManager:Destroy()

@@ -5,6 +5,8 @@ local Modules = script.Parent.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local StudioComponents = require(Modules.StudioComponents)
 
+local ComponentManager = require(script.Parent.Parent.Parent.ComponentManager)
+
 local BaseProperty = require(script.Parent.BaseProperty)
 
 local InstanceSelect = Roact.Component:extend("InstanceSelect")
@@ -44,6 +46,8 @@ function InstanceSelect:render()
 
 				local oldSelection = Selection:Get()
 
+				ComponentManager._global:pauseSelection()
+
 				Selection:Set({})
 				Selection.SelectionChanged:Wait()
 
@@ -71,6 +75,8 @@ function InstanceSelect:render()
 				RunService.Heartbeat:Wait()
 
 				Selection:Set(oldSelection)
+
+				ComponentManager._global:unpauseSelection()
 
 				self:setState({
 					Selecting = false,
