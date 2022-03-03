@@ -1,0 +1,20 @@
+{
+  "name": "AnattaPluginDevBuild",
+  "tree": {
+    "$className": "DataModel",
+    "ServerStorage": {
+      "AnattaPlugin": {
+        "$path": "../plugin"
+      }
+    },
+    "ReplicatedStorage": {
+      "Packages":{
+        "$className": "Folder",
+        "Anatta": {
+          "$path": "../"
+        },
+        "$ignoreUnknownInstances": true
+      }
+    }
+  }
+}

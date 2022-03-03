@@ -8,7 +8,17 @@ local tryToAttributes = require(script.Parent.tryToAttributes)
 
 local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
-return function(pool)
+local function shouldIgnore(instance, ancestorsToIgnore)
+	for _, ancestor in ipairs(ancestorsToIgnore) do
+		if instance:IsDescendantOf(ancestor) then
+			return true
+		end
+	end
+
+	return false
+end
+
+return function(pool, ancestorsToIgnore)
 	util.jumpAssert(pool.size == 0, "Pool must be empty")
 	local definition
 	local componentDefinition = pool.componentDefinition
@@ -26,6 +36,7 @@ return function(pool)
 	pool.components = table.create(taggedCount)
 
 	for _, instance in ipairs(tagged) do
+		local ignore = shouldIgnore(instance, ancestorsToIgnore)
 		local success, entity, rawComponent = tryFromAttributes(instance, definition)
 
 		if not success then
@@ -60,8 +71,10 @@ return function(pool)
 				end
 			end
 
-			pool:insert(entity, component)
-		else
+			if not ignore then
+				pool:insert(entity, component)
+			end
+		elseif not ignore then
 			pool:insert(entity, rawComponent)
 		end
 	end

@@ -1,0 +1,27 @@
+{
+  "name": "AnattaPlugin",
+  "tree": {
+    "$className": "Folder",
+    "Plugin": {
+      "$path": "src"
+    },
+    "Anatta": {
+      "$path": "../lib"
+    },
+    "Llama" : {
+      "$path": "../vendor/llama"
+    },
+    "Roact": {
+      "$path": "../vendor/roact"
+    },
+    "Rodux": {
+      "$path": "../vendor/rodux"
+    },
+    "RoactRodux": {
+      "$path": "../vendor/roact-rodux"
+    },
+    "StudioComponents": {
+      "$path": "../vendor/StudioComponents"
+    }
+  }
+}

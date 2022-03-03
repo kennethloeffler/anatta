@@ -120,6 +120,10 @@
 	[`Registry:entityHasAny`](/api/Registry#entityHasAny).
 	:::
 ]=]
+local CollectionService = game:GetService("CollectionService")
+
+local Constants = require(script.Parent.Core.Constants)
+local Dom = require(script.Parent.Dom)
 local Mapper = require(script.Mapper)
 local Reactor = require(script.Reactor)
 local Registry = require(script.Registry)
@@ -132,6 +136,9 @@ local ErrReactorsNeedComponents =
 	"reactors need at least one component type provided in withAll, withUpdated, or withAny"
 local ErrTooManyUpdated = "reactors can only track up to 32 updated component types"
 local ErrInvalidComponentDefinition = 'The component type "%s" is not defined for this world'
+
+local ENTITY_TAG_NAME = Constants.EntityTagName
+local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local World = {}
 World.__index = World
@@ -181,6 +188,70 @@ function World.new(definitions)
 		registry = registry,
 		_reactorSystems = {},
 	}, World)
+end
+
+function World:fromPrefab(prefab: Model)
+	assert(prefab.PrimaryPart ~= nil, "Prefabs must have a PrimaryPart")
+
+	local registry = self.registry
+	local copiedPrefab = prefab:Clone()
+	local entityRewriteMap = {}
+	local linkedInstances = {}
+	local entities = {}
+
+	local function rewriteEntityRefs(typeDefinition, value)
+		if typeDefinition.typeName == "entity" then
+			return entityRewriteMap[value] or value
+		elseif typeDefinition.typeName == "strictInterface" then
+			for fieldName, fieldType in pairs(typeDefinition.typeParams[1]) do
+				value[fieldName] = rewriteEntityRefs(fieldType, value[fieldName])
+			end
+		elseif typeDefinition.typeName == "strictArray" then
+			for fieldName, fieldType in ipairs(typeDefinition.typeParams) do
+				value[fieldName] = rewriteEntityRefs(fieldType, value[fieldName])
+			end
+		end
+	end
+
+	for _, descendant in ipairs(copiedPrefab:GetDescendants()) do
+		if not CollectionService:HasTag(descendant, ENTITY_TAG_NAME) then
+			continue
+		end
+
+		local entity = registry:createEntity()
+		local originalEntity = descendant:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+		table.insert(entities, entity)
+		linkedInstances[descendant] = entity
+		entityRewriteMap[originalEntity] = entity
+	end
+
+	for linkedInstance, entity in ipairs(linkedInstances) do
+		for componentDefinition in pairs(registry._pools) do
+			if not CollectionService:HasTag(linkedInstance, componentDefinition.name) then
+				continue
+			end
+
+			local success, originalEntity, component = Dom.tryFromAttributes(linkedInstance, componentDefinition)
+
+			if not success then
+				warn(
+					("Failed attribute validation for %s while building the prefab %s: %s"):format(
+						prefab:GetFullName(),
+						componentDefinition.name,
+						originalEntity
+					)
+				)
+				continue
+			end
+
+			local rewrittenComponent = rewriteEntityRefs(componentDefinition.type, component)
+
+			registry:addComponent(entity, componentDefinition, rewrittenComponent)
+		end
+	end
+
+	return copiedPrefab.PrimaryPart, entities
 end
 
 --[=[

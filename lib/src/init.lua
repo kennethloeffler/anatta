@@ -9,6 +9,7 @@
 ]=]
 
 local Dom = require(script.Dom)
+local Constants = require(script.Core.Constants)
 local T = require(script.Core.T)
 local Types = require(script.Types)
 local World = require(script.World)
@@ -99,6 +100,7 @@ local function getWorld(namespace, script)
 end
 
 return {
+	Constants = Constants,
 	Dom = Dom,
 	T = T,
 

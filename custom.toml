@@ -1,0 +1,7 @@
+[selene]
+base = "roblox"
+name = "custom"
+
+[Enum.GetEnums]
+method = true
+args = []

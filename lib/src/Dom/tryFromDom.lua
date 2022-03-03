@@ -5,7 +5,7 @@ local jumpAssert = require(script.Parent.Parent.util.jumpAssert)
 
 local ENTITYID_MASK = Constants.EntityIdMask
 
-return function(registry)
+return function(registry, ancestorsToIgnore)
 	jumpAssert(registry._size == 0, "Registry must be empty")
 
 	local entitySet = {}
@@ -15,7 +15,7 @@ return function(registry)
 			continue
 		end
 
-		local success, result = tryFromTagged(pool)
+		local success, result = tryFromTagged(pool, ancestorsToIgnore)
 
 		if success then
 			for _, entity in ipairs(pool.dense) do
@@ -57,6 +57,4 @@ return function(registry)
 			pool.added:dispatch(entity, pool:get(entity))
 		end
 	end
-
-	return
 end
