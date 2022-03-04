@@ -49,6 +49,15 @@ return function()
 			)
 		end)
 
+		describe("tryDefault", function()
+			itFOCUS("should correctly handle a T.union of literals", function()
+				local success, default = T.union(T.literal("BIG"), T.literal("MONEY")):tryDefault()
+
+				expect(success).to.equal(true)
+				expect(default).to.equal("BIG")
+			end)
+		end)
+
 		describe("getConcreteType", function()
 			it("should fail for table", function()
 				local success = T.table:tryGetConcreteType()
@@ -112,11 +121,9 @@ return function()
 	describe("API", function()
 		describe("entity", function()
 			it("should percolate _containsEntities upwards", function()
-				local world = World.new({})
-
 				local interface = T.strictInterface({
 					nested = T.strictInterface({
-						member = T.entity(world),
+						member = T.entity,
 					}),
 				})
 				expect(interface._containsEntities).to.equal(true)

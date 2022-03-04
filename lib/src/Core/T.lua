@@ -117,8 +117,8 @@ local concreters = {
 	instanceOf = makeConcreteInstance,
 	instanceIsA = makeConcreteInstance,
 
-	literal = function(typeDefinition)
-		return true, typeof(typeDefinition.typeParams[1])
+	literal = function()
+		return true, "literal"
 	end,
 
 	strictArray = function(typeDefinition)
@@ -187,6 +187,10 @@ local concreteFromAbstract = {
 }
 
 local defaults = {
+	union = function(typeDefinition)
+		return true, typeDefinition.typeParams[1]:tryDefault()
+	end,
+
 	enum = function(typeDefinition)
 		return true, typeDefinition.typeParams[1]:GetEnumItems()[1]
 	end,
@@ -247,6 +251,10 @@ local defaults = {
 		end
 
 		return true, instance
+	end,
+
+	literal = function(typeDefinition)
+		return true, typeDefinition.typeParams[1].typeParams[1]
 	end,
 
 	number = 0,
