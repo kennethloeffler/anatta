@@ -202,12 +202,12 @@ function World:fromPrefab(prefab: Model)
 		if typeDefinition.typeName == "entity" then
 			return entityRewriteMap[value] or value
 		elseif typeDefinition.typeName == "strictInterface" then
-			for fieldName, fieldType in pairs(typeDefinition.typeParams[1]) do
-				value[fieldName] = rewriteEntityRefs(fieldType, value[fieldName])
+			for field, fieldType in pairs(typeDefinition.typeParams[1]) do
+				value[field] = rewriteEntityRefs(fieldType, value[field])
 			end
 		elseif typeDefinition.typeName == "strictArray" then
-			for fieldName, fieldType in ipairs(typeDefinition.typeParams) do
-				value[fieldName] = rewriteEntityRefs(fieldType, value[fieldName])
+			for field, fieldType in ipairs(typeDefinition.typeParams) do
+				value[field] = rewriteEntityRefs(fieldType, value[field])
 			end
 		end
 
