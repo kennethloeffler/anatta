@@ -197,7 +197,7 @@ function World:fromPrefab(prefab: Model)
 	local copiedPrefab = prefab:Clone()
 	local entityRewriteMap = {}
 	local linkedInstances = {}
-	local entities = {}
+	local entityMap = {}
 
 	local function rewriteEntityRefs(typeDefinition, value)
 		if typeDefinition.typeName == "entity" then
@@ -211,7 +211,11 @@ function World:fromPrefab(prefab: Model)
 				value[fieldName] = rewriteEntityRefs(fieldType, value[fieldName])
 			end
 		end
+
+		return value
 	end
+
+	local primaryEntity
 
 	for _, descendant in ipairs(copiedPrefab:GetDescendants()) do
 		if not CollectionService:HasTag(descendant, ENTITY_TAG_NAME) then
@@ -221,12 +225,16 @@ function World:fromPrefab(prefab: Model)
 		local entity = registry:createEntity()
 		local originalEntity = descendant:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
-		table.insert(entities, entity)
+		if descendant == copiedPrefab.PrimaryPart then
+			primaryEntity = entity
+		end
+
+		entityMap[entity] = descendant
 		linkedInstances[descendant] = entity
 		entityRewriteMap[originalEntity] = entity
 	end
 
-	for linkedInstance, entity in ipairs(linkedInstances) do
+	for linkedInstance, entity in pairs(linkedInstances) do
 		for componentDefinition in pairs(registry._pools) do
 			if not CollectionService:HasTag(linkedInstance, componentDefinition.name) then
 				continue
@@ -248,10 +256,18 @@ function World:fromPrefab(prefab: Model)
 			local rewrittenComponent = rewriteEntityRefs(componentDefinition.type, component)
 
 			registry:addComponent(entity, componentDefinition, rewrittenComponent)
+
+			local _, rewrite = Dom.tryToAttributes(linkedInstance, entity, componentDefinition, rewrittenComponent)
+
+			for attributeName, value in pairs(rewrite) do
+				if typeof(value) == "number" then
+					linkedInstance:SetAttribute(attributeName, value)
+				end
+			end
 		end
 	end
 
-	return copiedPrefab.PrimaryPart, entities
+	return copiedPrefab, primaryEntity, entityMap
 end
 
 --[=[
