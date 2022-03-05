@@ -257,9 +257,14 @@ function World:fromPrefab(prefab: Model)
 
 			registry:addComponent(entity, componentDefinition, rewrittenComponent)
 
-			local _, rewrite = Dom.tryToAttributes(linkedInstance, entity, componentDefinition, rewrittenComponent)
+			local _, rewrittenAttributeMap = Dom.tryToAttributes(
+				linkedInstance,
+				entity,
+				componentDefinition,
+				rewrittenComponent
+			)
 
-			for attributeName, value in pairs(rewrite) do
+			for attributeName, value in pairs(rewrittenAttributeMap) do
 				if typeof(value) == "number" then
 					linkedInstance:SetAttribute(attributeName, value)
 				end
