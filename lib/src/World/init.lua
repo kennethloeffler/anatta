@@ -197,7 +197,6 @@ function World:fromPrefab(prefab: Model)
 	local copiedPrefab = prefab:Clone()
 	local entityRewriteMap = {}
 	local linkedInstances = {}
-	local entityMap = {}
 
 	local function rewriteEntityRefs(typeDefinition, value)
 		if typeDefinition.typeName == "entity" then
@@ -229,7 +228,6 @@ function World:fromPrefab(prefab: Model)
 			primaryEntity = entity
 		end
 
-		entityMap[entity] = descendant
 		linkedInstances[descendant] = entity
 		entityRewriteMap[originalEntity] = entity
 	end
@@ -272,7 +270,7 @@ function World:fromPrefab(prefab: Model)
 		end
 	end
 
-	return copiedPrefab, primaryEntity, entityMap
+	return copiedPrefab, primaryEntity, linkedInstances
 end
 
 --[=[
