@@ -56,6 +56,7 @@ local function makeInputElement(elementKind)
 end
 
 local Types = {
+	literal = makeInputElement(StringInput),
 	instance = createInstanceElement,
 	Instance = createInstanceElement,
 	instanceIsA = createInstanceElement,
