@@ -35,6 +35,9 @@ function ComponentAnnotation.add(instance, definition)
 
 	for attributeName, attributeValue in pairs(attributeMap) do
 		if typeof(attributeValue) == "Instance" then
+			attributeValue.Parent = workspace.Terrain
+			attributeValue.Archivable = false
+
 			instance[INSTANCE_REF_FOLDER][attributeName].Value = attributeValue
 		elseif attributeName ~= ENTITY_ATTRIBUTE_NAME then
 			instance:SetAttribute(attributeName, attributeValue)
