@@ -50,7 +50,7 @@ return function()
 		end)
 
 		describe("tryDefault", function()
-			itFOCUS("should correctly handle a T.union of literals", function()
+			it("should correctly handle a T.union of literals", function()
 				local success, default = T.union(T.literal("BIG"), T.literal("MONEY")):tryDefault()
 
 				expect(success).to.equal(true)
@@ -113,7 +113,7 @@ return function()
 				)
 
 				local _, concreteType = stringUnion:tryGetConcreteType()
-				expect(concreteType).to.equal("string")
+				expect(concreteType).to.equal("literal")
 			end)
 		end)
 	end)
