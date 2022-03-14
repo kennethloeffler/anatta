@@ -6,6 +6,7 @@ local ChangeHistory = game:GetService("ChangeHistoryService")
 local Modules = script.Parent.Parent
 local Types = require(Modules.Anatta.Library.Types)
 local Dom = require(Modules.Anatta.Library.Dom)
+local Constants = require(Modules.Anatta.Library.Core.Constants)
 
 local Actions = require(script.Parent.Actions)
 local ComponentAnnotation = require(script.ComponentAnnotation)
@@ -16,6 +17,8 @@ local componentConfigFolder = "ComponentConfigurations"
 
 local componentDefinitionsRoot = game:GetService("ReplicatedStorage")
 local componentDefinitionsFolder = "ComponentDefinitions"
+
+local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 
 local ComponentManager = {}
 ComponentManager.__index = ComponentManager
@@ -314,10 +317,16 @@ function ComponentManager:_doUpdateStore()
 				end
 
 				if CollectionService:HasTag(linkedInstance, entry.Name) then
-					local success, _, value = Dom.tryFromAttributes(linkedInstance, definition)
+					if not linkedInstance:GetAttribute("__entity") then
+						linkedInstance:GetAttributeChangedSignal(ENTITY_ATTRIBUTE_NAME):Wait()
+					end
+
+					local success, entity, value = Dom.tryFromAttributes(linkedInstance, definition)
 
 					if success then
 						values[linkedInstance] = value
+					else
+						warn(("Failed to read component from %s: %s"):format(linkedInstance:GetFullName(), entity))
 					end
 
 					hasAny = true
