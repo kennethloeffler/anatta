@@ -4,15 +4,21 @@ local StudioComponents = require(Modules.StudioComponents)
 
 local BaseProperty = require(script.Parent.BaseProperty)
 
-local function EnumItem(props)
+local EnumItem = Roact.Component:extend("EnumItem")
+
+function EnumItem:render()
+	local props = self.props
 	local items = {}
 
 	for _, enumItem in ipairs(props.Enum:GetEnumItems()) do
 		table.insert(items, enumItem.Name)
 	end
 
+	print(self.state)
+
 	return Roact.createElement(BaseProperty, {
-		Text = props.Key
+		Text = props.Key,
+		ZIndex = 100,
 	}, {
 		Centered = Roact.createElement("Frame", {
 			Size = UDim2.new(1, 0, 0, 15),
@@ -22,12 +28,18 @@ local function EnumItem(props)
 		}, {
 			Dropdown = Roact.createElement(StudioComponents.Dropdown, {
 				Items = items,
-				Item = props.Selected.Name,
+				Item = if self.state.selected then self.state.selected else props.Selected.Name,
 				OnSelected = function(enumItemName)
-					props.OnSelected(props.Enum[enumItemName])
+					local item = props.Enum[enumItemName]
+
+					props.OnSelected(item)
+
+					self:setState({
+						selected = item,
+					})
 				end,
-			})
-		})
+			}),
+		}),
 	})
 end
 
