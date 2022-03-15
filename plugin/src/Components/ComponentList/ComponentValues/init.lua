@@ -68,6 +68,7 @@ local Types = {
 	UDim = makeInputElement(UDimInput),
 	Vector2 = makeInputElement(Vector2Input),
 	Vector3 = makeInputElement(Vector3Input),
+
 	literal = function(name, attributeName, typeDefinition, value, values)
 		local enums = {}
 		local mockEnum = {
@@ -96,6 +97,7 @@ local Types = {
 			end,
 		})
 	end,
+
 	entity = function(name, attributeName, _, _, values)
 		return Roact.createElement(InstanceSelect, {
 			Key = name,
