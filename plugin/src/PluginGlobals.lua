@@ -63,7 +63,7 @@ function exports.showComponentMenu(dispatch, component: string)
 		elseif action == exports.changeColorAction then
 			exports.promptPickColor(dispatch, definition)
 		elseif action == exports.viewComponentizedAction then
-			dispatch(Actions.OpenInstanceView(definition))
+			dispatch(Actions.OpenInstanceView(definition.name))
 		elseif action == exports.deleteAction then
 			ComponentManager.Get():DelComponent(definition)
 		elseif action == exports.renameAction then
