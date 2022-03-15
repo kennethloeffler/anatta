@@ -94,7 +94,10 @@ function Item:render()
 							PlaceholderColor3 = props.IsInput and theme:GetColor("DimmedText") or nil,
 							Font = Enum.Font.SourceSans,
 							TextSize = 20,
-							TextColor3 = theme:GetColor("MainText"),
+							TextColor3 = theme:GetColor(
+								Enum.StudioStyleGuideColor.MainText,
+								if props.Active then Enum.StudioStyleGuideModifier.Selected else nil
+							),
 
 							[Roact.Event.FocusLost] = props.IsInput and function(rbx, enterPressed)
 								local text = rbx.Text
