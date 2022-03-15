@@ -327,6 +327,19 @@ function ComponentManager:_doUpdateStore()
 						values[linkedInstance] = value
 					else
 						warn(("Failed to read component from %s: %s"):format(linkedInstance:GetFullName(), entity))
+
+						local defaultSuccess, default = definition.type:tryDefault()
+
+						if not defaultSuccess then
+							warn(
+								("Failed to create fallback default for %s: %s"):format(
+									linkedInstance:GetFullName(),
+									default
+								)
+							)
+						else
+							values[linkedInstance] = default
+						end
 					end
 
 					hasAny = true
