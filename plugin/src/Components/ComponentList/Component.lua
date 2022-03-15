@@ -32,7 +32,7 @@ local function Component(props)
 	end
 
 	return StudioThemeAccessor.withTheme(function(theme)
-		return Roact.createElement(VerticalExpandingList, { BorderSizePixel = 0 }, {
+		return Roact.createElement(VerticalExpandingList, { LayoutOrder = props.LayoutOrder, BorderSizePixel = 0 }, {
 			Roact.createElement(Item, {
 				Text = Util.escapeComponentName(props.Component.Name, theme),
 				RichText = true,
@@ -41,7 +41,6 @@ local function Component(props)
 				ClearTextOnFocus = false,
 				CaptureFocusOnBecomeInput = true,
 				TextBoxText = props.Component,
-				LayoutOrder = 0,
 				Visible = props.Visible,
 				Checked = checked,
 				Active = props.isMenuOpen,
