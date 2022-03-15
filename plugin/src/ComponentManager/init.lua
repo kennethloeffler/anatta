@@ -93,6 +93,7 @@ function ComponentManager.new(store)
 		configurationsFolder = componentConfigRoot:FindFirstChild(componentConfigFolder),
 		configurationChangedConns = {},
 		configurationChangedSignals = {},
+		attributeChangedConnections = {},
 		components = {},
 		componentDefinitions = {},
 		onUpdate = {},
@@ -110,6 +111,28 @@ function ComponentManager.new(store)
 		self:_updateStore()
 
 		local selected = Selection:Get()
+		local selectedSet = {}
+
+		for _, instance in ipairs(selected) do
+			selectedSet[instance] = true
+		end
+
+		for instance, connection in pairs(self.attributeChangedConnections) do
+			if selectedSet[instance] == nil then
+				connection:Disconnect()
+			end
+		end
+
+		for _, instance in ipairs(selected) do
+			local connection = self.attributeChangedConnections[instance]
+
+			if connection == nil then
+				self.attributeChangedConnections[instance] = instance.AttributeChanged:Connect(function()
+					self:_updateStore()
+				end)
+			end
+		end
+
 		self.store:dispatch(Actions.SetSelectionActive(#selected > 0))
 	end)
 
@@ -152,6 +175,10 @@ function ComponentManager:Destroy()
 
 	for _, signal in pairs(self.configurationChangedConns) do
 		signal:Disconnect()
+	end
+
+	for _, connection in pairs(self.attributeChangedConnections) do
+		connection:Disconnect()
 	end
 
 	for _, connections in pairs(self.configurationChangedSignals) do
