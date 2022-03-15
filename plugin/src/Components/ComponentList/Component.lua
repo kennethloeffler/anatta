@@ -69,7 +69,7 @@ function Component:render()
 				Height = 26,
 
 				onSetVisible = function()
-					ComponentManager.Get():SetVisible(props.Definition, not props.Visible)
+					ComponentManager.Get():SetVisible(props.Definition.name, not props.Visible)
 				end,
 
 				onCheck = function(_rbx)

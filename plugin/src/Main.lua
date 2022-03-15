@@ -98,8 +98,8 @@ return function(plugin, savedState)
 
 	local viewComponentizedAction = plugin:createAction(
 		prefix .. "ViewComponentized",
-		"View entities",
-		"Show a list of entity-instances that have this component.",
+		"View linked instances",
+		"Show a list of instances that have this component.",
 		nil,
 		false
 	)
@@ -113,8 +113,9 @@ return function(plugin, savedState)
 	local selectAllConn = selectAllAction.Triggered:Connect(function()
 		local state = store:getState()
 		local component = state.InstanceView or PluginGlobals.currentComponentMenu or state.ComponentMenu
+
 		if component then
-			ComponentManager.Get():SelectAll(component)
+			ComponentManager.Get():SelectAll(component.Definition.name)
 		end
 	end)
 

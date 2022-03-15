@@ -409,11 +409,11 @@ function ComponentManager:_doUpdateStore()
 	end
 end
 
-function ComponentManager:_setProp(componentDefinition, key: string, value: any)
+function ComponentManager:_setProp(componentName, key: string, value: any)
 	local configurationsFolder = self:_getFolder()
-	local component = configurationsFolder:FindFirstChild(componentDefinition.name)
+	local component = configurationsFolder:FindFirstChild(componentName)
 	if not component then
-		error("Setting property of non-existent component `" .. tostring(componentDefinition.name) .. "`")
+		error("Setting property of non-existent component `" .. tostring(componentName) .. "`")
 	end
 
 	-- don't do unnecessary updates
@@ -421,9 +421,9 @@ function ComponentManager:_setProp(componentDefinition, key: string, value: any)
 		return false
 	end
 
-	ChangeHistory:SetWaypoint(string.format("Setting property %q of component %q", key, componentDefinition.name))
+	ChangeHistory:SetWaypoint(string.format("Setting property %q of component %q", key, componentName))
 	component:SetAttribute(key, value)
-	ChangeHistory:SetWaypoint(string.format("Set property %q of component %q", key, componentDefinition.name))
+	ChangeHistory:SetWaypoint(string.format("Set property %q of component %q", key, componentName))
 
 	return true
 end
@@ -480,8 +480,25 @@ function ComponentManager:Rename(oldName, newName)
 	ChangeHistory:SetWaypoint(string.format("Renamed component %q to %q", oldName, newName))
 end
 
-function ComponentManager:SelectAll(component: string)
-	Selection:Set(CollectionService:GetTagged(component))
+function ComponentManager:SelectAll(name: string)
+	local selection = Selection:Get()
+
+	if next(selection) == nil then
+		Selection:Set(CollectionService:GetTagged(name))
+		return
+	end
+
+	local newSelection = {}
+
+	for _, instance in ipairs(selection) do
+		for _, descendant in ipairs(instance:GetDescendants()) do
+			if CollectionService:HasTag(descendant, name) then
+				table.insert(newSelection, descendant)
+			end
+		end
+	end
+
+	Selection:Set(newSelection)
 end
 
 function ComponentManager:GetIcon(name: string): string

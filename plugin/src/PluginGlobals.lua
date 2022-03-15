@@ -22,25 +22,25 @@ type Exports = {
 
 local exports: Exports = {}
 
-function exports.promptPickColor(dispatch, component: string)
+function exports.promptPickColor(dispatch, componentName)
 	local module = CoreGui:FindFirstChild("ColorPane")
 	if module and module:IsA("ModuleScript") then
 		local manager = ComponentManager.Get()
 		local ColorPane = require(module)
 
 		ColorPane.PromptForColor({
-			PromptTitle = string.format("%s - Select a color", component),
-			InitialColor = manager:GetColor(component),
+			PromptTitle = string.format("%s - Select a color", componentName),
+			InitialColor = manager:GetColor(componentName),
 			OnColorChanged = function(color: Color3)
-				manager:SetColor(component, color)
+				manager:SetColor(componentName, color)
 			end,
 		})
 	else
-		dispatch(Actions.ToggleColorPicker(component))
+		dispatch(Actions.ToggleColorPicker(componentName))
 	end
 end
 
-function exports.showComponentMenu(dispatch, component: string)
+function exports.showComponentMenu(dispatch, component)
 	coroutine.wrap(function()
 		local visualTypes = {
 			[exports.visualizeBox] = "Box",
@@ -50,26 +50,21 @@ function exports.showComponentMenu(dispatch, component: string)
 			[exports.visualizeIcon] = "Icon",
 		}
 
-		local action = exports.ComponentMenu:ShowAsync()
-		local definition = component.Definition
-
 		exports.currentComponentMenu = component
-		exports.currentComponentMenu = nil
+
+		local action = exports.ComponentMenu:ShowAsync()
+		local componentName = component.Definition.name
 
 		if action == exports.changeIconAction then
-			dispatch(Actions.ToggleIconPicker(definition))
+			dispatch(Actions.ToggleIconPicker(componentName))
 		elseif action == exports.changeGroupAction then
-			dispatch(Actions.ToggleGroupPicker(definition))
+			dispatch(Actions.ToggleGroupPicker(componentName))
 		elseif action == exports.changeColorAction then
-			exports.promptPickColor(dispatch, definition)
+			exports.promptPickColor(dispatch, componentName)
 		elseif action == exports.viewComponentizedAction then
-			dispatch(Actions.OpenInstanceView(definition.name))
-		elseif action == exports.deleteAction then
-			ComponentManager.Get():DelComponent(definition)
-		elseif action == exports.renameAction then
-			dispatch(Actions.SetRenaming(definition, true))
+			dispatch(Actions.OpenInstanceView(componentName))
 		elseif visualTypes[action] then
-			ComponentManager.Get():SetDrawType(definition, visualTypes[action])
+			ComponentManager.Get():SetDrawType(componentName, visualTypes[action])
 		elseif action ~= nil and action ~= exports.selectAllAction then
 			print("Missing handler for action " .. action.Title)
 		end
