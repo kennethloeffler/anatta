@@ -11,16 +11,18 @@ local PluginGlobals = require(Modules.Plugin.PluginGlobals)
 
 local VerticalExpandingList = require(Modules.StudioComponents.VerticalExpandingList)
 
-local function Component(props)
-	local function openMenu(_rbx)
-		if not props.isMenuOpen then
-			props.openComponentMenu(props.Component)
-		else
-			props.openComponentMenu(nil)
-		end
-	end
+local Component = Roact.Component:extend("Component")
 
+function Component:init()
+	self:setState({
+		isMenuOpen = false,
+	})
+end
+
+function Component:render()
+	local props = self.props
 	local checked = nil
+
 	if not props.Disabled then
 		if props.HasAll then
 			checked = true
@@ -29,6 +31,24 @@ local function Component(props)
 		else
 			checked = false
 		end
+	end
+
+	local function openMenu(_rbx)
+		if not checked then
+			return
+		end
+
+		local isMenuOpen = self.state.isMenuOpen
+
+		if not isMenuOpen then
+			props.openComponentMenu(props.Component)
+		else
+			props.openComponentMenu(nil)
+		end
+
+		self:setState({
+			isMenuOpen = not isMenuOpen,
+		})
 	end
 
 	return StudioThemeAccessor.withTheme(function(theme)
@@ -43,7 +63,7 @@ local function Component(props)
 				TextBoxText = props.Component,
 				Visible = props.Visible,
 				Checked = checked,
-				Active = props.isMenuOpen,
+				Active = checked and self.state.isMenuOpen,
 				Hidden = props.Hidden,
 				Indent = props.Group and 10 or 0,
 				Height = 26,
@@ -67,7 +87,7 @@ local function Component(props)
 					props.showContextMenu(props.Component)
 				end,
 			}),
-			(checked and props.isMenuOpen) and Roact.createElement(ComponentValues, {
+			(checked and self.state.isMenuOpen) and Roact.createElement(ComponentValues, {
 				Definition = props.Definition,
 				Values = props.Values,
 			}),
