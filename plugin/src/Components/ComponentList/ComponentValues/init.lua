@@ -136,11 +136,13 @@ function ComponentValues:render()
 	local _, value = next(props.Values)
 	-- TODO: compare all values to display ambiguous fields
 
-	return Roact.createElement(
-		VerticalExpandingList,
-		{},
-		createComponentMembers(name, name, typeDefinition, value, props.Values)
-	)
+	local members = createComponentMembers(name, name, typeDefinition, value, props.Values)
+
+	table.sort(members, function(lhs, rhs)
+		return lhs.props.Key < rhs.props.Key
+	end)
+
+	return Roact.createElement(VerticalExpandingList, {}, members)
 end
 
 local function mapStateToProps(state)
