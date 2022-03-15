@@ -12,7 +12,8 @@ local function EnumItem(props)
 	end
 
 	return Roact.createElement(BaseProperty, {
-		Text = props.Key
+		Text = props.Key,
+		ZIndex = 100,
 	}, {
 		Centered = Roact.createElement("Frame", {
 			Size = UDim2.new(1, 0, 0, 15),
@@ -24,10 +25,11 @@ local function EnumItem(props)
 				Items = items,
 				Item = props.Selected.Name,
 				OnSelected = function(enumItemName)
-					props.OnSelected(props.Enum[enumItemName])
+					local item = props.Enum[enumItemName]
+					props.OnSelected(item)
 				end,
-			})
-		})
+			}),
+		}),
 	})
 end
 

@@ -6,8 +6,9 @@ local Actions = require(Modules.Plugin.Actions)
 local Anatta = require(Modules.Anatta)
 local PluginGlobals = require(Modules.Plugin.PluginGlobals)
 
-local InstanceSelect = require(Properties.InstanceSelect)
 local Boolean = require(Properties.Boolean)
+local EnumItem = require(Properties.EnumItem)
+local InstanceSelect = require(Properties.InstanceSelect)
 local NumberInput = require(Properties.NumberInput)
 local StringInput = require(Properties.StringInput)
 local UDim2Input = require(Properties.UDim2Input)
@@ -67,6 +68,36 @@ local Types = {
 	UDim = makeInputElement(UDimInput),
 	Vector2 = makeInputElement(Vector2Input),
 	Vector3 = makeInputElement(Vector3Input),
+
+	literal = function(name, attributeName, typeDefinition, value, values)
+		local enums = {}
+		local mockEnum = {
+			GetEnumItems = function()
+				return enums
+			end,
+		}
+
+		for _, item in ipairs(typeDefinition.typeParams) do
+			local itemName = item.typeParams[1]
+
+			mockEnum[itemName] = itemName
+			table.insert(enums, { Name = itemName })
+		end
+
+		return Roact.createElement(EnumItem, {
+			Key = name,
+			Enum = mockEnum,
+			Selected = {
+				Name = value,
+			},
+			OnSelected = function(enumItemName)
+				for linkedInstance in pairs(values) do
+					linkedInstance:SetAttribute(attributeName, enumItemName)
+				end
+			end,
+		})
+	end,
+
 	entity = function(name, attributeName, _, _, values)
 		return Roact.createElement(InstanceSelect, {
 			Key = name,
