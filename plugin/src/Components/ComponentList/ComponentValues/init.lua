@@ -54,6 +54,10 @@ local function makeInputElement(elementKind)
 			Key = name,
 			Value = value,
 			OnChanged = function(newValue)
+				if not newValue then
+					return
+				end
+
 				ChangeHistoryService:SetWaypoint(("Changing attribute %s"):format(attributeName))
 
 				for linkedInstance in pairs(values) do
