@@ -1,3 +1,5 @@
+local ChangeHistoryService = game:GetService("ChangeHistoryService")
+
 local Modules = script.Parent.Parent.Parent.Parent
 local Properties = script.Parent.Parent.Properties
 local Roact = require(Modules.Roact)
@@ -35,9 +37,13 @@ local function createInstanceElement(name, attributeName, typeDefinition, value,
 		ClassName = typeDefinition.typeName == "instanceOf" and typeParam,
 
 		OnChanged = function(instance)
+			ChangeHistoryService:SetWaypoint(("Changing ref %s"):format(attributeName))
+
 			for linkedInstance in pairs(values) do
 				linkedInstance[INSTANCE_REF_FOLDER][attributeName].Value = instance
 			end
+
+			ChangeHistoryService:SetWaypoint(("Changed ref %s"):format(attributeName))
 		end,
 	})
 end
@@ -48,9 +54,13 @@ local function makeInputElement(elementKind)
 			Key = name,
 			Value = value,
 			OnChanged = function(newValue)
+				ChangeHistoryService:SetWaypoint(("Changing attribute %s"):format(attributeName))
+
 				for linkedInstance in pairs(values) do
 					linkedInstance:SetAttribute(attributeName, newValue)
 				end
+
+				ChangeHistoryService:SetWaypoint(("Changed attribute %s"):format(attributeName))
 			end,
 		})
 	end
@@ -91,9 +101,13 @@ local Types = {
 				Name = value,
 			},
 			OnSelected = function(enumItemName)
+				ChangeHistoryService:SetWaypoint(("Changing attribute %s"):format(attributeName))
+
 				for linkedInstance in pairs(values) do
 					linkedInstance:SetAttribute(attributeName, enumItemName)
 				end
+
+				ChangeHistoryService:SetWaypoint(("Changed attribute %s"):format(attributeName))
 			end,
 		})
 	end,
@@ -102,6 +116,8 @@ local Types = {
 		return Roact.createElement(InstanceSelect, {
 			Key = name,
 			OnChanged = function(instance)
+				ChangeHistoryService:SetWaypoint(("Changing attribute %s"):format(attributeName))
+
 				for linkedInstance in pairs(values) do
 					local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
@@ -111,6 +127,8 @@ local Types = {
 						warn(("%s does not have a linked entity"):format(instance:GetFullName()))
 					end
 				end
+
+				ChangeHistoryService:SetWaypoint(("Changed attribute %s"):format(attributeName))
 			end,
 		})
 	end,
