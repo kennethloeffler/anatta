@@ -344,7 +344,8 @@ function Registry:importEntity(entity)
 end
 
 --[=[
-	Returns an entity equal to the given entity.
+	Returns an entity equal to the given entity if possible. If creating the entity
+	would result in a collision, a new entity is generated instead.
 
 	#### Usage:
 	```lua
@@ -402,8 +403,8 @@ function Registry:createEntityFrom(entity)
 	end
 
 	if existingEntityId == entityId and self:entityIsValid(entity) then
-		-- The id is currently in use. We should destroy the existing entity before continuing.
-		self:destroyEntity(entity)
+		-- The id is currently in use. We create a new entity to avoid a collision.
+		return self:createEntity(entity)
 	end
 
 	-- The id is currently available for recycling.
