@@ -32,7 +32,7 @@ function InstanceSelect:render()
 	}, {
 		InstanceSelector = Roact.createElement(StudioComponents.Button, {
 			Size = UDim2.new(1, 0, 1, 0),
-			Text = self.state.Instance and self.state.Instance.Name or "<none>",
+			Text = self.state.Instance and self.state.Instance:GetFullName() or "<none>",
 			TextXAlignment = Enum.TextXAlignment.Left,
 			BorderSizePixel = 0,
 			OnActivated = function()
