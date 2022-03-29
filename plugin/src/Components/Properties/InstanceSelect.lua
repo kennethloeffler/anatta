@@ -26,15 +26,17 @@ end
 
 function InstanceSelect:render()
 	local requiredKind = self.props.ClassName or self.props.IsA
+	local instance = self.state.Instance or self.props.Instance
 
 	return Roact.createElement(BaseProperty, {
 		Text = ("%s (%s)"):format(self.props.Key, requiredKind or "any"),
 	}, {
 		InstanceSelector = Roact.createElement(StudioComponents.Button, {
 			Size = UDim2.new(1, 0, 1, 0),
-			Text = self.state.Instance and self.state.Instance:GetFullName() or "<none>",
+			Text = instance and instance:GetFullName() or "<none>",
 			TextXAlignment = Enum.TextXAlignment.Left,
 			BorderSizePixel = 0,
+			TextTruncate = Enum.TextTruncate.AtEnd,
 			OnActivated = function()
 				if self.state.Selecting then
 					return
