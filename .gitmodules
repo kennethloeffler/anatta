@@ -6,7 +6,7 @@
 	url = https://github.com/osyrisrblx/t
 [submodule "vendor/StudioComponents"]
 	path = vendor/StudioComponents
-	url = https://github.com/sircfenner/StudioComponents
+	url = https://github.com/kennethloeffler/StudioComponents
 [submodule "vendor/roact"]
 	path = vendor/roact
 	url = https://github.com/roblox/roact
