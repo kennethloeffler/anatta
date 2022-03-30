@@ -10,6 +10,7 @@ local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccesso
 local function Group(props)
 	return Roact.createElement(ListItemChrome, {
 		LayoutOrder = props.LayoutOrder,
+		ZIndex = props.ZIndex,
 		showDivider = true,
 		leftClick = function()
 			props.toggleHidden(props.Name)

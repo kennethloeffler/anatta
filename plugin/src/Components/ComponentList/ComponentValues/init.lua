@@ -19,6 +19,7 @@ local Vector2Input = require(Properties.Vector2Input)
 local Vector3Input = require(Properties.Vector3Input)
 
 local VerticalExpandingList = require(Modules.StudioComponents.VerticalExpandingList)
+local VerticalCollapsibleSection = require(Modules.StudioComponents.VerticalCollapsibleSection)
 
 local ENTITY_ATTRIBUTE_NAME = Anatta.Constants.EntityAttributeName
 local INSTANCE_REF_FOLDER = Anatta.Constants.InstanceRefFolder
@@ -138,7 +139,16 @@ local Types = {
 	end,
 }
 
-local function createComponentMembers(name, attributeName, typeDefinition, value, values, members, attributeMap)
+local function createComponentMembers(
+	name,
+	attributeName,
+	typeDefinition,
+	value,
+	values,
+	members,
+	attributeMap,
+	recursed
+)
 	members = members or {}
 	attributeMap = attributeMap or {}
 
@@ -158,20 +168,55 @@ local function createComponentMembers(name, attributeName, typeDefinition, value
 			typeParams = typeDefinition.typeParams[1]
 		end
 
-		for fieldName in pairs(concreteType) do
-			local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
-			local fieldTypeDefinition = typeParams[fieldName]
-			local fieldValue = value[fieldName]
+		if recursed then
+			local subMembers = {}
 
-			createComponentMembers(
-				fieldName,
-				fieldAttributeName,
-				fieldTypeDefinition,
-				fieldValue,
-				values,
+			for fieldName in pairs(concreteType) do
+				local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
+				local fieldTypeDefinition = typeParams[fieldName]
+				local fieldValue = value[fieldName]
+
+				createComponentMembers(
+					fieldName,
+					fieldAttributeName,
+					fieldTypeDefinition,
+					fieldValue,
+					values,
+					subMembers,
+					attributeMap,
+					true
+				)
+			end
+
+			table.sort(subMembers, function(lhs, rhs)
+				return lhs.props.Key < rhs.props.Key
+			end)
+
+			table.insert(
 				members,
-				attributeMap
+				Roact.createElement(VerticalCollapsibleSection, {
+					Key = name,
+					HeaderText = name,
+					OnToggled = function() end,
+				}, subMembers)
 			)
+		else
+			for fieldName in pairs(concreteType) do
+				local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
+				local fieldTypeDefinition = typeParams[fieldName]
+				local fieldValue = value[fieldName]
+
+				createComponentMembers(
+					fieldName,
+					fieldAttributeName,
+					fieldTypeDefinition,
+					fieldValue,
+					values,
+					members,
+					attributeMap,
+					true
+				)
+			end
 		end
 	elseif Types[concreteType] ~= nil then
 		local element = Types[concreteType](name, attributeName, typeDefinition, value, values)
