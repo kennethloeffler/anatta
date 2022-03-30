@@ -144,7 +144,9 @@ function ComponentManager.new(store)
 		task.spawn(function()
 			self.definitionsFolder = componentDefinitionsRoot:WaitForChild(componentDefinitionsFolder, 5)
 
-			self:_watchDefinitions()
+			if self.definitionsFolder then
+				self:_watchDefinitions()
+			end
 		end)
 	else
 		self:_watchDefinitions()
