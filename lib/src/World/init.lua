@@ -194,6 +194,75 @@ function World:fromPrefab(prefab: Model)
 	assert(prefab.PrimaryPart ~= nil, "Prefabs must have a PrimaryPart")
 
 	local registry = self.registry
+	local entityRewriteMap = {}
+	local linkedInstances = {}
+
+	local function rewriteEntityRefs(typeDefinition, value)
+		if typeDefinition.typeName == "entity" then
+			return entityRewriteMap[value] or value
+		elseif typeDefinition.typeName == "strictInterface" then
+			for field, fieldType in pairs(typeDefinition.typeParams[1]) do
+				value[field] = rewriteEntityRefs(fieldType, value[field])
+			end
+		elseif typeDefinition.typeName == "strictArray" then
+			for field, fieldType in ipairs(typeDefinition.typeParams) do
+				value[field] = rewriteEntityRefs(fieldType, value[field])
+			end
+		end
+
+		return value
+	end
+
+	local primaryEntity
+
+	for _, descendant in ipairs(prefab:GetDescendants()) do
+		if not CollectionService:HasTag(descendant, ENTITY_TAG_NAME) then
+			continue
+		end
+
+		local entity = registry:createEntity()
+		local originalEntity = descendant:GetAttribute(ENTITY_ATTRIBUTE_NAME)
+
+		if descendant == prefab.PrimaryPart then
+			primaryEntity = entity
+		end
+
+		linkedInstances[descendant] = entity
+		entityRewriteMap[originalEntity] = entity
+	end
+
+	for linkedInstance, entity in pairs(linkedInstances) do
+		for componentDefinition in pairs(registry._pools) do
+			if not CollectionService:HasTag(linkedInstance, componentDefinition.name) then
+				continue
+			end
+
+			local success, originalEntity, component = Dom.tryFromAttributes(linkedInstance, componentDefinition)
+
+			if not success then
+				warn(
+					("Failed attribute validation for %s while building the prefab %s: %s"):format(
+						prefab:GetFullName(),
+						componentDefinition.name,
+						originalEntity
+					)
+				)
+				continue
+			end
+
+			local rewrittenComponent = rewriteEntityRefs(componentDefinition.type, component)
+
+			registry:addComponent(entity, componentDefinition, rewrittenComponent)
+		end
+	end
+
+	return primaryEntity, linkedInstances
+end
+
+function World:cloneFromPrefab(prefab: Model)
+	assert(prefab.PrimaryPart ~= nil, "Prefabs must have a PrimaryPart")
+
+	local registry = self.registry
 	local copiedPrefab = prefab:Clone()
 	local entityRewriteMap = {}
 	local linkedInstances = {}
