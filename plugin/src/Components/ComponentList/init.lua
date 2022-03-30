@@ -50,6 +50,7 @@ function ComponentList:render()
 			lastGroup = components[i].Group
 			children["Group" .. groupName] = Roact.createElement(Group, {
 				Name = groupName,
+				ZIndex = -i,
 				LayoutOrder = itemCount,
 				toggleHidden = toggleGroup,
 				Hidden = self.state["Hide" .. groupName],
@@ -59,6 +60,7 @@ function ComponentList:render()
 		children[components[i].Name] = Roact.createElement(
 			Component,
 			Util.merge(components[i], {
+				ZIndex = -i,
 				Hidden = self.state["Hide" .. groupName],
 				Disabled = not props.selectionActive,
 				Component = components[i],
@@ -74,10 +76,7 @@ function ComponentList:render()
 		local component = unknownComponents[i]
 		children[component] = StudioThemeAccessor.withTheme(function(theme)
 			return Roact.createElement(Item, {
-				Text = string.format(
-					"%s (click to import)",
-					Util.escapeComponentName(component, theme)
-				),
+				Text = string.format("%s (click to import)", Util.escapeComponentName(component, theme)),
 				RichText = true,
 				Icon = "help",
 				ButtonColor = Constants.LightRed,
@@ -121,8 +120,7 @@ local function mapStateToProps(state)
 
 	for _, component in pairs(state.ComponentData) do
 		-- todo: LCS
-		local passSearch = not state.Search
-			or component.Name:lower():find(state.Search:lower(), 1, true)
+		local passSearch = not state.Search or component.Name:lower():find(state.Search:lower(), 1, true)
 		if passSearch then
 			table.insert(components, component)
 		end

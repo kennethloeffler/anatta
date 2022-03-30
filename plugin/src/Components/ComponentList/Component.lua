@@ -52,46 +52,50 @@ function Component:render()
 	end
 
 	return StudioThemeAccessor.withTheme(function(theme)
-		return Roact.createElement(VerticalExpandingList, { LayoutOrder = props.LayoutOrder, BorderSizePixel = 0 }, {
-			Roact.createElement(Item, {
-				Text = Util.escapeComponentName(props.Component.Name, theme),
-				RichText = true,
-				Icon = props.Icon,
-				IsInput = props.isBeingRenamed,
-				ClearTextOnFocus = false,
-				CaptureFocusOnBecomeInput = true,
-				TextBoxText = props.Component,
-				Visible = props.Visible,
-				Checked = checked,
-				Active = checked and self.state.isMenuOpen,
-				Hidden = props.Hidden,
-				Indent = props.Group and 10 or 0,
-				Height = 26,
+		return Roact.createElement(
+			VerticalExpandingList,
+			{ LayoutOrder = props.LayoutOrder, BorderSizePixel = 0, ZIndex = props.ZIndex },
+			{
+				Roact.createElement(Item, {
+					Text = Util.escapeComponentName(props.Component.Name, theme),
+					RichText = true,
+					Icon = props.Icon,
+					IsInput = props.isBeingRenamed,
+					ClearTextOnFocus = false,
+					CaptureFocusOnBecomeInput = true,
+					TextBoxText = props.Component,
+					Visible = props.Visible,
+					Checked = checked,
+					Active = checked and self.state.isMenuOpen,
+					Hidden = props.Hidden,
+					Indent = props.Group and 10 or 0,
+					Height = 26,
 
-				onSetVisible = function()
-					ComponentManager.Get():SetVisible(props.Definition.name, not props.Visible)
-				end,
+					onSetVisible = function()
+						ComponentManager.Get():SetVisible(props.Definition.name, not props.Visible)
+					end,
 
-				onCheck = function(_rbx)
-					ComponentManager.Get():SetComponent(props.Component, not props.HasAll)
-				end,
+					onCheck = function(_rbx)
+						ComponentManager.Get():SetComponent(props.Component, not props.HasAll)
+					end,
 
-				onSubmit = function(_rbx, newName)
-					props.stopRenaming()
-					ComponentManager.Get():Rename(props.Component, newName)
-				end,
+					onSubmit = function(_rbx, newName)
+						props.stopRenaming()
+						ComponentManager.Get():Rename(props.Component, newName)
+					end,
 
-				onFocusLost = props.stopRenaming,
-				leftClick = openMenu,
-				rightClick = function(_rbx)
-					props.showContextMenu(props.Component)
-				end,
-			}),
-			(checked and self.state.isMenuOpen) and Roact.createElement(ComponentValues, {
-				Definition = props.Definition,
-				Values = props.Values,
-			}),
-		})
+					onFocusLost = props.stopRenaming,
+					leftClick = openMenu,
+					rightClick = function(_rbx)
+						props.showContextMenu(props.Component)
+					end,
+				}),
+				(checked and self.state.isMenuOpen) and Roact.createElement(ComponentValues, {
+					Definition = props.Definition,
+					Values = props.Values,
+				}),
+			}
+		)
 	end)
 end
 
