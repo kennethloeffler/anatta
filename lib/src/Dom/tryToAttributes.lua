@@ -1,5 +1,4 @@
 local Constants = require(script.Parent.Parent.Core.Constants)
-local util = require(script.Parent.Parent.util)
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
@@ -70,8 +69,11 @@ end
 return function(instance, entity, definition, component)
 	local typeDefinition = definition.type
 	local componentName = definition.name
+	local checkSuccess, checkResult = typeDefinition.check(component)
 
-	util.jumpAssert(typeDefinition.check(component))
+	if not checkSuccess then
+		return false, ("Error converting %s on %s: %s"):format(componentName, instance:GetFullName(), checkResult)
+	end
 
 	local conversionSuccess, concreteType = typeDefinition:tryGetConcreteType()
 

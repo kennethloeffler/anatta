@@ -61,6 +61,7 @@ return function(pool, ancestorsToIgnore)
 
 			if not conversionSuccess then
 				warn(("%s failed conversion from plugin type for %s"):format(instance:GetFullName(), definition.name))
+				continue
 			end
 
 			for attributeName, value in pairs(attributeMap) do
