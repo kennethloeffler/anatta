@@ -19,7 +19,7 @@ local Vector2Input = require(Properties.Vector2Input)
 local Vector3Input = require(Properties.Vector3Input)
 
 local VerticalExpandingList = require(Modules.StudioComponents.VerticalExpandingList)
-local VerticalCollapsibleSection = require(Modules.StudioComponents.VerticalCollapsibleSection)
+local CollapsibleSection = require(script.CollapsibleSection)
 
 local ENTITY_ATTRIBUTE_NAME = Anatta.Constants.EntityAttributeName
 local INSTANCE_REF_FOLDER = Anatta.Constants.InstanceRefFolder
@@ -194,7 +194,7 @@ local function createComponentMembers(
 
 			table.insert(
 				members,
-				Roact.createElement(VerticalCollapsibleSection, {
+				Roact.createElement(CollapsibleSection, {
 					Key = ("%s%s"):format(string.rep("  ", recursedCount), name),
 					HeaderText = ("%s%s"):format(string.rep("  ", recursedCount), name),
 					OnToggled = function() end,
