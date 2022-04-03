@@ -147,7 +147,7 @@ local function createComponentMembers(
 	values,
 	members,
 	attributeMap,
-	recursed
+	recursedCount
 )
 	members = members or {}
 	attributeMap = attributeMap or {}
@@ -168,7 +168,7 @@ local function createComponentMembers(
 			typeParams = typeDefinition.typeParams[1]
 		end
 
-		if recursed then
+		if recursedCount then
 			local subMembers = {}
 
 			for fieldName in pairs(concreteType) do
@@ -177,14 +177,14 @@ local function createComponentMembers(
 				local fieldValue = value[fieldName]
 
 				createComponentMembers(
-					fieldName,
+					("%s%s"):format(string.rep("  ", recursedCount), fieldName),
 					fieldAttributeName,
 					fieldTypeDefinition,
 					fieldValue,
 					values,
 					subMembers,
 					attributeMap,
-					true
+					recursedCount + 1
 				)
 			end
 
@@ -195,8 +195,8 @@ local function createComponentMembers(
 			table.insert(
 				members,
 				Roact.createElement(VerticalCollapsibleSection, {
-					Key = name,
-					HeaderText = name,
+					Key = ("%s%s"):format(string.rep("  ", recursedCount), name),
+					HeaderText = ("%s%s"):format(string.rep("  ", recursedCount), name),
 					OnToggled = function() end,
 				}, subMembers)
 			)
@@ -214,7 +214,7 @@ local function createComponentMembers(
 					values,
 					members,
 					attributeMap,
-					true
+					1
 				)
 			end
 		end
