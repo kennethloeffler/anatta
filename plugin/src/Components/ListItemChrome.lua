@@ -19,6 +19,7 @@ local function ListItemChrome(props)
 			BackgroundColor3 = theme:GetColor("Item", state),
 			BorderSizePixel = 0,
 			Text = "",
+			ZIndex = props.ZIndex,
 
 			[Roact.Event.MouseEnter] = props.mouseEnter,
 			[Roact.Event.MouseLeave] = props.mouseLeave,
