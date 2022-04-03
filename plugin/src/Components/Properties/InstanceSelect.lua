@@ -26,7 +26,7 @@ end
 
 function InstanceSelect:render()
 	local requiredKind = self.props.ClassName or self.props.IsA
-	local instance = self.state.Instance or self.props.Instance
+	local instance = self.props.Instance
 
 	return Roact.createElement(BaseProperty, {
 		Text = ("%s (%s)"):format(self.props.Key, requiredKind or "any"),
