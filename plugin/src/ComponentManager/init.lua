@@ -19,6 +19,7 @@ local componentDefinitionsRoot = game:GetService("ReplicatedStorage")
 local componentDefinitionsFolder = "ComponentDefinitions"
 
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
+local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local ComponentManager = {}
 ComponentManager.__index = ComponentManager
@@ -111,28 +112,6 @@ function ComponentManager.new(store)
 		self:_updateStore()
 
 		local selected = Selection:Get()
-		local selectedSet = {}
-
-		for _, instance in ipairs(selected) do
-			selectedSet[instance] = true
-		end
-
-		for instance, connection in pairs(self.attributeChangedConnections) do
-			if selectedSet[instance] == nil then
-				connection:Disconnect()
-			end
-		end
-
-		for _, instance in ipairs(selected) do
-			local connection = self.attributeChangedConnections[instance]
-
-			if connection == nil then
-				self.attributeChangedConnections[instance] = instance.AttributeChanged:Connect(function()
-					self:_updateStore()
-				end)
-			end
-		end
-
 		self.store:dispatch(Actions.SetSelectionActive(#selected > 0))
 	end)
 
@@ -179,8 +158,10 @@ function ComponentManager:Destroy()
 		signal:Disconnect()
 	end
 
-	for _, connection in pairs(self.attributeChangedConnections) do
-		connection:Disconnect()
+	for _, connections in pairs(self.attributeChangedConnections) do
+		for _, connection in ipairs(connections) do
+			connection:Disconnect()
+		end
 	end
 
 	for _, connections in pairs(self.configurationChangedSignals) do
@@ -333,10 +314,70 @@ function ComponentManager:_doUpdateStore()
 				entry.Icon = defaultValues.Icon
 			end
 
+			local selectedSet = {}
 			local definition = {
 				name = rawDefinition.name,
 				type = rawDefinition.pluginType or rawDefinition.type,
 			}
+
+			for _, instance in ipairs(selected) do
+				local linkedInstance = getLinkedInstance(instance)
+
+				if not linkedInstance then
+					continue
+				end
+
+				selectedSet[linkedInstance] = true
+			end
+
+			for instance, connections in pairs(self.attributeChangedConnections) do
+				local linkedInstance = getLinkedInstance(instance)
+
+				if not linkedInstance then
+					continue
+				end
+
+				if selectedSet[linkedInstance] == nil then
+					for _, connection in ipairs(connections) do
+						connection:Disconnect()
+					end
+				end
+			end
+
+			for _, instance in ipairs(selected) do
+				local linkedInstance = getLinkedInstance(instance)
+
+				if not linkedInstance then
+					continue
+				end
+
+				local connections = self.attributeChangedConnections[linkedInstance]
+
+				if connections == nil then
+					connections = {}
+					self.attributeChangedConnections[linkedInstance] = connections
+				end
+
+				table.insert(
+					connections,
+					linkedInstance.AttributeChanged:Connect(function()
+						self:_updateStore()
+					end)
+				)
+
+				local refFolder = linkedInstance:FindFirstChild(INSTANCE_REF_FOLDER)
+
+				if refFolder then
+					for _, objectValue in ipairs(refFolder:GetChildren()) do
+						table.insert(
+							connections,
+							objectValue.Changed:Connect(function()
+								self:_updateStore()
+							end)
+						)
+					end
+				end
+			end
 
 			for _, instance in ipairs(selected) do
 				local linkedInstance = getLinkedInstance(instance)
