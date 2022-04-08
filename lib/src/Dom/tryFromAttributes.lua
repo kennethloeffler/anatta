@@ -109,22 +109,42 @@ function convert(instance, attributeName, typeDefinition)
 		local value = {}
 		local typeParams
 
-		if typeDefinition.typeName == "strictArray" then
+		if typeDefinition.typeName == "strictArray" or typeDefinition.typeName == "array" then
 			typeParams = typeDefinition.typeParams
 		else
 			typeParams = typeDefinition.typeParams[1]
 		end
 
-		for field in pairs(concreteType) do
-			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
-			local fieldTypeDefinition = typeParams[field]
-			local convertSuccess, result, componentValue = convert(instance, fieldAttributeName, fieldTypeDefinition)
+		if typeDefinition.typeName ~= "array" then
+			for field in pairs(concreteType) do
+				local fieldAttributeName = ("%s_%s"):format(attributeName, field)
+				local fieldTypeDefinition = typeParams[field]
+				local convertSuccess, result, componentValue = convert(
+					instance,
+					fieldAttributeName,
+					fieldTypeDefinition
+				)
 
-			if convertSuccess then
-				value[field] = componentValue
-			else
-				return false, result
+				if convertSuccess then
+					value[field] = componentValue
+				else
+					return false, result
+				end
 			end
+		else
+			local index = 1
+			local fieldAttributeName = ("%s_%s"):format(attributeName, index)
+			local fieldTypeDefinition = typeParams[1]
+			local convertSuccess, _, componentValue = convert(instance, fieldAttributeName, fieldTypeDefinition)
+			while convertSuccess do
+				table.insert(value, componentValue)
+
+				index += 1
+				fieldAttributeName = ("%s_%s"):format(attributeName, index)
+				convertSuccess, _, componentValue = convert(instance, fieldAttributeName, fieldTypeDefinition)
+			end
+
+			return true, entity, value
 		end
 
 		return true, entity, value

@@ -94,6 +94,35 @@ return function()
 		end)
 	end)
 
+	describe("array", function()
+		it("should return true and an array containing the values of the appropriate attributes", function()
+			local instance = Instance.new("Folder")
+
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 1)
+			instance:SetAttribute("Test_1_my", "influence")
+			instance:SetAttribute("Test_1_is", "maximal")
+			instance:SetAttribute("Test_2_my", "presence")
+			instance:SetAttribute("Test_2_is", "everywhere")
+			instance:SetAttribute("Test_3_my", "name")
+			instance:SetAttribute("Test_3_is", "God")
+
+			local success, entity, component = tryFromAttributes(instance, {
+				name = "Test",
+				type = T.array(T.strictInterface({
+					my = T.string,
+					is = T.string,
+				})),
+			})
+
+			expect(success).to.equal(true)
+			expect(entity).to.equal(1)
+			expect(component).to.be.a("table")
+			expect(component[1]).to.be.a("table")
+			expect(component[2]).to.be.a("table")
+			expect(component[3]).to.be.a("table")
+		end)
+	end)
+
 	describe("strictArray", function()
 		it("should return true and the value when the instance has the correct attributes", function()
 			local instance = Instance.new("Folder")

@@ -121,6 +121,10 @@ local concreters = {
 		return true, "literal"
 	end,
 
+	array = function()
+		return true, {}
+	end,
+
 	strictArray = function(typeDefinition)
 		local result = table.create(#typeDefinition.typeParams)
 
@@ -199,7 +203,7 @@ local defaults = {
 		local default = {}
 		local typeParams
 
-		if typeDefinition.typeName == "strictArray" then
+		if typeDefinition.typeName == "strictArray" or typeDefinition.typeName == "array" then
 			typeParams = typeDefinition.typeParams
 		else
 			typeParams = typeDefinition.typeParams[1]
@@ -320,17 +324,18 @@ function TypeDefinition._new(typeName, check, ...)
 		or typeName == "instanceOf"
 		or typeName == "instanceIsA"
 	local containsEntities = typeName == "entity"
+	local params = typeName == "strictInterface" and typeParams[1] or typeParams
 
-	for _, typeParam in pairs(typeName == "strictInterface" and typeParams[1] or typeParams) do
-		if not Types.TypeDefinition(typeParam) then
+	for _, param in pairs(params) do
+		if not Types.TypeDefinition(param) then
 			continue
 		end
 
-		if typeParam._containsRefs then
+		if param._containsRefs then
 			containsRefs = true
 		end
 
-		if typeParam._containsEntities then
+		if param._containsEntities then
 			containsEntities = true
 		end
 	end
