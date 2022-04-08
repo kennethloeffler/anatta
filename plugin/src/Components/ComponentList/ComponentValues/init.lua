@@ -162,7 +162,7 @@ local function createComponentMembers(
 	if typeof(concreteType) == "table" then
 		local typeParams
 
-		if typeDefinition.typeName == "strictArray" then
+		if typeDefinition.typeName == "strictArray" or typeDefinition.typeName == "array" then
 			typeParams = typeDefinition.typeParams
 		else
 			typeParams = typeDefinition.typeParams[1]
