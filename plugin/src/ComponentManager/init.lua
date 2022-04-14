@@ -223,7 +223,10 @@ function ComponentManager:_watchDefinitions()
 		end
 
 		self.componentDefinitions[newDefinition.name] = newDefinition
-		self:AddComponent(newDefinition.name)
+		self:AddComponent(
+			newDefinition.name,
+			if instance.Parent == self.definitionsFolder then "" else instance.Parent.Name
+		)
 
 		return true
 	end
@@ -298,8 +301,6 @@ function ComponentManager:_doUpdateStore()
 			for _, connection in ipairs(connections) do
 				connection:Disconnect()
 			end
-
-			print(("disconnected %s"):format(instance:GetFullName()))
 
 			self.attributeChangedConnections[linkedInstance] = nil
 		end
@@ -488,23 +489,18 @@ function ComponentManager:_getProp(componentName: string, key: string)
 	return instance:GetAttribute(key)
 end
 
-function ComponentManager:AddComponent(name)
-	-- Early out if component already exists.
-	if self.configurationsFolder and self.configurationsFolder:FindFirstChild(name) then
-		return
-	end
-
+function ComponentManager:AddComponent(name, group)
 	ChangeHistory:SetWaypoint(string.format("Creating component %q", name))
 
 	local configurationsFolder = self:_getFolder()
-	local instance = Instance.new("Configuration")
+	local instance = self.configurationsFolder:FindFirstChild(name) or Instance.new("Configuration")
 	instance.Name = name
-	instance:SetAttribute("Icon", defaultValues.Icon)
-	instance:SetAttribute("Visible", defaultValues.Visible)
-	instance:SetAttribute("DrawType", defaultValues.DrawType)
-	instance:SetAttribute("AlwaysOnTop", defaultValues.AlwaysOnTop)
-	instance:SetAttribute("Group", defaultValues.Group)
-	instance:SetAttribute("Color", genColor(name))
+	instance:SetAttribute("Icon", instance:GetAttribute("Icon") or defaultValues.Icon)
+	instance:SetAttribute("Visible", instance:GetAttribute("Visible") or defaultValues.Visible)
+	instance:SetAttribute("DrawType", instance:GetAttribute("DrawType") or defaultValues.DrawType)
+	instance:SetAttribute("AlwaysOnTop", instance:GetAttribute("AlwaysOnTop") or defaultValues.AlwaysOnTop)
+	instance:SetAttribute("Group", group or defaultValues.Group)
+	instance:SetAttribute("Color", instance:getAttribute("Color") or genColor(name))
 	instance.Parent = configurationsFolder
 
 	ChangeHistory:SetWaypoint(string.format("Created component %q", name))
