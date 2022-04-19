@@ -56,6 +56,14 @@ return function()
 				expect(success).to.equal(true)
 				expect(default).to.equal("BIG")
 			end)
+
+			it("should correctly handle T.array", function()
+				local ok, default = T.array(T.number):tryDefault()
+
+				expect(ok).to.equal(true)
+				expect(typeof(default)).to.equal("table")
+				expect(next(default)).to.never.be.ok()
+			end)
 		end)
 
 		describe("getConcreteType", function()
@@ -114,6 +122,14 @@ return function()
 
 				local _, concreteType = stringUnion:tryGetConcreteType()
 				expect(concreteType).to.equal("literal")
+			end)
+
+			it("should resolve an array", function()
+				local ok, concreteType = T.array(T.string):tryGetConcreteType()
+
+				expect(ok).to.equal(true)
+				expect(typeof(concreteType)).to.equal("table")
+				expect(next(concreteType)).to.never.be.ok()
 			end)
 		end)
 	end)
