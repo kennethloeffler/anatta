@@ -1,4 +1,5 @@
 return function()
+	local CollectionService = game:GetService("CollectionService")
 	local Constants = require(script.Parent.Parent.Core.Constants)
 	local T = require(script.Parent.Parent.Core.T)
 
@@ -64,6 +65,19 @@ return function()
 
 			expect(success).to.equal(false)
 			expect(result).to.be.a("string")
+		end)
+	end)
+
+	describe("none", function()
+		it("should return true when the instance has the correct tag", function()
+			local instance = Instance.new("Folder")
+
+			CollectionService:AddTag(instance, "Test")
+			instance:SetAttribute(ENTITY_ATTRIBUTE_NAME, 0)
+
+			local success = tryFromAttributes(instance, { name = "Test", type = T.none })
+
+			expect(success).to.equal(true)
 		end)
 	end)
 
