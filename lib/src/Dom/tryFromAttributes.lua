@@ -1,3 +1,5 @@
+local CollectionService = game:GetService("CollectionService")
+
 local Constants = require(script.Parent.Parent.Core.Constants)
 local T = require(script.Parent.Parent.Core.T)
 
@@ -49,6 +51,10 @@ local conversions = {
 	instanceOf = instanceConversion,
 	instance = instanceConversion,
 	instanceIsA = instanceConversion,
+
+	none = function(instance, _, attributeName)
+		return CollectionService:HasTag(instance, attributeName), nil
+	end,
 
 	enum = function(instance, entity, attributeName, typeDefinition)
 		local enum = typeDefinition.typeParams[1]
