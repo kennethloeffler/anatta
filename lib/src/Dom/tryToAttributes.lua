@@ -81,6 +81,20 @@ return function(instance, entity, definition, component)
 		return false, ("Error converting %s: %s"):format(componentName, concreteType)
 	end
 
+	if typeDefinition.typeName == "array" then
+		concreteType = table.create(#component)
+
+		for _ = 1, #component do
+			local arrayFieldSuccess, fieldConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
+
+			if not arrayFieldSuccess then
+				return false, ("Error converting %s: %s"):format(componentName, fieldConcreteType)
+			end
+
+			table.insert(concreteType, fieldConcreteType)
+		end
+	end
+
 	local success, attributeMap = convert({}, componentName, concreteType, instance, entity, component)
 
 	attributeMap[ENTITY_ATTRIBUTE_NAME] = entity
