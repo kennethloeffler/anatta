@@ -52,8 +52,8 @@ local conversions = {
 	instance = instanceConversion,
 	instanceIsA = instanceConversion,
 
-	none = function(instance, _, attributeName)
-		return CollectionService:HasTag(instance, attributeName), nil
+	none = function(instance, entity, attributeName)
+		return CollectionService:HasTag(instance, attributeName), entity, nil
 	end,
 
 	enum = function(instance, entity, attributeName, typeDefinition)
