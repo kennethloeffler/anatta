@@ -248,10 +248,13 @@ function Reactor:consumeEach(callback)
 	for i = self._pool.size, 1, -1 do
 		local entity = dense[i]
 
-		pool:delete(entity)
 		updates[entity] = nil
 		self:_pack(entity)
 		callback(entity, unpack(packed, 1, numPacked))
+
+		if pool:getIndex(entity) then
+			pool:delete(entity)
+		end
 	end
 end
 
@@ -268,7 +271,10 @@ function Reactor:consume(entity)
 	self._updates[entity] = nil
 	self:_pack(entity)
 	self.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
-	self._pool:delete(entity)
+
+	if self._pool:getIndex(entity) then
+		self._pool:delete(entity)
+	end
 end
 
 --[=[
@@ -385,7 +391,10 @@ function Reactor:_tryRemove()
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
 			self._pool.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
-			self._pool:delete(entity)
+
+			if self._pool:getIndex(entity) then
+				self._pool:delete(entity)
+			end
 		end
 	end
 end
@@ -409,7 +418,10 @@ function Reactor:_tryRemoveUpdated(offset)
 		if self._pool:getIndex(entity) then
 			self:_pack(entity)
 			self._pool.removed:dispatch(entity, unpack(self._packed, 1, self._numPacked))
-			self._pool:delete(entity)
+
+			if self._pool:getIndex(entity) then
+				self._pool:delete(entity)
+			end
 		end
 	end
 end
