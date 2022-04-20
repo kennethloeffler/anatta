@@ -41,8 +41,8 @@ Also unlike a [`Mapper`](/api/Mapper), a `Reactor` has the ability to &quot;atta
 [`Reactor:withAttachments`](#withAttachments).
 
 You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><meta data-react-helmet="true" property="og:url" content="https://kennethloeffler.github.io/anatta/api/Reactor"><meta data-react-helmet="true" name="docusaurus_locale" content="en"><meta data-react-helmet="true" name="docusaurus_tag" content="default"><link data-react-helmet="true" rel="canonical" href="https://kennethloeffler.github.io/anatta/api/Reactor"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Reactor" hreflang="en"><link data-react-helmet="true" rel="alternate" href="https://kennethloeffler.github.io/anatta/api/Reactor" hreflang="x-default"><link rel="stylesheet" href="/anatta/assets/css/styles.302001c7.css">
-<link rel="preload" href="/anatta/assets/js/runtime~main.e11e9331.js" as="script">
-<link rel="preload" href="/anatta/assets/js/main.aea9e3da.js" as="script">
+<link rel="preload" href="/anatta/assets/js/runtime~main.6204f335.js" as="script">
+<link rel="preload" href="/anatta/assets/js/main.0d34b3fe.js" as="script">
 </head>
 <body>
 <script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
@@ -91,7 +91,7 @@ You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><
     </p>
   </div>
 </div>
-</div><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="each"><code style="text-decoration:none">each</code><a aria-hidden="true" class="hash-link" href="#each" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Reactor.lua#L161"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Reactor<!-- -->:</code><code class="green_3LnD">each</code><code>(</code><code>callback<!-- -->: </code><code class="purple__nFc">(</code><div class="inset_2cJr"><code>entity<!-- -->: </code><code class="blue_2Afy">number</code><code class="purple__nFc">,</code></div><div class="inset_2cJr"><code class="blue_2Afy">...any</code></div><code class="purple__nFc">)</code><code class="purple__nFc"> → </code><code class="purple__nFc">(</code><code class="purple__nFc">)</code><code>) → </code><code>(</code><code>)</code></div><div>
+</div><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="each"><code style="text-decoration:none">each</code><a aria-hidden="true" class="hash-link" href="#each" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Reactor.lua#L172"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Reactor<!-- -->:</code><code class="green_3LnD">each</code><code>(</code><code>callback<!-- -->: </code><code class="purple__nFc">(</code><div class="inset_2cJr"><code>entity<!-- -->: </code><code class="blue_2Afy">number</code><code class="purple__nFc">,</code></div><div class="inset_2cJr"><code class="blue_2Afy">...any</code></div><code class="purple__nFc">)</code><code class="purple__nFc"> → </code><code class="purple__nFc">(</code><code class="purple__nFc">)</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>
   Iterates over the all the entities present in the <code>Reactor</code>. Calls the callback for
   each entity, passing each entity followed by the components named in the
@@ -107,7 +107,7 @@ You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><
     <p>It's safe to add or remove components inside of the callback.</p>
   </div>
 </div>
-</div><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="consumeEach"><code style="text-decoration:none">consumeEach</code><a aria-hidden="true" class="hash-link" href="#consumeEach" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Reactor.lua#L229"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Reactor<!-- -->:</code><code class="green_3LnD">consumeEach</code><code>(</code><code>callback<!-- -->: </code><code class="purple__nFc">(</code><div class="inset_2cJr"><code>entity<!-- -->: </code><code class="blue_2Afy">number</code><code class="purple__nFc">,</code></div><div class="inset_2cJr"><code class="blue_2Afy">...any</code></div><code class="purple__nFc">)</code><code class="purple__nFc"> → </code><code class="purple__nFc">(</code><code class="purple__nFc">)</code><code>) → </code><code>(</code><code>)</code></div><div>
+</div><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="consumeEach"><code style="text-decoration:none">consumeEach</code><a aria-hidden="true" class="hash-link" href="#consumeEach" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Reactor.lua#L240"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Reactor<!-- -->:</code><code class="green_3LnD">consumeEach</code><code>(</code><code>callback<!-- -->: </code><code class="purple__nFc">(</code><div class="inset_2cJr"><code>entity<!-- -->: </code><code class="blue_2Afy">number</code><code class="purple__nFc">,</code></div><div class="inset_2cJr"><code class="blue_2Afy">...any</code></div><code class="purple__nFc">)</code><code class="purple__nFc"> → </code><code class="purple__nFc">(</code><code class="purple__nFc">)</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>
   Iterates over all the entities present in the <code>Reactor</code> and clears each entity's
   update status. Calls the callback for each entity visited during the iteration,
@@ -129,7 +129,7 @@ You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><
     <p>It's safe to add or remove components inside of the callback.</p>
   </div>
 </div>
-</div><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="consume"><code style="text-decoration:none">consume</code><a aria-hidden="true" class="hash-link" href="#consume" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Reactor.lua#L254"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Reactor<!-- -->:</code><code class="green_3LnD">consume</code><code>(</code><code>entity<!-- -->: </code><code class="blue_2Afy">number</code><code>) → </code><code>(</code><code>)</code></div><div>
+</div><div class="divider_3z1R"></div><h3 class="anchor anchorWithStickyNavbar_31ik" id="consume"><code style="text-decoration:none">consume</code><a aria-hidden="true" class="hash-link" href="#consume" title="Direct link to heading">​</a></h3><div class="repositoryDetailsContainer_1UH0"><a class="sourceButton_2aE5" href="https://github.com/kennethloeffler/anatta/blob/master/lib/src/World/Reactor.lua#L265"><div class="sourceButtonText_monK">&lt;/&gt;</div></a></div><div class="memberString_P8-X"><code>Reactor<!-- -->:</code><code class="green_3LnD">consume</code><code>(</code><code>entity<!-- -->: </code><code class="blue_2Afy">number</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>Consumes updates made to components named in <code>Query.withUpdated</code>.</p>
 </div><h3>Errors</h3><table class="errorTable_25fH"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody><tr><td>&quot;entity %d is not present in this reactor&quot;</td><td>The reactor doesn&#x27;t contain that entity.</td></tr></tbody></table></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
@@ -186,7 +186,7 @@ You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 161,
+                &quot;line&quot;: 172,
                 &quot;path&quot;: &quot;lib/src/World/Reactor.lua&quot;
             }
         },
@@ -203,7 +203,7 @@ You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 229,
+                &quot;line&quot;: 240,
                 &quot;path&quot;: &quot;lib/src/World/Reactor.lua&quot;
             }
         },
@@ -226,7 +226,7 @@ You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><
                 }
             ],
             &quot;source&quot;: {
-                &quot;line&quot;: 254,
+                &quot;line&quot;: 265,
                 &quot;path&quot;: &quot;lib/src/World/Reactor.lua&quot;
             }
         },
@@ -238,7 +238,7 @@ You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><
             &quot;function_type&quot;: &quot;method&quot;,
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 269,
+                &quot;line&quot;: 280,
                 &quot;path&quot;: &quot;lib/src/World/Reactor.lua&quot;
             }
         }
@@ -252,7 +252,7 @@ You can create a `Reactor` using [`World:getReactor`](/api/World#getReactor)."><
         &quot;path&quot;: &quot;lib/src/World/Reactor.lua&quot;
     }
 }</pre></details></div><div class="col col--3"><div class="tableOfContents_35-E thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#consume" class="table-of-contents__link toc-highlight">:consume</a></li><li><a href="#consumeEach" class="table-of-contents__link toc-highlight">:consumeEach</a></li><li><a href="#each" class="table-of-contents__link toc-highlight">:each</a></li><li><a href="#withAttachments" class="table-of-contents__link toc-highlight">:withAttachments</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2022 kennethloeffler. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/anatta/assets/js/runtime~main.e11e9331.js"></script>
-<script src="/anatta/assets/js/main.aea9e3da.js"></script>
+<script src="/anatta/assets/js/runtime~main.6204f335.js"></script>
+<script src="/anatta/assets/js/main.0d34b3fe.js"></script>
 </body>
 </html>
