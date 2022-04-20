@@ -113,20 +113,31 @@ end
 	:::
 ]=]
 function Reactor:withAttachments(callback)
-	local attachmentsAdded = self.added:connect(function(entity, ...)
+	local entityAdded = self.added:connect(function(entity, ...)
 		local attachments = callback(entity, ...)
 
 		if typeof(attachments) ~= "table" then
 			warn(WarnNoAttachmentsTable:format(debug.info(callback, "s"), debug.info(callback, "l")))
-
-			self._pool:replace(entity, {})
-			return
+			attachments = {}
 		end
 
-		self._pool:replace(entity, attachments)
+		local index = self._pool:getIndex(entity)
+
+		if not index then
+			-- Another added listener or the withAttachments callback caused the entity to leave
+			-- the Reactor. This is pretty weird thing for a consumer of this function to
+			-- do, but we shouldn't throw or leak attachments.
+			for _, item in pairs(attachments) do
+				Finalizers[typeof(item)](item)
+			end
+
+			return
+		else
+			self._pool.components[index] = attachments
+		end
 	end)
 
-	local attachmentsRemoved = self.removed:connect(function(entity)
+	local entityRemoved = self.removed:connect(function(entity)
 		local attachments = self._pool:get(entity)
 
 		if attachments == nil then
@@ -139,8 +150,8 @@ function Reactor:withAttachments(callback)
 		end
 	end)
 
-	table.insert(self._connections, attachmentsAdded)
-	table.insert(self._connections, attachmentsRemoved)
+	table.insert(self._connections, entityAdded)
+	table.insert(self._connections, entityRemoved)
 end
 
 function Reactor:getAttachment(entity)
