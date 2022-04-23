@@ -26,10 +26,6 @@ function EntityGenerator.new()
 	local self
 
 	local authorityRemovedConnection = CollectionService:GetInstanceRemovedSignal(ENTITY_AUTHORITY):Connect(function()
-		RunService.Heartbeat:Wait()
-		RunService.Heartbeat:Wait()
-		RunService.Heartbeat:Wait()
-
 		self:negotiateAuthority()
 	end)
 
@@ -52,6 +48,10 @@ end
 function EntityGenerator:negotiateAuthority()
 	if LocalPlayer == nil then
 		self:becomeAuthority()
+		return
+	end
+
+	if #CollectionService:GetTagged(ENTITY_AUTHORITY) > 0 then
 		return
 	end
 
