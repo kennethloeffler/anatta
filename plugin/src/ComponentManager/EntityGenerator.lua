@@ -8,14 +8,15 @@ local Constants = require(Modules.Anatta.Library.Core.Constants)
 local Registry = require(Modules.Anatta.Library.World.Registry)
 
 local CANDIDATE = ".__pendingAuthorityCandidate"
-local PENDING_ENTITY_CREATION = ".__pendingEntityCreation"
-local PENDING_ENTITY_DESTRUCTION = ".__pendingEntityDestruction"
 local ENTITY_ATTRIBUTE_NAME = Constants.EntityAttributeName
 local ENTITY_AUTHORITY = ".__entityAuthority"
 local ENTITY_TAG_NAME = Constants.EntityTagName
+local ENTITYID_MASK = Constants.EntityIdMask
 local NEGOTIATION_ACK = ".__authorityNegotiation"
-local TOKEN_ATTRIBUTE = "__authorityToken"
+local PENDING_ENTITY_CREATION = ".__pendingEntityCreation"
+local PENDING_ENTITY_DESTRUCTION = ".__pendingEntityDestruction"
 local PING_ATTRIBUTE = "__ping"
+local TOKEN_ATTRIBUTE = "__authorityToken"
 
 local EntityGenerator = {}
 EntityGenerator.__index = EntityGenerator
@@ -154,7 +155,9 @@ function EntityGenerator:becomeAuthority()
 		table.insert(entities, entity)
 	end
 
-	table.sort(entities)
+	table.sort(entities, function(lhs, rhs)
+		return bit32.band(lhs, ENTITYID_MASK) < bit32.band(rhs, ENTITYID_MASK)
+	end)
 
 	for _, entity in ipairs(entities) do
 		registry:createEntityFrom(entity)
