@@ -1,5 +1,4 @@
 return function()
-	local World = require(script.Parent.Parent.World)
 	local T = require(script.Parent.T)
 	local t = require(script.Parent.Parent.Parent.t)
 

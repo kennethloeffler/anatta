@@ -14,7 +14,6 @@ local T = require(script.Core.T)
 local Types = require(script.Types)
 local World = require(script.World)
 local util = require(script.util)
-local t = require(script.Parent.t)
 
 local ErrWorldAlreadyExists = 'A world named "%s" already exists'
 local ErrWorldDoesntExist = 'No world named "%s" exists'
