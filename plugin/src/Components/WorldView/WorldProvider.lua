@@ -35,9 +35,7 @@ function WorldProvider:init()
 			end)
 		end
 	end
-	self.maid.cameraChangedConn = workspace
-		:GetPropertyChangedSignal("CurrentCamera")
-		:Connect(cameraAdded)
+	self.maid.cameraChangedConn = workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(cameraAdded)
 	cameraAdded(workspace.CurrentCamera)
 end
 
@@ -50,35 +48,34 @@ function WorldProvider:didMount()
 		end
 		self:componentAdded(component.Name)
 	end
-	self.onComponentsUpdatedConn =
-		manager:OnComponentsUpdated(function(newComponents, oldComponents)
-			local added = {}
-			local removed = {}
-			for _, component in pairs(newComponents) do
-				if component.Visible == false or component.DrawType == "None" then
-					continue
-				end
-				added[component.Name] = component
+	self.onComponentsUpdatedConn = manager:OnComponentsUpdated(function(newComponents, oldComponents)
+		local added = {}
+		local removed = {}
+		for _, component in pairs(newComponents) do
+			if component.Visible == false or component.DrawType == "None" then
+				continue
 			end
-			for _, component in pairs(oldComponents) do
-				if component.Visible == false or component.DrawType == "None" then
-					continue
-				end
-				if added[component.Name] then
-					added[component.Name] = nil
-				else
-					removed[component.Name] = component
-				end
+			added[component.Name] = component
+		end
+		for _, component in pairs(oldComponents) do
+			if component.Visible == false or component.DrawType == "None" then
+				continue
 			end
+			if added[component.Name] then
+				added[component.Name] = nil
+			else
+				removed[component.Name] = component
+			end
+		end
 
-			for name in pairs(added) do
-				self:componentAdded(name)
-			end
-			for name in pairs(removed) do
-				self:componentRemoved(name)
-			end
-			self:updateParts()
-		end)
+		for name in pairs(added) do
+			self:componentAdded(name)
+		end
+		for name in pairs(removed) do
+			self:componentRemoved(name)
+		end
+		self:updateParts()
+	end)
 
 	self:updateParts()
 end
@@ -366,10 +363,7 @@ local function isTypeAllowed(instance)
 end
 
 function WorldProvider:componentAdded(componentName)
-	assert(
-		not self.trackedComponents[componentName],
-		"Newly added component must not already be tracked"
-	)
+	assert(not self.trackedComponents[componentName], "Newly added component must not already be tracked")
 	self.trackedComponents[componentName] = true
 	for _, obj in pairs(Collection:GetTagged(componentName)) do
 		if isTypeAllowed(obj) then
@@ -389,44 +383,37 @@ function WorldProvider:componentAdded(componentName)
 			end
 		end
 	end
-	self.instanceAddedConns[componentName] = Collection
-		:GetInstanceAddedSignal(componentName)
-		:Connect(function(obj)
-			if not isTypeAllowed(obj) then
-				return
-			end
-			if obj:IsDescendantOf(workspace) then
-				self:instanceAdded(obj)
-				self:updateParts()
-			end
-			if not self.instanceAncestryChangedConns[obj] then
-				self.instanceAncestryChangedConns[obj] = obj.AncestryChanged:Connect(function()
-					if not self.trackedParts[obj] and obj:IsDescendantOf(workspace) then
-						self:instanceAdded(obj)
-						self:updateParts()
-					elseif self.trackedParts[obj] and not obj:IsDescendantOf(workspace) then
-						self:removeInstance(obj)
-						self:updateParts()
-					end
-				end)
-			end
-		end)
-	self.instanceRemovedConns[componentName] = Collection
-		:GetInstanceRemovedSignal(componentName)
-		:Connect(function(obj)
-			if not isTypeAllowed(obj) then
-				return
-			end
-			self:instanceRemoved(obj)
+	self.instanceAddedConns[componentName] = Collection:GetInstanceAddedSignal(componentName):Connect(function(obj)
+		if not isTypeAllowed(obj) then
+			return
+		end
+		if obj:IsDescendantOf(workspace) then
+			self:instanceAdded(obj)
 			self:updateParts()
-		end)
+		end
+		if not self.instanceAncestryChangedConns[obj] then
+			self.instanceAncestryChangedConns[obj] = obj.AncestryChanged:Connect(function()
+				if not self.trackedParts[obj] and obj:IsDescendantOf(workspace) then
+					self:instanceAdded(obj)
+					self:updateParts()
+				elseif self.trackedParts[obj] and not obj:IsDescendantOf(workspace) then
+					self:removeInstance(obj)
+					self:updateParts()
+				end
+			end)
+		end
+	end)
+	self.instanceRemovedConns[componentName] = Collection:GetInstanceRemovedSignal(componentName):Connect(function(obj)
+		if not isTypeAllowed(obj) then
+			return
+		end
+		self:instanceRemoved(obj)
+		self:updateParts()
+	end)
 end
 
 function WorldProvider:componentRemoved(componentName)
-	assert(
-		self.trackedComponents[componentName],
-		"Attempted to remove a component that isn't tracked"
-	)
+	assert(self.trackedComponents[componentName], "Attempted to remove a component that isn't tracked")
 	self.trackedComponents[componentName] = nil
 	for _, obj in pairs(Collection:GetTagged(componentName)) do
 		if obj:IsDescendantOf(workspace) then

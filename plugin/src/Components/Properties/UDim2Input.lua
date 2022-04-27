@@ -40,7 +40,7 @@ local function UDim2Input(props)
 			return createUDim2FromString(raw:gsub("%s", ""))
 		end,
 
-		OnChanged = props.OnChanged
+		OnChanged = props.OnChanged,
 	})
 end
 

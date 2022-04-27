@@ -16,9 +16,7 @@ local function createUDimFromString(str)
 end
 
 local function createShortStringFromUDim(uDim: UDim)
-	return string.format("%.3f, %.0f", uDim.Scale, uDim.Offset)
-		:gsub("%.?0+$", "")
-		:gsub("%.?0+,", ",")
+	return string.format("%.3f, %.0f", uDim.Scale, uDim.Offset):gsub("%.?0+$", ""):gsub("%.?0+,", ",")
 end
 
 local function UDimInput(props)
@@ -40,7 +38,7 @@ local function UDimInput(props)
 			return createUDimFromString(raw:gsub("%s", ""))
 		end,
 
-		OnChanged = props.OnChanged
+		OnChanged = props.OnChanged,
 	})
 end
 

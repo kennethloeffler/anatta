@@ -12,16 +12,11 @@ local function createVector2FromString(str)
 		return
 	end
 
-	return Vector2.new(
-		tonumber(x),
-		tonumber(y)
-	)
+	return Vector2.new(tonumber(x), tonumber(y))
 end
 
 local function createShortStringFromVector2(vec2)
-	return string.format("%.3f, %.3f", vec2.X, vec2.Y)
-		:gsub("%.?0+$", "")
-		:gsub("%.?0+,", ",")
+	return string.format("%.3f, %.3f", vec2.X, vec2.Y):gsub("%.?0+$", ""):gsub("%.?0+,", ",")
 end
 
 local function Vector2Input(props)
@@ -43,7 +38,7 @@ local function Vector2Input(props)
 			return createVector2FromString(raw:gsub("%s", ""))
 		end,
 
-		OnChanged = props.OnChanged
+		OnChanged = props.OnChanged,
 	})
 end
 

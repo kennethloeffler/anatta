@@ -24,8 +24,7 @@ function IconPicker:init()
 end
 
 function IconPicker:shouldUpdate(newProps)
-	return self.props.componentName ~= newProps.componentName
-		or self.props.search ~= newProps.search
+	return self.props.componentName ~= newProps.componentName or self.props.search ~= newProps.search
 end
 
 function IconPicker:render()

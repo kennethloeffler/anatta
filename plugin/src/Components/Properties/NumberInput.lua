@@ -34,7 +34,7 @@ local function NumberInput(props)
 			return tonumber(raw)
 		end,
 
-		OnChanged = props.OnChanged
+		OnChanged = props.OnChanged,
 	})
 end
 

@@ -22,8 +22,8 @@ return function(target)
 				Value = UDim2.new(0.4, 25, 0.3, 400),
 				OnChanged = function(udim2)
 					print(udim2)
-				end
-			})
+				end,
+			}),
 		}),
 	})
 

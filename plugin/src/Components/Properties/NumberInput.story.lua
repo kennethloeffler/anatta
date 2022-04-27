@@ -20,9 +20,7 @@ return function(target)
 			NumberInput = Roact.createElement(NumberInput, {
 				Key = "Cool Number Bro",
 				Value = 55,
-				OnChanged = function()
-					
-				end
+				OnChanged = function() end,
 			}),
 		}),
 		Container1 = Roact.createElement("Frame", {
@@ -33,9 +31,7 @@ return function(target)
 			NumberMinInput = Roact.createElement(NumberInput, {
 				Key = "Minimum -10",
 				Value = 55,
-				OnChanged = function()
-					
-				end,
+				OnChanged = function() end,
 				Min = -10,
 			}),
 		}),
@@ -47,9 +43,7 @@ return function(target)
 			NumberMaxInput = Roact.createElement(NumberInput, {
 				Key = "Maximum 8999",
 				Value = 299,
-				OnChanged = function()
-					
-				end,
+				OnChanged = function() end,
 				Max = 8999,
 			}),
 		}),
@@ -61,9 +55,7 @@ return function(target)
 			NumberConstrainedInput = Roact.createElement(NumberInput, {
 				Key = "Constrainted 0-1",
 				Value = 0.2,
-				OnChanged = function()
-					
-				end,
+				OnChanged = function() end,
 				Min = 0,
 				Max = 1,
 			}),

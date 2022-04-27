@@ -111,28 +111,22 @@ function ComponentizedInstanceProvider:didUpdate(prevProps, prevState)
 		self.ancestryChangedConns = {}
 		self.nameChangedConns = {}
 		if componentName then
-			self.instanceAddedConn = Collection
-				:GetInstanceAddedSignal(componentName)
-				:Connect(function(inst)
-					self.nameChangedConns[inst] = inst
-						:GetPropertyChangedSignal("Name")
-						:Connect(function()
-							self:updateState(componentName)
-						end)
-					self.ancestryChangedConns[inst] = inst.AncestryChanged:Connect(function()
-						self:updateState(componentName)
-					end)
+			self.instanceAddedConn = Collection:GetInstanceAddedSignal(componentName):Connect(function(inst)
+				self.nameChangedConns[inst] = inst:GetPropertyChangedSignal("Name"):Connect(function()
 					self:updateState(componentName)
 				end)
-			self.instanceRemovedConn = Collection
-				:GetInstanceRemovedSignal(componentName)
-				:Connect(function(inst)
-					self.nameChangedConns[inst]:Disconnect()
-					self.nameChangedConns[inst] = nil
-					self.ancestryChangedConns[inst]:Disconnect()
-					self.ancestryChangedConns[inst] = nil
+				self.ancestryChangedConns[inst] = inst.AncestryChanged:Connect(function()
 					self:updateState(componentName)
 				end)
+				self:updateState(componentName)
+			end)
+			self.instanceRemovedConn = Collection:GetInstanceRemovedSignal(componentName):Connect(function(inst)
+				self.nameChangedConns[inst]:Disconnect()
+				self.nameChangedConns[inst] = nil
+				self.ancestryChangedConns[inst]:Disconnect()
+				self.ancestryChangedConns[inst] = nil
+				self:updateState(componentName)
+			end)
 		end
 
 		for _, entry in pairs(parts) do

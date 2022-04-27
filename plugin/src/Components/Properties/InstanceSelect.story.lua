@@ -22,8 +22,8 @@ return function(target)
 				OnChanged = function(instance)
 					print(instance:GetFullName())
 				end,
-				Instance = game:GetService("Workspace").Camera
-			})
+				Instance = game:GetService("Workspace").Camera,
+			}),
 		}),
 		Container1 = Roact.createElement("Frame", {
 			LayoutOrder = 0,
@@ -36,8 +36,8 @@ return function(target)
 				OnChanged = function(instance)
 					print(instance:GetFullName())
 				end,
-				Instance = game:GetService("Workspace").Terrain
-			})
+				Instance = game:GetService("Workspace").Terrain,
+			}),
 		}),
 		Container2 = Roact.createElement("Frame", {
 			LayoutOrder = 0,
@@ -50,8 +50,8 @@ return function(target)
 				OnChanged = function(instance)
 					print(instance:GetFullName())
 				end,
-				Instance = game:GetService("ServerStorage")
-			})
+				Instance = game:GetService("ServerStorage"),
+			}),
 		}),
 	})
 

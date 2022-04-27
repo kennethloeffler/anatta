@@ -13,7 +13,7 @@ function ComplexStringInput:init()
 	self.lastGoodInput = self.props.Value
 
 	self:setState({
-		Value = self.props.Value
+		Value = self.props.Value,
 	})
 end
 
@@ -66,7 +66,7 @@ function ComplexStringInput:render()
 				self:validateField()
 				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
 			end
-		end
+		end,
 	})
 end
 

@@ -33,10 +33,10 @@ function Wrapper:render()
 					Selected = self.state.Selected,
 					OnSelected = function(enumItem)
 						self:setState({
-							Selected = enumItem
+							Selected = enumItem,
 						})
 					end,
-				})
+				}),
 			}),
 			Display = Roact.createElement("TextLabel", {
 				Size = UDim2.fromOffset(300, 25),
@@ -45,7 +45,7 @@ function Wrapper:render()
 				Text = "Hello world! Everyone is epic :D",
 				Font = self.state.Selected,
 				TextScaled = true,
-			})
+			}),
 		})
 	end)
 end
