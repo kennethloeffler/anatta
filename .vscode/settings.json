@@ -1,0 +1,63 @@
+{
+	// Rojo adaptions for devcontainer
+	"rojo.releaseBranch": "7.x",
+	"rojo.pluginManagement": false,
+
+	// Preferred organization-wide editor tweaks
+	"editor.formatOnSave": true,
+	"editor.semanticHighlighting.enabled": true,
+
+	// Disable LSP diagnostics since Selene is enabled
+	"robloxLsp.diagnostics.enable": false,
+
+	// Exclude all modules/vendor deps from search
+	"search.exclude": {
+		"**/node_modules": true,
+		"**/bower_components": true,
+		"**/*.code-search": true,
+		"**/vendor": true
+	},
+
+	// Clean up source control panel
+	"git.autoRepositoryDetection": false,
+	"git.ignoredRepositories": ["**/vendor"],
+	"gitlens.showWelcomeOnInstall": false,
+	"gitlens.showWhatsNewAfterUpgrades": false,
+	"gitlens.partners": null,
+
+	// Language-specific configurations
+	"[json]": {
+		"editor.quickSuggestions": {
+			"strings": true
+		},
+		"editor.suggest.insertMode": "replace",
+		"gitlens.codeLens.scopes": ["document"],
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[jsonc]": {
+		"editor.quickSuggestions": {
+			"strings": true
+		},
+		"editor.suggest.insertMode": "replace",
+		"gitlens.codeLens.scopes": ["document"],
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[lua]": {
+		"editor.defaultFormatter": "JohnnyMorganz.stylua",
+		"editor.snippetSuggestions": "inline"
+	},
+	"[yaml]": {
+		"editor.insertSpaces": true,
+		"editor.tabSize": 2,
+		"editor.autoIndent": "keep",
+		"gitlens.codeLens.scopes": ["document"],
+		"editor.quickSuggestions": {
+			"other": true,
+			"comments": false,
+			"strings": true
+		}
+	},
+	"yaml.schemaStore.enable": false,
+	"yaml.validate": false,
+	"robloxLsp.workspace.maxPreload": 5000
+}
