@@ -7,9 +7,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
 # Install packages
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 RUN apt-get update
-RUN apt-get install git unzip git-lfs -y
-
-RUN git lfs install
+RUN apt-get install git unzip -y
 
 # Install foreman
 RUN curl -fsSL https://github.com/Roblox/foreman/releases/download/v1.0.3/foreman-1.0.3-linux.zip -O
@@ -22,5 +20,5 @@ RUN rm foreman-1.0.3-linux.zip
 RUN wget -qO tokei.tar.gz https://github.com/XAMPPRocky/tokei/releases/latest/download/tokei-x86_64-unknown-linux-gnu.tar.gz
 RUN tar xf tokei.tar.gz -C /usr/local/bin
 
-WORKDIR /workspaces/wof
+WORKDIR /workspaces/anatta
 RUN foreman install
