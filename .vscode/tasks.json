@@ -1,0 +1,19 @@
+{
+	// See https://go.microsoft.com/fwlink/?LinkId=733558
+	// for the documentation about the tasks.json format
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "prune git tree",
+			"type": "shell",
+			"command": "git fetch -p && for branch in $(git branch -vv | grep ': gone]' | awk '{print $1}'); do git branch -D $branch; done",
+			"problemMatcher": []
+		},
+		{
+			"label": "update git submodules",
+			"type": "shell",
+			"command": "git submodule update --init --recursive",
+			"problemMatcher": []
+		}
+	]
+}
