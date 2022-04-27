@@ -7,6 +7,7 @@ local Anatta = require(Modules.Anatta)
 
 local Boolean = require(Properties.Boolean)
 local EnumItem = require(Properties.EnumItem)
+local InlineButton = require(Properties.InlineButton)
 local InstanceSelect = require(Properties.InstanceSelect)
 local NumberInput = require(Properties.NumberInput)
 local StringInput = require(Properties.StringInput)
@@ -68,22 +69,45 @@ local function makeInputElement(elementKind)
 	end
 end
 
-local function getAttributeMap(instance, definition)
-	local defaultSuccess, default = definition.type:tryDefault()
-
-	if not defaultSuccess and not definition.type.typeName == "none" then
-		return false, default
-	end
-
-	local attributeSuccess, attributeMap = Anatta.Dom.tryToAttributes(instance, 0, definition, default)
-
-	return attributeSuccess, attributeMap, default
-end
-
-local function createArrayAddElement(currentArray, typeDefinition, linkedInstances)
+local function createArrayAddElement(currentArray, typeDefinition, linkedInstances, indentCount)
 	-- Anatta.Dom.tryToAttributes(instance, entity, definition, component)
 	--local component = Anatta.Dom.tryFromAttributes(
-	return Roact.createElement({})
+	return Roact.createElement(InlineButton, {
+		Text = "+ Add Item",
+		Indents = indentCount,
+		OnActivated = function()
+			local newIndex = #currentArray + 1
+
+			print(typeDefinition)
+
+			local newValueSuccess, newValue = typeDefinition.typeParams[1]:tryDefault()
+
+			if not newValueSuccess then
+				return warn(newValue)
+			end
+
+			currentArray[newIndex] = newValue
+
+			for linkedInstance: Instance in pairs(linkedInstances) do
+				local attributeSuccess, attributeMap = Anatta.Dom.tryToAttributes(
+					linkedInstance,
+					0,
+					typeDefinition,
+					currentArray
+				)
+
+				if not attributeSuccess then
+					warn(attributeMap)
+				else
+					for k, v in pairs(attributeMap) do
+						if k ~= Anatta.Constants.EntityAttributeName then
+							linkedInstance:SetAttribute(k, v)
+						end
+					end
+				end
+			end
+		end,
+	})
 end
 
 local Types = {
