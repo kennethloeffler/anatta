@@ -30,10 +30,10 @@ function Wrapper:render()
 				Selected = self.state.Selected,
 				OnSelected = function(enum)
 					self:setState({
-						Selected = enum
+						Selected = enum,
 					})
 				end,
-			})
+			}),
 		}),
 	})
 end

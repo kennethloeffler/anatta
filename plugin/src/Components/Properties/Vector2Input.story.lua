@@ -22,8 +22,8 @@ return function(target)
 				Value = Vector2.new(-1, 55),
 				OnChanged = function(vec2)
 					print(vec2)
-				end
-			})
+				end,
+			}),
 		}),
 	})
 

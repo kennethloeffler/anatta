@@ -22,8 +22,8 @@ return function(target)
 				Value = Vector3.new(-1, 55, 4),
 				OnChanged = function(vec3)
 					print(vec3)
-				end
-			})
+				end,
+			}),
 		}),
 	})
 

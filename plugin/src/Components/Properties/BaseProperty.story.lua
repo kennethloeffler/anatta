@@ -18,8 +18,8 @@ return function(target)
 			BackgroundTransparency = 1,
 		}, {
 			BaseProperty = Roact.createElement(BaseProperty, {
-				Text = "Hello World"
-			})
+				Text = "Hello World",
+			}),
 		}),
 	})
 

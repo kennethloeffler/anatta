@@ -13,7 +13,7 @@ end
 
 function Wrapper:render()
 	local value = self.state.Value
-	
+
 	return Roact.createFragment({
 		Layout = Roact.createElement("UIListLayout", {
 			Padding = UDim.new(0, 5),
@@ -33,7 +33,7 @@ function Wrapper:render()
 				OnActivated = function()
 					self:setState({ Value = not value })
 				end,
-			})
+			}),
 		}),
 	})
 end

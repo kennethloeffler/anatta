@@ -65,12 +65,7 @@ function InstanceItem:render()
 				local function isDown(key)
 					return UserInputService:IsKeyDown(Enum.KeyCode[key])
 				end
-				if
-					isDown("LeftControl")
-					or isDown("RightControl")
-					or isDown("LeftShift")
-					or isDown("RightShift")
-				then
+				if isDown("LeftControl") or isDown("RightControl") or isDown("LeftShift") or isDown("RightShift") then
 					baseSel = sel
 				end
 				baseSel[#baseSel + 1] = props.Instance

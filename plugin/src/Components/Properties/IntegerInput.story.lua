@@ -20,10 +20,8 @@ return function(target)
 			IntegerInput = Roact.createElement(IntegerInput, {
 				Key = "No Decimals here",
 				Value = 55,
-				OnChanged = function()
-					
-				end
-			})
+				OnChanged = function() end,
+			}),
 		}),
 	})
 

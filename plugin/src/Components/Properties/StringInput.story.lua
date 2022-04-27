@@ -18,8 +18,8 @@ return function(target)
 			BackgroundTransparency = 1,
 		}, {
 			StringInput = Roact.createElement(StringInput, {
-				Text = "Hello World"
-			})
+				Text = "Hello World",
+			}),
 		}),
 	})
 

@@ -12,17 +12,11 @@ local function createVector3FromString(str)
 		return
 	end
 
-	return Vector3.new(
-		tonumber(x),
-		tonumber(y),
-		tonumber(z)
-	)
+	return Vector3.new(tonumber(x), tonumber(y), tonumber(z))
 end
 
 local function createShortStringFromVector3(vec3)
-	return string.format("%.3f, %.3f, %.3f", vec3.X, vec3.Y, vec3.Z)
-		:gsub("%.?0+$", "")
-		:gsub("%.?0+,", ",")
+	return string.format("%.3f, %.3f, %.3f", vec3.X, vec3.Y, vec3.Z):gsub("%.?0+$", ""):gsub("%.?0+,", ",")
 end
 
 local function Vector3Input(props)
@@ -44,7 +38,7 @@ local function Vector3Input(props)
 			return createVector3FromString(raw:gsub("%s", ""))
 		end,
 
-		OnChanged = props.OnChanged
+		OnChanged = props.OnChanged,
 	})
 end
 

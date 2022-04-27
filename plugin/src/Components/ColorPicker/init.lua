@@ -88,10 +88,7 @@ function ColorPicker:render()
 					end,
 
 					[Roact.Event.InputEnded] = function(rbx, input)
-						if
-							input.UserInputType == Enum.UserInputType.MouseButton1
-							and self.state.wheelMouseDown
-						then
+						if input.UserInputType == Enum.UserInputType.MouseButton1 and self.state.wheelMouseDown then
 							local x, y = input.Position.X, input.Position.Y
 							local pos = Vector2.new(x, y) - rbx.AbsolutePosition
 							pos = pos / rbx.AbsoluteSize
@@ -105,12 +102,8 @@ function ColorPicker:render()
 					end,
 
 					[Roact.Event.InputChanged] = function(rbx, input)
-						if
-							self.state.wheelMouseDown
-							and input.UserInputType == Enum.UserInputType.MouseMovement
-						then
-							local pos = Vector2.new(input.Position.X, input.Position.Y)
-								- rbx.AbsolutePosition
+						if self.state.wheelMouseDown and input.UserInputType == Enum.UserInputType.MouseMovement then
+							local pos = Vector2.new(input.Position.X, input.Position.Y) - rbx.AbsolutePosition
 							pos = pos / rbx.AbsoluteSize
 
 							self:setState({
@@ -181,8 +174,7 @@ function ColorPicker:render()
 						Label = "RGB",
 
 						Validate = function(text)
-							local r, g, b =
-								text:match("^%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*%s*$")
+							local r, g, b = text:match("^%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*%s*$")
 
 							if r == nil or g == nil or b == nil then
 								return false
@@ -217,8 +209,7 @@ function ColorPicker:render()
 						LayoutOrder = 3,
 
 						Validate = function(text)
-							local h, s, v =
-								text:match("^%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*%s*$")
+							local h, s, v = text:match("^%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*,%s*(%d?%d?%d)%s*%s*$")
 
 							if h == nil or s == nil or v == nil then
 								return false
