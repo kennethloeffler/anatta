@@ -1,0 +1,59 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.202.3/containers/ubuntu
+{
+	"name": "Ubuntu",
+	"runArgs": ["--init"],
+
+	"build": {
+		"dockerfile": "Dockerfile",
+		// Update 'VARIANT' to pick an Ubuntu version: hirsute, focal, bionic
+		// Use hirsute or bionic on local arm64/Apple Silicon.
+		"args": {
+			"VARIANT": "focal"
+		}
+	},
+
+	// Set *default* container specific settings.json values on container create.
+	"settings": {},
+
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"editorconfig.editorconfig",
+		"aaron-bond.better-comments",
+		"evaera.vscode-rojo",
+		"kampfkarren.selene-vscode",
+		"nightrains.robloxlsp",
+		"johnnymorganz.stylua",
+		"ms-vsliveshare.vsliveshare",
+		"bungcip.better-toml",
+		"esbenp.prettier-vscode",
+		"github.vscode-pull-request-github",
+		"redhat.vscode-yaml",
+		"maattdd.gitless"
+	],
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [34872],
+	"portsAttributes": {
+		"34872": {
+			"label": "Rojo",
+			"onAutoForward": "silent"
+		}
+	},
+	"otherPortsAttributes": {
+		"onAutoForward": "silent"
+	},
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "uname -a",
+	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	"remoteUser": "vscode",
+	"postCreateCommand": "foreman install",
+	"remoteEnv": {
+		"PATH": "${containerEnv:PATH}:/home/vscode/.foreman/bin"
+	},
+
+	"containerEnv": {
+		"RBXAUTH": "_|WARNING:-DO-NOT-SHARE-THIS.--Sharing-this-will-allow-someone-to-log-in-as-you-and-to-steal-your-ROBUX-and-items.|_84574B1403B1F866CD174D191A7C74108CFA00169CD1B17A291CA74640561AD7BCCD8099E0D4F1A233C863F40449344EE2AC7583A6D288A5B6DA0331236EB71739907B746B9D28C761DB86B9AC59E4205CEFAA077FCE1739153712B2389899DBA637DC49D6FE2D528F5132EEDA9B2C51AD5446D3477B0C58D9F118D191958260442F2763459FB54008F8C2C3ED5C42914F10BC518A26714EC91AAEF771F47C9103372337BB64C3A557156AFCC24C9209C86C5EAB72D9EB3ED4467C971DAC8575886172CBD07B47908FAD9673BFEBC32A11EC68BCF821E88F940BACFAAD01938FD51E4DAE8227DAB2C47FE19FD10C6E149FC663A383B8DB04F4E30102A5A5D73085947DF9C49B8F7FF961AD05856C81459D4A93A6461B70F2A57FDCB3332135345A762C52B82948CEF787D9006BC43C4C3B4450DFD56AB700C0C769F7968AEE4823A8DEBAFC1DB1B8BB48E8DDC2C8454D6A969526"
+	}
+}
