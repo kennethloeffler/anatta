@@ -47,7 +47,7 @@ local function createInstanceElement(name, attributeName, typeDefinition, value,
 end
 
 local function makeInputElement(elementKind)
-	return function(name, attributeName, _, value, values)
+	return function(name, attributeName, _, value, linkedInstances)
 		return Roact.createElement(elementKind, {
 			Key = name,
 			Value = value,
@@ -58,7 +58,7 @@ local function makeInputElement(elementKind)
 
 				ChangeHistoryService:SetWaypoint(("Changing attribute %s"):format(attributeName))
 
-				for linkedInstance in pairs(values) do
+				for linkedInstance in pairs(linkedInstances) do
 					linkedInstance:SetAttribute(attributeName, newValue)
 				end
 
@@ -66,6 +66,24 @@ local function makeInputElement(elementKind)
 			end,
 		})
 	end
+end
+
+local function getAttributeMap(instance, definition)
+	local defaultSuccess, default = definition.type:tryDefault()
+
+	if not defaultSuccess and not definition.type.typeName == "none" then
+		return false, default
+	end
+
+	local attributeSuccess, attributeMap = Anatta.Dom.tryToAttributes(instance, 0, definition, default)
+
+	return attributeSuccess, attributeMap, default
+end
+
+local function createArrayAddElement(currentArray, typeDefinition, linkedInstances)
+	-- Anatta.Dom.tryToAttributes(instance, entity, definition, component)
+	--local component = Anatta.Dom.tryFromAttributes(
+	return Roact.createElement({})
 end
 
 local Types = {
@@ -168,21 +186,25 @@ local function createComponentMembers(
 		if recursedCount then
 			local subMembers = {}
 
-			for fieldName in pairs(concreteType) do
-				local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
-				local fieldTypeDefinition = typeParams[fieldName]
-				local fieldValue = value[fieldName]
+			if typeDefinition.typeName == "array" then
+				warn("huh")
+			else
+				for fieldName in pairs(concreteType) do
+					local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
+					local fieldTypeDefinition = typeParams[fieldName]
+					local fieldValue = value[fieldName]
 
-				createComponentMembers(
-					("%s%s"):format(string.rep("  ", recursedCount), fieldName),
-					fieldAttributeName,
-					fieldTypeDefinition,
-					fieldValue,
-					values,
-					subMembers,
-					attributeMap,
-					recursedCount + 1
-				)
+					createComponentMembers(
+						("%s%s"):format(string.rep("  ", recursedCount), fieldName),
+						fieldAttributeName,
+						fieldTypeDefinition,
+						fieldValue,
+						values,
+						subMembers,
+						attributeMap,
+						recursedCount + 1
+					)
+				end
 			end
 
 			table.sort(subMembers, function(lhs, rhs)
@@ -198,21 +220,43 @@ local function createComponentMembers(
 				}, subMembers)
 			)
 		else
-			for fieldName in pairs(concreteType) do
-				local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
-				local fieldTypeDefinition = typeParams[fieldName]
-				local fieldValue = value[fieldName]
+			if typeDefinition.typeName == "array" then
+				print(value)
 
-				createComponentMembers(
-					fieldName,
-					fieldAttributeName,
-					fieldTypeDefinition,
-					fieldValue,
-					values,
-					members,
-					attributeMap,
-					1
-				)
+				for arrayIndex, fieldValue in ipairs(value) do
+					local fieldAttributeName = ("%s_%s"):format(attributeName, arrayIndex)
+					local fieldTypeDefinition = typeParams
+
+					createComponentMembers(
+						arrayIndex,
+						fieldAttributeName,
+						fieldTypeDefinition,
+						fieldValue,
+						values,
+						members,
+						attributeMap,
+						1
+					)
+				end
+
+				table.insert(members, createArrayAddElement(value, typeDefinition, values))
+			else
+				for fieldName in pairs(concreteType) do
+					local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
+					local fieldTypeDefinition = typeParams[fieldName]
+					local fieldValue = value[fieldName]
+
+					createComponentMembers(
+						fieldName,
+						fieldAttributeName,
+						fieldTypeDefinition,
+						fieldValue,
+						values,
+						members,
+						attributeMap,
+						1
+					)
+				end
 			end
 		end
 	elseif Types[concreteType] ~= nil then
