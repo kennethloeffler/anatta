@@ -29,8 +29,7 @@ local Types = require(script.Parent.Parent.Types)
 local util = require(script.Parent.Parent.util)
 
 local ErrEntityMissing = "entity %d is not present in this reactor"
-
-local WarnNoAttachmentsTable = "withAttachments callback defined in %s at line %s did not return a table"
+local ErrBadAttachmentTable = "function at %s:%i returned a bad attachment table: %s"
 
 local Reactor = {}
 Reactor.__index = Reactor
@@ -54,7 +53,7 @@ function Reactor.new(registry, query)
 		return SingleReactor.new(registry:getPool(query.withAll[1]))
 	end
 
-	local reactorContents = Pool.new({ name = "reactorInternal", type = {} })
+	local reactorContents = Pool.new({ name = "ReactorInternalPool", type = {} })
 
 	local self = setmetatable({
 		added = reactorContents.added,
@@ -115,10 +114,10 @@ end
 function Reactor:withAttachments(callback)
 	local entityAdded = self.added:connect(function(entity, ...)
 		local attachments = callback(entity, ...)
+		local success, err = Types.AttachmentTable(attachments)
 
-		if typeof(attachments) ~= "table" then
-			warn(WarnNoAttachmentsTable:format(debug.info(callback, "s"), debug.info(callback, "l")))
-			attachments = {}
+		if not success then
+			error(ErrBadAttachmentTable:format(debug.info(callback, "s"), debug.info(callback, "l"), err), 2)
 		end
 
 		local index = self._pool:getIndex(entity)

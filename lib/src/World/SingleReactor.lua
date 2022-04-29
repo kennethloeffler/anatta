@@ -1,7 +1,8 @@
 local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 local Pool = require(script.Parent.Parent.Core.Pool)
+local Types = require(script.Parent.Parent.Types)
 
-local WarnNoAttachmentsTable = "withAttachments callback defined in %s at line %s did not return a table"
+local ErrBadAttachmentTable = "function at %s:%i returned a bad attachment table: %s"
 
 local SingleReactor = {}
 SingleReactor.__index = SingleReactor
@@ -59,19 +60,17 @@ end
 
 function SingleReactor:withAttachments(callback)
 	if not self._pool then
-		self._pool = Pool.new({ name = "reactorContents", type = {} })
+		self._pool = Pool.new({ name = "ReactorInternalPool", type = {} })
 	end
 
 	table.insert(
 		self._connections,
 		self.added:connect(function(entity, component)
 			local attachments = callback(entity, component)
+			local success, err = Types.AttachmentTable(attachments)
 
-			if typeof(attachments) ~= "table" then
-				warn(WarnNoAttachmentsTable:format(debug.info(callback, "s"), debug.info(callback, "l")))
-
-				self._pool:insert(entity, {})
-				return
+			if not success then
+				error(ErrBadAttachmentTable:format(debug.info(callback, "s"), debug.info(callback, "l"), err), 2)
 			end
 
 			self._pool:insert(entity, attachments)
@@ -88,8 +87,8 @@ function SingleReactor:withAttachments(callback)
 				return
 			end
 
-			for _, item in ipairs(attachments) do
-				Finalizers[typeof(item)](item)
+			for _, attachment in pairs(attachments) do
+				Finalizers[typeof(attachment)](attachment)
 			end
 		end)
 	)
