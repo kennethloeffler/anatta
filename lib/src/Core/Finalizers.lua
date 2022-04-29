@@ -1,8 +1,12 @@
 local function disconnectOrDestroy(arg)
 	if typeof(arg.Disconnect) == "function" then
 		arg:Disconnect()
-	elseif arg.Destroy == "function" then
+	elseif typeof(arg.Destroy) == "function" then
 		arg:Destroy()
+	elseif typeof(arg.disconnect) == "function" then
+		arg:disconnect()
+	elseif typeof(arg.destroy) == "function" then
+		arg:destroy()
 	end
 end
 
