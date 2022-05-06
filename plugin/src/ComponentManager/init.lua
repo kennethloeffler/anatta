@@ -631,7 +631,7 @@ function ComponentManager:SetComponent(component, value: boolean)
 		end
 
 		if value then
-			local success, err = ComponentAnnotation.add(linkedInstance, definition)
+			local success, err = ComponentAnnotation.apply(linkedInstance, definition)
 
 			if not success then
 				warn(err)

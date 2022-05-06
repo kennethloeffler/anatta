@@ -10,7 +10,7 @@ local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local ComponentAnnotation = {}
 
-local function getAttributeMap(instance, definition)
+local function getDefaultAttributeMap(instance, definition)
 	if definition.pluginType then
 		definition = { name = definition.name, type = definition.pluginType }
 	end
@@ -26,11 +26,21 @@ local function getAttributeMap(instance, definition)
 	return attributeSuccess, attributeMap, default
 end
 
-function ComponentAnnotation.add(instance, definition)
-	local success, attributeMap = getAttributeMap(instance, definition)
+function ComponentAnnotation.apply(instance, definition, value)
+	local success, attributeMap
 
-	if not success then
-		return false, attributeMap
+	if value == nil then
+		success, attributeMap = getDefaultAttributeMap(instance, definition)
+
+		if not success then
+			return false, attributeMap
+		end
+	else
+		success, attributeMap = Dom.tryToAttributes(instance, 0, definition, value)
+
+		if not success then
+			return false, attributeMap
+		end
 	end
 
 	for attributeName, attributeValue in pairs(attributeMap) do
@@ -50,7 +60,7 @@ function ComponentAnnotation.add(instance, definition)
 end
 
 function ComponentAnnotation.remove(instance, definition)
-	local success, attributeMap = getAttributeMap(instance, definition)
+	local success, attributeMap = getDefaultAttributeMap(instance, definition)
 
 	if not success then
 		return false, attributeMap
