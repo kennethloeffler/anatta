@@ -79,8 +79,6 @@ return function(plugin, savedState)
 				componentClipboard[component] = value
 			end
 		end
-
-		print(componentClipboard)
 	end
 
 	local function pasteComponents()
