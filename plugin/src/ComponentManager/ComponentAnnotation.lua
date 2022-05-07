@@ -11,10 +11,6 @@ local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 local ComponentAnnotation = {}
 
 local function getDefaultAttributeMap(instance, definition)
-	if definition.pluginType then
-		definition = { name = definition.name, type = definition.pluginType }
-	end
-
 	local defaultSuccess, default = definition.type:tryDefault()
 
 	if not defaultSuccess and not definition.type.typeName == "none" then
@@ -27,10 +23,16 @@ local function getDefaultAttributeMap(instance, definition)
 end
 
 function ComponentAnnotation.apply(instance, definition, value)
+	if definition.pluginType then
+		definition = { name = definition.name, type = definition.pluginType }
+	end
+
 	local success, attributeMap
+	local usingDefault = false
 
 	if value == nil then
 		success, attributeMap = getDefaultAttributeMap(instance, definition)
+		usingDefault = true
 
 		if not success then
 			return false, attributeMap
@@ -45,8 +47,10 @@ function ComponentAnnotation.apply(instance, definition, value)
 
 	for attributeName, attributeValue in pairs(attributeMap) do
 		if typeof(attributeValue) == "Instance" then
-			attributeValue.Parent = workspace.Terrain
-			attributeValue.Archivable = false
+			if usingDefault then
+				attributeValue.Parent = workspace.Terrain
+				attributeValue.Archivable = false
+			end
 
 			instance[INSTANCE_REF_FOLDER][attributeName].Value = attributeValue
 		elseif attributeName ~= ENTITY_ATTRIBUTE_NAME then
