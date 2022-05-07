@@ -76,9 +76,8 @@ function InstanceSelect:render()
 
 				RunService.Heartbeat:Wait()
 
-				Selection:Set(oldSelection)
-
 				ComponentManager._global:unpauseSelection()
+				Selection:Set(oldSelection)
 
 				self:setState({
 					Selecting = false,
