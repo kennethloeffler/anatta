@@ -40,11 +40,7 @@ function Component:render()
 
 		local isMenuOpen = self.state.isMenuOpen
 
-		if not isMenuOpen then
-			props.openComponentMenu(props.Component)
-		else
-			props.openComponentMenu(nil)
-		end
+		props.openComponentMenu(not isMenuOpen, props.Component)
 
 		self:setState({
 			isMenuOpen = not isMenuOpen,
@@ -108,8 +104,8 @@ end
 
 local function mapDispatchToProps(dispatch)
 	return {
-		openComponentMenu = function(component)
-			dispatch(Actions.OpenComponentMenu(component))
+		openComponentMenu = function(isMenuOpen, component)
+			dispatch(Actions.OpenComponentMenu(isMenuOpen, component))
 		end,
 		showContextMenu = function(component)
 			PluginGlobals.showComponentMenu(dispatch, component)
