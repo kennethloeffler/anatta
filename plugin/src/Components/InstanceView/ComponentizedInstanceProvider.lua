@@ -87,7 +87,7 @@ function ComponentizedInstanceProvider:updateState(componentName)
 	return parts, selected
 end
 
-function ComponentizedInstanceProvider:didUpdate(prevProps, prevState)
+function ComponentizedInstanceProvider:didUpdate(prevProps)
 	local componentName = self.props.componentName
 
 	if componentName ~= prevProps.componentName then

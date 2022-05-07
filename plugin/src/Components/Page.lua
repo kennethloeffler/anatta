@@ -28,7 +28,7 @@ local function Page(props)
 					BackgroundTransparency = 1.0,
 					TextColor3 = theme:GetColor("TitlebarText"),
 
-					[Roact.Event.MouseButton1Click] = function(rbx)
+					[Roact.Event.MouseButton1Click] = function()
 						props.close()
 					end,
 				}),

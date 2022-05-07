@@ -111,7 +111,7 @@ function IconPicker:render()
 	})
 end
 
-local function mapStateToProps(state, props)
+local function mapStateToProps(state)
 	local componentName = state.IconPicker
 	local componentIcon
 	for _, component in pairs(state.ComponentData) do
