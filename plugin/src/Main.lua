@@ -42,15 +42,6 @@ return function(plugin, savedState)
 		"http://www.roblox.com/asset/?id=1367285594"
 	)
 
-	local copyButton = plugin:button(toolbar, "Copy Components", "Copy components from a selected instance.", "")
-
-	local pasteButton = plugin:button(
-		toolbar,
-		"Paste Components",
-		"Paste currently copied components onto selected instances.",
-		""
-	)
-
 	local store = Rodux.Store.new(Reducer, savedState)
 
 	local function copyComponents()
@@ -107,9 +98,6 @@ return function(plugin, savedState)
 		gui.Enabled = not gui.Enabled
 		toggleButton:SetActive(gui.Enabled)
 	end)
-
-	local pasteConnection = pasteButton.Click:Connect(pasteComponents)
-	local copyConnection = copyButton.Click:Connect(copyComponents)
 
 	local prefix = "ComponentEditor" .. nameSuffix .. "_"
 
