@@ -1,3 +1,5 @@
+local Selection = game:GetService("Selection")
+
 local Modules = script.Parent.Parent
 local Roact = require(Modules.Roact)
 local Rodux = require(Modules.Rodux)
@@ -22,6 +24,7 @@ end
 
 return function(plugin, savedState)
 	local displaySuffix, nameSuffix = getSuffix(plugin)
+	local componentClipboard = {}
 
 	local toolbar = plugin:toolbar("Anatta" .. displaySuffix)
 
@@ -39,7 +42,50 @@ return function(plugin, savedState)
 		"http://www.roblox.com/asset/?id=1367285594"
 	)
 
+	local copyButton = plugin:button(toolbar, "Copy Components", "Copy components from a selected instance.", "")
+
+	local pasteButton = plugin:button(
+		toolbar,
+		"Paste Components",
+		"Paste currently copied components onto selected instances.",
+		""
+	)
+
 	local store = Rodux.Store.new(Reducer, savedState)
+
+	local function copyComponents()
+		local selected = Selection:Get()
+
+		if #selected > 1 then
+			error("Cannot copy components from more than one instance")
+		elseif #selected == 0 then
+			error("No instance selected")
+		end
+
+		componentClipboard = {}
+
+		local state = store:getState()
+		local openMenus = state.ComponentMenu
+		local components = ComponentManager.Get().components
+
+		for _, component in ipairs(components) do
+			if not openMenus[component.Name] then
+				continue
+			end
+
+			local _, value = next(component.Values)
+
+			if value then
+				componentClipboard[component] = value
+			end
+		end
+	end
+
+	local function pasteComponents()
+		for component, value in pairs(componentClipboard) do
+			ComponentManager.Get():SetComponent(component, true, value)
+		end
+	end
 
 	local manager = ComponentManager.new(store)
 
@@ -61,6 +107,9 @@ return function(plugin, savedState)
 		gui.Enabled = not gui.Enabled
 		toggleButton:SetActive(gui.Enabled)
 	end)
+
+	local pasteConnection = pasteButton.Click:Connect(pasteComponents)
+	local copyConnection = copyButton.Click:Connect(copyComponents)
 
 	local prefix = "ComponentEditor" .. nameSuffix .. "_"
 
@@ -118,6 +167,22 @@ return function(plugin, savedState)
 			ComponentManager.Get():SelectAll(component.Definition.name)
 		end
 	end)
+
+	local copyAction = plugin:createAction(
+		prefix .. "CopyComponents",
+		"Copy components",
+		"Copy components from a selected instance."
+	)
+
+	local copyActionConnection = copyAction.Triggered:Connect(copyComponents)
+
+	local pasteAction = plugin:createAction(
+		prefix .. "PasteComponents",
+		"Paste components",
+		"Paste currently copied components onto selected instances."
+	)
+
+	local pasteActionConnection = pasteAction.Triggered:Connect(pasteComponents)
 
 	local visualizeBox = plugin:createAction(
 		prefix .. "Visualize_Box",
@@ -202,6 +267,10 @@ return function(plugin, savedState)
 	plugin:beforeUnload(function()
 		Roact.unmount(instance)
 		connection:Disconnect()
+		copyActionConnection:Disconnect()
+		copyConnection:Disconnect()
+		pasteActionConnection:Disconnect()
+		pasteConnection:Disconnect()
 		worldViewConnection:Disconnect()
 		manager:Destroy()
 		selectAllConn:Disconnect()

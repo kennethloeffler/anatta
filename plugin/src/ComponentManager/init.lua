@@ -4,6 +4,7 @@ local Selection = game:GetService("Selection")
 local ChangeHistory = game:GetService("ChangeHistoryService")
 
 local Modules = script.Parent.Parent
+local Llama = require(Modules.Llama)
 local Types = require(Modules.Anatta.Library.Types)
 local Dom = require(Modules.Anatta.Library.Dom)
 local Constants = require(Modules.Anatta.Library.Core.Constants)
@@ -613,8 +614,8 @@ function ComponentManager:DelComponent(name: string)
 	ChangeHistory:SetWaypoint(string.format("Deleted component %q", name))
 end
 
-function ComponentManager:SetComponent(component, value: boolean)
-	if value then
+function ComponentManager:SetComponent(component, has: boolean, value)
+	if has then
 		ChangeHistory:SetWaypoint(string.format("Applying component %q to selection", component.Name))
 	else
 		ChangeHistory:SetWaypoint(string.format("Removing component %q from selection", component.Name))
@@ -630,8 +631,12 @@ function ComponentManager:SetComponent(component, value: boolean)
 			continue
 		end
 
-		if value then
-			local success, err = ComponentAnnotation.add(linkedInstance, definition)
+		if has then
+			local success, err = ComponentAnnotation.apply(
+				linkedInstance,
+				definition,
+				value ~= Llama.None and value or nil
+			)
 
 			if not success then
 				warn(err)
@@ -666,7 +671,7 @@ function ComponentManager:SetComponent(component, value: boolean)
 	-- to be manually marked for update.
 	self:_updateStore()
 
-	if value then
+	if has then
 		ChangeHistory:SetWaypoint(string.format("Applied component %q to selection", component.Name))
 	else
 		ChangeHistory:SetWaypoint(string.format("Removed component %q from selection", component.Name))

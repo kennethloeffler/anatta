@@ -10,11 +10,7 @@ local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local ComponentAnnotation = {}
 
-local function getAttributeMap(instance, definition)
-	if definition.pluginType then
-		definition = { name = definition.name, type = definition.pluginType }
-	end
-
+local function getDefaultAttributeMap(instance, definition)
 	local defaultSuccess, default = definition.type:tryDefault()
 
 	if not defaultSuccess and not definition.type.typeName == "none" then
@@ -26,17 +22,35 @@ local function getAttributeMap(instance, definition)
 	return attributeSuccess, attributeMap, default
 end
 
-function ComponentAnnotation.add(instance, definition)
-	local success, attributeMap = getAttributeMap(instance, definition)
+function ComponentAnnotation.apply(instance, definition, value)
+	if definition.pluginType then
+		definition = { name = definition.name, type = definition.pluginType }
+	end
 
-	if not success then
-		return false, attributeMap
+	local success, attributeMap
+	local usingDefault = false
+
+	if value == nil then
+		success, attributeMap = getDefaultAttributeMap(instance, definition)
+		usingDefault = true
+
+		if not success then
+			return false, attributeMap
+		end
+	else
+		success, attributeMap = Dom.tryToAttributes(instance, 0, definition, value)
+
+		if not success then
+			return false, attributeMap
+		end
 	end
 
 	for attributeName, attributeValue in pairs(attributeMap) do
 		if typeof(attributeValue) == "Instance" then
-			attributeValue.Parent = workspace.Terrain
-			attributeValue.Archivable = false
+			if usingDefault then
+				attributeValue.Parent = workspace.Terrain
+				attributeValue.Archivable = false
+			end
 
 			instance[INSTANCE_REF_FOLDER][attributeName].Value = attributeValue
 		elseif attributeName ~= ENTITY_ATTRIBUTE_NAME then
@@ -50,7 +64,7 @@ function ComponentAnnotation.add(instance, definition)
 end
 
 function ComponentAnnotation.remove(instance, definition)
-	local success, attributeMap = getAttributeMap(instance, definition)
+	local success, attributeMap = getDefaultAttributeMap(instance, definition)
 
 	if not success then
 		return false, attributeMap
