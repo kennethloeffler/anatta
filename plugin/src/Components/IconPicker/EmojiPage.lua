@@ -5,6 +5,7 @@ local ScrollingFrame = require(script.Parent.Parent.ScrollingFrame)
 local RadioButton = require(Modules.Plugin.Components.RadioButton)
 local Emoji = require(Modules.Plugin.Emoji)
 
+-- selene:allow(bad_string_escape)
 local labels = {
 	[2] = "\u{1F3FB}",
 	[3] = "\u{1F3FC}",

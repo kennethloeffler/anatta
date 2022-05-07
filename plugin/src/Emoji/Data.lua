@@ -1,5 +1,6 @@
 -- Automatically generated with create_emoji_list.js
 
+-- selene:allow(bad_string_escape, duplicate_keys)
 return {
 	{
 		name = "Smileys & Emotion",

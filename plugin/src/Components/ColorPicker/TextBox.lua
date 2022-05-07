@@ -53,13 +53,13 @@ function TextBox:render()
 				BackgroundColor3 = theme:GetColor("InputFieldBackground"),
 				BorderColor3 = borderColor,
 
-				[Roact.Event.MouseEnter] = function(rbx)
+				[Roact.Event.MouseEnter] = function()
 					self:setState({
 						hover = true,
 					})
 				end,
 
-				[Roact.Event.MouseLeave] = function(rbx)
+				[Roact.Event.MouseLeave] = function()
 					self:setState({
 						hover = false,
 					})
@@ -92,7 +92,7 @@ function TextBox:render()
 						end
 					end,
 
-					[Roact.Event.Focused] = function(rbx)
+					[Roact.Event.Focused] = function()
 						self:setState({
 							focus = true,
 						})

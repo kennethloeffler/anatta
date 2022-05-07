@@ -6,7 +6,7 @@ return function(state, action)
 	end
 
 	if action.type == "SetIconSearch" then
-		assert(typeof(action.text) == "string")
+		assert(typeof(action.text) == "string", "Icon search text must be a string")
 		return action.text
 	end
 
