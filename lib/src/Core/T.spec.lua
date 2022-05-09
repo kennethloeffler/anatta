@@ -46,6 +46,21 @@ return function()
 					expect(string2.typeName).to.equal("literal")
 				end
 			)
+
+			it("should convert keyOf to a union of literals", function()
+				local testTable = {
+					hey = "ready",
+					you = "set",
+					guys = 22,
+				}
+
+				local testTableKeys = T.keyOf(testTable)
+
+				expect(testTableKeys.typeName).to.equal("union")
+				expect(testTableKeys.typeParams[1].typeName).to.equal("literal")
+				expect(testTableKeys.typeParams[2].typeName).to.equal("literal")
+				expect(testTableKeys.typeParams[3].typeName).to.equal("literal")
+			end)
 		end)
 
 		describe("tryDefault", function()
