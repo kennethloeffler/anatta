@@ -58,6 +58,7 @@ return function()
 
 				expect(testTableKeys.typeName).to.equal("union")
 				expect(testTableKeys.typeParams[1].typeName).to.equal("literal")
+				expect(testTableKeys.typeParams[1].typeParams[1]).to.equal("hey")
 				expect(testTableKeys.typeParams[2].typeName).to.equal("literal")
 				expect(testTableKeys.typeParams[3].typeName).to.equal("literal")
 			end)
