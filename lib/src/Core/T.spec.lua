@@ -56,11 +56,26 @@ return function()
 
 				local testTableKeys = T.keyOf(testTable)
 
+				local literalsExpected = {
+					hey = false,
+					you = false,
+					guys = false,
+				}
+
 				expect(testTableKeys.typeName).to.equal("union")
+
 				expect(testTableKeys.typeParams[1].typeName).to.equal("literal")
-				expect(testTableKeys.typeParams[1].typeParams[1]).to.equal("hey")
+				literalsExpected[testTableKeys.typeParams[1].typeParams[1]] = true
+
 				expect(testTableKeys.typeParams[2].typeName).to.equal("literal")
+				literalsExpected[testTableKeys.typeParams[2].typeParams[1]] = true
+
 				expect(testTableKeys.typeParams[3].typeName).to.equal("literal")
+				literalsExpected[testTableKeys.typeParams[3].typeParams[1]] = true
+
+				expect(literalsExpected.hey).to.equal(true)
+				expect(literalsExpected.you).to.equal(true)
+				expect(literalsExpected.guys).to.equal(true)
 			end)
 		end)
 
