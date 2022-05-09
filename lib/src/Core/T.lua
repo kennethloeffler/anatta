@@ -418,4 +418,15 @@ T.entity = TypeDefinition._new("entity", function(entity)
 	end
 end)
 
+-- Override keyOf method so it is exposed in its internal format
+T.keyOf = TypeDefinition._new("union", function(keyTable)
+	local literalTypes = {}
+
+	for key in pairs(keyTable) do
+		table.insert(literalTypes, T.literal(key))
+	end
+
+	return T.union(table.unpack(literalTypes))
+end)
+
 return T
