@@ -91,7 +91,8 @@ return function()
 				local success, default = T.union(T.instanceOf("Trail"), T.instanceOf("Beam")):tryDefault()
 
 				expect(success).to.equal(true)
-				expect(default).to.be.a("Trail")
+				expect(typeof(default)).to.equal("Instance")
+				expect(default:IsA("Trail")).to.equal(true)
 			end)
 
 			it("should correctly handle T.array", function()
