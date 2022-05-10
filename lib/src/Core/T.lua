@@ -107,19 +107,17 @@ local unserializable = {
 	table = true,
 }
 
-local function makeConcreteInstance(typeDefinition)
+local function makeConcrete(typeDefinition)
 	return true, typeDefinition.typeName
 end
 
 local concreters = {
-	Instance = makeConcreteInstance,
-	instance = makeConcreteInstance,
-	instanceOf = makeConcreteInstance,
-	instanceIsA = makeConcreteInstance,
+	Instance = makeConcrete,
+	instance = makeConcrete,
+	instanceOf = makeConcrete,
+	instanceIsA = makeConcrete,
 
-	literal = function()
-		return true, "literal"
-	end,
+	literal = makeConcrete,
 
 	array = function()
 		return true, {}
@@ -192,7 +190,13 @@ local concreteFromAbstract = {
 
 local defaults = {
 	union = function(typeDefinition)
-		return true, typeDefinition.typeParams[1]:tryDefault()
+		local isUniform, result = typeDefinition:tryGetConcreteType()
+
+		if not isUniform then
+			return false, result
+		end
+
+		return typeDefinition.typeParams[1]:tryDefault()
 	end,
 
 	enum = function(typeDefinition)
@@ -258,7 +262,7 @@ local defaults = {
 	end,
 
 	literal = function(typeDefinition)
-		return true, typeDefinition.typeParams[1].typeParams[1]
+		return true, typeDefinition.typeParams[1]
 	end,
 
 	number = 0,
@@ -352,19 +356,23 @@ function TypeDefinition._new(typeName, check, ...)
 end
 
 function TypeDefinition:tryDefault()
-	local success, concreteType = self:tryGetConcreteType()
-	local value = defaults[concreteType]
+	local default = defaults[self.typeName]
+	local success, concreteType
 
-	if not success then
-		return false, concreteType
+	if not default then
+		success, concreteType = self:tryGetConcreteType()
+
+		if not success then
+			return false, concreteType
+		end
+
+		default = defaults[if typeof(concreteType) == "table" then "table" else concreteType]
 	end
 
-	if typeof(concreteType) == "table" then
-		return defaults.table(self, concreteType)
-	elseif typeof(value) == "function" then
-		return value(self, concreteType)
-	elseif value ~= nil then
-		return true, value
+	if typeof(default) == "function" then
+		return default(self, concreteType)
+	elseif default ~= nil then
+		return true, default
 	else
 		return false, nil
 	end
