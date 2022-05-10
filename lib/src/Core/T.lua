@@ -357,11 +357,9 @@ end
 
 function TypeDefinition:tryDefault()
 	local default = defaults[self.typeName]
-	local success, concreteType
+	local success, concreteType = self:tryGetConcreteType()
 
-	if not default then
-		success, concreteType = self:tryGetConcreteType()
-
+	if default == nil then
 		if not success then
 			return false, concreteType
 		end
