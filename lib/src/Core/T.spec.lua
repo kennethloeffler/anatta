@@ -87,6 +87,14 @@ return function()
 				expect(default).to.equal("BIG")
 			end)
 
+			it("should correctly handle a T.union of instances", function()
+				local success, default = T.union(T.instanceOf("Trail"), T.instanceOf("Beam")):tryDefault()
+
+				expect(success).to.equal(true)
+				expect(typeof(default)).to.equal("Instance")
+				expect(default:IsA("Trail")).to.equal(true)
+			end)
+
 			it("should correctly handle T.array", function()
 				local ok, default = T.array(T.number):tryDefault()
 
@@ -149,9 +157,16 @@ return function()
 					T.literal("A"),
 					T.literal("Union")
 				)
+				local stringSuccess, stringUnionConcreteType = stringUnion:tryGetConcreteType()
 
-				local _, concreteType = stringUnion:tryGetConcreteType()
-				expect(concreteType).to.equal("literal")
+				expect(stringSuccess).to.equal(true)
+				expect(stringUnionConcreteType).to.equal("literal")
+
+				local instanceUnion = T.union(T.instanceOf("Beam"), T.instanceOf("Trail"))
+				local instanceSuccess, instanceUnionConcreteType = instanceUnion:tryGetConcreteType()
+
+				expect(instanceSuccess).to.equal(true)
+				expect(instanceUnionConcreteType).to.equal("instanceOf")
 			end)
 
 			it("should resolve an array", function()
