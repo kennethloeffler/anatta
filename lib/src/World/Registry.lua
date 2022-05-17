@@ -125,7 +125,7 @@ function Registry.getVersion(entity)
 end
 
 --[=[
-	Returns the domain of an entity. 0 = client; 1 = server
+	Returns the domain of an entity. 0 = server; 1 = client
 
 	@private
 	@param entity number
