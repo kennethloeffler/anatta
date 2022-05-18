@@ -1,5 +1,3 @@
-local CollectionService = game:GetService("CollectionService")
-
 local Modules = script.Parent.Parent.Parent
 
 local Dom = require(Modules.Anatta.Library.Dom)
@@ -47,7 +45,7 @@ function ComponentAnnotation.apply(instance, definition, value)
 
 	for attributeName, attributeValue in pairs(attributeMap) do
 		if typeof(attributeValue) == "Instance" then
-			if usingDefault then
+			if usingDefault or attributeValue.Parent == nil then
 				attributeValue.Parent = workspace.Terrain
 				attributeValue.Archivable = false
 			end
@@ -58,13 +56,16 @@ function ComponentAnnotation.apply(instance, definition, value)
 		end
 	end
 
-	CollectionService:AddTag(instance, definition.name)
-
 	return true
 end
 
 function ComponentAnnotation.remove(instance, definition)
-	local success, attributeMap = getDefaultAttributeMap(instance, definition)
+	if definition.pluginType then
+		definition = { name = definition.name, type = definition.pluginType }
+	end
+
+	local _, _, component = Dom.tryFromAttributes(instance, definition)
+	local success, attributeMap = Dom.tryToAttributes(instance, 0, definition, component)
 
 	if not success then
 		return false, attributeMap
@@ -89,8 +90,6 @@ function ComponentAnnotation.remove(instance, definition)
 			instance:SetAttribute(attributeName, nil)
 		end
 	end
-
-	CollectionService:RemoveTag(instance, definition.name)
 
 	return true
 end
