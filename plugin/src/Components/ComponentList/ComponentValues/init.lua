@@ -4,6 +4,8 @@ local Modules = script.Parent.Parent.Parent.Parent
 local Properties = script.Parent.Parent.Properties
 local Roact = require(Modules.Roact)
 local Anatta = require(Modules.Anatta)
+local ComponentManager = require(script.Parent.Parent.Parent.ComponentManager)
+local ComponentAnnotation = require(script.Parent.Parent.Parent.ComponentManager.ComponentAnnotation)
 
 local Boolean = require(Properties.Boolean)
 local EnumItem = require(Properties.EnumItem)
@@ -53,7 +55,7 @@ local function makeInputElement(elementKind)
 			Key = name,
 			Value = value,
 			OnChanged = function(newValue)
-				if not newValue then
+				if newValue == nil then
 					return
 				end
 
@@ -69,14 +71,13 @@ local function makeInputElement(elementKind)
 	end
 end
 
-local function createArrayAddElement(currentArray, typeDefinition, linkedInstances, indentCount)
+local function createArrayAddElement(attributeName, typeDefinition, value, linkedInstances, indentCount)
 	return Roact.createElement(InlineButton, {
+		Key = attributeName,
 		Text = "+ Add Item",
 		Indents = indentCount,
 		OnActivated = function()
-			local newIndex = #currentArray + 1
-
-			print(typeDefinition)
+			local newIndex = #value + 1
 
 			local newValueSuccess, newValue = typeDefinition.typeParams[1]:tryDefault()
 
@@ -84,26 +85,15 @@ local function createArrayAddElement(currentArray, typeDefinition, linkedInstanc
 				return warn(newValue)
 			end
 
-			currentArray[newIndex] = newValue
+			value[newIndex] = newValue
 
-			for linkedInstance: Instance in pairs(linkedInstances) do
-				local attributeSuccess, attributeMap = Anatta.Dom.tryToAttributes(
-					linkedInstance,
-					0,
-					typeDefinition,
-					currentArray
-				)
+			local definition = { name = attributeName, type = typeDefinition }
 
-				if not attributeSuccess then
-					warn(attributeMap)
-				else
-					for k, v in pairs(attributeMap) do
-						if k ~= Anatta.Constants.EntityAttributeName then
-							linkedInstance:SetAttribute(k, v)
-						end
-					end
-				end
+			for linkedInstance in pairs(linkedInstances) do
+				ComponentAnnotation.apply(linkedInstance, definition, value)
 			end
+
+			ComponentManager._global:_updateStore()
 		end,
 	})
 end
@@ -176,7 +166,15 @@ local Types = {
 	end,
 }
 
-local function createComponentMembers(name, attributeName, typeDefinition, value, values, members, recursedCount)
+local function createComponentMembers(
+	name,
+	attributeName,
+	typeDefinition,
+	value,
+	linkedInstances,
+	members,
+	recursedCount
+)
 	members = members or {}
 
 	local typeOk, concreteType = typeDefinition:tryGetConcreteType()
@@ -199,7 +197,22 @@ local function createComponentMembers(name, attributeName, typeDefinition, value
 			local subMembers = {}
 
 			if typeDefinition.typeName == "array" then
-				warn("yes....")
+				for arrayIndex, fieldValue in ipairs(value) do
+					local fieldAttributeName = ("%s_%s"):format(attributeName, arrayIndex)
+					local fieldTypeDefinition = typeParams
+
+					createComponentMembers(
+						("%s%s"):format(string.rep("  ", recursedCount), tostring(arrayIndex)),
+						fieldAttributeName,
+						fieldTypeDefinition,
+						fieldValue,
+						linkedInstances,
+						subMembers,
+						recursedCount + 1
+					)
+				end
+
+				table.insert(subMembers, createArrayAddElement(attributeName, typeDefinition, value, linkedInstances))
 			else
 				for fieldName in pairs(concreteType) do
 					local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
@@ -211,7 +224,7 @@ local function createComponentMembers(name, attributeName, typeDefinition, value
 						fieldAttributeName,
 						fieldTypeDefinition,
 						fieldValue,
-						values,
+						linkedInstances,
 						subMembers,
 						recursedCount + 1
 					)
@@ -241,13 +254,13 @@ local function createComponentMembers(name, attributeName, typeDefinition, value
 						fieldAttributeName,
 						fieldTypeDefinition,
 						fieldValue,
-						values,
+						linkedInstances,
 						members,
 						1
 					)
 				end
 
-				table.insert(members, createArrayAddElement(value, typeDefinition, values))
+				table.insert(members, createArrayAddElement(attributeName, typeDefinition, value, linkedInstances))
 			else
 				for fieldName in pairs(concreteType) do
 					local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
@@ -259,7 +272,7 @@ local function createComponentMembers(name, attributeName, typeDefinition, value
 						fieldAttributeName,
 						fieldTypeDefinition,
 						fieldValue,
-						values,
+						linkedInstances,
 						members,
 						1
 					)
@@ -267,7 +280,7 @@ local function createComponentMembers(name, attributeName, typeDefinition, value
 			end
 		end
 	elseif Types[concreteType] ~= nil then
-		local element = Types[concreteType](name, attributeName, typeDefinition, value, values)
+		local element = Types[concreteType](name, attributeName, typeDefinition, value, linkedInstances)
 		table.insert(members, element)
 	end
 
@@ -276,16 +289,16 @@ end
 
 function ComponentValues:render()
 	local props = self.props
-	local componentDefinition = props.Definition
-	local name = componentDefinition.name
-	local typeDefinition = componentDefinition.pluginType and componentDefinition.pluginType or componentDefinition.type
+	local definition = props.Definition
+	local name = definition.name
+	local typeDefinition = definition.pluginType and definition.pluginType or definition.type
 	local _, value = next(props.Values)
-	-- TODO: compare all values to display ambiguous fields
 
+	-- TODO: compare all values to display ambiguous fields
 	local members = createComponentMembers(name, name, typeDefinition, value, props.Values)
 
 	table.sort(members, function(lhs, rhs)
-		return lhs.props.Key < rhs.props.Key
+		return tostring(lhs.props.Key) < tostring(rhs.props.Key)
 	end)
 
 	return Roact.createElement(VerticalExpandingList, {}, members)
