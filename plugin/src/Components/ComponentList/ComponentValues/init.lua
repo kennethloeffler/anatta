@@ -70,8 +70,6 @@ local function makeInputElement(elementKind)
 end
 
 local function createArrayAddElement(currentArray, typeDefinition, linkedInstances, indentCount)
-	-- Anatta.Dom.tryToAttributes(instance, entity, definition, component)
-	--local component = Anatta.Dom.tryFromAttributes(
 	return Roact.createElement(InlineButton, {
 		Text = "+ Add Item",
 		Indents = indentCount,
@@ -178,18 +176,8 @@ local Types = {
 	end,
 }
 
-local function createComponentMembers(
-	name,
-	attributeName,
-	typeDefinition,
-	value,
-	values,
-	members,
-	attributeMap,
-	recursedCount
-)
+local function createComponentMembers(name, attributeName, typeDefinition, value, values, members, recursedCount)
 	members = members or {}
-	attributeMap = attributeMap or {}
 
 	local typeOk, concreteType = typeDefinition:tryGetConcreteType()
 
@@ -211,7 +199,7 @@ local function createComponentMembers(
 			local subMembers = {}
 
 			if typeDefinition.typeName == "array" then
-				warn("huh")
+				warn("yes....")
 			else
 				for fieldName in pairs(concreteType) do
 					local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
@@ -225,7 +213,6 @@ local function createComponentMembers(
 						fieldValue,
 						values,
 						subMembers,
-						attributeMap,
 						recursedCount + 1
 					)
 				end
@@ -245,8 +232,6 @@ local function createComponentMembers(
 			)
 		else
 			if typeDefinition.typeName == "array" then
-				print(value)
-
 				for arrayIndex, fieldValue in ipairs(value) do
 					local fieldAttributeName = ("%s_%s"):format(attributeName, arrayIndex)
 					local fieldTypeDefinition = typeParams
@@ -258,7 +243,6 @@ local function createComponentMembers(
 						fieldValue,
 						values,
 						members,
-						attributeMap,
 						1
 					)
 				end
@@ -277,7 +261,6 @@ local function createComponentMembers(
 						fieldValue,
 						values,
 						members,
-						attributeMap,
 						1
 					)
 				end
