@@ -47,7 +47,7 @@ function ComponentAnnotation.apply(instance, definition, value)
 
 	for attributeName, attributeValue in pairs(attributeMap) do
 		if typeof(attributeValue) == "Instance" then
-			if usingDefault then
+			if usingDefault or attributeValue.Parent == nil then
 				attributeValue.Parent = workspace.Terrain
 				attributeValue.Archivable = false
 			end
