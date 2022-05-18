@@ -58,8 +58,6 @@ function ComponentAnnotation.apply(instance, definition, value)
 		end
 	end
 
-	CollectionService:AddTag(instance, definition.name)
-
 	return true
 end
 
@@ -94,8 +92,6 @@ function ComponentAnnotation.remove(instance, definition)
 			instance:SetAttribute(attributeName, nil)
 		end
 	end
-
-	CollectionService:RemoveTag(instance, definition.name)
 
 	return true
 end

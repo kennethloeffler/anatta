@@ -643,6 +643,8 @@ function ComponentManager:SetComponent(component, has: boolean, value)
 				continue
 			end
 
+			CollectionService:AddTag(instance, definition.name)
+
 			self.entityGenerator:requestCreation(linkedInstance)
 		else
 			local success, err = ComponentAnnotation.remove(linkedInstance, definition)
@@ -651,6 +653,8 @@ function ComponentManager:SetComponent(component, has: boolean, value)
 				warn(err)
 				continue
 			end
+
+			CollectionService:RemoveTag(instance, definition.name)
 
 			local hasNoComponents = true
 
