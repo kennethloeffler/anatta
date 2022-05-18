@@ -36,7 +36,7 @@ local conversions = {
 		attributeMap[attributeName] = value.Name
 	end,
 
-	TweenInfo = function(attributeMap, attributeName, value)
+	TweenInfo = function(attributeMap, attributeName, value, typeDefinition)
 		convert(attributeMap, attributeName, {
 			EasingDirection = "enum",
 			Time = "number",
@@ -44,19 +44,45 @@ local conversions = {
 			RepeatCount = "number",
 			EasingStyle = "enum",
 			Reverses = "boolean",
-		}, value)
+		}, value, typeDefinition)
 	end,
 }
 
-function convert(attributeMap, attributeName, concreteType, instance, entity, value)
+function convert(attributeMap, attributeName, concreteType, instance, entity, value, typeDefinition)
 	if typeof(concreteType) == "table" then
+		local typeParams = if typeDefinition.typeName == "strictInterface"
+			then typeDefinition.typeParams[1]
+			else typeDefinition.typeParams
+
+		if typeDefinition.typeName == "array" then
+			concreteType = table.create(#value)
+
+			for _ = 1, #value do
+				local arrayFieldSuccess, fieldConcreteType = typeParams[1]:tryGetConcreteType()
+
+				if not arrayFieldSuccess then
+					return false, ("Error converting %s: %s"):format(attributeName, fieldConcreteType)
+				end
+
+				table.insert(concreteType, fieldConcreteType)
+			end
+		end
+
 		for field, fieldConcreteType in pairs(concreteType) do
 			local fieldAttributeName = ("%s_%s"):format(attributeName, field)
 
-			convert(attributeMap, fieldAttributeName, fieldConcreteType, instance, entity, value[field])
+			convert(
+				attributeMap,
+				fieldAttributeName,
+				fieldConcreteType,
+				instance,
+				entity,
+				value[field],
+				if typeDefinition.typeName == "array" then typeParams[1] else typeParams[field]
+			)
 		end
 	elseif conversions[concreteType] then
-		conversions[concreteType](attributeMap, attributeName, value, instance)
+		conversions[concreteType](attributeMap, attributeName, value, instance, typeDefinition)
 	elseif concreteType ~= nil then
 		attributeMap[attributeName] = value
 	else
@@ -81,21 +107,7 @@ return function(instance, entity, definition, component)
 		return false, ("Error converting %s: %s"):format(componentName, concreteType)
 	end
 
-	if typeDefinition.typeName == "array" then
-		concreteType = table.create(#component)
-
-		for _ = 1, #component do
-			local arrayFieldSuccess, fieldConcreteType = typeDefinition.typeParams[1]:tryGetConcreteType()
-
-			if not arrayFieldSuccess then
-				return false, ("Error converting %s: %s"):format(componentName, fieldConcreteType)
-			end
-
-			table.insert(concreteType, fieldConcreteType)
-		end
-	end
-
-	local success, attributeMap = convert({}, componentName, concreteType, instance, entity, component)
+	local success, attributeMap = convert({}, componentName, concreteType, instance, entity, component, typeDefinition)
 
 	attributeMap[ENTITY_ATTRIBUTE_NAME] = entity
 
