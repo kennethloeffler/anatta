@@ -1,5 +1,3 @@
-local CollectionService = game:GetService("CollectionService")
-
 local Modules = script.Parent.Parent.Parent
 
 local Dom = require(Modules.Anatta.Library.Dom)
