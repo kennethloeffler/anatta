@@ -64,7 +64,12 @@ function ComponentAnnotation.apply(instance, definition, value)
 end
 
 function ComponentAnnotation.remove(instance, definition)
-	local success, attributeMap = getDefaultAttributeMap(instance, definition)
+	if definition.pluginType then
+		definition = { name = definition.name, type = definition.pluginType }
+	end
+
+	local _, _, component = Dom.tryFromAttributes(instance, definition)
+	local success, attributeMap = Dom.tryToAttributes(instance, 0, definition, component)
 
 	if not success then
 		return false, attributeMap
