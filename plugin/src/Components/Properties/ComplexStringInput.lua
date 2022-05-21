@@ -48,6 +48,7 @@ function ComplexStringInput:render()
 		_FieldRef = self.fieldRef,
 		Value = self.props.Value,
 		Key = self.props.Key,
+		LayoutOrder = self.props.LayoutOrder,
 
 		OnChanged = function()
 			if self.props.Filter then

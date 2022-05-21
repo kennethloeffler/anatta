@@ -7,6 +7,7 @@ local BaseProperty = require(script.Parent.BaseProperty)
 local function StringInput(props)
 	return Roact.createElement(BaseProperty, {
 		Text = props.Key,
+		LayoutOrder = props.LayoutOrder,
 	}, {
 		Container = Roact.createElement("Frame", {
 			[Roact.Ref] = props._FieldRef,
