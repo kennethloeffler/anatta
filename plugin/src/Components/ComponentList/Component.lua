@@ -88,7 +88,7 @@ function Component:render()
 				}),
 				(checked and self.state.isMenuOpen) and Roact.createElement(ComponentValues, {
 					Definition = props.Definition,
-					Values = props.Values,
+					ValuesFromInstance = props.ValuesFromInstance,
 				}),
 			}
 		)

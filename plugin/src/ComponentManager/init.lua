@@ -355,7 +355,7 @@ function ComponentManager:_doUpdateStore()
 				continue
 			end
 
-			local values = {}
+			local valuesFromInstance = {}
 			local hasAny = false
 			local missingAny = false
 			local entry: Component = {
@@ -369,7 +369,7 @@ function ComponentManager:_doUpdateStore()
 				Definition = rawDefinition,
 				HasAll = false,
 				HasSome = false,
-				Values = values,
+				ValuesFromInstance = valuesFromInstance,
 			}
 
 			if entry.Group == "" then
@@ -400,7 +400,7 @@ function ComponentManager:_doUpdateStore()
 					local success, entity, value = Dom.tryFromAttributes(linkedInstance, definition)
 
 					if success then
-						values[linkedInstance] = value
+						valuesFromInstance[linkedInstance] = value
 					else
 						warn(("Failed to read component from %s: %s"):format(linkedInstance:GetFullName(), entity))
 
@@ -414,7 +414,7 @@ function ComponentManager:_doUpdateStore()
 								)
 							)
 						else
-							values[linkedInstance] = default
+							valuesFromInstance[linkedInstance] = default
 						end
 					end
 

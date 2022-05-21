@@ -295,7 +295,7 @@ function ComponentValues:render()
 	local _, value = next(props.Values)
 
 	-- TODO: compare all values to display ambiguous fields
-	local members = createComponentMembers(name, name, typeDefinition, value, props.Values)
+	local members = createComponentMembers(name, name, typeDefinition, value, props.ValuesFromInstance)
 
 	table.sort(members, function(lhs, rhs)
 		return tostring(lhs.props.Key) < tostring(rhs.props.Key)
