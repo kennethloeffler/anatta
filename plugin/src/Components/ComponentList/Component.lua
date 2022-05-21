@@ -52,7 +52,7 @@ function Component:render()
 			VerticalExpandingList,
 			{ LayoutOrder = props.LayoutOrder, BorderSizePixel = 0, ZIndex = props.ZIndex },
 			{
-				Roact.createElement(Item, {
+				Item = Roact.createElement(Item, {
 					Text = Util.escapeComponentName(props.Component.Name, theme),
 					RichText = true,
 					Icon = props.Icon,
@@ -66,6 +66,7 @@ function Component:render()
 					Hidden = props.Hidden,
 					Indent = props.Group and 10 or 0,
 					Height = 26,
+					LayoutOrder = 1,
 
 					onSetVisible = function()
 						ComponentManager.Get():SetVisible(props.Definition.name, not props.Visible)
@@ -86,7 +87,8 @@ function Component:render()
 						props.showContextMenu(props.Component)
 					end,
 				}),
-				(checked and self.state.isMenuOpen) and Roact.createElement(ComponentValues, {
+				Values = (checked and self.state.isMenuOpen) and Roact.createElement(ComponentValues, {
+					LayoutOrder = 2,
 					Definition = props.Definition,
 					ValuesFromInstance = props.ValuesFromInstance,
 				}),
