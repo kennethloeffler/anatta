@@ -2,7 +2,7 @@ local Modules = script.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local Icons = require(Modules.Plugin.FamFamFam)
 local Emoji = require(Modules.Plugin.Emoji)
-local Util = require(Modules.Plugin.Util)
+local Llama = require(Modules.Llama)
 
 local function EmojiIcon(props)
 	local defaultProps = {
@@ -30,7 +30,7 @@ local function EmojiIcon(props)
 
 	return Roact.createElement(
 		props.onClick and "TextButton" or "TextLabel",
-		Util.merge(defaultProps, props, {
+		Llama.Dictionary.merge(defaultProps, props, {
 			onClick = Roact.None,
 			onHover = Roact.None,
 		})
@@ -60,7 +60,7 @@ local function ImageIcon(props)
 
 	return Roact.createElement(
 		props.onClick and "ImageButton" or "ImageLabel",
-		Util.merge(defaultProps, props, {
+		Llama.Dictionary.merge(defaultProps, props, {
 			onClick = Roact.None,
 			onHover = Roact.None,
 		})
@@ -71,7 +71,7 @@ local function Icon(props)
 	if props.Name:sub(1, 13) == "rbxassetid://" then
 		return Roact.createElement(
 			ImageIcon,
-			Util.merge(props, {
+			Llama.Dictionary.merge(props, {
 				Name = Roact.None,
 				TextScaled = Roact.None,
 				TextSize = Roact.None,
@@ -88,7 +88,7 @@ local function Icon(props)
 		end
 		return Roact.createElement(
 			EmojiIcon,
-			Util.merge(props, {
+			Llama.Dictionary.merge(props, {
 				Name = Roact.None,
 				Text = emoji,
 				TextScaled = props.TextScaled,
@@ -98,7 +98,7 @@ local function Icon(props)
 		local imageProps = Icons.Lookup(props.Name) or Icons.Lookup("computer_error")
 		return Roact.createElement(
 			ImageIcon,
-			Util.merge(props, {
+			Llama.Dictionary.merge(props, {
 				Name = Roact.None,
 				TextScaled = Roact.None,
 				TextSize = Roact.None,

@@ -2,7 +2,7 @@ local Modules = script.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 
 local StudioThemeAccessor = require(script.Parent.StudioThemeAccessor)
-local Util = require(Modules.Plugin.Util)
+local Llama = require(Modules.Llama)
 
 local RadioButton = Roact.PureComponent:extend("Button")
 RadioButton.defaultProps = {
@@ -88,7 +88,7 @@ function RadioButton:render()
 				[Roact.Event.MouseButton1Up] = self._mouseUp,
 				[Roact.Event.Activated] = props.onSelect,
 			},
-			Util.merge(props[Roact.Children] or {}, {
+			Llama.Dictionary.merge(props[Roact.Children] or {}, {
 				Corner = Roact.createElement("UICorner", {
 					CornerRadius = UDim.new(0, 5),
 				}),

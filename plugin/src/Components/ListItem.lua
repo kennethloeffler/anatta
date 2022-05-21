@@ -1,7 +1,7 @@
 local Modules = script.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
-local Util = require(Modules.Plugin.Util)
+local Llama = require(Modules.Llama)
 
 local Icon = require(script.Parent.Icon)
 local Checkbox = require(script.Parent.Checkbox)
@@ -76,7 +76,7 @@ function Item:render()
 					}),
 					Name = Roact.createElement(
 						props.IsInput and "TextBox" or "TextLabel",
-						Util.merge({
+						Llama.Dictionary.merge({
 							BackgroundTransparency = 1.0,
 							TextXAlignment = Enum.TextXAlignment.Left,
 							Position = props.Icon and UDim2.new(0, 48 + 16, 0, 0) or UDim2.new(0, 14, 0, 0),

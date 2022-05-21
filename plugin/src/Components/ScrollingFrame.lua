@@ -2,7 +2,7 @@ local Modules = script.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 
 local StudioThemeAccessor = require(Modules.Plugin.Components.StudioThemeAccessor)
-local Util = require(Modules.Plugin.Util)
+local Llama = require(Modules.Llama)
 
 local function ScrollingFrame(props)
 	local children = {}
@@ -11,7 +11,7 @@ local function ScrollingFrame(props)
 		local listProps = props.List == true and {} or props.List
 		children.UIListLayout = Roact.createElement(
 			"UIListLayout",
-			Util.merge({
+			Llama.Dictionary.merge({
 				SortOrder = Enum.SortOrder.LayoutOrder,
 			}, listProps)
 		)

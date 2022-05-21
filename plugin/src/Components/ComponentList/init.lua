@@ -1,6 +1,8 @@
 local Modules = script.Parent.Parent.Parent
 local Roact = require(Modules.Roact)
 local RoactRodux = require(Modules.RoactRodux)
+local Llama = require(Modules.Llama)
+
 local Constants = require(Modules.Plugin.Constants)
 local Actions = require(Modules.Plugin.Actions)
 local ComponentManager = require(Modules.Plugin.ComponentManager)
@@ -59,7 +61,7 @@ function ComponentList:render()
 		end
 		children[components[i].Name] = Roact.createElement(
 			Component,
-			Util.merge(components[i], {
+			Llama.Dictionary.merge(components[i], {
 				ZIndex = -i,
 				Hidden = self.state["Hide" .. groupName],
 				Disabled = not props.selectionActive,
