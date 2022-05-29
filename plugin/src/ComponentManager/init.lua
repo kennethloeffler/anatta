@@ -67,7 +67,7 @@ local function genColor(name: string): Color3
 	return Color3.fromHSV(h, s, v)
 end
 
-local function getLinkedInstance(instance)
+local function getApplicableInstance(instance)
 	local isModelWithPrimaryPart = instance:IsA("Model") and instance.PrimaryPart
 
 	if not (instance:IsA("BasePart") or instance:IsA("Attachment") or isModelWithPrimaryPart) then
@@ -282,53 +282,53 @@ function ComponentManager:_doUpdateStore()
 	local selectedSet = {}
 
 	for _, instance in ipairs(selected) do
-		local linkedInstance = getLinkedInstance(instance)
+		local applicableInstance = getApplicableInstance(instance)
 
-		if not linkedInstance then
+		if not applicableInstance then
 			continue
 		end
 
-		selectedSet[linkedInstance] = true
+		selectedSet[applicableInstance] = true
 	end
 
 	for instance, connections in pairs(self.attributeChangedConnections) do
-		local linkedInstance = getLinkedInstance(instance)
+		local applicableInstance = getApplicableInstance(instance)
 
-		if not linkedInstance then
+		if not applicableInstance then
 			continue
 		end
 
-		if selectedSet[linkedInstance] == nil then
+		if selectedSet[applicableInstance] == nil then
 			for _, connection in ipairs(connections) do
 				connection:Disconnect()
 			end
 
-			self.attributeChangedConnections[linkedInstance] = nil
+			self.attributeChangedConnections[applicableInstance] = nil
 		end
 	end
 
 	for _, instance in ipairs(selected) do
-		local linkedInstance = getLinkedInstance(instance)
+		local applicableInstance = getApplicableInstance(instance)
 
-		if not linkedInstance then
+		if not applicableInstance then
 			continue
 		end
 
-		local connections = self.attributeChangedConnections[linkedInstance]
+		local connections = self.attributeChangedConnections[applicableInstance]
 
 		if connections == nil then
 			connections = {}
-			self.attributeChangedConnections[linkedInstance] = connections
+			self.attributeChangedConnections[applicableInstance] = connections
 		end
 
 		table.insert(
 			connections,
-			linkedInstance.AttributeChanged:Connect(function()
+			applicableInstance.AttributeChanged:Connect(function()
 				self:_updateStore()
 			end)
 		)
 
-		local refFolder = linkedInstance:FindFirstChild(INSTANCE_REF_FOLDER)
+		local refFolder = applicableInstance:FindFirstChild(INSTANCE_REF_FOLDER)
 
 		if refFolder then
 			for _, objectValue in ipairs(refFolder:GetChildren()) do
@@ -386,35 +386,35 @@ function ComponentManager:_doUpdateStore()
 			}
 
 			for _, instance in ipairs(selected) do
-				local linkedInstance = getLinkedInstance(instance)
+				local applicableInstance = getApplicableInstance(instance)
 
-				if not linkedInstance then
+				if not applicableInstance then
 					continue
 				end
 
-				if CollectionService:HasTag(linkedInstance, entry.Name) then
-					if not linkedInstance:GetAttribute("__entity") then
-						linkedInstance:GetAttributeChangedSignal(ENTITY_ATTRIBUTE_NAME):Wait()
+				if CollectionService:HasTag(applicableInstance, entry.Name) then
+					if not applicableInstance:GetAttribute("__entity") then
+						applicableInstance:GetAttributeChangedSignal(ENTITY_ATTRIBUTE_NAME):Wait()
 					end
 
-					local success, entity, value = Dom.tryFromAttributes(linkedInstance, definition)
+					local success, entity, value = Dom.tryFromAttributes(applicableInstance, definition)
 
 					if success then
-						values[linkedInstance] = value
+						values[applicableInstance] = value
 					else
-						warn(("Failed to read component from %s: %s"):format(linkedInstance:GetFullName(), entity))
+						warn(("Failed to read component from %s: %s"):format(applicableInstance:GetFullName(), entity))
 
 						local defaultSuccess, default = definition.type:tryDefault()
 
 						if not defaultSuccess then
 							warn(
 								("Failed to create fallback default for %s: %s"):format(
-									linkedInstance:GetFullName(),
+									applicableInstance:GetFullName(),
 									default
 								)
 							)
 						else
-							values[linkedInstance] = default
+							values[applicableInstance] = default
 						end
 					end
 
@@ -625,15 +625,20 @@ function ComponentManager:SetComponent(component, has: boolean, value)
 	local definition = component.Definition
 
 	for _, instance in pairs(selected) do
-		local linkedInstance = getLinkedInstance(instance)
+		local applicableInstance = getApplicableInstance(instance)
 
-		if not linkedInstance then
+		if not applicableInstance then
+			warn(
+				(
+					"%s is not applicable: components can only be set on BaseParts, Attachments, and Models with primary parts"
+				):format(instance:GetFullName())
+			)
 			continue
 		end
 
 		if has then
 			local success, err = ComponentAnnotation.apply(
-				linkedInstance,
+				applicableInstance,
 				definition,
 				value ~= Llama.None and value or nil
 			)
@@ -643,30 +648,30 @@ function ComponentManager:SetComponent(component, has: boolean, value)
 				continue
 			end
 
-			CollectionService:AddTag(instance, definition.name)
+			CollectionService:AddTag(applicableInstance, definition.name)
 
-			self.entityGenerator:requestCreation(linkedInstance)
+			self.entityGenerator:requestCreation(applicableInstance)
 		else
-			local success, err = ComponentAnnotation.remove(linkedInstance, definition)
+			local success, err = ComponentAnnotation.remove(applicableInstance, definition)
 
 			if not success then
 				warn(err)
 				continue
 			end
 
-			CollectionService:RemoveTag(instance, definition.name)
+			CollectionService:RemoveTag(applicableInstance, definition.name)
 
 			local hasNoComponents = true
 
 			for componentName in pairs(self.componentDefinitions) do
-				if CollectionService:HasTag(linkedInstance, componentName) then
+				if CollectionService:HasTag(applicableInstance, componentName) then
 					hasNoComponents = false
 					break
 				end
 			end
 
 			if hasNoComponents then
-				self.entityGenerator:requestDestruction(linkedInstance)
+				self.entityGenerator:requestDestruction(applicableInstance)
 			end
 		end
 	end
