@@ -2,7 +2,11 @@ local Finalizers = require(script.Parent.Parent.Core.Finalizers)
 local Pool = require(script.Parent.Parent.Core.Pool)
 local Types = require(script.Parent.Parent.Types)
 
+local util = require(script.Parent.Parent.util)
+
 local ErrBadAttachmentTable = "function at %s:%i returned a bad attachment table: %s"
+local ErrEntityMissing = "entity %d is not present in this reactor"
+local ErrNoAttachmentTable = "this reactor has no attachment table"
 
 local SingleReactor = {}
 SingleReactor.__index = SingleReactor
@@ -92,6 +96,13 @@ function SingleReactor:withAttachments(callback)
 			end
 		end)
 	)
+end
+
+function SingleReactor:getAttachment(entity)
+	util.jumpAssert(self._pool ~= nil, ErrNoAttachmentTable)
+	util.jumpAssert(self._pool:getIndex(entity) ~= nil, ErrEntityMissing, entity)
+
+	return self._pool:get(entity)
 end
 
 function SingleReactor:detach()
