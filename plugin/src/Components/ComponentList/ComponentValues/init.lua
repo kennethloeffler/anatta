@@ -92,13 +92,14 @@ local function createArrayAddElement(attributeName, typeDefinition, value, linke
 
 			local definition = { name = attributeName, type = typeDefinition }
 
-			ChangeHistoryService:SetWaypoint(("Applying new array members for %s"):format(attributeName))
+			ChangeHistoryService:SetWaypoint(("Adding array element %s%s"):format(attributeName, newIndex))
 
 			for linkedInstance in pairs(linkedInstances) do
 				ComponentAnnotation.apply(linkedInstance, definition, value)
 			end
 
-			ChangeHistoryService:SetWaypoint(("Applying new array members for %s"):format(attributeName))
+			ChangeHistoryService:SetWaypoint(("Added array element %s%s"):format(attributeName, newIndex))
+
 			ComponentManager._global:_updateStore()
 		end,
 	})

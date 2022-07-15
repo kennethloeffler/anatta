@@ -20,8 +20,8 @@ local function StringInput(props)
 			StringInput = Roact.createElement(StudioComponents.TextInput, {
 				BorderSizePixel = 0,
 				OnFocused = props.OnFocused,
-				OnFocusLost = props.OnChanged,
-				OnChanged = function() end,
+				OnFocusLost = props.OnFocusLost,
+				OnChanged = props.OnChanged,
 				Text = props.Value,
 				ClearTextOnFocus = false,
 			}),

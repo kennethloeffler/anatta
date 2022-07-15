@@ -63,7 +63,9 @@ function EntityGenerator:negotiateAuthority()
 	CollectionService:AddTag(LocalPlayer, CANDIDATE)
 
 	repeat
-		RunService.Heartbeat:Wait()
+		-- No obvious way to guarantee that all possible candidates have applied their
+		-- tags - waiting a second is probably okay?
+		task.wait(1)
 	until #CollectionService:GetTagged(NEGOTIATION_ACK) == #CollectionService:GetTagged(CANDIDATE)
 		or #CollectionService:GetTagged(ENTITY_AUTHORITY) > 0
 
