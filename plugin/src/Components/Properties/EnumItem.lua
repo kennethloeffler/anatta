@@ -13,7 +13,7 @@ local function EnumItem(props)
 
 	return Roact.createElement(BaseProperty, {
 		Text = props.Key,
-		ZIndex = 100,
+		ZIndex = props.ZIndex,
 	}, {
 		Centered = Roact.createElement("Frame", {
 			Size = UDim2.new(1, 0, 0, 15),

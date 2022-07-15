@@ -45,6 +45,7 @@ end
 
 function ComplexStringInput:render()
 	return Roact.createElement(StringInput, {
+		ZIndex = self.props.ZIndex,
 		_FieldRef = self.fieldRef,
 		Value = self.props.Value,
 		Key = self.props.Key,

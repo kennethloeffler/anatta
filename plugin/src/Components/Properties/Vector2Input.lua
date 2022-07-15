@@ -23,6 +23,7 @@ local function Vector2Input(props)
 	return Roact.createElement(ComplexStringInput, {
 		Key = props.Key,
 		Value = createShortStringFromVector2(props.Value),
+		ZIndex = props.ZIndex,
 
 		Validate = function(raw)
 			local vec2 = createVector2FromString(raw:gsub("%s", ""))
