@@ -23,6 +23,7 @@ local function UDimInput(props)
 	return Roact.createElement(ComplexStringInput, {
 		Key = props.Key,
 		Value = createShortStringFromUDim(props.Value),
+		ZIndex = props.ZIndex,
 
 		Validate = function(raw)
 			local udim = createUDimFromString(raw:gsub("%s", ""))
