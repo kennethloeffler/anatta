@@ -26,12 +26,17 @@ local INSTANCE_REF_FOLDER = Anatta.Constants.InstanceRefFolder
 
 local ComponentValues = Roact.Component:extend("ComponentValues")
 
+local CurrentZIndex = 1
+
 local function createInstanceElement(name, attributeName, typeDefinition, value, values)
 	local typeParam = typeDefinition.typeParams[1]
 
 	local currentInstance = if value and value.Parent and value.Parent ~= workspace.Terrain then value else nil
 
+	CurrentZIndex += 1
+
 	return Roact.createElement(InstanceSelect, {
+		ZIndex = -CurrentZIndex,
 		Key = name,
 		Instance = currentInstance,
 		IsA = typeDefinition.typeName == "instanceIsA" and typeParam,
@@ -51,7 +56,10 @@ end
 
 local function makeInputElement(elementKind)
 	return function(name, attributeName, _, value, linkedInstances)
+		CurrentZIndex += 1
+
 		return Roact.createElement(elementKind, {
+			ZIndex = -CurrentZIndex,
 			Key = name,
 			Value = value,
 			OnChanged = function(newValue)
@@ -72,7 +80,10 @@ local function makeInputElement(elementKind)
 end
 
 local function createArrayAddElement(attributeName, typeDefinition, value, linkedInstances, indentCount)
+	CurrentZIndex += 1
+
 	return Roact.createElement(InlineButton, {
+		ZIndex = -CurrentZIndex,
 		Key = attributeName,
 		Text = "+ Add Item",
 		Indents = indentCount,
@@ -130,7 +141,10 @@ local Types = {
 			table.insert(enums, { Name = itemName })
 		end
 
+		CurrentZIndex += 1
+
 		return Roact.createElement(EnumItem, {
+			ZIndex = -CurrentZIndex,
 			Key = name,
 			Enum = mockEnum,
 			Selected = {
@@ -149,7 +163,10 @@ local Types = {
 	end,
 
 	entity = function(name, attributeName, _, _, values)
+		CurrentZIndex += 1
+
 		return Roact.createElement(InstanceSelect, {
+			ZIndex = -CurrentZIndex,
 			Key = name,
 			OnChanged = function(instance)
 				ChangeHistoryService:SetWaypoint(("Changing attribute %s"):format(attributeName))
@@ -239,9 +256,12 @@ local function createComponentMembers(
 				return lhs.props.Key < rhs.props.Key
 			end)
 
+			CurrentZIndex += 1
+
 			table.insert(
 				members,
 				Roact.createElement(CollapsibleSection, {
+					ZIndex = -CurrentZIndex + 10000,
 					Key = ("%s%s"):format(string.rep("  ", recursedCount), name),
 					HeaderText = ("%s%s"):format(string.rep("  ", recursedCount), name),
 					OnToggled = function() end,
@@ -297,6 +317,8 @@ function ComponentValues:render()
 	local name = definition.name
 	local typeDefinition = definition.pluginType and definition.pluginType or definition.type
 	local _, value = next(props.Values)
+
+	CurrentZIndex = 1
 
 	-- TODO: compare all values to display ambiguous fields
 	local members = createComponentMembers(name, name, typeDefinition, value, props.Values)
