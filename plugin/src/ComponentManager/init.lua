@@ -393,7 +393,7 @@ function ComponentManager:_doUpdateStore()
 				end
 
 				if CollectionService:HasTag(applicableInstance, entry.Name) then
-					if not applicableInstance:GetAttribute("__entity") then
+					if not applicableInstance:GetAttribute(ENTITY_ATTRIBUTE_NAME) then
 						applicableInstance:GetAttributeChangedSignal(ENTITY_ATTRIBUTE_NAME):Wait()
 					end
 
