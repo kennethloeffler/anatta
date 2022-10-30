@@ -13,14 +13,12 @@ local function EnumSelect(props)
 
 	return Roact.createElement(BaseProperty, {
 		Text = props.Key,
-		ZIndex = props.ZIndex,
 	}, {
 		Centered = Roact.createElement("Frame", {
 			Size = UDim2.new(1, 0, 0, 15),
 			BackgroundTransparency = 1,
 			AnchorPoint = Vector2.new(0, 0.5),
 			Position = UDim2.new(0, 0, 0.5, 0),
-			ZIndex = props.ZIndex,
 		}, {
 			Dropdown = Roact.createElement(StudioComponents.Dropdown, {
 				Items = items,
