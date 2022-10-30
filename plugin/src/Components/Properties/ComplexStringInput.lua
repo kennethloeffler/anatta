@@ -56,18 +56,6 @@ function ComplexStringInput:render()
 				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
 			end
 		end,
-
-		OnFocusLost = function()
-			if self.props.Filter then
-				self:filterField()
-				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
-			end
-
-			if self.props.Validate then
-				self:validateField()
-				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
-			end
-		end,
 	})
 end
 
