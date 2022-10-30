@@ -232,6 +232,7 @@ local function createComponentMembers(componentDefinition, linkedInstances)
 					Key = ("%s%s"):format(string.rep("  ", depth), name),
 					HeaderText = ("%s%s"):format(string.rep("  ", depth), name),
 					OnToggled = function() end,
+					SortOrder = Enum.SortOrder.Name,
 				}, subMembers)
 
 				members[attributeName] = element
@@ -257,7 +258,7 @@ end
 function ComponentValues:render()
 	return Roact.createElement(
 		VerticalExpandingList,
-		{ LayoutOrder = self.props.LayoutOrder },
+		{ LayoutOrder = self.props.LayoutOrder, SortOrder = Enum.SortOrder.Name },
 		createComponentMembers(self.props.Definition, self.props.ValuesFromInstance)
 	)
 end

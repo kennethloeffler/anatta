@@ -17,6 +17,7 @@ function CollapsibleSection:render()
 		HeaderText = self.props.HeaderText,
 		Key = self.props.Key,
 		LayoutOrder = self.props.LayoutOrder,
+		SortOrder = self.props.SortOrder,
 	}, self.props[Roact.Children])
 end
 
