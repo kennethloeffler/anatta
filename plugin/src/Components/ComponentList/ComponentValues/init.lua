@@ -1,12 +1,13 @@
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 
 local Modules = script.Parent.Parent.Parent.Parent
-local Properties = script.Parent.Parent.Properties
 local Roact = require(Modules.Roact)
 local Anatta = require(Modules.Anatta)
+
 local ComponentManager = require(script.Parent.Parent.Parent.ComponentManager)
 local ComponentAnnotation = require(script.Parent.Parent.Parent.ComponentManager.ComponentAnnotation)
 
+local Properties = script.Parent.Parent.Properties
 local Boolean = require(Properties.Boolean)
 local EnumItem = require(Properties.EnumItem)
 local InlineButton = require(Properties.InlineButton)
@@ -26,7 +27,7 @@ local INSTANCE_REF_FOLDER = Anatta.Constants.InstanceRefFolder
 
 local ComponentValues = Roact.Component:extend("ComponentValues")
 
-local function createInstanceElement(name, attributeName, typeDefinition, value, values)
+local function createInstanceElement(name, attributeName, typeDefinition, value, linkedInstances, layoutOrder)
 	local typeParam = typeDefinition.typeParams[1]
 
 	local currentInstance = if value and value.Parent and value.Parent ~= workspace.Terrain then value else nil
@@ -36,11 +37,12 @@ local function createInstanceElement(name, attributeName, typeDefinition, value,
 		Instance = currentInstance,
 		IsA = typeDefinition.typeName == "instanceIsA" and typeParam,
 		ClassName = typeDefinition.typeName == "instanceOf" and typeParam,
+		LayoutOrder = layoutOrder,
 
 		OnChanged = function(instance)
 			ChangeHistoryService:SetWaypoint(("Changing ref %s"):format(attributeName))
 
-			for linkedInstance in pairs(values) do
+			for linkedInstance in pairs(linkedInstances) do
 				linkedInstance[INSTANCE_REF_FOLDER][attributeName].Value = instance
 			end
 
@@ -50,10 +52,11 @@ local function createInstanceElement(name, attributeName, typeDefinition, value,
 end
 
 local function makeInputElement(elementKind)
-	return function(name, attributeName, _, value, linkedInstances)
+	return function(name, attributeName, _, value, linkedInstances, layoutOrder)
 		return Roact.createElement(elementKind, {
 			Key = name,
 			Value = value,
+			LayoutOrder = layoutOrder,
 			OnChanged = function(newValue)
 				if newValue == nil then
 					return
@@ -71,11 +74,11 @@ local function makeInputElement(elementKind)
 	end
 end
 
-local function createArrayAddElement(attributeName, typeDefinition, value, linkedInstances, indentCount)
+local function createArrayAddElement(attributeName, typeDefinition, value, linkedInstances, layoutOrder)
 	return Roact.createElement(InlineButton, {
 		Key = attributeName,
 		Text = "+ Add Item",
-		Indents = indentCount,
+		LayoutOrder = layoutOrder,
 		OnActivated = function()
 			local newIndex = #value + 1
 
@@ -115,7 +118,7 @@ local Types = {
 	Vector2 = makeInputElement(Vector2Input),
 	Vector3 = makeInputElement(Vector3Input),
 
-	literal = function(name, attributeName, typeDefinition, value, values)
+	literal = function(name, attributeName, typeDefinition, value, linkedInstances, layoutOrder)
 		local enums = {}
 		local mockEnum = {
 			GetEnumItems = function()
@@ -136,10 +139,11 @@ local Types = {
 			Selected = {
 				Name = value,
 			},
+			LayoutOrder = layoutOrder,
 			OnSelected = function(enumItemName)
 				ChangeHistoryService:SetWaypoint(("Changing attribute %s"):format(attributeName))
 
-				for linkedInstance in pairs(values) do
+				for linkedInstance in pairs(linkedInstances) do
 					linkedInstance:SetAttribute(attributeName, enumItemName)
 				end
 
@@ -148,13 +152,14 @@ local Types = {
 		})
 	end,
 
-	entity = function(name, attributeName, _, _, values)
+	entity = function(name, attributeName, _, _, linkedInstances, layoutOrder)
 		return Roact.createElement(InstanceSelect, {
 			Key = name,
+			LayoutOrder = layoutOrder,
 			OnChanged = function(instance)
 				ChangeHistoryService:SetWaypoint(("Changing attribute %s"):format(attributeName))
 
-				for linkedInstance in pairs(values) do
+				for linkedInstance in pairs(linkedInstances) do
 					local entity = instance:GetAttribute(ENTITY_ATTRIBUTE_NAME)
 
 					if entity then
@@ -170,142 +175,92 @@ local Types = {
 	end,
 }
 
-local function createComponentMembers(
-	name,
-	attributeName,
-	typeDefinition,
-	value,
-	linkedInstances,
-	members,
-	recursedCount
-)
-	members = members or {}
+local function createComponentMembers(componentDefinition, linkedInstances)
+	local function createMembers(depth, members, name, attributeName, typeDefinition, value)
+		local typeOk, concreteType = typeDefinition:tryGetConcreteType()
 
-	local typeOk, concreteType = typeDefinition:tryGetConcreteType()
-
-	if not typeOk then
-		warn(concreteType)
-		return members
-	end
-
-	if typeof(concreteType) == "table" then
-		local typeParams
-
-		if typeDefinition.typeName == "strictArray" then
-			typeParams = typeDefinition.typeParams
-		else
-			typeParams = typeDefinition.typeParams[1]
+		if not typeOk then
+			warn(concreteType)
+			return members
 		end
 
-		if recursedCount then
-			local subMembers = {}
+		if typeof(concreteType) == "table" then
+			local subMembers = if depth > 0 then {} else members
 
 			if typeDefinition.typeName == "array" then
+				local typeParam = typeDefinition.typeParams[1]
+
 				for arrayIndex, fieldValue in ipairs(value) do
 					local fieldAttributeName = ("%s_%s"):format(attributeName, arrayIndex)
-					local fieldTypeDefinition = typeParams
 
-					createComponentMembers(
-						("%s%s"):format(string.rep("  ", recursedCount), tostring(arrayIndex)),
-						fieldAttributeName,
-						fieldTypeDefinition,
-						fieldValue,
-						linkedInstances,
+					createMembers(
+						depth + 1,
 						subMembers,
-						recursedCount + 1
+						("%s%s"):format(string.rep("  ", depth), tostring(arrayIndex)),
+						fieldAttributeName,
+						typeParam,
+						fieldValue
 					)
 				end
 
-				table.insert(subMembers, createArrayAddElement(attributeName, typeDefinition, value, linkedInstances))
+				local element = createArrayAddElement(attributeName, typeDefinition, value, linkedInstances)
+
+				subMembers[attributeName] = element
 			else
+				local typeParams = if typeDefinition.typeName == "strictInterface"
+					then typeDefinition.typeParams[1]
+					else typeDefinition.typeParams
+
 				for fieldName in pairs(concreteType) do
 					local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
 					local fieldTypeDefinition = typeParams[fieldName]
 					local fieldValue = value[fieldName]
 
-					createComponentMembers(
-						("%s%s"):format(string.rep("  ", recursedCount), fieldName),
+					createMembers(
+						depth + 1,
+						subMembers,
+						("%s%s"):format(string.rep("  ", depth), fieldName),
 						fieldAttributeName,
 						fieldTypeDefinition,
-						fieldValue,
-						linkedInstances,
-						subMembers,
-						recursedCount + 1
+						fieldValue
 					)
 				end
 			end
 
-			table.sort(subMembers, function(lhs, rhs)
-				return lhs.props.Key < rhs.props.Key
-			end)
-
-			table.insert(
-				members,
-				Roact.createElement(CollapsibleSection, {
-					Key = ("%s%s"):format(string.rep("  ", recursedCount), name),
-					HeaderText = ("%s%s"):format(string.rep("  ", recursedCount), name),
+			if depth > 0 then
+				local element = Roact.createElement(CollapsibleSection, {
+					Key = ("%s%s"):format(string.rep("  ", depth), name),
+					HeaderText = ("%s%s"):format(string.rep("  ", depth), name),
 					OnToggled = function() end,
+					SortOrder = Enum.SortOrder.Name,
 				}, subMembers)
-			)
-		else
-			if typeDefinition.typeName == "array" then
-				for arrayIndex, fieldValue in ipairs(value) do
-					local fieldAttributeName = ("%s_%s"):format(attributeName, arrayIndex)
-					local fieldTypeDefinition = typeParams
 
-					createComponentMembers(
-						arrayIndex,
-						fieldAttributeName,
-						fieldTypeDefinition,
-						fieldValue,
-						linkedInstances,
-						members,
-						1
-					)
-				end
-
-				table.insert(members, createArrayAddElement(attributeName, typeDefinition, value, linkedInstances))
-			else
-				for fieldName in pairs(concreteType) do
-					local fieldAttributeName = ("%s_%s"):format(attributeName, fieldName)
-					local fieldTypeDefinition = typeParams[fieldName]
-					local fieldValue = value[fieldName]
-
-					createComponentMembers(
-						fieldName,
-						fieldAttributeName,
-						fieldTypeDefinition,
-						fieldValue,
-						linkedInstances,
-						members,
-						1
-					)
-				end
+				members["_" .. attributeName] = element
 			end
+		elseif Types[concreteType] ~= nil then
+			local element = Types[concreteType](name, attributeName, typeDefinition, value, linkedInstances)
+
+			members[attributeName] = element
 		end
-	elseif Types[concreteType] ~= nil then
-		local element = Types[concreteType](name, attributeName, typeDefinition, value, linkedInstances)
-		table.insert(members, element)
 	end
 
-	return members
+	local componentMembers = {}
+	local _, componentValue = next(linkedInstances)
+	local componentName = componentDefinition.name
+	local componentTypeDefinition = componentDefinition.pluginType and componentDefinition.pluginType
+		or componentDefinition.type
+
+	createMembers(0, componentMembers, componentName, componentName, componentTypeDefinition, componentValue)
+
+	return componentMembers
 end
 
 function ComponentValues:render()
-	local props = self.props
-	local definition = props.Definition
-	local name = definition.name
-	local typeDefinition = definition.pluginType and definition.pluginType or definition.type
-	local _, value = next(props.Values)
-
-	-- TODO: compare all values to display ambiguous fields
-	local members = createComponentMembers(name, name, typeDefinition, value, props.Values)
-
-	table.sort(members, function(lhs, rhs)
-		return tostring(lhs.props.Key) < tostring(rhs.props.Key)
-	end)
-
-	return Roact.createElement(VerticalExpandingList, {}, members)
+	return Roact.createElement(
+		VerticalExpandingList,
+		{ LayoutOrder = self.props.LayoutOrder, SortOrder = Enum.SortOrder.Name },
+		createComponentMembers(self.props.Definition, self.props.ValuesFromInstance)
+	)
 end
 
 return ComponentValues

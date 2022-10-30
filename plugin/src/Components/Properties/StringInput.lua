@@ -4,9 +4,18 @@ local StudioComponents = require(Modules.StudioComponents)
 
 local BaseProperty = require(script.Parent.BaseProperty)
 
-local function StringInput(props)
+local StringInput = Roact.Component:extend("StringInput")
+
+function StringInput:init()
+	self:setState({ Focused = false })
+end
+
+function StringInput:render()
+	local props = self.props
+
 	return Roact.createElement(BaseProperty, {
 		Text = props.Key,
+		LayoutOrder = props.LayoutOrder,
 	}, {
 		Container = Roact.createElement("Frame", {
 			[Roact.Ref] = props._FieldRef,
@@ -18,9 +27,23 @@ local function StringInput(props)
 		}, {
 			StringInput = Roact.createElement(StudioComponents.TextInput, {
 				BorderSizePixel = 0,
-				OnFocused = props.OnFocused,
-				OnFocusLost = props.OnFocusLost,
-				OnChanged = props.OnChanged,
+				OnFocused = function(text, enterPressed, inputObject)
+					self:setState({ Focused = true })
+					if self.props.OnFocused then
+						props.OnFocused()
+					end
+				end,
+				OnFocusLost = function()
+					self:setState({ Focused = false })
+					if props.OnFocusLost then
+						props.OnFocusLost(text, enterPressed, inputObject)
+					end
+				end,
+				OnChanged = function(text)
+					if self.state.Focused then
+						props.OnChanged(text)
+					end
+				end,
 				Text = props.Value,
 				ClearTextOnFocus = false,
 			}),

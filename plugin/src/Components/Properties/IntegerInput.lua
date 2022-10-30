@@ -7,6 +7,7 @@ local function IntegerInput(props)
 	return Roact.createElement(ComplexStringInput, {
 		Key = props.Key,
 		Value = props.Value,
+		LayoutOrder = props.LayoutOrder,
 
 		Filter = function(raw)
 			return raw:match("%d*%.?%d*")

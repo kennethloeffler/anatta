@@ -48,22 +48,11 @@ function ComplexStringInput:render()
 		_FieldRef = self.fieldRef,
 		Value = self.props.Value,
 		Key = self.props.Key,
+		LayoutOrder = self.props.LayoutOrder,
 
 		OnChanged = function()
 			if self.props.Filter then
 				self:filterField()
-				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
-			end
-		end,
-
-		OnFocusLost = function()
-			if self.props.Filter then
-				self:filterField()
-				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
-			end
-
-			if self.props.Validate then
-				self:validateField()
 				self.props.OnChanged(self.props.Parse(self:getFieldFromRef().Text))
 			end
 		end,

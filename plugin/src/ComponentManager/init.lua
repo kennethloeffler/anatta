@@ -355,7 +355,7 @@ function ComponentManager:_doUpdateStore()
 				continue
 			end
 
-			local values = {}
+			local valuesFromInstance = {}
 			local hasAny = false
 			local missingAny = false
 			local entry: Component = {
@@ -369,7 +369,7 @@ function ComponentManager:_doUpdateStore()
 				Definition = rawDefinition,
 				HasAll = false,
 				HasSome = false,
-				Values = values,
+				ValuesFromInstance = valuesFromInstance,
 			}
 
 			if entry.Group == "" then
@@ -393,14 +393,14 @@ function ComponentManager:_doUpdateStore()
 				end
 
 				if CollectionService:HasTag(applicableInstance, entry.Name) then
-					if not applicableInstance:GetAttribute("__entity") then
+					if not applicableInstance:GetAttribute(ENTITY_ATTRIBUTE_NAME) then
 						applicableInstance:GetAttributeChangedSignal(ENTITY_ATTRIBUTE_NAME):Wait()
 					end
 
 					local success, entity, value = Dom.tryFromAttributes(applicableInstance, definition)
 
 					if success then
-						values[applicableInstance] = value
+						valuesFromInstance[applicableInstance] = value
 					else
 						warn(("Failed to read component from %s: %s"):format(applicableInstance:GetFullName(), entity))
 
@@ -414,7 +414,7 @@ function ComponentManager:_doUpdateStore()
 								)
 							)
 						else
-							values[applicableInstance] = default
+							valuesFromInstance[applicableInstance] = default
 						end
 					end
 

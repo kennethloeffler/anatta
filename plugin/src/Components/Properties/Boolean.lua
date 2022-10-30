@@ -17,6 +17,7 @@ function Boolean:render()
 
 	return Roact.createElement(BaseProperty, {
 		Text = props.Key,
+		LayoutOrder = props.LayoutOrder,
 	}, {
 		Centered = Roact.createElement("Frame", {
 			Size = UDim2.new(1, 0, 0, 15),

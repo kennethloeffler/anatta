@@ -10,6 +10,7 @@ local function BaseProperty(props)
 			BorderColor3 = theme:GetColor(Enum.StudioStyleGuideColor.Border),
 			Size = UDim2.new(1, 0, 0, 25),
 			ZIndex = props.ZIndex,
+			LayoutOrder = props.LayoutOrder,
 		}, {
 			UIPadding = Roact.createElement("UIPadding", {
 				PaddingLeft = UDim.new(0, 25),

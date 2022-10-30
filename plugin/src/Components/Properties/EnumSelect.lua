@@ -12,6 +12,7 @@ local function EnumSelect(props)
 	end
 
 	return Roact.createElement(BaseProperty, {
+		LayoutOrder = props.LayoutOrder,
 		Text = props.Key,
 	}, {
 		Centered = Roact.createElement("Frame", {
