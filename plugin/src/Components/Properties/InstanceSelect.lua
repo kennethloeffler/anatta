@@ -30,7 +30,6 @@ function InstanceSelect:render()
 
 	return Roact.createElement(BaseProperty, {
 		Text = ("%s (%s)"):format(self.props.Key, requiredKind or "any"),
-		ZIndex = self.props.ZIndex,
 	}, {
 		InstanceSelector = Roact.createElement(StudioComponents.Button, {
 			Size = UDim2.new(1, 0, 1, 0),
