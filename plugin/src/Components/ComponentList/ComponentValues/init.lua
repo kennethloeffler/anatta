@@ -235,7 +235,7 @@ local function createComponentMembers(componentDefinition, linkedInstances)
 					SortOrder = Enum.SortOrder.Name,
 				}, subMembers)
 
-				members[attributeName] = element
+				members["_" .. attributeName] = element
 			end
 		elseif Types[concreteType] ~= nil then
 			local element = Types[concreteType](name, attributeName, typeDefinition, value, linkedInstances)
