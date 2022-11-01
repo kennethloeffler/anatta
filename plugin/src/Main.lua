@@ -64,7 +64,7 @@ return function(plugin, savedState)
 				continue
 			end
 
-			local _, value = next(component.Values)
+			local _, value = next(component.ValuesFromInstance)
 
 			if value then
 				componentClipboard[component] = value
