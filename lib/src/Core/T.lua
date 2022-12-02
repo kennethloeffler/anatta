@@ -117,7 +117,9 @@ local concreters = {
 	instanceOf = makeConcrete,
 	instanceIsA = makeConcrete,
 
-	literal = makeConcrete,
+	literal = function(typeDefinition)
+		return true, typeof(typeDefinition.typeParams[1])
+	end,
 
 	array = function()
 		return true, {}
