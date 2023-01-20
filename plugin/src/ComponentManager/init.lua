@@ -404,7 +404,18 @@ function ComponentManager:_doUpdateStore()
 					else
 						warn(("Failed to read component from %s: %s"):format(applicableInstance:GetFullName(), entity))
 
-						local defaultSuccess, default = definition.type:tryDefault()
+						local refFolder = applicableInstance:FindFirstChild(INSTANCE_REF_FOLDER)
+						local objectValues = Llama.Dictionary.map(
+							Llama.Set.fromList(if refFolder then refFolder:GetChildren() else {}),
+							function(_, objectValue)
+								return objectValue.Value, objectValue.Name
+							end
+						)
+
+						local defaultSuccess, attributeMap, default = ComponentAnnotation.getDefaultAttributeMap(
+							applicableInstance,
+							definition
+						)
 
 						if not defaultSuccess then
 							warn(
@@ -413,9 +424,25 @@ function ComponentManager:_doUpdateStore()
 									default
 								)
 							)
-						else
-							valuesFromInstance[applicableInstance] = default
+							continue
 						end
+
+						for attributeName, defaultAttributeValue in pairs(attributeMap) do
+							if typeof(defaultAttributeValue) == "Instance" then
+								applicableInstance[INSTANCE_REF_FOLDER][attributeName].Value = objectValues[attributeName]
+									or defaultAttributeValue
+							else
+								local realAttributeValue = applicableInstance:GetAttribute(attributeName)
+
+								if typeof(realAttributeValue) ~= typeof(defaultAttributeValue) then
+									applicableInstance:SetAttribute(attributeName, defaultAttributeValue)
+								end
+							end
+						end
+
+						local _, _, recoveredValue = Dom.tryFromAttributes(applicableInstance, definition)
+
+						valuesFromInstance[applicableInstance] = recoveredValue
 					end
 
 					hasAny = true

@@ -27,13 +27,13 @@ function StringInput:render()
 		}, {
 			StringInput = Roact.createElement(StudioComponents.TextInput, {
 				BorderSizePixel = 0,
-				OnFocused = function(text, enterPressed, inputObject)
+				OnFocused = function()
 					self:setState({ Focused = true })
 					if self.props.OnFocused then
 						props.OnFocused()
 					end
 				end,
-				OnFocusLost = function()
+				OnFocusLost = function(text, enterPressed, inputObject)
 					self:setState({ Focused = false })
 					if props.OnFocusLost then
 						props.OnFocusLost(text, enterPressed, inputObject)
