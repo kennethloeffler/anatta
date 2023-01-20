@@ -8,7 +8,7 @@ local INSTANCE_REF_FOLDER = Constants.InstanceRefFolder
 
 local ComponentAnnotation = {}
 
-local function getDefaultAttributeMap(instance, definition)
+function ComponentAnnotation.getDefaultAttributeMap(instance, definition)
 	local defaultSuccess, default = definition.type:tryDefault()
 
 	if not defaultSuccess and not definition.type.typeName == "none" then
@@ -29,7 +29,7 @@ function ComponentAnnotation.apply(instance, definition, value)
 	local usingDefault = false
 
 	if value == nil then
-		success, attributeMap = getDefaultAttributeMap(instance, definition)
+		success, attributeMap = ComponentAnnotation.getDefaultAttributeMap(instance, definition)
 		usingDefault = true
 
 		if not success then
