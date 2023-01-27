@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[620],{63891:e=>{e.exports=JSON.parse('{"sourceUrl":"https://github.com/kennethloeffler/anatta/blob/master","baseUrl":"/anatta/","classOrder":["Anatta","World","Registry","Reactor","Mapper","Dom","T"],"apiCategories":[]}')}}]);
