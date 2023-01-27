@@ -4,6 +4,7 @@ local Modules = script.Parent.Parent
 local Roact = require(Modules.Roact)
 local Rodux = require(Modules.Rodux)
 local RoactRodux = require(Modules.RoactRodux)
+local Llama = require(Modules.Llama)
 
 local App = require(script.Parent.Components.App)
 local Reducer = require(script.Parent.Reducer)
@@ -65,10 +66,7 @@ return function(plugin, savedState)
 			end
 
 			local _, value = next(component.ValuesFromInstance)
-
-			if value then
-				componentClipboard[component] = value
-			end
+			componentClipboard[component] = if typeof(value) == "nil" then Llama.None else value
 		end
 	end
 
