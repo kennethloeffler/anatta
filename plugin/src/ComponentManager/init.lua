@@ -400,7 +400,7 @@ function ComponentManager:_doUpdateStore()
 					local success, entity, value = Dom.tryFromAttributes(applicableInstance, definition)
 
 					if success then
-						valuesFromInstance[applicableInstance] = value
+						valuesFromInstance[applicableInstance] = if typeof(value) == "nil" then Llama.None else value
 					else
 						warn(("Failed to read component from %s: %s"):format(applicableInstance:GetFullName(), entity))
 
@@ -442,7 +442,9 @@ function ComponentManager:_doUpdateStore()
 
 						local _, _, recoveredValue = Dom.tryFromAttributes(applicableInstance, definition)
 
-						valuesFromInstance[applicableInstance] = recoveredValue
+						valuesFromInstance[applicableInstance] = if typeof(recoveredValue) == "nil"
+							then Llama.None
+							else recoveredValue
 					end
 
 					hasAny = true
